@@ -47,7 +47,7 @@ const NAV: Record<'processOwner' | 'reviewer' | 'admin', NavGroup> = {
       { id: 'sops', label: 'SOPs', icon: FileText, href: '/sops' },
       { id: 'apps', label: 'Apps', icon: Bot, href: '/apps' },
       { id: 'evaluations', label: 'Evaluations', icon: LineChart, href: '/evaluations' },
-      { id: 'helper', label: 'Helper', icon: Sparkles, href: '/helper' },
+      { id: 'knowledge', label: 'Knowledge', icon: Database, href: '/knowledge', count: 12 },
       { id: 'marketplace', label: 'Marketplace', icon: Store, href: '/marketplace' },
     ],
     secondary: [
