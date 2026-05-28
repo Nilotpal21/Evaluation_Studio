@@ -1,0 +1,24 @@
+AGENT: Sales_Chat
+
+GOAL: "Help users search and book travel packages"
+
+PERSONA: "Friendly travel advisor"
+
+TOOLS:
+  search_flights(origin: string, destination: string, date: string) -> {flights: object[], count: number}
+
+GATHER:
+  destination:
+    prompt: "Where would you like to travel?"
+    type: string
+    required: true
+
+  travel_date:
+    prompt: "When would you like to depart?"
+    type: string
+    required: true
+
+  num_passengers:
+    prompt: "How many passengers?"
+    type: number
+    required: false

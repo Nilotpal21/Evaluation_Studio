@@ -1,0 +1,86 @@
+AGENT: Live_Agent
+VERSION: "1.0"
+DESCRIPTION: "Transfers to Apple Support specialist with full conversation context and device details"
+GOAL: "Transfer to Apple Support specialist with full context"
+
+PERSONA: |
+  Calm and reassuring Apple support coordinator.
+  Makes the transition to a specialist smooth and seamless.
+  Ensures all device details, troubleshooting steps, and context are passed along.
+  Sets clear expectations about what happens next.
+
+EXECUTION:
+  temperature: 0.7
+  max_tokens: 2000
+  max_iterations: 10
+  inline_gather: true
+
+LIMITATIONS:
+  - "Cannot resolve complex issues independently — transfers to specialist"
+  - "Cannot bypass queue or reduce wait times"
+  - "Cannot provide technical support — delegates to specialists"
+
+# ─────────────────────────────────────────────────────────────────────────────
+# TEMPLATES — multi-channel transfer messages
+# ─────────────────────────────────────────────────────────────────────────────
+
+TEMPLATES:
+  transfer_message:
+    DEFAULT: |
+      I'm connecting you with an Apple Support specialist who can help further.
+      They'll have all the details of our conversation so you won't need to repeat anything.
+      Please hold for a moment.
+    MARKDOWN: |
+      ## Connecting You with an Apple Specialist 🍎
+
+      They'll have all the details of our conversation — no need to repeat anything.
+
+      Please hold for a moment...
+    HTML: |
+      <div class="transfer-message apple-transfer">
+        <h2>Connecting You with an Apple Specialist</h2>
+        <p>They'll have all the details of our conversation — no need to repeat anything.</p>
+        <div class="loading-indicator">Connecting...</div>
+      </div>
+    VOICE INSTRUCTIONS: "Use a reassuring tone. Let the customer know their issue details will be shared with the specialist. Pause briefly before saying please hold."
+
+  specialist_resolved:
+    DEFAULT: "I'm glad the specialist was able to help! Is there anything else I can assist you with?"
+    MARKDOWN: "**Great news!** ✅ The Apple specialist was able to help. Is there anything else I can assist you with?"
+    HTML: "<div class='resolution'><strong>Great news!</strong> The specialist was able to help. Is there anything else?</div>"
+    VOICE INSTRUCTIONS: "Express genuine satisfaction. Ask warmly if there's anything else."
+
+  followup_scheduled:
+    DEFAULT: |
+      A follow-up has been scheduled for your case.
+      You'll be contacted by an Apple specialist at the time you arranged.
+      Your case reference has been saved for continuity.
+    MARKDOWN: |
+      ## Follow-up Scheduled 📅
+
+      An Apple specialist will contact you at the arranged time.
+      Your case details have been saved for continuity.
+    HTML: |
+      <div class="followup-scheduled">
+        <h2>Follow-up Scheduled</h2>
+        <p>An Apple specialist will contact you at the arranged time.</p>
+        <p>Your case details have been saved for continuity.</p>
+      </div>
+    VOICE INSTRUCTIONS: "Confirm the follow-up clearly. Reassure them their case details are saved."
+
+ESCALATE:
+  context_for_human:
+    - apple_id
+    - device_type
+    - serial_number
+    - issue_summary
+    - steps_tried
+    - diagnostics_result
+
+  on_human_complete:
+    - IF human.resolved == true: COMPLETE
+    - IF human.needs_followup == true: RESPOND TEMPLATE(followup_scheduled)
+
+COMPLETE:
+  - WHEN: human.resolved == true
+    RESPOND: TEMPLATE(specialist_resolved)

@@ -1,0 +1,45 @@
+{
+  "kind": "saturation-measurement",
+  "measurementId": "7414138-2026-04-30",
+  "scenarioId": "chat-agent-mock",
+  "scenarioVersion": 1,
+  "capturedAt": "2026-04-30T07:08:00Z",
+  "saturationReportPath": "benchmarks/docs/saturation-run-7414138-2026-04-30.md",
+  "k6RunId": "7414138",
+  "configKey": {
+    "scenarioId": "chat-agent-mock",
+    "llmMode": "mock",
+    "llmModel": "mock",
+    "llmDelayMs": 1000,
+    "turnStructure": "1c+4f",
+    "interMessageDelayMs": 1000,
+    "cpuLimit": "2",
+    "memoryLimit": "2Gi",
+    "mongoPoolSize": 10,
+    "tier": "S",
+    "infraSnapshotHash": "sha256:6458c0b30fdbc9009aaaaddd7df72af688c46e433401cc78c154ce995bb87dc3"
+  },
+  "perPodCapacity": {
+    "maxSafeMsgPerSec": 13.0,
+    "maxSafeVUs": 25,
+    "p95AtMaxMs": 1425,
+    "p99AtMaxMs": 1737,
+    "efficiencyAtMaxPct": 85,
+    "primaryBottleneck": "runtime-cpu",
+    "bottleneckEvidence": "p95 crosses 1500ms at 32.5 VU/pod (65 VU total). CPU at 27% of limit — latency accumulation from event loop, not CPU ceiling. CFS throttle at 31% baseline."
+  },
+  "multiPodScaling": [
+    { "pods": 1, "totalMsgPerSec": 12.03, "scalingFactor": 1.0, "sharedBottleneck": null },
+    { "pods": 2, "totalMsgPerSec": 26.0, "scalingFactor": 1.0, "sharedBottleneck": null }
+  ],
+  "datastoreObserved": {
+    "mongoCpuMilli": 155,
+    "mongoCpuPctOfLimit": 1,
+    "mongoWriteLatencyMs": null,
+    "mongoIopsWrite": null,
+    "redisCpuMilli": 33,
+    "redisCpuPctOfLimit": 1
+  },
+  "validationStatus": "accepted",
+  "validationNotes": "Baseline run on current dev config (500m/2 CPU, 1Gi/2Gi memory). Per-pod capacity consistent with prior run 7281213 (12.03 msg/s at 1/4 CPU) and 7308523 (13.0 msg/s at 1/4 CPU). MongoDB IOPS not captured from Groundcover — mongoIopsWrite set to null."
+}

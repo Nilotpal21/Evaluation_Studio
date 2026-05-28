@@ -1,0 +1,94 @@
+id: test-integrity
+title: Test Integrity and Regression Coverage
+enforcement: blocking
+severity_default: high
+rubric_concern: 16
+
+protects:
+  - tests proving intended behavior rather than implementation details
+  - regression safety for known failures
+  - realistic black-box coverage at public boundaries
+
+review_when:
+  - always — especially when behavior, routing, persistence, auth, or orchestration changes
+
+review_questions:
+  - Do tests validate the promised domain behavior, not just the current implementation shape?
+  - Would the tests survive an internal refactor that preserves behavior?
+  - Is there a regression test for the exact bug or failure mode?
+  - Are tests at the correct level — unit for pure logic, integration for service boundaries, E2E for public behavior?
+  - Do E2E tests avoid mocking platform components and internal modules?
+  - Are deny paths, failure paths, and concurrency paths covered where they matter?
+
+proof_expected:
+  - new or updated regression tests for changed behavior
+  - public-boundary tests for routes, WebSocket, SDK, workflow, or queue behavior
+  - no codebase-component mocking in E2E coverage
+  - assertions against expected contract, not incidental implementation details
+
+scope:
+  globs:
+    - apps/**/src/**/__tests__/**/*.ts
+    - apps/**/src/**/*.test.ts
+    - apps/**/e2e/**/*.ts
+    - packages/**/src/**/__tests__/**/*.ts
+    - packages/**/src/**/*.test.ts
+
+references:
+  docs:
+    - CLAUDE.md#test-architecture--fix-the-code-not-the-test
+    - CLAUDE.md#e2e-test-standards
+  related_concerns:
+    - clean-contracts
+
+detectors:
+  - id: no-platform-mocks-in-tests
+    kind: grep
+    severity: critical
+    # Platform-component mocks are forbidden. Only external third-party
+    # services may be mocked, and only via dependency injection.
+    pattern: "(vi|jest)\\.mock\\(['\"]@(agent-platform|abl)/"
+    message: |
+      Mocking platform components (@agent-platform/*, @abl/*) is forbidden.
+      If code cannot be tested without mocking platform modules, refactor
+      the code — extract pure functions, break dependency chains, use DI.
+    fix_hint: |
+      Remove the mock. Refactor the code under test to accept dependencies
+      via constructor/function parameters. See CLAUDE.md
+      "Test Architecture — Fix the Code, Not the Test".
+
+  - id: no-mongoose-model-in-e2e
+    kind: grep
+    severity: high
+    glob: 'apps/**/e2e/**/*.ts'
+    pattern: "from ['\"]mongoose['\"]|require\\(['\"]mongoose['\"]\\)"
+    message: |
+      E2E tests must interact only via the HTTP API. Direct Mongoose access
+      bypasses auth, validation, and tenant isolation middleware and hides
+      real integration bugs.
+    fix_hint: |
+      Seed data via POST endpoints, assert via GET responses. Start Express
+      on random ports and exercise the full middleware chain.
+
+  - id: no-todo-stub-tests
+    kind: grep
+    severity: medium
+    pattern: '//\s*TODO[^\n]*(test|port|fixture|stub)'
+    message: |
+      TODO stubs in committed test files create false confidence. Either
+      complete the test or delete it until the infrastructure is ready.
+    fix_hint: |
+      Implement the missing infrastructure (real server, real DB via
+      MongoMemoryServer, real fixtures) or remove the placeholder.
+
+stage_hooks:
+  - stage: implementation
+    inject_checklist: true
+  - stage: testing
+    inject_checklist: true
+  - stage: oracle-analysis
+    as_review_lens: true
+
+acceptance:
+  - when: 'new E2E test file in apps/*/e2e/'
+    requires: 'no vi.mock / jest.mock calls; no direct Mongoose imports'

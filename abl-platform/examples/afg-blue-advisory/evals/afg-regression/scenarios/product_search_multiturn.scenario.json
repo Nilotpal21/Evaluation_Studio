@@ -1,0 +1,20 @@
+{
+  "name": "Product Search Multi-Turn",
+  "description": "Tests 3-turn product search flow: greeting → product query with filters → follow-up refinement. Validates tool calling, filter extraction, and context retention.",
+  "category": "tool_usage",
+  "difficulty": "medium",
+  "entryAgent": "GuardRail_Supervisor",
+  "initialMessage": "Hi",
+  "expectedOutcome": "Agent performs product search with extracted filters (color:red, gender:men, price_max:500), returns results, then handles Nike follow-up refinement",
+  "maxTurns": 6,
+  "maxToolCalls": 2,
+  "tags": ["product-search", "multi-turn", "tool-calling", "filter-extraction"],
+  "agentPath": ["GuardRail_Supervisor", "Advisor_Agent"],
+  "expectedMilestones": [
+    "supervisor_routes_to_advisor",
+    "product_search_tool_called",
+    "results_presented_with_context",
+    "follow_up_uses_existing_context",
+    "nike_filter_applied"
+  ]
+}

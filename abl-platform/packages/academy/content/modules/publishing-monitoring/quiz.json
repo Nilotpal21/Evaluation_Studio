@@ -1,0 +1,98 @@
+{
+  "moduleId": "publishing-monitoring",
+  "passThreshold": 0.8,
+  "questions": [
+    {
+      "id": "pm-q1",
+      "type": "mcq",
+      "stem": "A team deploys a new version of their booking agent to production, but customers report errors. The team needs to revert quickly. What happens when they click Rollback on the problematic deployment?",
+      "options": [
+        {
+          "id": "a",
+          "text": "The problematic deployment is deleted and all active sessions are immediately terminated"
+        },
+        {
+          "id": "b",
+          "text": "The current deployment is retired and the previous deployment is reactivated; existing sessions on the old deployment complete naturally during the draining period",
+          "correct": true
+        },
+        {
+          "id": "c",
+          "text": "The agent code is automatically reverted to the last Git commit"
+        }
+      ],
+      "explanation": "Rollback retires the current problematic deployment and reactivates the previous one. The deployment lifecycle uses three statuses: active (receiving new sessions), draining (no new sessions but existing sessions complete naturally), and retired (fully decommissioned). This ensures no customer conversations are abruptly cut off during the transition."
+    },
+    {
+      "id": "pm-q2",
+      "type": "mcq",
+      "stem": "A company wants to test agent changes in a production-like environment before real customers see them. They want to use the same tools and LLM configuration as production. Which Agent Platform workflow supports this?",
+      "options": [
+        {
+          "id": "a",
+          "text": "Test directly in the Studio chat panel, which is identical to production"
+        },
+        {
+          "id": "b",
+          "text": "Deploy to the staging environment with production-like configuration, validate with eval sets, then promote to production",
+          "correct": true
+        },
+        {
+          "id": "c",
+          "text": "Create a separate workspace that mirrors production settings"
+        }
+      ],
+      "explanation": "The platform supports three environments per project: dev, staging, and production. Each environment has its own deployments, environment variables, channel bindings, and model overrides. Deploy to staging with production-like configuration, run eval sets to validate, then promote to production. The promote API copies the staging deployment to production without rebuilding."
+    },
+    {
+      "id": "pm-q3",
+      "type": "fill-blank",
+      "stem": "The ___ metric on the Agent Platform Insights dashboard measures the percentage of sessions resolved without human escalation, indicating how effectively agents handle conversations autonomously.",
+      "answer": "Containment Rate",
+      "acceptAlternatives": ["containment rate", "containment", "Containment rate", "Containment"],
+      "explanation": "Containment Rate is one of the five KPI metric cards on the Insights dashboard. It measures the percentage of sessions that reached a successful outcome without requiring a human agent. A high containment rate indicates the AI agent is effectively handling conversations. The other KPI cards show Sessions, Messages, Tokens, and Estimated Cost."
+    },
+    {
+      "id": "pm-q4",
+      "type": "mcq",
+      "stem": "A DevOps team wants to automate deployments so that every push to the 'main' Git branch automatically deploys to production. Which Agent Platform capability enables this?",
+      "options": [
+        {
+          "id": "a",
+          "text": "Environment variable feature flags that toggle agent behavior"
+        },
+        {
+          "id": "b",
+          "text": "Git integration with auto-deploy configured to trigger on pushes to the main branch, which auto-versions, compiles, validates, and deploys agents",
+          "correct": true
+        },
+        {
+          "id": "c",
+          "text": "A scheduled deployment that checks the repository every hour"
+        }
+      ],
+      "explanation": "The Git integration supports auto-deploy: when a push lands on the configured branch, the platform automatically pulls the latest files, validates and compiles all agents, creates auto-versioned snapshots, and creates a new deployment. Teams can map different branches to different environments (develop to dev, staging to staging, main to production) for a full GitOps workflow."
+    },
+    {
+      "id": "pm-q5",
+      "type": "mcq",
+      "stem": "A project manager notices LLM costs doubled last month. Which Agent Platform analytics feature helps identify the root cause?",
+      "options": [
+        {
+          "id": "a",
+          "text": "The trace viewer, which shows individual session execution details"
+        },
+        {
+          "id": "b",
+          "text": "The Insights dashboard cost breakdown table, which shows spending by agent, plus the billing page breakdown by model and daily usage trends to identify cost spikes",
+          "correct": true
+        },
+        {
+          "id": "c",
+          "text": "The guardrail audit tab, which tracks content violations"
+        }
+      ],
+      "explanation": "The Insights dashboard includes a cost breakdown table grouped by agent name, sessions handled, tokens consumed, and estimated cost. The billing page adds breakdowns by provider, by model (with input/output tokens and cost), and a daily usage trend chart to spot spikes. Together, these identify whether the cost increase comes from a specific agent, a model change, or a usage spike."
+    }
+  ]
+}

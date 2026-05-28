@@ -1,0 +1,52 @@
+{
+  "organizationName": "ServiceNow",
+  "industry": "Technology",
+  "keyTerms": [
+    "IT service management",
+    "workflow automation",
+    "incident management",
+    "change management",
+    "service catalog",
+    "CMDB",
+    "ITSM",
+    "digital workflow",
+    "employee experience",
+    "low-code platform",
+    "integration hub",
+    "service portal",
+    "knowledge management"
+  ],
+  "acronyms": {
+    "ITSM": "IT Service Management",
+    "ITOM": "IT Operations Management",
+    "CMDB": "Configuration Management Database",
+    "SLA": "Service Level Agreement",
+    "ITIL": "Information Technology Infrastructure Library",
+    "CSM": "Customer Service Management",
+    "HR": "Human Resources",
+    "CI": "Configuration Item"
+  },
+  "departmentBoundaries": [
+    {
+      "product1": "incident-management",
+      "product2": "problem-management",
+      "reasoning": "Incidents are single events while problems are root causes of multiple incidents; teams often create wrong record types and escalation paths differ"
+    },
+    {
+      "product1": "itsm",
+      "product2": "itom",
+      "reasoning": "ITSM focuses on service delivery while ITOM focuses on infrastructure operations; both manage IT but at different layers and with different stakeholders"
+    },
+    {
+      "product1": "employee-workflows",
+      "product2": "customer-workflows",
+      "reasoning": "Employee workflows are internal (HR, IT) while customer workflows are external (CSM); similar automation capabilities but different use cases and permissions"
+    }
+  ],
+  "productSpecificNames": {
+    "itsm": ["IT Service Management", "ITSM Pro", "Service Operations"],
+    "itom": ["IT Operations Management", "Cloud Management", "Infrastructure Monitoring"],
+    "csm": ["Customer Service Management", "Customer Workflows"],
+    "platform": ["Now Platform", "App Engine", "Integration Hub", "Flow Designer"]
+  }
+}

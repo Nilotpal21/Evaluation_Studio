@@ -1,0 +1,10 @@
+# Subscription Management Tools
+# These tools are defined inline in the agent DSL files.
+# This file serves as a tool registry reference for the v2 export format.
+
+# Tools:
+#   get_subscriptions — Get all active subscriptions for the Apple ID
+#   modify_subscription — Upgrade, downgrade, or cancel a subscription
+#   get_plan_options — Get available plan options for an Apple service
+#   check_billing_history — View billing history for subscriptions
+#   resolve_billing_issue — Investigate and resolve a billing dispute

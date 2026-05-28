@@ -1,0 +1,43 @@
+AGENT: Transfer_To_SAC
+GOAL: "Handle transfer to human agents (SAC) with proper context handoff"
+
+EXECUTION:
+  model: gpt-4.1
+  temperature: 0.5
+  max_tokens: 2000
+  max_iterations: 10
+  inline_gather: true
+
+PERSONA: |
+  Handoff Coordinator for Saludsa.
+  Prepares customers for transfer to human agents.
+  Collects relevant context and sets appropriate expectations.
+  Uses formal Spanish (usted).
+
+LIMITATIONS:
+  - Cannot guarantee specific wait times
+  - Cannot resolve issues that require human agents
+  - Cannot transfer outside business hours (Mon-Fri 8:00-18:00)
+
+TOOLS:
+  get_queue_status(queue_name: string) -> QueueStatus
+  prepare_handoff_context(user_id: string, conversation_summary: string) -> HandoffContext
+  schedule_callback(user_id: string, preferred_time: string) -> CallbackResult
+
+GATHER:
+  transfer_reason:
+    prompt: "¿Podría indicarme brevemente el motivo de su consulta para informar al agente?"
+    type: string
+    required: false
+
+ESCALATE:
+  triggers:
+    - WHEN: outside_business_hours == true
+      REASON: "Transfer requested outside business hours"
+      PRIORITY: low
+
+COMPLETE:
+  - WHEN: transfer.outside_business_hours == false
+    RESPOND: "Lo estoy transfiriendo con uno de nuestros agentes. Por favor permanezca en línea."
+  - WHEN: transfer.outside_business_hours == true
+    RESPOND: "Nuestros agentes no están disponibles en este momento. Nuestro horario de atención es de Lunes a Viernes, 8:00 a 18:00. ¿Desea dejar un mensaje?"

@@ -1,0 +1,45 @@
+AGENT: HotelSearch
+GOAL: Help users find and compare hotels for their trips
+
+EXECUTION:
+  model: gpt-4.1
+  temperature: 0.7
+  max_tokens: 2000
+  max_iterations: 10
+  inline_gather: true
+
+PERSONA:
+  Friendly and knowledgeable travel assistant who helps users
+  find the perfect hotel for their needs.
+
+TOOLS:
+  FROM "./tools/hotels-api.tools.abl" USE: search_hotels, get_hotel
+
+  # Local contract-only tool (implementation injected by runtime)
+  format_results(hotels: Hotel[]) -> string
+    description: "Format hotel results for display"
+
+  # MCP tool
+  get_weather(location: string) -> {temp: number, conditions: string}
+    type: mcp
+    server: "weather-service"
+    tool: "get_current_weather"
+    description: "Get current weather for a destination"
+
+GATHER:
+  destination:
+    prompt: "Where would you like to stay?"
+    type: string
+    required: true
+  checkin:
+    prompt: "When is your check-in date?"
+    type: date
+    required: true
+  checkout:
+    prompt: "When is your check-out date?"
+    type: date
+    required: true
+
+COMPLETE:
+  WHEN: search_hotels.results.length > 0
+    RESPOND: "I found some great options for you!"

@@ -1,0 +1,153 @@
+pipeline:
+  name: CI - PR Cancel Stale
+  identifier: ci_pr_cancel
+  projectIdentifier: ABLPlatform
+  orgIdentifier: default
+  description: |
+    Lightweight pipeline triggered on PR merge or decline.
+    Cancels any running CI - PR Auto Detect executions for the merged/declined PR.
+    Uses Harness API with ci-cancel-api-token secret (ci-cancel-bot service account).
+  tags:
+    pipeline_type: ci
+    trigger: pr-cancel
+  properties:
+    ci:
+      codebase:
+        connectorRef: ablplatformconnector
+        repoName: abl-platform
+        build: <+input>
+  stages:
+    - stage:
+        name: Cancel Stale Builds
+        identifier: cancel_stale
+        type: CI
+        spec:
+          cloneCodebase: false
+          infrastructure:
+            type: KubernetesDirect
+            spec:
+              connectorRef: ABL_AKS_Dev
+              namespace: default
+              automountServiceAccountToken: true
+              nodeSelector:
+                workload: ci
+              tolerations:
+                - key: workload
+                  operator: Equal
+                  value: ci
+                  effect: NoSchedule
+              os: Linux
+          execution:
+            steps:
+              - step:
+                  type: Run
+                  name: Cancel Running Executions
+                  identifier: cancel_running
+                  spec:
+                    connectorRef: Docker
+                    image: alpine:3.19
+                    shell: Sh
+                    command: |
+                      apk add --no-cache curl jq >/dev/null 2>&1
+
+                      # Use trigger payload directly — codebase.prNumber is null when cloneCodebase: false
+                      PR_NUMBER="<+trigger.payload.pullrequest.id>"
+                      ACCOUNT_ID="<+account.identifier>"
+                      ORG_ID="default"
+                      PROJECT_ID="ABLPlatform"
+                      PIPELINE_ID="ci_pr_auto"
+                      API_KEY="<+secrets.getValue('ci-cancel-api-token')>"
+                      LIST_URL="https://app.harness.io/pipeline/api/pipelines/execution"
+                      INTERRUPT_URL="https://app.harness.io/pipeline/api/pipeline/execute/interrupt"
+
+                      if [ -z "$PR_NUMBER" ] || [ "$PR_NUMBER" = "null" ]; then
+                        echo "No PR number available — nothing to cancel"
+                        exit 0
+                      fi
+
+                      echo "PR #${PR_NUMBER} — looking for running executions to cancel..."
+
+                      echo "=== Cancelling running CI builds for PR #${PR_NUMBER} ==="
+
+                      # List running executions for ci_pr_auto pipeline
+                      # Use -s (silent) but NOT -f (fail) — we handle errors ourselves.
+                      # Harness injects set -e, so curl -f would exit the script on 4xx/5xx.
+                      HTTP_RESP=$(curl -s --max-time 30 -w "\n%{http_code}" -X POST \
+                        "${LIST_URL}/summary?accountIdentifier=${ACCOUNT_ID}&orgIdentifier=${ORG_ID}&projectIdentifier=${PROJECT_ID}&page=0&size=10" \
+                        -H "x-api-key: ${API_KEY}" \
+                        -H "Content-Type: application/json" \
+                        -d "{
+                          \"filterType\": \"PipelineExecution\",
+                          \"pipelineIdentifiers\": [\"${PIPELINE_ID}\"],
+                          \"status\": [\"Running\", \"AsyncWaiting\", \"TaskWaiting\", \"Queued\", \"Waiting\"]
+                        }" 2>/dev/null || echo "CURL_FAILED")
+                      HTTP_STATUS=$(echo "$HTTP_RESP" | tail -1)
+                      RESPONSE=$(echo "$HTTP_RESP" | sed '$d')
+
+                      if [ "$HTTP_STATUS" != "200" ]; then
+                        echo "Harness API returned HTTP ${HTTP_STATUS}"
+                        echo "Response: $(echo "$RESPONSE" | head -5)"
+                        echo "Check API key permissions (need: pipeline execution list + abort)"
+                        exit 0
+                      fi
+
+                      # Debug: show running executions and their PR info
+                      EXEC_COUNT=$(echo "$RESPONSE" | jq '.data.totalElements // 0' 2>/dev/null)
+                      echo "Found ${EXEC_COUNT} running execution(s) for ci_pr_auto"
+                      echo "Looking for PR #${PR_NUMBER}..."
+                      echo ""
+                      echo "=== Execution details ==="
+                      echo "$RESPONSE" | jq -r '
+                        .data.content[]? |
+                        "  ID: \(.planExecutionId)
+                          PR (ciExecutionInfoDTO): \(.moduleInfo.ci.ciExecutionInfoDTO.pullRequest.id // "N/A")
+                          PR (prNumber): \(.moduleInfo.ci.prNumber // "N/A")
+                          PR (sourceEventId): \(.executionTriggerInfo.triggeredBy.extraInfo.sourceEventId // "N/A")
+                          Status: \(.status)"
+                      ' 2>/dev/null || echo "  (failed to parse response)"
+                      echo "========================="
+                      echo ""
+
+                      # Extract execution IDs for this PR number
+                      # PR number in the execution payload can be string or number, handle both
+                      EXECUTION_IDS=$(echo "$RESPONSE" | jq -r "
+                        .data.content[]? |
+                        select(
+                          (.moduleInfo.ci.ciExecutionInfoDTO.pullRequest.id == ${PR_NUMBER}) or
+                          (.moduleInfo.ci.ciExecutionInfoDTO.pullRequest.id == \"${PR_NUMBER}\") or
+                          (.moduleInfo.ci.prNumber == \"${PR_NUMBER}\")
+                        ) |
+                        .planExecutionId
+                      " 2>/dev/null || echo "")
+
+                      if [ -z "$EXECUTION_IDS" ]; then
+                        echo "No running executions found for PR #${PR_NUMBER}"
+                        exit 0
+                      fi
+
+                      CANCELLED=0
+                      for EXEC_ID in $EXECUTION_IDS; do
+                        echo "  Aborting execution: ${EXEC_ID}"
+                        HTTP_CODE=$(curl -s --max-time 30 -o /dev/null -w "%{http_code}" -X PUT \
+                          "${INTERRUPT_URL}/${EXEC_ID}?accountIdentifier=${ACCOUNT_ID}&orgIdentifier=${ORG_ID}&projectIdentifier=${PROJECT_ID}&interruptType=AbortAll" \
+                          -H "x-api-key: ${API_KEY}" \
+                          -H "Content-Type: application/json" 2>/dev/null) || HTTP_CODE="000"
+                        if [ "$HTTP_CODE" = "200" ]; then
+                          echo "    ✓ Aborted successfully"
+                          CANCELLED=$((CANCELLED + 1))
+                        else
+                          echo "    ✗ Failed (HTTP ${HTTP_CODE})"
+                        fi
+                      done
+
+                      echo "Done — cancelled ${CANCELLED} execution(s)"
+                    resources:
+                      limits:
+                        memory: 256Mi
+                        cpu: '0.5'
+        failureStrategies:
+          - onFailure:
+              errors:
+                - AllErrors
+              action:
+                type: MarkAsFailure

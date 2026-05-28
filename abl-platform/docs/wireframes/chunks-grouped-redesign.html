@@ -1,0 +1,1496 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Chunks Tab Redesign — Live Interactive Prototype</title>
+    <style>
+      :root {
+        --bg: #1a1a2e;
+        --bg-elevated: #1e1e36;
+        --bg-muted: #252542;
+        --bg-subtle: #2a2a4a;
+        --border: #333360;
+        --border-accent: #6366f1;
+        --text: #e2e2f0;
+        --text-muted: #8888aa;
+        --text-subtle: #666688;
+        --accent: #6366f1;
+        --accent-light: rgba(99, 102, 241, 0.15);
+        --success: #22c55e;
+        --warning: #f59e0b;
+        --error: #ef4444;
+        --highlight: rgba(245, 158, 11, 0.35);
+        --radius: 10px;
+      }
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        min-height: 100vh;
+      }
+
+      /* ── Page shell ─────────────────────────────────────────────── */
+      .page-shell {
+        max-width: 1100px;
+        margin: 0 auto;
+        padding: 20px 24px;
+      }
+
+      /* ── Breadcrumb / KB header (static context) ───────────────── */
+      .kb-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 0 8px;
+        border-bottom: 1px solid var(--border);
+        margin-bottom: 6px;
+      }
+      .kb-back {
+        color: var(--text-muted);
+        cursor: pointer;
+        font-size: 18px;
+      }
+      .kb-name {
+        font-size: 18px;
+        font-weight: 600;
+      }
+      .kb-stats {
+        font-size: 12px;
+        color: var(--text-muted);
+        display: flex;
+        gap: 12px;
+        margin-left: 16px;
+      }
+      .kb-badge {
+        padding: 2px 10px;
+        border-radius: 20px;
+        font-size: 11px;
+        font-weight: 600;
+        margin-left: auto;
+      }
+      .kb-badge.active {
+        background: rgba(34, 197, 94, 0.15);
+        color: var(--success);
+      }
+
+      /* ── Section tabs ──────────────────────────────────────────── */
+      .section-tabs {
+        display: flex;
+        gap: 0;
+        border-bottom: 1px solid var(--border);
+        margin-bottom: 16px;
+      }
+      .section-tab {
+        padding: 10px 20px;
+        font-size: 13px;
+        font-weight: 500;
+        color: var(--text-muted);
+        cursor: pointer;
+        border-bottom: 2px solid transparent;
+        transition: all 0.15s;
+      }
+      .section-tab:hover {
+        color: var(--text);
+      }
+      .section-tab.active {
+        color: var(--text);
+        border-bottom-color: var(--accent);
+      }
+
+      /* ── Sub-tabs (Sources / Documents / Chunks) ───────────────── */
+      .sub-tabs {
+        display: flex;
+        gap: 0;
+        margin-bottom: 12px;
+      }
+      .sub-tab {
+        padding: 6px 14px;
+        font-size: 13px;
+        font-weight: 500;
+        color: var(--text-muted);
+        cursor: pointer;
+        border-radius: 6px;
+        transition: all 0.15s;
+      }
+      .sub-tab:hover {
+        color: var(--text);
+        background: var(--bg-muted);
+      }
+      .sub-tab.active {
+        color: var(--text);
+        background: var(--bg-muted);
+      }
+
+      /* ── Stats bar ─────────────────────────────────────────────── */
+      .stats-bar {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        padding: 8px 2px;
+        font-size: 12px;
+        color: var(--text-muted);
+        margin-bottom: 8px;
+      }
+      .stats-bar .count {
+        font-weight: 600;
+        color: var(--text);
+      }
+      .stats-bar .success {
+        color: var(--success);
+      }
+      .stats-bar .warning {
+        color: var(--warning);
+      }
+      .stats-bar .error-c {
+        color: var(--error);
+      }
+
+      /* ── Filter bar ────────────────────────────────────────────── */
+      .filter-bar {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 12px;
+      }
+      .search-wrap {
+        position: relative;
+        flex: 1;
+        max-width: 400px;
+      }
+      .search-wrap svg {
+        position: absolute;
+        left: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 14px;
+        height: 14px;
+        color: var(--text-subtle);
+        pointer-events: none;
+      }
+      .search-input {
+        width: 100%;
+        padding: 7px 32px 7px 32px;
+        border-radius: 8px;
+        border: 1px solid var(--border);
+        background: var(--bg-subtle);
+        color: var(--text);
+        font-size: 13px;
+        outline: none;
+        transition: border 0.15s;
+      }
+      .search-input:focus {
+        border-color: var(--border-accent);
+      }
+      .search-clear {
+        position: absolute;
+        right: 8px;
+        top: 50%;
+        transform: translateY(-50%);
+        background: none;
+        border: none;
+        color: var(--text-subtle);
+        cursor: pointer;
+        padding: 2px;
+        display: none;
+        font-size: 14px;
+        line-height: 1;
+      }
+      .search-clear:hover {
+        color: var(--text);
+      }
+      .search-wrap.has-query .search-clear {
+        display: block;
+      }
+
+      .sort-wrap {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 12px;
+        color: var(--text-muted);
+      }
+      .sort-select {
+        background: var(--bg-muted);
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        color: var(--text);
+        font-size: 11px;
+        padding: 4px 8px;
+        outline: none;
+        cursor: pointer;
+      }
+
+      .chips {
+        display: flex;
+        gap: 5px;
+        margin-left: auto;
+        flex-wrap: wrap;
+      }
+      .chip {
+        padding: 4px 10px;
+        border-radius: 20px;
+        font-size: 11px;
+        font-weight: 500;
+        border: none;
+        cursor: pointer;
+        transition: all 0.15s;
+      }
+      .chip.active {
+        background: var(--accent);
+        color: white;
+      }
+      .chip:not(.active) {
+        background: var(--bg-muted);
+        color: var(--text-muted);
+      }
+      .chip:hover:not(.active) {
+        color: var(--text);
+        background: var(--bg-subtle);
+      }
+
+      /* ── Per-document chunk search (inside expanded section) ──── */
+      .doc-chunk-search {
+        position: relative;
+        margin-bottom: 10px;
+      }
+      .doc-chunk-search svg {
+        position: absolute;
+        left: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 13px;
+        height: 13px;
+        color: var(--text-subtle);
+        pointer-events: none;
+      }
+      .doc-chunk-search input {
+        width: 100%;
+        padding: 6px 30px 6px 30px;
+        border-radius: 7px;
+        border: 1px solid var(--border);
+        background: var(--bg-subtle);
+        color: var(--text);
+        font-size: 12px;
+        outline: none;
+        transition: border 0.15s;
+      }
+      .doc-chunk-search input:focus {
+        border-color: var(--border-accent);
+      }
+      .doc-chunk-search .dcs-clear {
+        position: absolute;
+        right: 8px;
+        top: 50%;
+        transform: translateY(-50%);
+        background: none;
+        border: none;
+        color: var(--text-subtle);
+        cursor: pointer;
+        padding: 2px;
+        font-size: 13px;
+        line-height: 1;
+        display: none;
+      }
+      .doc-chunk-search .dcs-clear:hover {
+        color: var(--text);
+      }
+      .doc-chunk-search.has-query .dcs-clear {
+        display: block;
+      }
+      .doc-chunk-search .dcs-count {
+        position: absolute;
+        right: 28px;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 10px;
+        color: var(--accent);
+        font-weight: 500;
+        pointer-events: none;
+      }
+
+      /* ── Main container ────────────────────────────────────────── */
+      .chunks-container {
+        background: var(--bg-elevated);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        overflow: hidden;
+      }
+
+      /* ── Document row ──────────────────────────────────────────── */
+      .doc-row {
+        border-bottom: 1px solid var(--border);
+      }
+      .doc-row:last-child {
+        border-bottom: none;
+      }
+      .doc-header {
+        display: flex;
+        align-items: center;
+        padding: 11px 16px;
+        gap: 10px;
+        cursor: pointer;
+        transition: background 0.12s;
+        user-select: none;
+      }
+      .doc-header:hover {
+        background: var(--bg-muted);
+      }
+      .doc-row.open > .doc-header {
+        background: rgba(99, 102, 241, 0.04);
+      }
+      .doc-chevron {
+        width: 16px;
+        text-align: center;
+        color: var(--text-muted);
+        transition: transform 0.2s ease;
+        flex-shrink: 0;
+        font-size: 10px;
+      }
+      .doc-row.open > .doc-header .doc-chevron {
+        transform: rotate(90deg);
+      }
+      .doc-icon {
+        font-size: 15px;
+        flex-shrink: 0;
+      }
+      .doc-name {
+        font-size: 13px;
+        font-weight: 500;
+        flex: 1;
+        min-width: 0;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .doc-meta {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        font-size: 12px;
+        color: var(--text-muted);
+        flex-shrink: 0;
+      }
+      .doc-meta .tokens {
+        font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+        font-size: 11px;
+      }
+      .match-count {
+        font-size: 10px;
+        color: var(--accent);
+        background: var(--accent-light);
+        padding: 1px 6px;
+        border-radius: 8px;
+        font-weight: 600;
+      }
+
+      /* ── Status badge ──────────────────────────────────────────── */
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 2px 8px;
+        border-radius: 12px;
+        font-size: 10px;
+        font-weight: 500;
+      }
+      .badge::before {
+        content: '';
+        width: 5px;
+        height: 5px;
+        border-radius: 50%;
+      }
+      .badge.indexed {
+        background: rgba(34, 197, 94, 0.1);
+        color: var(--success);
+      }
+      .badge.indexed::before {
+        background: var(--success);
+      }
+      .badge.pending {
+        background: rgba(245, 158, 11, 0.1);
+        color: var(--warning);
+      }
+      .badge.pending::before {
+        background: var(--warning);
+      }
+      .badge.error {
+        background: rgba(239, 68, 68, 0.1);
+        color: var(--error);
+      }
+      .badge.error::before {
+        background: var(--error);
+      }
+      .badge.embedded {
+        background: rgba(99, 102, 241, 0.1);
+        color: var(--accent);
+      }
+      .badge.embedded::before {
+        background: var(--accent);
+      }
+
+      /* ── Expanded area ─────────────────────────────────────────── */
+      .doc-expanded {
+        overflow: hidden;
+        max-height: 0;
+        transition:
+          max-height 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+          opacity 0.25s ease;
+        opacity: 0;
+      }
+      .doc-row.open .doc-expanded {
+        max-height: 2000px;
+        opacity: 1;
+      }
+      .expanded-inner {
+        margin: 0 16px 14px 42px;
+        background: var(--bg);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 14px;
+      }
+
+      /* ── Stats cards ───────────────────────────────────────────── */
+      .stats-cards {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 8px;
+        margin-bottom: 14px;
+      }
+      .stat-card {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 10px;
+        border-radius: 8px;
+        border: 1px solid var(--border);
+        background: var(--bg-elevated);
+      }
+      .stat-card .s-icon {
+        width: 28px;
+        height: 28px;
+        border-radius: 6px;
+        background: var(--bg-muted);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+        color: var(--text-muted);
+        flex-shrink: 0;
+      }
+      .stat-card .s-label {
+        font-size: 10px;
+        color: var(--text-muted);
+      }
+      .stat-card .s-value {
+        font-size: 15px;
+        font-weight: 600;
+      }
+
+      /* ── Token distribution toggle ─────────────────────────────── */
+      .dist-toggle {
+        font-size: 11px;
+        color: var(--accent);
+        cursor: pointer;
+        background: none;
+        border: none;
+        margin-bottom: 10px;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+      }
+      .dist-toggle:hover {
+        text-decoration: underline;
+      }
+      .dist-toggle .arrow {
+        transition: transform 0.2s;
+        font-size: 8px;
+      }
+      .dist-toggle.open .arrow {
+        transform: rotate(90deg);
+      }
+      .token-dist {
+        overflow: hidden;
+        max-height: 0;
+        transition: max-height 0.3s ease;
+        margin-bottom: 4px;
+      }
+      .token-dist.visible {
+        max-height: 80px;
+        margin-bottom: 12px;
+      }
+      .token-bar {
+        display: flex;
+        gap: 2px;
+        height: 24px;
+        border-radius: 6px;
+        overflow: hidden;
+        background: var(--bg-muted);
+        padding: 2px;
+      }
+      .token-seg {
+        border-radius: 3px;
+        transition: all 0.2s;
+        cursor: pointer;
+        position: relative;
+      }
+      .token-seg:hover {
+        filter: brightness(1.3);
+        transform: scaleY(1.1);
+      }
+      .token-seg .tip {
+        display: none;
+        position: absolute;
+        bottom: calc(100% + 6px);
+        left: 50%;
+        transform: translateX(-50%);
+        background: var(--bg-elevated);
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        padding: 4px 8px;
+        font-size: 10px;
+        white-space: nowrap;
+        color: var(--text);
+        pointer-events: none;
+        z-index: 10;
+      }
+      .token-seg:hover .tip {
+        display: block;
+      }
+      .token-labels {
+        display: flex;
+        justify-content: space-between;
+        font-size: 10px;
+        color: var(--text-subtle);
+        margin-top: 3px;
+      }
+
+      /* ── Chunk list ────────────────────────────────────────────── */
+      .chunk-list {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+        max-height: 500px;
+        overflow-y: auto;
+      }
+      .chunk-list::-webkit-scrollbar {
+        width: 4px;
+      }
+      .chunk-list::-webkit-scrollbar-thumb {
+        background: var(--border);
+        border-radius: 2px;
+      }
+      .chunk-connector {
+        position: absolute;
+        left: 17px;
+        top: 14px;
+        bottom: 14px;
+        width: 2px;
+        background: linear-gradient(to bottom, var(--accent), rgba(99, 102, 241, 0.1));
+        border-radius: 1px;
+        pointer-events: none;
+      }
+
+      .chunk-item {
+        position: relative;
+        padding-left: 38px;
+        transition: opacity 0.2s;
+      }
+      .chunk-item.dimmed {
+        opacity: 0.35;
+      }
+      .chunk-item.dimmed:hover {
+        opacity: 0.6;
+      }
+      .chunk-dot {
+        position: absolute;
+        left: 12px;
+        top: 13px;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        border: 2px solid rgba(99, 102, 241, 0.35);
+        background: var(--bg);
+        transition: all 0.2s;
+        z-index: 1;
+      }
+      .chunk-item.has-match .chunk-dot {
+        background: var(--accent);
+        border-color: var(--accent);
+        box-shadow: 0 0 6px rgba(99, 102, 241, 0.4);
+      }
+      .chunk-item.c-open .chunk-dot {
+        background: var(--accent);
+        border-color: var(--accent);
+        transform: scale(1.2);
+      }
+
+      .chunk-card {
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        background: var(--bg-elevated);
+        overflow: hidden;
+        transition: all 0.15s;
+        cursor: pointer;
+      }
+      .chunk-card:hover {
+        border-color: rgba(99, 102, 241, 0.25);
+      }
+      .chunk-item.c-open .chunk-card {
+        border-color: rgba(99, 102, 241, 0.4);
+      }
+      .chunk-head {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 7px 10px;
+      }
+      .c-chevron {
+        color: var(--text-subtle);
+        flex-shrink: 0;
+        transition: transform 0.2s;
+        width: 12px;
+        text-align: center;
+        font-size: 9px;
+      }
+      .chunk-item.c-open .c-chevron {
+        transform: rotate(90deg);
+      }
+      .c-idx {
+        font-size: 11px;
+        font-family: monospace;
+        font-weight: 600;
+        color: var(--accent);
+        flex-shrink: 0;
+      }
+      .c-preview {
+        flex: 1;
+        font-size: 12px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        min-width: 0;
+        line-height: 1.4;
+      }
+      .c-tbar {
+        width: 40px;
+        height: 4px;
+        border-radius: 2px;
+        background: var(--bg-muted);
+        overflow: hidden;
+        flex-shrink: 0;
+      }
+      .c-tfill {
+        height: 100%;
+        border-radius: 2px;
+        background: rgba(99, 102, 241, 0.5);
+      }
+      .c-tok {
+        font-size: 11px;
+        font-family: monospace;
+        color: var(--text-muted);
+        flex-shrink: 0;
+        min-width: 32px;
+        text-align: right;
+      }
+
+      /* ── Chunk expanded content ────────────────────────────────── */
+      .chunk-body {
+        overflow: hidden;
+        max-height: 0;
+        transition:
+          max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+          opacity 0.2s;
+        opacity: 0;
+      }
+      .chunk-item.c-open .chunk-body {
+        max-height: 400px;
+        opacity: 1;
+      }
+      .chunk-body-inner {
+        border-top: 1px solid var(--border);
+        padding: 10px 12px;
+      }
+      .cb-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 6px;
+      }
+      .cb-label {
+        font-size: 11px;
+        font-weight: 500;
+        color: var(--text-muted);
+      }
+      .copy-btn {
+        font-size: 11px;
+        color: var(--text-muted);
+        cursor: pointer;
+        padding: 3px 8px;
+        border-radius: 4px;
+        border: 1px solid var(--border);
+        background: none;
+        transition: all 0.15s;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+      }
+      .copy-btn:hover {
+        color: var(--text);
+        border-color: var(--text-muted);
+      }
+      .copy-btn.copied {
+        color: var(--success);
+        border-color: var(--success);
+      }
+      .content-box {
+        background: var(--bg);
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        padding: 10px;
+        font-family: 'SF Mono', 'Fira Code', monospace;
+        font-size: 11px;
+        line-height: 1.65;
+        color: rgba(226, 226, 240, 0.85);
+        max-height: 180px;
+        overflow-y: auto;
+        white-space: pre-wrap;
+        word-break: break-word;
+      }
+      .content-box::-webkit-scrollbar {
+        width: 3px;
+      }
+      .content-box::-webkit-scrollbar-thumb {
+        background: var(--border);
+        border-radius: 2px;
+      }
+      .meta-row {
+        display: flex;
+        gap: 14px;
+        margin-top: 8px;
+        font-size: 10px;
+        color: var(--text-subtle);
+      }
+      .meta-section {
+        margin-top: 8px;
+      }
+      .meta-toggle {
+        font-size: 11px;
+        color: var(--text-muted);
+        cursor: pointer;
+        background: var(--bg-muted);
+        border: none;
+        border-radius: 4px;
+        padding: 3px 8px;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+      }
+      .meta-toggle:hover {
+        color: var(--text);
+      }
+
+      /* ── Load more ─────────────────────────────────────────────── */
+      .load-more {
+        text-align: center;
+        padding: 10px;
+      }
+      .load-more-btn {
+        font-size: 12px;
+        color: var(--accent);
+        background: var(--accent-light);
+        border: 1px solid rgba(99, 102, 241, 0.2);
+        border-radius: 6px;
+        padding: 6px 16px;
+        cursor: pointer;
+        transition: all 0.15s;
+      }
+      .load-more-btn:hover {
+        background: rgba(99, 102, 241, 0.25);
+      }
+
+      /* ── Hidden docs ───────────────────────────────────────────── */
+      .hidden-docs {
+        padding: 12px 16px;
+        text-align: center;
+        font-size: 12px;
+        color: var(--text-subtle);
+        border-top: 1px dashed var(--border);
+        display: none;
+      }
+      .hidden-docs a {
+        color: var(--accent);
+        cursor: pointer;
+        text-decoration: none;
+      }
+      .hidden-docs a:hover {
+        text-decoration: underline;
+      }
+
+      /* ── Empty state ───────────────────────────────────────────── */
+      .empty-state {
+        text-align: center;
+        padding: 40px 20px;
+      }
+      .empty-state .e-icon {
+        font-size: 28px;
+        margin-bottom: 8px;
+        opacity: 0.5;
+      }
+      .empty-state .e-title {
+        font-size: 14px;
+        font-weight: 500;
+        margin-bottom: 4px;
+      }
+      .empty-state .e-desc {
+        font-size: 12px;
+        color: var(--text-muted);
+      }
+      .empty-state .e-btn {
+        margin-top: 12px;
+        font-size: 12px;
+        color: var(--accent);
+        background: var(--accent-light);
+        border: 1px solid rgba(99, 102, 241, 0.2);
+        border-radius: 6px;
+        padding: 6px 14px;
+        cursor: pointer;
+      }
+
+      mark {
+        background: var(--highlight);
+        color: var(--text);
+        border-radius: 2px;
+        padding: 0 1px;
+      }
+
+      /* ── Transitions for doc show/hide ─────────────────────────── */
+      .doc-row.hidden-by-search {
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page-shell">
+      <!-- KB Header (static context) -->
+      <div class="kb-header">
+        <span class="kb-back">&#8592;</span>
+        <span class="kb-name">testdocs</span>
+        <div class="kb-stats">
+          <span>2 Sources</span><span>5 Documents</span><span>208 Chunks</span>
+          <span style="color: var(--text-subtle)">Last indexed 10/04/2026, 18:55:30</span>
+        </div>
+        <span class="kb-badge active">Active</span>
+      </div>
+
+      <!-- Section tabs -->
+      <div class="section-tabs">
+        <div class="section-tab">Home</div>
+        <div class="section-tab active">Data</div>
+        <div class="section-tab">Intelligence</div>
+        <div class="section-tab">Search &amp; Test</div>
+      </div>
+
+      <!-- Sub-tabs -->
+      <div class="sub-tabs">
+        <div class="sub-tab">Sources</div>
+        <div class="sub-tab">Documents</div>
+        <div class="sub-tab active">Chunks</div>
+      </div>
+
+      <!-- Stats bar -->
+      <div class="stats-bar" id="statsBar">
+        <span
+          >Total: <span class="count" id="statTotal">208 chunks</span> across
+          <span class="count" id="statDocs">5 documents</span></span
+        >
+        <span class="success">Indexed: 200</span>
+        <span class="warning">Pending: 8</span>
+      </div>
+
+      <!-- Filter bar -->
+      <div class="filter-bar">
+        <div class="search-wrap" id="searchWrap">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8" />
+            <path d="m21 21-4.3-4.3" />
+          </svg>
+          <input
+            class="search-input"
+            id="searchInput"
+            type="text"
+            placeholder="Search chunks across all documents..."
+          />
+          <button class="search-clear" id="searchClear">&times;</button>
+        </div>
+        <div class="sort-wrap">
+          <span>Sort:</span>
+          <select class="sort-select" id="sortSelect">
+            <option value="date">Newest</option>
+            <option value="chunks">Most Chunks</option>
+            <option value="name">Name A-Z</option>
+          </select>
+        </div>
+        <div class="chips" id="chipsBar">
+          <button class="chip active" data-status="all">All</button>
+          <button class="chip" data-status="indexed">indexed</button>
+          <button class="chip" data-status="pending">pending</button>
+          <button class="chip" data-status="embedded">embedded</button>
+          <button class="chip" data-status="error">error</button>
+        </div>
+      </div>
+
+      <!-- Main container -->
+      <div class="chunks-container" id="chunksContainer"></div>
+      <div class="hidden-docs" id="hiddenDocs">
+        <span id="hiddenCount"></span> documents hidden (no matches) &middot;
+        <a href="#" id="showAllLink">Show all</a>
+      </div>
+    </div>
+    <!-- /page-shell -->
+
+    <script>
+      // ── DATA ────────────────────────────────────────────────────────────────
+      const DOCUMENTS = [
+        {
+          id: 'd1',
+          name: 'Manthan Mehta_4.5 yrs of exp-Chatbot Testing - Mumbai (1).pdf',
+          icon: '📄',
+          date: '2026-04-10T17:55:00Z',
+          chunks: [
+            {
+              id: 'c1',
+              idx: 0,
+              tokens: 914,
+              status: 'indexed',
+              content:
+                '## Manthan Mehta Senior Manual/Automation Test Engineer | GCP ACE Certified | Google Cloud\n\nProfessional Summary: 4.5 years of experience in software testing with expertise in manual and automation testing. Skilled in chatbot testing, API testing, and GCP services.\n\nExperience:\n- Senior Test Engineer at TechCorp (2022-Present)\n  - Led chatbot testing automation framework\n  - Reduced regression test time by 60%\n- QA Engineer at DataSoft (2020-2022)\n  - Built API test suites with 95% coverage\n\nCertifications:\n- Google Cloud Professional Cloud Architect\n- GCP Associate Cloud Engineer\n- ISTQB Foundation Level',
+              meta: { source: 'Document Upload', pageCount: 2 },
+            },
+          ],
+        },
+        {
+          id: 'd2',
+          name: 'confluence_prod_space_counts.csv',
+          icon: '📊',
+          date: '2026-04-10T17:50:00Z',
+          chunks: [
+            {
+              id: 'c2',
+              idx: 0,
+              tokens: 0,
+              status: 'indexed',
+              content:
+                '{"type":"table_metadata","tableName":"confluence_prod_space_counts","displayName":"confluence_prod_space_counts","columns":["space_key","space_name","page_count","blog_count","attachment_count","last_updated"]}',
+              meta: { source: 'Document Upload' },
+            },
+          ],
+        },
+        {
+          id: 'd3',
+          name: 'Amlesh - Technical Feedback Form.docx',
+          icon: '📄',
+          date: '2026-04-10T17:55:00Z',
+          chunks: [
+            {
+              id: 'c3',
+              idx: 0,
+              tokens: 118,
+              status: 'indexed',
+              content:
+                "**CANDIDATE INTERVIEW EVALUATION FORM**\n\n**Candidate's Name: Amlesh Jana\nDate: March 15, 2026\nPosition: Senior Software Engineer\nInterviewer: S.Ram Gopal\n\nTechnical Assessment:\n- Data Structures: 8/10\n- Algorithms: 7/10\n- System Design: 9/10\n- Communication: 8/10\n\nOverall Rating: 8/10 — Strong Hire",
+              meta: { source: 'Document Upload', pageCount: 1 },
+            },
+            {
+              id: 'c4',
+              idx: 1,
+              tokens: 979,
+              status: 'indexed',
+              content:
+                '| Category | Score | Comments |\n|----------|-------|----------|\n| Problem Solving | 9/10 | Excellent approach to breaking down complex problems. Demonstrated strong analytical thinking during the system design round. |\n| Code Quality | 8/10 | Clean, well-structured code. Good naming conventions. Could improve on edge case handling. |\n| Architecture | 9/10 | Deep understanding of microservices patterns. Proposed scalable solutions for the distributed cache problem. |\n| Communication | 8/10 | Clear explanations. Good at walking through thought process. Collaborative approach to feedback. |\n| Cultural Fit | 9/10 | Strong alignment with team values. Enthusiastic about mentoring. Previous experience leading small teams. |\n\nDetailed Notes:\nThe candidate demonstrated exceptional skills in system design, particularly around distributed systems and caching strategies. Their approach to the real-time notification service design was thorough and production-ready.',
+              meta: { source: 'Document Upload', pageCount: 2 },
+            },
+            {
+              id: 'c5',
+              idx: 2,
+              tokens: 13,
+              status: 'indexed',
+              content: '**Signature of the Panel: S.Ram Gopal**',
+              meta: { source: 'Document Upload' },
+            },
+          ],
+        },
+        {
+          id: 'd4',
+          name: 'Resume_Rushikesh.pdf',
+          icon: '📄',
+          date: '2026-04-10T17:55:00Z',
+          chunks: [
+            {
+              id: 'c6',
+              idx: 0,
+              tokens: 750,
+              status: 'indexed',
+              content:
+                '## Education | Indian Institute of Technology Patna\nMasters of Technology - Mechatronics Courses - Deep Learning, Computer Vision, IoT\n\nEducation:\nB.Tech in Mechanical Engineering\nIndian Institute of Technology Patna\n2016 - 2020\n\nKey Courses: Machine Learning, Deep Learning, Computer Vision, IoT Systems, Robotics\n\nProjects:\n1. Autonomous Drone Navigation using Deep Reinforcement Learning\n2. Real-time Object Detection for Industrial Quality Control\n3. IoT-based Structural Health Monitoring System\n\nSkills: Python, TensorFlow, PyTorch, OpenCV, ROS, Arduino, Raspberry Pi',
+              meta: { source: 'Document Upload', pageCount: 3 },
+            },
+            {
+              id: 'c7',
+              idx: 1,
+              tokens: 109,
+              status: 'indexed',
+              content:
+                '| Indian Institute of Technology - Mechatronics Courses\nEducation: Deep Learning, Computer Vision, IoT\n\nResearch Interests:\n- Automated structural health monitoring\n- Computer vision for manufacturing\n- Edge AI deployment',
+              meta: { source: 'Document Upload' },
+            },
+            {
+              id: 'c8',
+              idx: 2,
+              tokens: 93,
+              status: 'indexed',
+              content:
+                '## Publication - Title: Tools for Automated Structural Health Monitoring Using Deep Learning and Computer Vision\n\nPublished in: International Journal of Smart Infrastructure\nYear: 2024\nCo-authors: Dr. Anil Kumar, Dr. Priya Singh',
+              meta: { source: 'Document Upload' },
+            },
+          ],
+        },
+        {
+          id: 'd5',
+          name: 'amswer.txt',
+          icon: '📝',
+          date: '2026-04-10T18:45:00Z',
+          chunks: generateLargeDocChunks(),
+        },
+      ];
+
+      function generateLargeDocChunks() {
+        const topics = [
+          'await memory.set_content("test_mem", { github: "include repository data for code search", slack: "include channel messages for team communication" })',
+          '1. ALWAYS include slack source (unconditionally, for every query) 2. For DIRECT questions: Match the doc_source_type exactly',
+          'Extract metadata fields ONLY when the question directly asks for specific requirements/filters. Extract query terms from natural language.',
+          '**Status:** ALWAYS included for EVERY query (no evaluation, keyword checks, or topic alignment) **Documentation sources** are the primary knowledge base.',
+          'For education requirements and professional development pathways, consult the HR policy documents and training materials catalog.',
+          'The platform supports multi-tenant isolation with education-specific compliance frameworks for K-12 and higher education institutions.',
+          'Configuration for the search pipeline includes vector similarity thresholds, reranking models, and chunk overlap parameters.',
+          'When handling user queries about benefits, always cross-reference with the latest compensation guidelines and education assistance programs.',
+          '2. SOURCE TYPE SELECTION (MANDATORY) Select doc_source_type strictly based on explicit query terms and context matching.',
+          '"issue" / "issues" → doc_source_type = ["issue"] "pull request" / "PR" → doc_source_type = ["pullRequest"] "code" → doc_source_type = ["code"]',
+          'The deployment pipeline validates all configuration changes against the staging environment before promoting to production.',
+          'Rate limiting is enforced at the tenant level with configurable thresholds for API calls, search queries, and document ingestion.',
+          'Webhook notifications are sent for document processing completion, search index updates, and system health alerts.',
+          'higher education policy framework and guidelines for implementing AI-powered search across institutional knowledge repositories.',
+          'The analytics dashboard provides real-time metrics on search quality, including relevance scores, click-through rates, and query success rates.',
+        ];
+        const chunks = [];
+        for (let i = 0; i < 200; i++) {
+          const t = topics[i % topics.length];
+          const extra =
+            i > 14
+              ? ` [Chunk variation ${i}: additional context about ${['search', 'indexing', 'queries', 'pipelines', 'models'][i % 5]} configuration and best practices for enterprise deployments.]`
+              : '';
+          chunks.push({
+            id: `c_big_${i}`,
+            idx: i,
+            tokens: 50 + Math.floor(Math.random() * 300),
+            status: i % 25 === 0 ? 'pending' : 'indexed',
+            content: t + extra,
+            meta: { source: 'Document Upload' },
+          });
+        }
+        return chunks;
+      }
+
+      // ── STATE ───────────────────────────────────────────────────────────────
+      let searchQuery = ''; // global chunk content search
+      let docChunkSearch = {}; // per-document chunk search: { docId: 'query' }
+      let statusFilter = 'all';
+      let expandedDocs = new Set();
+      let expandedChunks = new Set();
+      let showHidden = false;
+      let chunkLoadLimits = {}; // docId -> how many chunks to show
+      const INITIAL_CHUNK_LIMIT = 20;
+      const CHUNK_LOAD_MORE = 50;
+
+      // ── HELPERS ─────────────────────────────────────────────────────────────
+      function escapeHtml(s) {
+        return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      }
+
+      function highlightText(text, ...queries) {
+        let result = escapeHtml(text);
+        for (const query of queries) {
+          if (!query) continue;
+          const q = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+          result = result.replace(new RegExp(`(${q})`, 'gi'), '<mark>$1</mark>');
+        }
+        return result;
+      }
+
+      function truncate(s, max) {
+        if (!s) return '';
+        const flat = s.replace(/\n/g, ' ');
+        return flat.length <= max ? flat : flat.slice(0, max) + '...';
+      }
+
+      function chunkMatchesSearch(chunk) {
+        if (!searchQuery) return true;
+        return chunk.content?.toLowerCase().includes(searchQuery.toLowerCase());
+      }
+
+      function chunkMatchesDocSearch(chunk, docId) {
+        const q = docChunkSearch[docId];
+        if (!q) return true;
+        return chunk.content?.toLowerCase().includes(q.toLowerCase());
+      }
+
+      function docMatchesSearch(doc) {
+        if (!searchQuery) return true;
+        return doc.chunks.some((c) => chunkMatchesSearch(c));
+      }
+
+      function docMatchesStatus(doc) {
+        if (statusFilter === 'all') return true;
+        return doc.chunks.some((c) => c.status === statusFilter);
+      }
+
+      function getDocStats(chunks) {
+        const tokens = chunks.map((c) => c.tokens);
+        const total = tokens.reduce((a, b) => a + b, 0);
+        return {
+          total,
+          avg: chunks.length ? Math.round(total / chunks.length) : 0,
+          min: chunks.length ? Math.min(...tokens) : 0,
+          max: chunks.length ? Math.max(...tokens) : 0,
+          count: chunks.length,
+        };
+      }
+
+      function getMatchCount(doc) {
+        if (!searchQuery) return 0;
+        return doc.chunks.filter((c) => chunkMatchesSearch(c)).length;
+      }
+
+      // ── RENDER ──────────────────────────────────────────────────────────────
+      function render() {
+        const container = document.getElementById('chunksContainer');
+        const hiddenDocsEl = document.getElementById('hiddenDocs');
+
+        let visibleDocs = DOCUMENTS.filter((d) => docMatchesStatus(d));
+        let matchingDocs = visibleDocs.filter((d) => docMatchesSearch(d));
+        let hiddenCount = visibleDocs.length - matchingDocs.length;
+
+        // Update stats bar
+        if (searchQuery) {
+          document.getElementById('statTotal').textContent =
+            `${matchingDocs.reduce((s, d) => s + getMatchCount(d), 0)} matching chunks`;
+          document.getElementById('statDocs').textContent =
+            `${matchingDocs.length} of ${visibleDocs.length} documents`;
+        } else {
+          const totalChunks = visibleDocs.reduce(
+            (s, d) =>
+              s +
+              d.chunks.filter((c) => statusFilter === 'all' || c.status === statusFilter).length,
+            0,
+          );
+          document.getElementById('statTotal').textContent = `${totalChunks} chunks`;
+          document.getElementById('statDocs').textContent = `${visibleDocs.length} documents`;
+        }
+
+        // Auto-expand first matching doc on search
+        if (searchQuery && matchingDocs.length > 0) {
+          const firstMatch = matchingDocs[0];
+          expandedDocs.add(firstMatch.id);
+          // Auto-expand first matching chunk
+          const firstChunkMatch = firstMatch.chunks.find((c) => chunkMatchesSearch(c));
+          if (firstChunkMatch) expandedChunks.add(firstChunkMatch.id);
+        }
+
+        let docsToShow = showHidden ? visibleDocs : matchingDocs;
+
+        let html = '';
+        for (const doc of docsToShow) {
+          const isMatch = docMatchesSearch(doc);
+          const isOpen = expandedDocs.has(doc.id);
+          const matchCount = getMatchCount(doc);
+          const stats = getDocStats(doc.chunks);
+          const worstStatus = doc.chunks.some((c) => c.status === 'error')
+            ? 'error'
+            : doc.chunks.some((c) => c.status === 'pending')
+              ? 'pending'
+              : doc.chunks.some((c) => c.status === 'embedded')
+                ? 'embedded'
+                : 'indexed';
+
+          html += `<div class="doc-row ${isOpen ? 'open' : ''} ${searchQuery && !isMatch ? 'hidden-by-search' : ''}" data-doc="${doc.id}">`;
+          html += `<div class="doc-header" onclick="toggleDoc('${doc.id}')">`;
+          html += `<span class="doc-chevron">&#9654;</span>`;
+          html += `<span class="doc-icon">${doc.icon}</span>`;
+          html += `<span class="doc-name">${escapeHtml(doc.name)}</span>`;
+          html += `<div class="doc-meta">`;
+          html += `<span>${stats.count} chunk${stats.count !== 1 ? 's' : ''}`;
+          if (searchQuery && matchCount > 0)
+            html += ` <span class="match-count">${matchCount} match</span>`;
+          html += `</span>`;
+          html += `<span class="tokens">${stats.total.toLocaleString()} tok</span>`;
+          html += `<span class="badge ${worstStatus}">${worstStatus}</span>`;
+          html += `</div></div>`;
+
+          // Expanded content
+          html += `<div class="doc-expanded"><div class="expanded-inner">`;
+
+          if (isOpen) {
+            // Stats cards
+            html += `<div class="stats-cards">`;
+            html += `<div class="stat-card"><div class="s-icon">#</div><div><div class="s-label">Total Tokens</div><div class="s-value">${stats.total.toLocaleString()}</div></div></div>`;
+            html += `<div class="stat-card"><div class="s-icon">&empty;</div><div><div class="s-label">Avg / Chunk</div><div class="s-value">${stats.avg.toLocaleString()}</div></div></div>`;
+            html += `<div class="stat-card"><div class="s-icon">T</div><div><div class="s-label">Smallest</div><div class="s-value">${stats.min.toLocaleString()}</div></div></div>`;
+            html += `<div class="stat-card"><div class="s-icon">&equiv;</div><div><div class="s-label">Largest</div><div class="s-value">${stats.max.toLocaleString()}</div></div></div>`;
+            html += `</div>`;
+
+            // Token distribution (collapsible, hidden for 1 chunk)
+            if (stats.count > 1) {
+              const distId = `dist_${doc.id}`;
+              html += `<button class="dist-toggle" onclick="event.stopPropagation(); toggleDist('${distId}')"><span class="arrow" id="arrow_${distId}">&#9654;</span> Show token distribution</button>`;
+              html += `<div class="token-dist" id="${distId}">`;
+              html += `<div class="token-bar">`;
+              for (const c of doc.chunks) {
+                const intensity = stats.max > 0 ? 0.3 + (c.tokens / stats.max) * 0.7 : 0.3;
+                html += `<div class="token-seg" style="flex:${Math.max(c.tokens, 1)}; background:hsl(240,60%,${30 + intensity * 35}%)" onclick="event.stopPropagation(); toggleChunk('${c.id}','${doc.id}')"><div class="tip">Chunk ${c.idx}: ${c.tokens} tokens</div></div>`;
+              }
+              html += `</div>`;
+              html += `<div class="token-labels"><span>Chunk 0</span><span>Chunk ${stats.count - 1}</span></div>`;
+              html += `</div>`;
+            }
+
+            // Per-document chunk search (inside expanded area)
+            const localQ = docChunkSearch[doc.id] || '';
+            const localMatchCount = localQ
+              ? doc.chunks.filter((c) => c.content?.toLowerCase().includes(localQ.toLowerCase()))
+                  .length
+              : 0;
+            html += `<div class="doc-chunk-search ${localQ ? 'has-query' : ''}" data-docsearch="${doc.id}">`;
+            html += `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>`;
+            html += `<input type="text" placeholder="Search chunks in this document..." value="${escapeHtml(localQ)}" oninput="handleDocChunkSearch('${doc.id}', this.value)" />`;
+            if (localQ) html += `<span class="dcs-count">${localMatchCount} found</span>`;
+            html += `<button class="dcs-clear" onclick="event.stopPropagation(); clearDocChunkSearch('${doc.id}')">&times;</button>`;
+            html += `</div>`;
+
+            // Chunk list
+            const limit = chunkLoadLimits[doc.id] || INITIAL_CHUNK_LIMIT;
+            const activeSearch = searchQuery || localQ;
+            const visibleChunks = doc.chunks.slice(0, activeSearch ? doc.chunks.length : limit);
+            const remaining = doc.chunks.length - limit;
+
+            html += `<div class="chunk-list">`;
+            if (visibleChunks.length > 1) html += `<div class="chunk-connector"></div>`;
+
+            for (const chunk of visibleChunks) {
+              const globalMatch = chunkMatchesSearch(chunk);
+              const localMatch = chunkMatchesDocSearch(chunk, doc.id);
+              const isChunkMatch = globalMatch && localMatch;
+              const isChunkOpen = expandedChunks.has(chunk.id);
+              const isDimmed = (searchQuery && !globalMatch) || (localQ && !localMatch);
+              const intensity = stats.max > 0 ? (chunk.tokens / stats.max) * 100 : 0;
+
+              html += `<div class="chunk-item ${isChunkMatch && (searchQuery || localQ) ? 'has-match' : ''} ${isDimmed ? 'dimmed' : ''} ${isChunkOpen ? 'c-open' : ''}" data-chunk="${chunk.id}">`;
+              html += `<div class="chunk-dot"></div>`;
+              html += `<div class="chunk-card" onclick="event.stopPropagation(); toggleChunk('${chunk.id}','${doc.id}')">`;
+
+              // Head
+              html += `<div class="chunk-head">`;
+              html += `<span class="c-chevron">&#9654;</span>`;
+              html += `<span class="c-idx">#${chunk.idx}</span>`;
+              html += `<span class="c-preview">${highlightText(truncate(chunk.content, 100), searchQuery, localQ)}</span>`;
+              html += `<div class="c-tbar"><div class="c-tfill" style="width:${intensity}%"></div></div>`;
+              html += `<span class="c-tok">${chunk.tokens}</span>`;
+              html += `<span class="badge ${chunk.status}">${chunk.status}</span>`;
+              html += `</div>`;
+
+              // Body (expanded)
+              html += `<div class="chunk-body"><div class="chunk-body-inner">`;
+              html += `<div class="cb-header"><span class="cb-label">Content</span><button class="copy-btn" onclick="event.stopPropagation(); copyContent(this, '${chunk.id}')">&#128203; Copy</button></div>`;
+              html += `<div class="content-box">${highlightText(chunk.content || '', searchQuery, localQ)}</div>`;
+              if (chunk.meta) {
+                html += `<div class="meta-section"><button class="meta-toggle" onclick="event.stopPropagation(); this.nextElementSibling.style.display = this.nextElementSibling.style.display === 'block' ? 'none' : 'block'">&#9654; Metadata (${Object.keys(chunk.meta).length} fields)</button><div style="display:none; margin-top:6px; padding:8px; background:var(--bg-muted); border-radius:6px; font-size:11px; font-family:monospace; color:var(--text-muted);">${escapeHtml(JSON.stringify(chunk.meta, null, 2))}</div></div>`;
+              }
+              html += `<div class="meta-row"><span>ID: ${chunk.id}</span><span>Created: Apr 10, 17:55</span></div>`;
+              html += `</div></div>`; // /chunk-body
+
+              html += `</div></div>`; // /chunk-card /chunk-item
+            }
+
+            // Load more button
+            if (!activeSearch && remaining > 0) {
+              const nextBatch = Math.min(remaining, CHUNK_LOAD_MORE);
+              html += `<div class="load-more"><button class="load-more-btn" onclick="event.stopPropagation(); loadMore('${doc.id}')">Show ${nextBatch} more (${remaining} remaining)</button></div>`;
+            }
+
+            html += `</div>`; // /chunk-list
+          }
+
+          html += `</div></div>`; // /expanded-inner /doc-expanded
+          html += `</div>`; // /doc-row
+        }
+
+        if (docsToShow.length === 0) {
+          html = `<div class="empty-state"><div class="e-icon">&#128269;</div><div class="e-title">No chunks match "${escapeHtml(searchQuery)}"</div><div class="e-desc">Try a different search term or clear the filter</div><button class="e-btn" onclick="clearSearch()">Clear search</button></div>`;
+        }
+
+        container.innerHTML = html;
+
+        // Hidden docs bar
+        if (searchQuery && hiddenCount > 0 && !showHidden) {
+          hiddenDocsEl.style.display = 'block';
+          document.getElementById('hiddenCount').textContent = hiddenCount;
+        } else {
+          hiddenDocsEl.style.display = 'none';
+        }
+      }
+
+      // ── ACTIONS ─────────────────────────────────────────────────────────────
+      function toggleDoc(docId) {
+        if (expandedDocs.has(docId)) {
+          expandedDocs.delete(docId);
+        } else {
+          expandedDocs.add(docId);
+        }
+        render();
+      }
+
+      function toggleChunk(chunkId, docId) {
+        if (expandedChunks.has(chunkId)) {
+          expandedChunks.delete(chunkId);
+        } else {
+          expandedChunks.add(chunkId);
+        }
+        // Make sure parent doc is expanded
+        expandedDocs.add(docId);
+        render();
+      }
+
+      function toggleDist(distId) {
+        const el = document.getElementById(distId);
+        const arrow = document.getElementById('arrow_' + distId);
+        if (el) {
+          el.classList.toggle('visible');
+          if (arrow)
+            arrow.style.transform = el.classList.contains('visible') ? 'rotate(90deg)' : '';
+        }
+      }
+
+      function loadMore(docId) {
+        const current = chunkLoadLimits[docId] || INITIAL_CHUNK_LIMIT;
+        chunkLoadLimits[docId] = current + CHUNK_LOAD_MORE;
+        render();
+      }
+
+      function copyContent(btn, chunkId) {
+        const doc = DOCUMENTS.find((d) => d.chunks.some((c) => c.id === chunkId));
+        const chunk = doc?.chunks.find((c) => c.id === chunkId);
+        if (chunk?.content) {
+          navigator.clipboard.writeText(chunk.content).then(() => {
+            btn.innerHTML = '&#10003; Copied';
+            btn.classList.add('copied');
+            setTimeout(() => {
+              btn.innerHTML = '&#128203; Copy';
+              btn.classList.remove('copied');
+            }, 2000);
+          });
+        }
+      }
+
+      function clearSearch() {
+        searchQuery = '';
+        showHidden = false;
+        document.getElementById('searchInput').value = '';
+        document.getElementById('searchWrap').classList.remove('has-query');
+        expandedChunks.clear();
+        render();
+      }
+
+      // Per-document chunk search handlers
+      let docSearchTimers = {};
+      function handleDocChunkSearch(docId, value) {
+        clearTimeout(docSearchTimers[docId]);
+        docSearchTimers[docId] = setTimeout(() => {
+          docChunkSearch[docId] = value.trim();
+          // Auto-expand first matching chunk
+          if (docChunkSearch[docId]) {
+            const doc = DOCUMENTS.find((d) => d.id === docId);
+            const firstMatch = doc?.chunks.find((c) =>
+              c.content?.toLowerCase().includes(docChunkSearch[docId].toLowerCase()),
+            );
+            if (firstMatch) expandedChunks.add(firstMatch.id);
+          }
+          render();
+          // Re-focus the input after render
+          setTimeout(() => {
+            const wrapper = document.querySelector(`[data-docsearch="${docId}"] input`);
+            if (wrapper) {
+              wrapper.focus();
+              wrapper.selectionStart = wrapper.selectionEnd = wrapper.value.length;
+            }
+          }, 10);
+        }, 200);
+      }
+
+      function clearDocChunkSearch(docId) {
+        docChunkSearch[docId] = '';
+        render();
+      }
+
+      // ── EVENT LISTENERS ─────────────────────────────────────────────────────
+      let debounceTimer;
+
+      // Global chunk content search
+      document.getElementById('searchInput').addEventListener('input', (e) => {
+        clearTimeout(debounceTimer);
+        const wrap = document.getElementById('searchWrap');
+        debounceTimer = setTimeout(() => {
+          searchQuery = e.target.value.trim();
+          showHidden = false;
+          expandedChunks.clear();
+          wrap.classList.toggle('has-query', !!searchQuery);
+          // Reset expanded docs on new search
+          if (searchQuery) expandedDocs.clear();
+          render();
+        }, 250);
+      });
+
+      document.getElementById('searchClear').addEventListener('click', clearSearch);
+
+      document.getElementById('chipsBar').addEventListener('click', (e) => {
+        const chip = e.target.closest('.chip');
+        if (!chip) return;
+        document.querySelectorAll('.chip').forEach((c) => c.classList.remove('active'));
+        chip.classList.add('active');
+        statusFilter = chip.dataset.status;
+        render();
+      });
+
+      document.getElementById('showAllLink').addEventListener('click', (e) => {
+        e.preventDefault();
+        showHidden = true;
+        render();
+      });
+
+      document.getElementById('sortSelect').addEventListener('change', (e) => {
+        const val = e.target.value;
+        if (val === 'date') DOCUMENTS.sort((a, b) => new Date(b.date) - new Date(a.date));
+        else if (val === 'chunks') DOCUMENTS.sort((a, b) => b.chunks.length - a.chunks.length);
+        else if (val === 'name') DOCUMENTS.sort((a, b) => a.name.localeCompare(b.name));
+        render();
+      });
+
+      // ── INIT ────────────────────────────────────────────────────────────────
+      render();
+    </script>
+  </body>
+</html>

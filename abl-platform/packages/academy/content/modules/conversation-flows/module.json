@@ -1,0 +1,18 @@
+{
+  "id": "conversation-flows",
+  "title": "Conversation Flows",
+  "lessons": [
+    {
+      "id": "01-scripted-flow-tutorial",
+      "title": "Build a Scripted Flow (Tutorial)",
+      "sourceFile": "tutorials/02-build-a-scripted-flow.md",
+      "minutes": 15
+    },
+    {
+      "id": "02-scripted-flows-guide",
+      "title": "Building Scripted Flows Guide",
+      "sourceFile": "guides/02-building-scripted-flows.md",
+      "minutes": 20
+    }
+  ]
+}

@@ -1,0 +1,3084 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>KB Complete Wireframes — All Views</title>
+    <style>
+      :root {
+        --bg: #0f1117;
+        --bg-elevated: #1a1d27;
+        --bg-card: #21242f;
+        --bg-hover: #282c3a;
+        --bg-active: #2a3040;
+        --border: #2e3244;
+        --border-active: #4a5068;
+        --text: #e4e6ed;
+        --text-muted: #8b8fa3;
+        --text-dim: #5c6070;
+        --accent: #6c8cff;
+        --accent-hover: #829dff;
+        --accent-dim: #3a4a7a;
+        --green: #34d399;
+        --green-dim: #064e3b;
+        --yellow: #fbbf24;
+        --yellow-dim: #78350f;
+        --red: #f87171;
+        --red-dim: #7f1d1d;
+        --blue: #60a5fa;
+        --blue-dim: #1e3a5f;
+        --purple: #a78bfa;
+        --radius: 10px;
+        --radius-sm: 6px;
+        --shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+      }
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        font-size: 13px;
+        line-height: 1.5;
+        overflow: hidden;
+        height: 100vh;
+      }
+      .app {
+        display: flex;
+        height: 100vh;
+      }
+      .project-sidebar {
+        width: 220px;
+        background: var(--bg-elevated);
+        border-right: 1px solid var(--border);
+        display: flex;
+        flex-direction: column;
+        flex-shrink: 0;
+      }
+      .project-sidebar .logo {
+        padding: 16px 16px 12px;
+        font-weight: 700;
+        font-size: 14px;
+        color: var(--accent);
+        border-bottom: 1px solid var(--border);
+      }
+      .project-sidebar .project-name {
+        padding: 12px 16px;
+        font-size: 12px;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+      }
+      .sidebar-nav {
+        flex: 1;
+        padding: 4px 8px;
+      }
+      .sidebar-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 8px 12px;
+        border-radius: var(--radius-sm);
+        color: var(--text-muted);
+        cursor: pointer;
+        font-size: 13px;
+        transition: all 0.15s;
+      }
+      .sidebar-item:hover {
+        background: var(--bg-hover);
+        color: var(--text);
+      }
+      .sidebar-item.active {
+        background: var(--accent-dim);
+        color: var(--accent);
+      }
+      .main-content {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        min-width: 0;
+      }
+      .view {
+        display: none;
+        flex: 1;
+        flex-direction: column;
+        overflow-y: auto;
+        padding: 24px 32px;
+        animation: fadeIn 0.2s ease;
+      }
+      .view.active {
+        display: flex;
+      }
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(4px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      /* Shared */
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 7px 14px;
+        border-radius: var(--radius-sm);
+        border: 1px solid var(--border);
+        background: var(--bg-card);
+        color: var(--text);
+        cursor: pointer;
+        font-size: 12px;
+        transition: all 0.15s;
+      }
+      .btn:hover {
+        background: var(--bg-hover);
+        border-color: var(--border-active);
+      }
+      .btn-primary {
+        background: var(--accent);
+        border-color: var(--accent);
+        color: #fff;
+      }
+      .btn-primary:hover {
+        background: var(--accent-hover);
+      }
+      .btn-danger {
+        background: var(--red-dim);
+        border-color: var(--red);
+        color: var(--red);
+      }
+      .btn-sm {
+        padding: 4px 10px;
+        font-size: 11px;
+      }
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 2px 8px;
+        border-radius: 10px;
+        font-size: 11px;
+        font-weight: 600;
+      }
+      .badge-green {
+        background: var(--green-dim);
+        color: var(--green);
+      }
+      .badge-yellow {
+        background: var(--yellow-dim);
+        color: var(--yellow);
+      }
+      .badge-red {
+        background: var(--red-dim);
+        color: var(--red);
+      }
+      .badge-blue {
+        background: var(--blue-dim);
+        color: var(--blue);
+      }
+      .input {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-sm);
+        padding: 7px 12px;
+        color: var(--text);
+        font-size: 13px;
+        outline: none;
+        width: 100%;
+      }
+      .input:focus {
+        border-color: var(--accent);
+      }
+      select.input {
+        appearance: none;
+        cursor: pointer;
+        padding-right: 28px;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%238b8fa3' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10z'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 8px center;
+      }
+      .card {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 16px;
+      }
+      .card:hover {
+        border-color: var(--border-active);
+      }
+      .text-muted {
+        color: var(--text-muted);
+      }
+      .text-accent {
+        color: var(--accent);
+      }
+      .text-green {
+        color: var(--green);
+      }
+      .text-yellow {
+        color: var(--yellow);
+      }
+      .text-red {
+        color: var(--red);
+      }
+      .flex {
+        display: flex;
+      }
+      .flex-col {
+        flex-direction: column;
+      }
+      .items-center {
+        align-items: center;
+      }
+      .gap-8 {
+        gap: 8px;
+      }
+      .gap-12 {
+        gap: 12px;
+      }
+      .gap-16 {
+        gap: 16px;
+      }
+      .gap-24 {
+        gap: 24px;
+      }
+      .justify-between {
+        justify-content: space-between;
+      }
+      .flex-1 {
+        flex: 1;
+      }
+      .w-full {
+        width: 100%;
+      }
+      .mt-8 {
+        margin-top: 8px;
+      }
+      .mt-16 {
+        margin-top: 16px;
+      }
+      .mt-24 {
+        margin-top: 24px;
+      }
+      .mb-8 {
+        margin-bottom: 8px;
+      }
+      .mb-16 {
+        margin-bottom: 16px;
+      }
+      h1 {
+        font-size: 20px;
+        font-weight: 700;
+      }
+      h2 {
+        font-size: 16px;
+        font-weight: 600;
+      }
+      h3 {
+        font-size: 14px;
+        font-weight: 600;
+      }
+      .back-link {
+        color: var(--accent);
+        cursor: pointer;
+        font-size: 12px;
+        margin-bottom: 8px;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+      }
+      .back-link:hover {
+        text-decoration: underline;
+      }
+      .progress-bar {
+        height: 6px;
+        background: var(--bg-hover);
+        border-radius: 3px;
+        overflow: hidden;
+      }
+      .progress-bar .fill {
+        height: 100%;
+        border-radius: 3px;
+        transition: width 0.3s;
+      }
+      .table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      .table th {
+        text-align: left;
+        padding: 8px 12px;
+        font-size: 11px;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        border-bottom: 1px solid var(--border);
+      }
+      .table td {
+        padding: 8px 12px;
+        border-bottom: 1px solid var(--border);
+        font-size: 13px;
+      }
+      .table tr:hover td {
+        background: var(--bg-hover);
+      }
+
+      /* KB Detail Header */
+      .kb-header {
+        padding: 16px 32px 0;
+        border-bottom: 1px solid var(--border);
+        background: var(--bg-elevated);
+        flex-shrink: 0;
+      }
+      .kb-tabs {
+        display: flex;
+        gap: 0;
+        margin-top: 12px;
+      }
+      .kb-tab {
+        padding: 8px 16px;
+        color: var(--text-muted);
+        cursor: pointer;
+        border-bottom: 2px solid transparent;
+        font-size: 13px;
+        transition: all 0.15s;
+      }
+      .kb-tab:hover {
+        color: var(--text);
+      }
+      .kb-tab.active {
+        color: var(--accent);
+        border-bottom-color: var(--accent);
+      }
+
+      /* Settings Overlay */
+      .settings-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 100;
+        animation: fadeIn 0.2s;
+      }
+      .settings-overlay.active {
+        display: flex;
+        justify-content: flex-end;
+      }
+      .settings-panel {
+        width: 420px;
+        background: var(--bg-elevated);
+        border-left: 1px solid var(--border);
+        padding: 24px;
+        overflow-y: auto;
+        animation: slideIn 0.25s ease;
+      }
+      @keyframes slideIn {
+        from {
+          transform: translateX(30px);
+          opacity: 0;
+        }
+        to {
+          transform: translateX(0);
+          opacity: 1;
+        }
+      }
+
+      /* Source sidebar */
+      .source-sidebar {
+        width: 260px;
+        border-right: 1px solid var(--border);
+        background: var(--bg-elevated);
+        overflow-y: auto;
+        flex-shrink: 0;
+        padding: 12px;
+      }
+      .source-group-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 6px 8px;
+        cursor: pointer;
+        color: var(--text-muted);
+        font-size: 12px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        border-radius: var(--radius-sm);
+      }
+      .source-group-header:hover {
+        background: var(--bg-hover);
+      }
+      .source-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 8px 6px 20px;
+        cursor: pointer;
+        border-radius: var(--radius-sm);
+        font-size: 13px;
+        color: var(--text-muted);
+        border-left: 2px solid transparent;
+      }
+      .source-item:hover {
+        background: var(--bg-hover);
+        color: var(--text);
+      }
+      .source-item.selected {
+        background: var(--bg-active);
+        color: var(--text);
+        border-left-color: var(--accent);
+      }
+
+      /* Search results */
+      .result-card {
+        border-left: 3px solid var(--accent);
+        padding: 12px 16px;
+        background: var(--bg-card);
+        border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+      }
+      .score-pill {
+        display: inline-flex;
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-size: 11px;
+        font-weight: 600;
+        background: var(--accent-dim);
+        color: var(--accent);
+      }
+
+      /* Resolution chain */
+      .chain-step {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        padding: 10px 0;
+      }
+      .chain-num {
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        background: var(--accent-dim);
+        color: var(--accent);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 11px;
+        font-weight: 700;
+        flex-shrink: 0;
+      }
+      .chain-arrow {
+        text-align: center;
+        color: var(--text-dim);
+        font-size: 10px;
+        padding: 2px 0;
+      }
+
+      /* Collapsible */
+      .collapsible-content {
+        overflow: hidden;
+        max-height: 0;
+        transition: max-height 0.3s ease;
+      }
+      .collapsible-content.open {
+        max-height: 2000px;
+      }
+
+      /* Grid */
+      .grid-2 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+      }
+      .grid-3 {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 12px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app">
+      <!-- Project Sidebar -->
+      <div class="project-sidebar">
+        <div class="logo">SearchAI</div>
+        <div class="project-name">Acme Corp</div>
+        <nav class="sidebar-nav">
+          <div class="sidebar-item" onclick="showView('kb-list')">
+            <svg viewBox="0 0 16 16" fill="currentColor">
+              <path d="M2 3h12v2H2zm0 4h12v2H2zm0 4h8v2H2z" />
+            </svg>
+            Knowledge Bases
+          </div>
+          <div class="sidebar-item">
+            <svg viewBox="0 0 16 16" fill="currentColor">
+              <path d="M8 1a7 7 0 100 14A7 7 0 008 1zm1 10H7V7h2v4zm0-6H7V3h2v2z" />
+            </svg>
+            Connectors
+          </div>
+          <div class="sidebar-item">
+            <svg viewBox="0 0 16 16" fill="currentColor">
+              <path d="M3 1h10v14H3zm2 2v2h6V3zm0 4v2h6V7z" />
+            </svg>
+            Pipelines
+          </div>
+          <div class="sidebar-item">
+            <svg viewBox="0 0 16 16" fill="currentColor">
+              <circle cx="8" cy="8" r="6" fill="none" stroke="currentColor" stroke-width="2" />
+            </svg>
+            Settings
+          </div>
+        </nav>
+      </div>
+
+      <!-- Main Content -->
+      <div class="main-content">
+        <!-- VIEW: KB List -->
+        <div id="view-kb-list" class="view active">
+          <div class="flex items-center justify-between mb-16">
+            <h1>Knowledge Bases</h1>
+            <button class="btn btn-primary" onclick="showKBDetail()">+ New KB</button>
+          </div>
+          <div class="flex gap-12 mb-16">
+            <div class="card flex-1" style="padding: 10px 16px; text-align: center">
+              <span class="text-muted">Total KBs</span>
+              <div style="font-size: 20px; font-weight: 700">6</div>
+            </div>
+            <div class="card flex-1" style="padding: 10px 16px; text-align: center">
+              <span class="text-green">Active</span>
+              <div style="font-size: 20px; font-weight: 700">4</div>
+            </div>
+            <div class="card flex-1" style="padding: 10px 16px; text-align: center">
+              <span class="text-yellow">Indexing</span>
+              <div style="font-size: 20px; font-weight: 700">1</div>
+            </div>
+            <div class="card flex-1" style="padding: 10px 16px; text-align: center">
+              <span class="text-red">Error</span>
+              <div style="font-size: 20px; font-weight: 700">1</div>
+            </div>
+          </div>
+          <div class="flex gap-12 mb-16">
+            <input class="input" style="max-width: 300px" placeholder="Search knowledge bases..." />
+            <select class="input" style="width: 140px">
+              <option>All Status</option>
+              <option>Ready</option>
+              <option>Building</option>
+              <option>Error</option>
+            </select>
+            <select class="input" style="width: 160px">
+              <option>Last Indexed</option>
+              <option>Name</option>
+              <option>Created</option>
+              <option>Documents</option>
+            </select>
+          </div>
+          <div class="flex flex-col gap-12">
+            <!-- KB Card 1 -->
+            <div
+              class="card flex items-center justify-between"
+              style="cursor: pointer"
+              onclick="showKBDetail()"
+            >
+              <div class="flex items-center gap-16">
+                <div
+                  style="
+                    width: 40px;
+                    height: 40px;
+                    border-radius: 8px;
+                    background: var(--accent-dim);
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-size: 18px;
+                  "
+                >
+                  📚
+                </div>
+                <div>
+                  <div style="font-weight: 600">Product Docs KB</div>
+                  <div class="text-muted" style="font-size: 12px">
+                    1,234 docs &middot; 3 sources &middot; 45.6K chunks
+                  </div>
+                </div>
+              </div>
+              <div class="flex items-center gap-16">
+                <span class="badge badge-green">Ready</span>
+                <span class="text-muted" style="font-size: 12px">Indexed 5m ago</span>
+              </div>
+            </div>
+            <!-- KB Card 2 -->
+            <div
+              class="card flex items-center justify-between"
+              style="cursor: pointer"
+              onclick="showKBDetail()"
+            >
+              <div class="flex items-center gap-16">
+                <div
+                  style="
+                    width: 40px;
+                    height: 40px;
+                    border-radius: 8px;
+                    background: var(--green-dim);
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-size: 18px;
+                  "
+                >
+                  🎧
+                </div>
+                <div>
+                  <div style="font-weight: 600">Support Knowledge Base</div>
+                  <div class="text-muted" style="font-size: 12px">
+                    8,923 docs &middot; 5 sources &middot; 112K chunks
+                  </div>
+                </div>
+              </div>
+              <div class="flex items-center gap-16">
+                <span class="badge badge-green">Ready</span>
+                <span class="text-muted" style="font-size: 12px">Indexed 12m ago</span>
+              </div>
+            </div>
+            <!-- KB Card 3 - Building -->
+            <div class="card flex items-center justify-between" style="cursor: pointer">
+              <div class="flex items-center gap-16">
+                <div
+                  style="
+                    width: 40px;
+                    height: 40px;
+                    border-radius: 8px;
+                    background: var(--yellow-dim);
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-size: 18px;
+                  "
+                >
+                  🏗
+                </div>
+                <div>
+                  <div style="font-weight: 600">Engineering Wiki</div>
+                  <div class="text-muted" style="font-size: 12px">
+                    456 docs &middot; 2 sources &middot; 8.2K chunks
+                  </div>
+                  <div class="progress-bar mt-8" style="width: 200px">
+                    <div class="fill" style="width: 62%; background: var(--yellow)"></div>
+                  </div>
+                  <div class="text-yellow" style="font-size: 11px; margin-top: 2px">
+                    Building &mdash; 62% complete
+                  </div>
+                </div>
+              </div>
+              <div class="flex items-center gap-16">
+                <span class="badge badge-yellow">Building</span>
+              </div>
+            </div>
+            <!-- KB Card 4 - Error -->
+            <div
+              class="card flex items-center justify-between"
+              style="cursor: pointer; border-color: var(--red-dim)"
+            >
+              <div class="flex items-center gap-16">
+                <div
+                  style="
+                    width: 40px;
+                    height: 40px;
+                    border-radius: 8px;
+                    background: var(--red-dim);
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-size: 18px;
+                  "
+                >
+                  📋
+                </div>
+                <div>
+                  <div style="font-weight: 600">Legal Documents</div>
+                  <div class="text-muted" style="font-size: 12px">
+                    89 docs &middot; 1 source &middot; 1.2K chunks
+                  </div>
+                  <div class="text-red" style="font-size: 11px; margin-top: 4px">
+                    Embedding model unavailable &mdash; pipeline halted
+                  </div>
+                </div>
+              </div>
+              <div class="flex items-center gap-16">
+                <span class="badge badge-red">Error</span>
+                <span class="text-muted" style="font-size: 12px">3h ago</span>
+              </div>
+            </div>
+            <!-- KB Card 5 -->
+            <div class="card flex items-center justify-between" style="cursor: pointer">
+              <div class="flex items-center gap-16">
+                <div
+                  style="
+                    width: 40px;
+                    height: 40px;
+                    border-radius: 8px;
+                    background: var(--blue-dim);
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-size: 18px;
+                  "
+                >
+                  💼
+                </div>
+                <div>
+                  <div style="font-weight: 600">HR Policies</div>
+                  <div class="text-muted" style="font-size: 12px">
+                    234 docs &middot; 2 sources &middot; 5.8K chunks
+                  </div>
+                </div>
+              </div>
+              <div class="flex items-center gap-16">
+                <span class="badge badge-green">Ready</span>
+                <span class="text-muted" style="font-size: 12px">Indexed 1h ago</span>
+              </div>
+            </div>
+            <!-- KB Card 6 -->
+            <div class="card flex items-center justify-between" style="cursor: pointer">
+              <div class="flex items-center gap-16">
+                <div
+                  style="
+                    width: 40px;
+                    height: 40px;
+                    border-radius: 8px;
+                    background: var(--accent-dim);
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-size: 18px;
+                  "
+                >
+                  🔬
+                </div>
+                <div>
+                  <div style="font-weight: 600">Research Papers</div>
+                  <div class="text-muted" style="font-size: 12px">
+                    567 docs &middot; 1 source &middot; 23.4K chunks
+                  </div>
+                </div>
+              </div>
+              <div class="flex items-center gap-16">
+                <span class="badge badge-green">Ready</span>
+                <span class="text-muted" style="font-size: 12px">Indexed 2h ago</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- KB Detail Container -->
+        <div id="view-kb-detail" class="view" style="padding: 0; overflow: hidden">
+          <!-- Persistent Header -->
+          <div class="kb-header">
+            <div class="flex items-center justify-between">
+              <div>
+                <div class="back-link" onclick="showView('kb-list')">&larr; Knowledge Bases</div>
+                <div class="flex items-center gap-12">
+                  <h1>Product Docs KB</h1>
+                  <span class="badge badge-green">Ready</span>
+                </div>
+                <div class="text-muted mt-8" style="font-size: 12px">
+                  1,234 docs &nbsp;|&nbsp; 45.6K chunks &nbsp;|&nbsp; 3 sources &nbsp;|&nbsp;
+                  Indexed: 5m ago
+                </div>
+              </div>
+              <button class="btn" onclick="toggleSettings()" title="Settings (Alt+,)">
+                &#9881; Settings
+              </button>
+            </div>
+            <div class="kb-tabs">
+              <div class="kb-tab active" data-tab="home" onclick="switchTab('home')">Home</div>
+              <div class="kb-tab" data-tab="data" onclick="switchTab('data')">Data</div>
+              <div class="kb-tab" data-tab="intelligence" onclick="switchTab('intelligence')">
+                Intelligence
+              </div>
+              <div class="kb-tab" data-tab="search" onclick="switchTab('search')">
+                Search &amp; Test
+              </div>
+            </div>
+          </div>
+
+          <!-- Tab Content Area -->
+          <div style="flex: 1; overflow-y: auto">
+            <!-- HOME TAB -->
+            <div id="tab-home" class="tab-content" style="padding: 24px 32px">
+              <div class="flex gap-8 mb-16">
+                <button class="btn btn-sm" onclick="setHomeState('new')" id="hs-new">New KB</button>
+                <button class="btn btn-sm" onclick="setHomeState('setup')" id="hs-setup">
+                  Setup
+                </button>
+                <button
+                  class="btn btn-sm btn-primary"
+                  onclick="setHomeState('mature')"
+                  id="hs-mature"
+                >
+                  Mature
+                </button>
+              </div>
+
+              <!-- New KB State -->
+              <div id="home-new" style="display: none">
+                <div class="card" style="text-align: center; padding: 32px">
+                  <h2>Welcome to Product Docs KB</h2>
+                  <p class="text-muted mt-8">Get started by adding your first data source</p>
+                </div>
+                <div class="grid-2 mt-16">
+                  <div class="card" style="text-align: center; padding: 24px">
+                    <div
+                      style="
+                        border: 2px dashed var(--border);
+                        border-radius: var(--radius);
+                        padding: 32px;
+                        margin-bottom: 12px;
+                      "
+                    >
+                      <div style="font-size: 28px; margin-bottom: 8px">📄</div>
+                      <div class="text-muted">Drop PDF, DOCX, or text files here</div>
+                    </div>
+                    <button class="btn btn-primary">Browse Files</button>
+                  </div>
+                  <div class="card" style="padding: 24px">
+                    <h3 style="margin-bottom: 12px">Connect a Data Source</h3>
+                    <div class="flex flex-col gap-8">
+                      <div
+                        class="flex items-center gap-8"
+                        style="
+                          padding: 8px;
+                          border-radius: var(--radius-sm);
+                          background: var(--bg-hover);
+                          cursor: pointer;
+                        "
+                      >
+                        🏢 SharePoint
+                      </div>
+                      <div
+                        class="flex items-center gap-8"
+                        style="
+                          padding: 8px;
+                          border-radius: var(--radius-sm);
+                          background: var(--bg-hover);
+                          cursor: pointer;
+                        "
+                      >
+                        🌐 Web Crawler
+                      </div>
+                      <div
+                        class="flex items-center gap-8"
+                        style="
+                          padding: 8px;
+                          border-radius: var(--radius-sm);
+                          background: var(--bg-hover);
+                          cursor: pointer;
+                        "
+                      >
+                        🗄 Database
+                      </div>
+                      <div
+                        class="flex items-center gap-8"
+                        style="
+                          padding: 8px;
+                          border-radius: var(--radius-sm);
+                          background: var(--bg-hover);
+                          cursor: pointer;
+                        "
+                      >
+                        🔌 API
+                      </div>
+                    </div>
+                    <button class="btn mt-16">Connect &rarr;</button>
+                  </div>
+                </div>
+                <div class="card mt-16">
+                  <h3 style="margin-bottom: 8px">What happens automatically</h3>
+                  <div class="flex flex-col gap-8 text-muted" style="font-size: 12px">
+                    <div>
+                      &#10003; Schema detection &mdash; fields are discovered from your data
+                    </div>
+                    <div>
+                      &#10003; Field mapping &mdash; source fields mapped to canonical schema
+                    </div>
+                    <div>&#10003; Processing &mdash; documents chunked and embedded</div>
+                    <div>&#10003; Search ready &mdash; start querying immediately</div>
+                  </div>
+                </div>
+                <div class="card mt-16" style="border-color: var(--yellow-dim)">
+                  <div class="flex items-center gap-8">
+                    <span class="text-yellow">&#9888;</span>
+                    <span>No LLM model configured</span>
+                    <span class="text-accent" style="cursor: pointer; margin-left: auto"
+                      >Configure &rarr;</span
+                    >
+                  </div>
+                </div>
+              </div>
+
+              <!-- Setup State -->
+              <div id="home-setup" style="display: none">
+                <div class="card">
+                  <h3 style="margin-bottom: 12px">Setup Progress</h3>
+                  <div class="flex flex-col gap-12">
+                    <div class="flex items-center gap-8">
+                      <span class="text-green">&#10004;</span> SharePoint connected &mdash; 23
+                      documents discovered
+                    </div>
+                    <div>
+                      <div class="flex items-center gap-8">
+                        <span class="text-yellow">&#128260;</span> Processing documents &mdash; 8 of
+                        23 indexed
+                      </div>
+                      <div class="progress-bar mt-8" style="width: 300px">
+                        <div class="fill" style="width: 35%; background: var(--accent)"></div>
+                      </div>
+                    </div>
+                    <div class="flex items-center gap-8">
+                      <span class="text-green">&#10004;</span> Schema detected &mdash; 8 fields
+                      found
+                    </div>
+                    <div class="flex items-center gap-8">
+                      <span class="text-yellow">&#128312;</span> 12 field mapping suggestions ready
+                    </div>
+                    <div class="flex items-center gap-8">
+                      <span class="text-dim">&#11036;</span> Search ready (partial results
+                      available)
+                    </div>
+                  </div>
+                </div>
+                <div class="flex gap-12 mt-16">
+                  <span class="text-accent" style="cursor: pointer">Try a search &rarr;</span>
+                  <span class="text-accent" style="cursor: pointer"
+                    >Review field mappings &rarr;</span
+                  >
+                </div>
+                <div class="flex gap-12 mt-16">
+                  <button class="btn">Upload Files</button>
+                  <button class="btn">Add Web Crawler</button>
+                  <button class="btn">Add Source</button>
+                </div>
+              </div>
+
+              <!-- Mature State -->
+              <div id="home-mature">
+                <div class="card" style="border-color: var(--red-dim)">
+                  <h3 class="text-red" style="margin-bottom: 8px">Needs Attention</h3>
+                  <div
+                    class="flex items-center justify-between"
+                    style="padding: 8px 0; border-bottom: 1px solid var(--border)"
+                  >
+                    <div>
+                      <div style="font-weight: 600">SharePoint "Corp Docs"</div>
+                      <div class="text-muted" style="font-size: 12px">
+                        Auth token expired &mdash; last synced 3 days ago
+                      </div>
+                    </div>
+                    <button class="btn btn-sm">Reconnect &rarr;</button>
+                  </div>
+                </div>
+                <div class="card mt-16" style="border-color: var(--accent-dim)">
+                  <h3 class="text-accent" style="margin-bottom: 8px">Suggestions</h3>
+                  <div style="padding: 8px 0; border-bottom: 1px solid var(--border)">
+                    <div class="flex items-center justify-between">
+                      <div>
+                        <div style="font-weight: 600">
+                          12 field mapping suggestions from Web Crawler
+                        </div>
+                        <div class="text-muted" style="font-size: 12px">
+                          Auto-detected mappings with high confidence
+                        </div>
+                      </div>
+                      <div class="flex gap-8">
+                        <button class="btn btn-sm btn-primary" onclick="showDrillDown('fields')">
+                          Review &rarr;
+                        </button>
+                        <button class="btn btn-sm">Dismiss</button>
+                      </div>
+                    </div>
+                  </div>
+                  <div style="padding: 8px 0">
+                    <div class="flex items-center justify-between">
+                      <div>
+                        <div style="font-weight: 600">Vocabulary: 6 new terms auto-generated</div>
+                        <div class="text-muted" style="font-size: 12px">
+                          Match rate 72% &rarr; 78%
+                        </div>
+                      </div>
+                      <div class="flex gap-8">
+                        <button
+                          class="btn btn-sm btn-primary"
+                          onclick="showDrillDown('vocabulary')"
+                        >
+                          Review terms &rarr;
+                        </button>
+                        <button class="btn btn-sm">Dismiss</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="card mt-16">
+                  <h3 style="margin-bottom: 8px">Activity</h3>
+                  <div class="flex flex-col gap-8 text-muted" style="font-size: 12px">
+                    <div>
+                      <span class="text-dim">5m ago</span> &nbsp; Web Crawler synced 45 pages
+                    </div>
+                    <div>
+                      <span class="text-dim">12m ago</span> &nbsp; Pipeline processed 45 documents
+                    </div>
+                    <div>
+                      <span class="text-dim">1h ago</span> &nbsp; Sarah uploaded Q1-Report.pdf
+                    </div>
+                    <div><span class="text-dim">3h ago</span> &nbsp; Pipeline v3 published</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- DATA TAB -->
+            <div id="tab-data" class="tab-content" style="display: none; padding: 0">
+              <div class="flex" style="height: calc(100vh - 140px)">
+                <!-- Source Sidebar -->
+                <div class="source-sidebar">
+                  <div class="flex items-center justify-between mb-8">
+                    <span
+                      style="
+                        font-size: 11px;
+                        text-transform: uppercase;
+                        letter-spacing: 0.05em;
+                        color: var(--text-muted);
+                        font-weight: 600;
+                      "
+                      >Sources</span
+                    >
+                    <button
+                      class="btn btn-sm btn-primary"
+                      style="padding: 2px 8px; font-size: 11px"
+                    >
+                      + Add
+                    </button>
+                  </div>
+                  <input
+                    class="input mb-8"
+                    style="font-size: 12px; padding: 5px 8px"
+                    placeholder="Search sources..."
+                  />
+                  <div class="flex gap-8 mb-8">
+                    <select class="input" style="font-size: 11px; padding: 3px 6px; width: 50%">
+                      <option>All Types</option>
+                      <option>SharePoint</option>
+                      <option>Web</option>
+                      <option>Manual</option>
+                      <option>Database</option>
+                      <option>API</option>
+                    </select>
+                    <select class="input" style="font-size: 11px; padding: 3px 6px; width: 50%">
+                      <option>All Status</option>
+                      <option>Active</option>
+                      <option>Error</option>
+                      <option>Syncing</option>
+                    </select>
+                  </div>
+                  <div class="text-muted mb-8" style="font-size: 12px; padding: 0 8px">
+                    All (127)
+                  </div>
+
+                  <!-- SharePoint Group -->
+                  <div class="source-group-header" onclick="toggleCollapse(this)">
+                    <span>&#127970; SharePoint (3)</span
+                    ><span style="font-size: 10px">&#9660;</span>
+                  </div>
+                  <div class="collapsible-content open">
+                    <div class="source-item selected" onclick="selectSource(this)">
+                      <span class="text-green" style="font-size: 10px">&#9679;</span> Corp Docs
+                      <span class="text-muted" style="margin-left: auto; font-size: 11px">234</span>
+                    </div>
+                    <div class="source-item" onclick="selectSource(this)">
+                      <span class="text-green" style="font-size: 10px">&#9679;</span> HR Portal
+                      <span class="text-muted" style="margin-left: auto; font-size: 11px">89</span>
+                    </div>
+                    <div class="source-item" onclick="selectSource(this)">
+                      <span class="text-red" style="font-size: 10px">&#9679;</span> Legal Vault
+                      <span class="text-muted" style="margin-left: auto; font-size: 11px">45</span>
+                    </div>
+                  </div>
+
+                  <!-- Web Crawlers -->
+                  <div class="source-group-header" onclick="toggleCollapse(this)">
+                    <span>&#127760; Web Crawlers (8)</span
+                    ><span style="font-size: 10px">&#9660;</span>
+                  </div>
+                  <div class="collapsible-content open">
+                    <div class="source-item" onclick="selectSource(this)">
+                      <span class="text-green" style="font-size: 10px">&#9679;</span> Help Center
+                      <span class="text-muted" style="margin-left: auto; font-size: 11px"
+                        >1.2K</span
+                      >
+                    </div>
+                    <div class="source-item" onclick="selectSource(this)">
+                      <span class="text-yellow" style="font-size: 10px">&#9679;</span> Blog
+                      <span class="text-muted" style="margin-left: auto; font-size: 11px">234</span>
+                    </div>
+                    <div class="source-item text-muted" style="font-size: 12px">...6 more</div>
+                  </div>
+
+                  <!-- Manual -->
+                  <div class="source-group-header" onclick="toggleCollapse(this)">
+                    <span>&#128196; Manual (12)</span><span style="font-size: 10px">&#9660;</span>
+                  </div>
+                  <div class="collapsible-content">
+                    <div class="source-item text-muted" style="font-size: 12px">...12 items</div>
+                  </div>
+
+                  <!-- Database -->
+                  <div class="source-group-header" onclick="toggleCollapse(this)">
+                    <span>&#128452; Database (4)</span><span style="font-size: 10px">&#9660;</span>
+                  </div>
+                  <div class="collapsible-content">
+                    <div class="source-item text-muted" style="font-size: 12px">...4 items</div>
+                  </div>
+
+                  <!-- API -->
+                  <div class="source-group-header" onclick="toggleCollapse(this)">
+                    <span>&#128268; API (100)</span><span style="font-size: 10px">&#9660;</span>
+                  </div>
+                  <div class="collapsible-content open">
+                    <div class="source-item" onclick="selectSource(this)">
+                      <span class="text-green" style="font-size: 10px">&#9679;</span> Zendesk
+                      <span class="text-muted" style="margin-left: auto; font-size: 11px">12K</span>
+                    </div>
+                    <div class="source-item" onclick="selectSource(this)">
+                      <span class="text-green" style="font-size: 10px">&#9679;</span> Jira
+                      <span class="text-muted" style="margin-left: auto; font-size: 11px"
+                        >8.9K</span
+                      >
+                    </div>
+                    <div class="source-item" onclick="selectSource(this)">
+                      <span class="text-green" style="font-size: 10px">&#9679;</span> ServiceNow
+                      <span class="text-muted" style="margin-left: auto; font-size: 11px"
+                        >4.5K</span
+                      >
+                    </div>
+                    <div class="source-item text-muted" style="font-size: 12px">...97 more</div>
+                  </div>
+
+                  <div style="margin-top: 16px; padding: 8px; border-top: 1px solid var(--border)">
+                    <div
+                      class="text-muted"
+                      style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em"
+                    >
+                      Explore
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Document Table Area -->
+                <div style="flex: 1; overflow-y: auto; padding: 16px 24px">
+                  <!-- Source Detail Card -->
+                  <div class="card mb-16" id="source-detail">
+                    <div class="flex items-center justify-between mb-8">
+                      <div class="flex items-center gap-12">
+                        <h3>Corp Docs</h3>
+                        <span class="badge badge-green">Active</span>
+                        <span class="text-muted">234 documents</span>
+                      </div>
+                      <div class="flex gap-8">
+                        <button class="btn btn-sm btn-primary">Sync Now</button>
+                        <button class="btn btn-sm">Configure &rarr;</button>
+                        <button class="btn btn-sm btn-danger">Delete</button>
+                      </div>
+                    </div>
+                    <div class="grid-3 text-muted" style="font-size: 12px">
+                      <div><span style="color: var(--text-dim)">Type:</span> SharePoint</div>
+                      <div><span style="color: var(--text-dim)">Auth:</span> OAuth 2.0</div>
+                      <div><span style="color: var(--text-dim)">Schedule:</span> Every 6h</div>
+                      <div><span style="color: var(--text-dim)">Last sync:</span> 5m ago</div>
+                      <div><span style="color: var(--text-dim)">Next sync:</span> in 5h 55m</div>
+                      <div><span style="color: var(--text-dim)">Status:</span> Healthy</div>
+                    </div>
+                    <div class="mt-8" style="font-size: 12px">
+                      <span style="color: var(--text-dim)">Sync History:</span>
+                      <span class="text-muted"
+                        >Today 10:30 (12 docs, &#10004;) &middot; Yesterday 16:00 (45 docs,
+                        &#10004;) &middot; Mar 14 (8 docs, &#10004;)</span
+                      >
+                    </div>
+                  </div>
+
+                  <!-- Document Table -->
+                  <div class="flex items-center justify-between mb-8">
+                    <h3>Documents</h3>
+                    <input
+                      class="input"
+                      style="max-width: 200px; font-size: 12px"
+                      placeholder="Search documents..."
+                    />
+                  </div>
+                  <div class="flex gap-8 mb-12">
+                    <select class="input" style="width: 120px; font-size: 12px">
+                      <option>All Sources</option>
+                    </select>
+                    <select class="input" style="width: 110px; font-size: 12px">
+                      <option>All Status</option>
+                      <option>Indexed</option>
+                      <option>Partial</option>
+                      <option>Failed</option>
+                      <option>Processing</option>
+                    </select>
+                    <select class="input" style="width: 100px; font-size: 12px">
+                      <option>All Types</option>
+                      <option>PDF</option>
+                      <option>HTML</option>
+                      <option>DOCX</option>
+                      <option>JSON</option>
+                    </select>
+                    <select class="input" style="width: 110px; font-size: 12px">
+                      <option>Any Date</option>
+                    </select>
+                    <button class="btn btn-sm" style="margin-left: auto">Columns</button>
+                  </div>
+                  <div class="flex items-center gap-8 mb-8 text-muted" style="font-size: 12px">
+                    <span>0 selected</span>
+                    <button class="btn btn-sm" disabled>Reprocess</button>
+                    <button class="btn btn-sm" disabled>Delete</button>
+                  </div>
+                  <table class="table">
+                    <thead>
+                      <tr>
+                        <th style="width: 30px"><input type="checkbox" /></th>
+                        <th></th>
+                        <th>Title</th>
+                        <th>Source</th>
+                        <th>Status</th>
+                        <th>Type</th>
+                        <th>Chunks</th>
+                        <th>Date</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td><input type="checkbox" /></td>
+                        <td>&#128196;</td>
+                        <td>Getting Started Guide</td>
+                        <td>Corp Docs</td>
+                        <td><span class="badge badge-green">Indexed</span></td>
+                        <td>PDF</td>
+                        <td>24</td>
+                        <td>Mar 16</td>
+                      </tr>
+                      <tr>
+                        <td><input type="checkbox" /></td>
+                        <td>&#127760;</td>
+                        <td>API Reference v3.2</td>
+                        <td>Help Center</td>
+                        <td><span class="badge badge-green">Indexed</span></td>
+                        <td>HTML</td>
+                        <td>156</td>
+                        <td>Mar 16</td>
+                      </tr>
+                      <tr>
+                        <td><input type="checkbox" /></td>
+                        <td>&#128196;</td>
+                        <td>Onboarding Handbook</td>
+                        <td>HR Portal</td>
+                        <td><span class="badge badge-yellow">Partial (8/12)</span></td>
+                        <td>DOCX</td>
+                        <td>8</td>
+                        <td>Mar 15</td>
+                      </tr>
+                      <tr>
+                        <td><input type="checkbox" /></td>
+                        <td>&#128196;</td>
+                        <td>Q1 Financial Report</td>
+                        <td>Corp Docs</td>
+                        <td><span class="badge badge-red">Failed</span></td>
+                        <td>PDF</td>
+                        <td>0</td>
+                        <td>Mar 15</td>
+                      </tr>
+                      <tr>
+                        <td colspan="8" style="padding-left: 60px">
+                          <span class="text-red" style="font-size: 11px"
+                            >Error: PDF extraction failed &mdash; encrypted file</span
+                          >
+                        </td>
+                      </tr>
+                      <tr>
+                        <td><input type="checkbox" /></td>
+                        <td>&#128268;</td>
+                        <td>Zendesk Ticket #45231</td>
+                        <td>Zendesk</td>
+                        <td><span class="badge badge-green">Indexed</span></td>
+                        <td>JSON</td>
+                        <td>3</td>
+                        <td>Mar 15</td>
+                      </tr>
+                      <tr>
+                        <td><input type="checkbox" /></td>
+                        <td>&#127760;</td>
+                        <td>Troubleshooting Guide</td>
+                        <td>Help Center</td>
+                        <td><span class="badge badge-blue">Processing</span></td>
+                        <td>HTML</td>
+                        <td>&mdash;</td>
+                        <td>Mar 16</td>
+                      </tr>
+                      <tr>
+                        <td><input type="checkbox" /></td>
+                        <td>&#128196;</td>
+                        <td>Security Policy v2.1</td>
+                        <td>Legal Vault</td>
+                        <td><span class="badge badge-green">Indexed</span></td>
+                        <td>PDF</td>
+                        <td>18</td>
+                        <td>Mar 14</td>
+                      </tr>
+                      <tr>
+                        <td><input type="checkbox" /></td>
+                        <td>&#128452;</td>
+                        <td>Product Specifications DB</td>
+                        <td>Products DB</td>
+                        <td><span class="badge badge-green">Indexed</span></td>
+                        <td>JSON</td>
+                        <td>89</td>
+                        <td>Mar 14</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                  <div
+                    class="flex items-center justify-between mt-16 text-muted"
+                    style="font-size: 12px"
+                  >
+                    <span>Showing 1-50 of 1,234</span>
+                    <div class="flex gap-8">
+                      <button class="btn btn-sm" disabled>&laquo;</button>
+                      <button class="btn btn-sm btn-primary">1</button>
+                      <button class="btn btn-sm">2</button>
+                      <button class="btn btn-sm">3</button>
+                      <button class="btn btn-sm">...</button>
+                      <button class="btn btn-sm">25</button>
+                      <button class="btn btn-sm">&raquo;</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- INTELLIGENCE TAB -->
+            <div
+              id="tab-intelligence"
+              class="tab-content"
+              style="display: none; padding: 24px 32px"
+            >
+              <!-- Hub View -->
+              <div id="intel-hub">
+                <h2>Intelligence Hub</h2>
+                <p class="text-muted mt-8 mb-16">
+                  How your data is processed and enriched for search
+                </p>
+                <div class="flex items-center gap-8 mb-24 text-muted" style="font-size: 12px">
+                  <span class="badge badge-blue">Sources</span> &rarr;
+                  <span class="badge badge-blue">Pipeline</span> &rarr;
+                  <span class="badge badge-blue">Schema</span> &rarr;
+                  <span class="badge badge-blue">Vocabulary</span> &rarr;
+                  <span class="badge badge-blue">KG</span> &rarr;
+                  <span class="badge badge-blue">Search</span>
+                </div>
+
+                <div class="grid-2 gap-16">
+                  <!-- Pipeline Card -->
+                  <div class="card">
+                    <div class="flex items-center gap-8 mb-8">
+                      <span style="font-size: 18px">&#128295;</span>
+                      <h3>Processing Pipeline</h3>
+                    </div>
+                    <div class="text-muted" style="font-size: 12px">
+                      <div>3 flows | <span class="text-green">Published &#10004;</span></div>
+                      <div class="mt-8">Embedding: e5-small (1536d)</div>
+                      <div>0 errors | 0 breakers</div>
+                      <div>Last published: 2 days ago</div>
+                    </div>
+                    <div class="flex gap-8 mt-16">
+                      <button class="btn btn-sm btn-primary" onclick="showDrillDown('pipeline')">
+                        Open Editor &rarr;
+                      </button>
+                      <button class="btn btn-sm">Test Flow Selection</button>
+                    </div>
+                  </div>
+
+                  <!-- Schema Card -->
+                  <div class="card">
+                    <div class="flex items-center gap-8 mb-8">
+                      <span style="font-size: 18px">&#128203;</span>
+                      <h3>Schema &amp; Fields</h3>
+                    </div>
+                    <div class="text-muted" style="font-size: 12px">
+                      <div>14 canonical fields, 127 connector source fields</div>
+                      <div class="mt-8">
+                        <span class="text-yellow">12 suggested mappings &#128312;</span>
+                      </div>
+                      <div>34 unmapped fields</div>
+                    </div>
+                    <div class="flex gap-8 mt-16">
+                      <button class="btn btn-sm">Accept All High-Conf</button>
+                      <button class="btn btn-sm btn-primary" onclick="showDrillDown('fields')">
+                        Review Mappings &rarr;
+                      </button>
+                    </div>
+                  </div>
+
+                  <!-- Vocabulary Card -->
+                  <div class="card">
+                    <div class="flex items-center gap-8 mb-8">
+                      <span style="font-size: 18px">&#128214;</span>
+                      <h3>Vocabulary</h3>
+                    </div>
+                    <div class="text-muted" style="font-size: 12px">
+                      <div>156 terms | 78% match rate</div>
+                      <div class="mt-8">142 active | 14 disabled</div>
+                      <div>Recent: "CPU" &rarr; processor, chip</div>
+                    </div>
+                    <div class="flex gap-8 mt-16">
+                      <button class="btn btn-sm btn-primary" onclick="showDrillDown('vocabulary')">
+                        Manage Terms &rarr;
+                      </button>
+                      <button class="btn btn-sm">Test Resolution</button>
+                      <button class="btn btn-sm">Generate from Schema</button>
+                    </div>
+                  </div>
+
+                  <!-- KG Card -->
+                  <div class="card">
+                    <div class="flex items-center gap-8 mb-8">
+                      <span style="font-size: 18px">&#128376;</span>
+                      <h3>Knowledge Graph</h3>
+                    </div>
+                    <div class="text-muted" style="font-size: 12px">
+                      <div>
+                        <span class="text-green">Enabled</span> | 234 entities, 98% enriched
+                      </div>
+                      <div class="mt-8">Domain: Electronics, Taxonomy: v3</div>
+                    </div>
+                    <div class="flex gap-8 mt-16">
+                      <button class="btn btn-sm btn-primary" onclick="showDrillDown('kg')">
+                        Explore Graph &rarr;
+                      </button>
+                      <button class="btn btn-sm">Run Enrichment</button>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- LLM Models - full width -->
+                <div class="card mt-16">
+                  <div class="flex items-center gap-8 mb-8">
+                    <span style="font-size: 18px">&#129302;</span>
+                    <h3>LLM Models</h3>
+                  </div>
+                  <div class="flex gap-24">
+                    <div class="text-muted" style="font-size: 12px; flex: 1">
+                      <div>
+                        <span class="text-green">&#10004;</span> GPT-4o-mini &rarr; Summarization,
+                        Vocabulary, Fields, Classification
+                      </div>
+                      <div class="mt-8">
+                        <span class="text-green">&#10004;</span> GPT-4o &rarr; Knowledge Graph
+                        extraction
+                      </div>
+                      <div class="mt-8">
+                        <span class="text-dim">&#9679;</span> Not configured: Vision, Multimodal
+                      </div>
+                    </div>
+                    <div style="width: 240px">
+                      <div class="text-muted" style="font-size: 12px">
+                        Usage: 234K / 1M tokens (23%)
+                      </div>
+                      <div class="progress-bar mt-8">
+                        <div class="fill" style="width: 23%; background: var(--accent)"></div>
+                      </div>
+                    </div>
+                  </div>
+                  <button class="btn btn-sm mt-16" onclick="showDrillDown('llm')">
+                    Configure Models &rarr;
+                  </button>
+                </div>
+              </div>
+
+              <!-- DRILL-DOWN: Fields -->
+              <div id="intel-fields" style="display: none">
+                <div class="back-link" onclick="showDrillDown('hub')">&larr; Intelligence</div>
+                <div class="flex items-center justify-between">
+                  <h2>Schema &amp; Fields</h2>
+                  <button class="btn btn-sm">+ Add Field</button>
+                </div>
+                <div class="flex gap-16 mt-8 mb-16 text-muted" style="font-size: 12px">
+                  <span>14 canonical</span> <span>127 source</span>
+                  <span class="text-yellow">12 suggested</span>
+                  <span class="text-red">34 unmapped</span>
+                </div>
+                <div class="flex gap-0 mb-16" style="border-bottom: 1px solid var(--border)">
+                  <div
+                    class="kb-tab active"
+                    data-ftab="myfields"
+                    onclick="switchFieldTab('myfields')"
+                  >
+                    My Fields
+                  </div>
+                  <div class="kb-tab" data-ftab="suggested" onclick="switchFieldTab('suggested')">
+                    Suggested Mappings (12)
+                  </div>
+                  <div class="kb-tab" data-ftab="unmapped" onclick="switchFieldTab('unmapped')">
+                    Unmapped Fields (34)
+                  </div>
+                </div>
+
+                <!-- My Fields -->
+                <div id="ftab-myfields">
+                  <div class="flex items-center gap-12 mb-16">
+                    <button
+                      class="btn btn-sm btn-primary"
+                      id="viewByField"
+                      onclick="setFieldView('field')"
+                    >
+                      By Field
+                    </button>
+                    <button
+                      class="btn btn-sm"
+                      id="viewByConnector"
+                      onclick="setFieldView('connector')"
+                    >
+                      By Connector
+                    </button>
+                    <input
+                      class="input"
+                      style="max-width: 200px; font-size: 12px"
+                      placeholder="Search fields..."
+                    />
+                  </div>
+                  <!-- Priority field card -->
+                  <div class="card mb-12">
+                    <div
+                      class="flex items-center justify-between"
+                      style="cursor: pointer"
+                      onclick="this.nextElementSibling.classList.toggle('open')"
+                    >
+                      <div class="flex items-center gap-12">
+                        <h3>priority</h3>
+                        <span class="text-muted">(issue_priority)</span
+                        ><span class="badge badge-blue">Text</span
+                        ><span class="text-muted" style="font-size: 11px">Filter, Sort</span>
+                      </div>
+                      <span class="text-muted">Mapped from 4 connectors &#9660;</span>
+                    </div>
+                    <div class="collapsible-content open" style="margin-top: 12px">
+                      <table class="table">
+                        <thead>
+                          <tr>
+                            <th>Connector</th>
+                            <th>Source Path</th>
+                            <th>Confidence</th>
+                            <th>Transform</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr>
+                            <td>Jira</td>
+                            <td>fields.priority.name</td>
+                            <td>
+                              <div class="progress-bar" style="width: 80px; display: inline-block">
+                                <div
+                                  class="fill"
+                                  style="width: 95%; background: var(--green)"
+                                ></div>
+                              </div>
+                              95%
+                            </td>
+                            <td>lowercase</td>
+                          </tr>
+                          <tr>
+                            <td>ServiceNow</td>
+                            <td>priority</td>
+                            <td>
+                              <div class="progress-bar" style="width: 80px; display: inline-block">
+                                <div
+                                  class="fill"
+                                  style="width: 92%; background: var(--green)"
+                                ></div>
+                              </div>
+                              92%
+                            </td>
+                            <td>enum_map</td>
+                          </tr>
+                          <tr>
+                            <td>PagerDuty</td>
+                            <td>urgency</td>
+                            <td>
+                              <div class="progress-bar" style="width: 80px; display: inline-block">
+                                <div
+                                  class="fill"
+                                  style="width: 88%; background: var(--yellow)"
+                                ></div>
+                              </div>
+                              88%
+                            </td>
+                            <td>enum_map</td>
+                          </tr>
+                          <tr>
+                            <td>Zendesk</td>
+                            <td>ticket.priority</td>
+                            <td>
+                              <div class="progress-bar" style="width: 80px; display: inline-block">
+                                <div
+                                  class="fill"
+                                  style="width: 91%; background: var(--green)"
+                                ></div>
+                              </div>
+                              91%
+                            </td>
+                            <td>lowercase</td>
+                          </tr>
+                        </tbody>
+                      </table>
+                      <div class="text-muted mt-8" style="font-size: 11px">
+                        Enum values: critical, high, medium, low
+                      </div>
+                      <div class="flex gap-8 mt-8">
+                        <button class="btn btn-sm">Edit Field</button
+                        ><button class="btn btn-sm">Edit Mappings</button>
+                      </div>
+                    </div>
+                  </div>
+                  <!-- Additional collapsed cards -->
+                  <div class="card mb-12" style="cursor: pointer">
+                    <div class="flex items-center justify-between">
+                      <div class="flex items-center gap-12">
+                        <h3>category</h3>
+                        <span class="badge badge-blue">Text</span>
+                      </div>
+                      <span class="text-muted">3 connectors &#9654;</span>
+                    </div>
+                  </div>
+                  <div class="card mb-12" style="cursor: pointer">
+                    <div class="flex items-center justify-between">
+                      <div class="flex items-center gap-12">
+                        <h3>assignee_email</h3>
+                        <span class="badge badge-blue">Email</span>
+                      </div>
+                      <span class="text-muted">5 connectors &#9654;</span>
+                    </div>
+                  </div>
+                  <div class="card mb-12" style="cursor: pointer">
+                    <div class="flex items-center justify-between">
+                      <div class="flex items-center gap-12">
+                        <h3>created_date</h3>
+                        <span class="badge badge-blue">Date</span>
+                      </div>
+                      <span class="text-muted">6 connectors &#9654;</span>
+                    </div>
+                  </div>
+                  <div class="card mb-12" style="cursor: pointer">
+                    <div class="flex items-center justify-between">
+                      <div class="flex items-center gap-12">
+                        <h3>status</h3>
+                        <span class="badge badge-blue">Enum</span>
+                      </div>
+                      <span class="text-muted">5 connectors &#9654;</span>
+                    </div>
+                  </div>
+                  <div class="text-muted mt-16" style="font-size: 12px">
+                    Showing 1-14 of 14 canonical fields
+                  </div>
+                </div>
+
+                <!-- Suggested Mappings -->
+                <div id="ftab-suggested" style="display: none">
+                  <div class="card mb-16" style="border-color: var(--green-dim)">
+                    <div class="flex items-center justify-between">
+                      <span class="text-green">8 high-confidence (&ge;80%)</span>
+                      <button class="btn btn-sm btn-primary">Accept All 8</button>
+                    </div>
+                  </div>
+                  <div class="flex gap-8 mb-12">
+                    <select class="input" style="width: 130px; font-size: 12px">
+                      <option>All Connectors</option>
+                    </select>
+                    <select class="input" style="width: 130px; font-size: 12px">
+                      <option>All Confidence</option>
+                    </select>
+                    <input
+                      class="input"
+                      style="max-width: 200px; font-size: 12px"
+                      placeholder="Search..."
+                    />
+                  </div>
+                  <div class="flex items-center gap-8 mb-8 text-muted" style="font-size: 12px">
+                    <span>0 selected</span>
+                    <button class="btn btn-sm" disabled>Accept Selected</button>
+                    <button class="btn btn-sm" disabled>Reject Selected</button>
+                  </div>
+                  <table class="table">
+                    <thead>
+                      <tr>
+                        <th style="width: 30px"><input type="checkbox" /></th>
+                        <th>Connector</th>
+                        <th>Source Path</th>
+                        <th></th>
+                        <th>Canonical</th>
+                        <th>Confidence</th>
+                        <th>Action</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td><input type="checkbox" /></td>
+                        <td>Jira</td>
+                        <td>fields.assignee.email</td>
+                        <td>&rarr;</td>
+                        <td>assignee_email</td>
+                        <td><span class="text-green">94%</span></td>
+                        <td>
+                          <button class="btn btn-sm" style="padding: 2px 6px">&#10004;</button>
+                          <button class="btn btn-sm" style="padding: 2px 6px">&#10008;</button>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td><input type="checkbox" /></td>
+                        <td>Zendesk</td>
+                        <td>ticket.tags</td>
+                        <td>&rarr;</td>
+                        <td>tags</td>
+                        <td><span class="text-green">91%</span></td>
+                        <td>
+                          <button class="btn btn-sm" style="padding: 2px 6px">&#10004;</button>
+                          <button class="btn btn-sm" style="padding: 2px 6px">&#10008;</button>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td><input type="checkbox" /></td>
+                        <td>ServiceNow</td>
+                        <td>sys_created_on</td>
+                        <td>&rarr;</td>
+                        <td>created_date</td>
+                        <td><span class="text-green">89%</span></td>
+                        <td>
+                          <button class="btn btn-sm" style="padding: 2px 6px">&#10004;</button>
+                          <button class="btn btn-sm" style="padding: 2px 6px">&#10008;</button>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td><input type="checkbox" /></td>
+                        <td>PagerDuty</td>
+                        <td>incident.status</td>
+                        <td>&rarr;</td>
+                        <td>status</td>
+                        <td><span class="text-green">87%</span></td>
+                        <td>
+                          <button class="btn btn-sm" style="padding: 2px 6px">&#10004;</button>
+                          <button class="btn btn-sm" style="padding: 2px 6px">&#10008;</button>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td><input type="checkbox" /></td>
+                        <td>Confluence</td>
+                        <td>content.space.key</td>
+                        <td>&rarr;</td>
+                        <td>category</td>
+                        <td><span class="text-yellow">72%</span></td>
+                        <td>
+                          <button class="btn btn-sm" style="padding: 2px 6px">&#10004;</button>
+                          <button class="btn btn-sm" style="padding: 2px 6px">&#10008;</button>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td><input type="checkbox" /></td>
+                        <td>Slack</td>
+                        <td>message.channel</td>
+                        <td>&rarr;</td>
+                        <td>source_channel</td>
+                        <td><span class="text-yellow">65%</span></td>
+                        <td>
+                          <button class="btn btn-sm" style="padding: 2px 6px">&#10004;</button>
+                          <button class="btn btn-sm" style="padding: 2px 6px">&#10008;</button>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+
+                <!-- Unmapped Fields -->
+                <div id="ftab-unmapped" style="display: none">
+                  <p class="text-muted mb-16" style="font-size: 12px">
+                    Fields from connectors that haven't been mapped to canonical schema fields yet.
+                  </p>
+                  <div class="flex gap-8 mb-12">
+                    <select class="input" style="width: 130px; font-size: 12px">
+                      <option>All Connectors</option>
+                    </select>
+                    <select class="input" style="width: 110px; font-size: 12px">
+                      <option>All Types</option>
+                    </select>
+                    <input
+                      class="input"
+                      style="max-width: 200px; font-size: 12px"
+                      placeholder="Search..."
+                    />
+                  </div>
+                  <table class="table">
+                    <thead>
+                      <tr>
+                        <th>Connector</th>
+                        <th>Source Path</th>
+                        <th>Type</th>
+                        <th>Samples</th>
+                        <th>Action</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td>Jira</td>
+                        <td>fields.customfield_10234</td>
+                        <td>String</td>
+                        <td>"sprint-42", "sprint-43"</td>
+                        <td><button class="btn btn-sm">Map &rarr;</button></td>
+                      </tr>
+                      <tr>
+                        <td>Zendesk</td>
+                        <td>ticket.custom_fields.satisfaction</td>
+                        <td>Number</td>
+                        <td>4.2, 3.8, 5.0</td>
+                        <td><button class="btn btn-sm">Map &rarr;</button></td>
+                      </tr>
+                      <tr>
+                        <td>ServiceNow</td>
+                        <td>u_department_code</td>
+                        <td>String</td>
+                        <td>"ENG", "MKT", "HR"</td>
+                        <td><button class="btn btn-sm">Map &rarr;</button></td>
+                      </tr>
+                      <tr>
+                        <td>PagerDuty</td>
+                        <td>incident.escalation_level</td>
+                        <td>Number</td>
+                        <td>1, 2, 3</td>
+                        <td><button class="btn btn-sm">Map &rarr;</button></td>
+                      </tr>
+                      <tr>
+                        <td>Confluence</td>
+                        <td>content.metadata.labels</td>
+                        <td>Array</td>
+                        <td>["api","v3"], ["internal"]</td>
+                        <td><button class="btn btn-sm">Map &rarr;</button></td>
+                      </tr>
+                      <tr>
+                        <td>Slack</td>
+                        <td>message.reactions</td>
+                        <td>Array</td>
+                        <td>["+1",":fire:"]</td>
+                        <td><button class="btn btn-sm">Map &rarr;</button></td>
+                      </tr>
+                    </tbody>
+                  </table>
+                  <div
+                    class="flex items-center justify-between mt-16 text-muted"
+                    style="font-size: 12px"
+                  >
+                    <span>Showing 1-34 of 34</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- DRILL-DOWN: Pipeline Editor -->
+              <div id="intel-pipeline" style="display: none">
+                <div class="back-link" onclick="showDrillDown('hub')">&larr; Intelligence</div>
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center gap-12">
+                    <h2>Pipeline Editor</h2>
+                    <span class="badge badge-yellow">Draft</span>
+                  </div>
+                  <div class="flex gap-8">
+                    <button class="btn btn-sm">Save</button
+                    ><button class="btn btn-sm btn-primary">Publish</button>
+                  </div>
+                </div>
+                <div class="flex items-center gap-8 mt-8 mb-16 text-muted" style="font-size: 12px">
+                  Embedding: <span class="badge badge-blue">e5-small (1536d)</span>
+                  <button class="btn btn-sm" style="padding: 2px 8px; font-size: 11px">
+                    Change
+                  </button>
+                </div>
+                <div class="flex" style="gap: 16px; height: 400px">
+                  <!-- Flow list -->
+                  <div
+                    style="
+                      width: 200px;
+                      border: 1px solid var(--border);
+                      border-radius: var(--radius);
+                      background: var(--bg-elevated);
+                      padding: 12px;
+                    "
+                  >
+                    <div
+                      class="text-muted"
+                      style="font-size: 11px; text-transform: uppercase; margin-bottom: 8px"
+                    >
+                      Flows
+                    </div>
+                    <div
+                      style="
+                        padding: 8px;
+                        background: var(--accent-dim);
+                        border-radius: var(--radius-sm);
+                        color: var(--accent);
+                        margin-bottom: 4px;
+                        cursor: pointer;
+                      "
+                    >
+                      Default Flow
+                    </div>
+                    <div
+                      style="
+                        padding: 8px;
+                        border-radius: var(--radius-sm);
+                        color: var(--text-muted);
+                        margin-bottom: 4px;
+                        cursor: pointer;
+                      "
+                    >
+                      PDF Flow
+                    </div>
+                    <div
+                      style="
+                        padding: 8px;
+                        border-radius: var(--radius-sm);
+                        color: var(--text-muted);
+                        margin-bottom: 4px;
+                        cursor: pointer;
+                      "
+                    >
+                      Web Flow
+                    </div>
+                    <button class="btn btn-sm mt-16 w-full">+ Add Flow</button>
+                  </div>
+                  <!-- Flow detail -->
+                  <div
+                    style="
+                      flex: 1;
+                      border: 1px solid var(--border);
+                      border-radius: var(--radius);
+                      background: var(--bg-elevated);
+                      padding: 20px;
+                    "
+                  >
+                    <div class="flex items-center gap-12 mb-16">
+                      <h3>Default Flow</h3>
+                      <span class="text-muted">Priority: 0 (fallback)</span>
+                    </div>
+                    <div
+                      class="flex items-center gap-16"
+                      style="justify-content: center; margin: 40px 0"
+                    >
+                      <div
+                        class="card"
+                        style="padding: 16px 24px; text-align: center; min-width: 120px"
+                      >
+                        <div style="font-size: 20px">&#128196;</div>
+                        <div style="font-weight: 600; margin-top: 4px">Extract</div>
+                        <div class="text-muted" style="font-size: 11px">Text + metadata</div>
+                      </div>
+                      <span class="text-muted" style="font-size: 20px">&rarr;</span>
+                      <div
+                        class="card"
+                        style="padding: 16px 24px; text-align: center; min-width: 120px"
+                      >
+                        <div style="font-size: 20px">&#9986;</div>
+                        <div style="font-weight: 600; margin-top: 4px">Chunk</div>
+                        <div class="text-muted" style="font-size: 11px">512 tokens, 50 overlap</div>
+                      </div>
+                      <span class="text-muted" style="font-size: 20px">&rarr;</span>
+                      <div
+                        class="card"
+                        style="padding: 16px 24px; text-align: center; min-width: 120px"
+                      >
+                        <div style="font-size: 20px">&#129518;</div>
+                        <div style="font-weight: 600; margin-top: 4px">Embed</div>
+                        <div class="text-muted" style="font-size: 11px">e5-small (1536d)</div>
+                      </div>
+                    </div>
+                    <div class="text-muted" style="font-size: 12px">
+                      Selection rules:
+                      <code style="background: var(--bg-card); padding: 2px 6px; border-radius: 3px"
+                        >*</code
+                      >
+                      (matches all documents)
+                    </div>
+                    <div class="text-muted mt-8" style="font-size: 12px">
+                      3 stages | <span class="text-green">Enabled &#10004;</span>
+                    </div>
+                  </div>
+                </div>
+                <button class="btn mt-16">Test Flow Selection</button>
+              </div>
+
+              <!-- DRILL-DOWN: Vocabulary -->
+              <div id="intel-vocabulary" style="display: none">
+                <div class="back-link" onclick="showDrillDown('hub')">&larr; Intelligence</div>
+                <h2>Vocabulary</h2>
+                <div class="flex gap-16 mt-8 mb-16 text-muted" style="font-size: 12px">
+                  <span>156 terms</span> <span>78% match rate</span>
+                  <span class="text-green">142 active</span>
+                  <span class="text-dim">14 disabled</span>
+                </div>
+                <div class="flex gap-8 mb-16">
+                  <button class="btn btn-sm btn-primary">+ Add Term</button>
+                  <button class="btn btn-sm">Generate from Schema</button>
+                  <button class="btn btn-sm">Test Resolution</button>
+                </div>
+                <div class="flex gap-8 mb-12">
+                  <input
+                    class="input"
+                    style="max-width: 200px; font-size: 12px"
+                    placeholder="Search terms..."
+                  />
+                  <select class="input" style="width: 150px; font-size: 12px">
+                    <option>All Types</option>
+                    <option>Synonym</option>
+                    <option>Abbreviation</option>
+                    <option>Acronym</option>
+                  </select>
+                </div>
+                <table class="table">
+                  <thead>
+                    <tr>
+                      <th>Term</th>
+                      <th>Type</th>
+                      <th>Expansions</th>
+                      <th>Match Rate</th>
+                      <th>Status</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td style="font-weight: 600">CPU</td>
+                      <td>Acronym</td>
+                      <td>processor, chip, central processing unit</td>
+                      <td>92%</td>
+                      <td><span class="badge badge-green">Active</span></td>
+                      <td><button class="btn btn-sm">Edit</button></td>
+                    </tr>
+                    <tr>
+                      <td style="font-weight: 600">RAM</td>
+                      <td>Acronym</td>
+                      <td>memory, random access memory</td>
+                      <td>88%</td>
+                      <td><span class="badge badge-green">Active</span></td>
+                      <td><button class="btn btn-sm">Edit</button></td>
+                    </tr>
+                    <tr>
+                      <td style="font-weight: 600">GPU</td>
+                      <td>Acronym</td>
+                      <td>graphics card, video card</td>
+                      <td>85%</td>
+                      <td><span class="badge badge-green">Active</span></td>
+                      <td><button class="btn btn-sm">Edit</button></td>
+                    </tr>
+                    <tr>
+                      <td style="font-weight: 600">SSD</td>
+                      <td>Abbreviation</td>
+                      <td>solid state drive, storage</td>
+                      <td>81%</td>
+                      <td><span class="badge badge-green">Active</span></td>
+                      <td><button class="btn btn-sm">Edit</button></td>
+                    </tr>
+                    <tr>
+                      <td style="font-weight: 600">password</td>
+                      <td>Synonym</td>
+                      <td>credentials, passphrase, auth</td>
+                      <td>76%</td>
+                      <td><span class="badge badge-green">Active</span></td>
+                      <td><button class="btn btn-sm">Edit</button></td>
+                    </tr>
+                    <tr>
+                      <td style="font-weight: 600">HDD</td>
+                      <td>Abbreviation</td>
+                      <td>hard drive, hard disk</td>
+                      <td>72%</td>
+                      <td><span class="badge badge-green">Active</span></td>
+                      <td><button class="btn btn-sm">Edit</button></td>
+                    </tr>
+                    <tr>
+                      <td style="font-weight: 600">NIC</td>
+                      <td>Acronym</td>
+                      <td>network card, network interface</td>
+                      <td>45%</td>
+                      <td><span class="text-dim">Disabled</span></td>
+                      <td><button class="btn btn-sm">Edit</button></td>
+                    </tr>
+                    <tr>
+                      <td style="font-weight: 600">PSU</td>
+                      <td>Abbreviation</td>
+                      <td>power supply</td>
+                      <td>38%</td>
+                      <td><span class="text-dim">Disabled</span></td>
+                      <td><button class="btn btn-sm">Edit</button></td>
+                    </tr>
+                  </tbody>
+                </table>
+                <div class="text-muted mt-16" style="font-size: 12px">Showing 1-50 of 156</div>
+              </div>
+
+              <!-- DRILL-DOWN: Knowledge Graph -->
+              <div id="intel-kg" style="display: none">
+                <div class="back-link" onclick="showDrillDown('hub')">&larr; Intelligence</div>
+                <h2>Knowledge Graph</h2>
+                <div class="flex gap-16 mt-8 mb-16 text-muted" style="font-size: 12px">
+                  <span>234 entities</span> <span>567 relationships</span>
+                  <span class="text-green">98% enriched</span> <span>Domain: Electronics</span>
+                </div>
+                <div class="flex gap-8 mb-16">
+                  <button class="btn btn-sm btn-primary">Run Enrichment</button>
+                  <button class="btn btn-sm">Configure</button>
+                  <button class="btn btn-sm">Export</button>
+                </div>
+                <!-- Graph Canvas -->
+                <div
+                  style="
+                    border: 1px solid var(--border);
+                    border-radius: var(--radius);
+                    background: var(--bg-card);
+                    height: 500px;
+                    position: relative;
+                    overflow: hidden;
+                  "
+                >
+                  <svg width="100%" height="100%" style="position: absolute; top: 0; left: 0">
+                    <line x1="300" y1="200" x2="500" y2="150" stroke="#4a5068" stroke-width="1.5" />
+                    <line x1="300" y1="200" x2="200" y2="320" stroke="#4a5068" stroke-width="1.5" />
+                    <line x1="300" y1="200" x2="450" y2="300" stroke="#4a5068" stroke-width="1.5" />
+                    <line x1="500" y1="150" x2="650" y2="220" stroke="#4a5068" stroke-width="1.5" />
+                    <line x1="500" y1="150" x2="550" y2="80" stroke="#4a5068" stroke-width="1.5" />
+                    <line x1="450" y1="300" x2="600" y2="350" stroke="#4a5068" stroke-width="1.5" />
+                    <line x1="200" y1="320" x2="150" y2="420" stroke="#4a5068" stroke-width="1.5" />
+                    <line x1="200" y1="320" x2="320" y2="400" stroke="#4a5068" stroke-width="1.5" />
+                    <circle
+                      cx="300"
+                      cy="200"
+                      r="28"
+                      fill="#3a4a7a"
+                      stroke="#6c8cff"
+                      stroke-width="2"
+                    />
+                    <text x="300" y="204" text-anchor="middle" fill="#e4e6ed" font-size="11">
+                      Laptop
+                    </text>
+                    <circle
+                      cx="500"
+                      cy="150"
+                      r="24"
+                      fill="#064e3b"
+                      stroke="#34d399"
+                      stroke-width="2"
+                    />
+                    <text x="500" y="154" text-anchor="middle" fill="#e4e6ed" font-size="11">
+                      CPU
+                    </text>
+                    <circle
+                      cx="200"
+                      cy="320"
+                      r="24"
+                      fill="#064e3b"
+                      stroke="#34d399"
+                      stroke-width="2"
+                    />
+                    <text x="200" y="324" text-anchor="middle" fill="#e4e6ed" font-size="11">
+                      Display
+                    </text>
+                    <circle
+                      cx="450"
+                      cy="300"
+                      r="22"
+                      fill="#78350f"
+                      stroke="#fbbf24"
+                      stroke-width="2"
+                    />
+                    <text x="450" y="304" text-anchor="middle" fill="#e4e6ed" font-size="11">
+                      RAM
+                    </text>
+                    <circle
+                      cx="650"
+                      cy="220"
+                      r="20"
+                      fill="#78350f"
+                      stroke="#fbbf24"
+                      stroke-width="2"
+                    />
+                    <text x="650" y="224" text-anchor="middle" fill="#e4e6ed" font-size="11">
+                      i9-13900
+                    </text>
+                    <circle
+                      cx="550"
+                      cy="80"
+                      r="20"
+                      fill="#78350f"
+                      stroke="#fbbf24"
+                      stroke-width="2"
+                    />
+                    <text x="550" y="84" text-anchor="middle" fill="#e4e6ed" font-size="11">
+                      i7-13700
+                    </text>
+                    <circle
+                      cx="600"
+                      cy="350"
+                      r="18"
+                      fill="#1e3a5f"
+                      stroke="#60a5fa"
+                      stroke-width="2"
+                    />
+                    <text x="600" y="354" text-anchor="middle" fill="#e4e6ed" font-size="10">
+                      DDR5
+                    </text>
+                    <circle
+                      cx="150"
+                      cy="420"
+                      r="18"
+                      fill="#1e3a5f"
+                      stroke="#60a5fa"
+                      stroke-width="2"
+                    />
+                    <text x="150" y="424" text-anchor="middle" fill="#e4e6ed" font-size="10">
+                      OLED
+                    </text>
+                    <circle
+                      cx="320"
+                      cy="400"
+                      r="18"
+                      fill="#1e3a5f"
+                      stroke="#60a5fa"
+                      stroke-width="2"
+                    />
+                    <text x="320" y="404" text-anchor="middle" fill="#e4e6ed" font-size="10">
+                      IPS
+                    </text>
+                  </svg>
+                  <!-- Legend -->
+                  <div
+                    style="
+                      position: absolute;
+                      bottom: 12px;
+                      left: 12px;
+                      background: var(--bg-elevated);
+                      border: 1px solid var(--border);
+                      border-radius: var(--radius-sm);
+                      padding: 8px 12px;
+                      font-size: 11px;
+                    "
+                  >
+                    <div class="flex gap-12">
+                      <span><span style="color: var(--accent)">&#9679;</span> Product</span>
+                      <span><span style="color: var(--green)">&#9679;</span> Category</span>
+                      <span><span style="color: var(--yellow)">&#9679;</span> Feature</span>
+                      <span><span style="color: var(--blue)">&#9679;</span> Specification</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- DRILL-DOWN: LLM Models -->
+              <div id="intel-llm" style="display: none">
+                <div class="back-link" onclick="showDrillDown('hub')">&larr; Intelligence</div>
+                <h2>LLM Configuration</h2>
+                <div class="grid-2 mt-16 gap-16">
+                  <div class="card">
+                    <div class="flex items-center justify-between mb-8">
+                      <h3>GPT-4o-mini</h3>
+                      <span class="badge badge-green">Active</span>
+                    </div>
+                    <div class="text-muted" style="font-size: 12px">
+                      <div>Used for: Summarization, Vocabulary, Fields, Classification</div>
+                      <div class="mt-8">Usage: 189K / 500K tokens (38%)</div>
+                      <div class="progress-bar mt-8">
+                        <div class="fill" style="width: 38%; background: var(--accent)"></div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="card">
+                    <div class="flex items-center justify-between mb-8">
+                      <h3>GPT-4o</h3>
+                      <span class="badge badge-green">Active</span>
+                    </div>
+                    <div class="text-muted" style="font-size: 12px">
+                      <div>Used for: Knowledge Graph extraction</div>
+                      <div class="mt-8">Usage: 45K / 500K tokens (9%)</div>
+                      <div class="progress-bar mt-8">
+                        <div class="fill" style="width: 9%; background: var(--green)"></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="card mt-16">
+                  <h3 class="mb-8">Add Model</h3>
+                  <div class="flex gap-8">
+                    <select class="input" style="width: 200px">
+                      <option>Select provider...</option>
+                      <option>OpenAI</option>
+                      <option>Azure OpenAI</option>
+                      <option>Anthropic</option>
+                    </select>
+                    <input class="input" style="width: 200px" placeholder="Model name..." />
+                    <button class="btn btn-primary">Add</button>
+                  </div>
+                </div>
+                <div class="card mt-16">
+                  <h3 class="mb-8">Feature &rarr; Model Mapping</h3>
+                  <table class="table">
+                    <thead>
+                      <tr>
+                        <th>Feature</th>
+                        <th>Model</th>
+                        <th>Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td>Summarization</td>
+                        <td>GPT-4o-mini</td>
+                        <td><span class="text-green">&#10004;</span></td>
+                      </tr>
+                      <tr>
+                        <td>Vocabulary Generation</td>
+                        <td>GPT-4o-mini</td>
+                        <td><span class="text-green">&#10004;</span></td>
+                      </tr>
+                      <tr>
+                        <td>Field Suggestion</td>
+                        <td>GPT-4o-mini</td>
+                        <td><span class="text-green">&#10004;</span></td>
+                      </tr>
+                      <tr>
+                        <td>Classification</td>
+                        <td>GPT-4o-mini</td>
+                        <td><span class="text-green">&#10004;</span></td>
+                      </tr>
+                      <tr>
+                        <td>Knowledge Graph</td>
+                        <td>GPT-4o</td>
+                        <td><span class="text-green">&#10004;</span></td>
+                      </tr>
+                      <tr>
+                        <td>Vision</td>
+                        <td>&mdash;</td>
+                        <td><span class="text-dim">Not configured</span></td>
+                      </tr>
+                      <tr>
+                        <td>Multimodal</td>
+                        <td>&mdash;</td>
+                        <td><span class="text-dim">Not configured</span></td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+                <div class="card mt-16">
+                  <h3 class="mb-8">Token Usage Summary</h3>
+                  <div class="flex items-center gap-16 text-muted" style="font-size: 12px">
+                    <div>Total: 234K / 1M (23%)</div>
+                    <div class="progress-bar flex-1">
+                      <div class="fill" style="width: 23%; background: var(--accent)"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- SEARCH & TEST TAB -->
+            <div id="tab-search" class="tab-content" style="display: none; padding: 24px 32px">
+              <div class="flex gap-8 mb-16">
+                <input
+                  class="input"
+                  style="flex: 1; font-size: 14px; padding: 10px 16px"
+                  placeholder="Enter your search query..."
+                  value="how to reset password on laptop"
+                />
+                <button class="btn btn-primary" style="padding: 10px 20px">Search</button>
+                <button class="btn">Test Vocabulary</button>
+              </div>
+              <!-- Options -->
+              <div class="card mb-16" style="padding: 10px 16px">
+                <div class="flex items-center gap-16 text-muted" style="font-size: 12px">
+                  <span>Type: <strong class="text-accent">Hybrid</strong></span>
+                  <span>TopK: <strong>10</strong></span>
+                  <span>Debug: <strong class="text-green">On</strong></span>
+                  <span>Resolve: <strong>Alias</strong></span>
+                </div>
+              </div>
+              <!-- Latency Bar -->
+              <div class="card mb-16" style="padding: 10px 16px">
+                <div class="flex items-center gap-8 mb-8">
+                  <span style="font-weight: 600">234ms total</span>
+                </div>
+                <div class="flex" style="height: 8px; border-radius: 4px; overflow: hidden">
+                  <div style="width: 1%; background: var(--green)" title="Clean 2ms"></div>
+                  <div style="width: 4%; background: var(--blue)" title="Vocab 10ms"></div>
+                  <div style="width: 67%; background: var(--accent)" title="Vector 156ms"></div>
+                  <div style="width: 28%; background: var(--purple)" title="Rerank 66ms"></div>
+                </div>
+                <div class="flex gap-16 mt-8 text-muted" style="font-size: 11px">
+                  <span><span style="color: var(--green)">&#9679;</span> Clean 2ms</span>
+                  <span><span style="color: var(--blue)">&#9679;</span> Vocab 10ms</span>
+                  <span><span style="color: var(--accent)">&#9679;</span> Vector 156ms</span>
+                  <span><span style="color: var(--purple)">&#9679;</span> Rerank 66ms</span>
+                </div>
+              </div>
+
+              <!-- Resolution Chain -->
+              <div class="card mb-16">
+                <h3
+                  class="mb-8"
+                  style="cursor: pointer"
+                  onclick="
+                    this.parentElement.querySelector('.chain-detail').classList.toggle('open')
+                  "
+                >
+                  Resolution Chain &#9660;
+                </h3>
+                <div class="chain-detail collapsible-content open">
+                  <div class="chain-step">
+                    <div class="chain-num">1</div>
+                    <div>
+                      <div style="font-weight: 600">Raw Query</div>
+                      <div class="text-muted" style="font-size: 12px">
+                        "how to reset password on laptop"
+                      </div>
+                    </div>
+                  </div>
+                  <div class="chain-arrow">&darr;</div>
+                  <div class="chain-step">
+                    <div class="chain-num">2</div>
+                    <div>
+                      <div style="font-weight: 600">Cleaned &rarr; hybrid type</div>
+                      <div class="text-muted" style="font-size: 12px">
+                        "reset password laptop" (stopwords removed)
+                      </div>
+                    </div>
+                  </div>
+                  <div class="chain-arrow">&darr;</div>
+                  <div class="chain-step">
+                    <div class="chain-num">3</div>
+                    <div>
+                      <div style="font-weight: 600">Vocabulary Resolution</div>
+                      <div class="text-muted" style="font-size: 12px">
+                        password &rarr; credentials (92%) | laptop &rarr; notebook, portable
+                        computer (88%) | reset &rarr; restore, initialize (76%)
+                      </div>
+                    </div>
+                  </div>
+                  <div class="chain-arrow">&darr;</div>
+                  <div class="chain-step">
+                    <div class="chain-num">4</div>
+                    <div>
+                      <div style="font-weight: 600">Alias Resolution</div>
+                      <div class="text-muted" style="font-size: 12px">
+                        credentials &rarr; auth, passphrase | notebook &rarr; laptop-pc | restore
+                        &rarr; factory-reset
+                      </div>
+                    </div>
+                  </div>
+                  <div class="chain-arrow">&darr;</div>
+                  <div class="chain-step">
+                    <div class="chain-num">5</div>
+                    <div>
+                      <div style="font-weight: 600">Generated Filters</div>
+                      <div class="text-muted" style="font-size: 12px">
+                        <code style="background: var(--bg); padding: 2px 6px; border-radius: 3px"
+                          >{"category": "troubleshooting"}</code
+                        >
+                      </div>
+                    </div>
+                  </div>
+                  <div class="chain-arrow">&darr;</div>
+                  <div class="chain-step">
+                    <div class="chain-num">6</div>
+                    <div>
+                      <div style="font-weight: 600">Search</div>
+                      <div class="text-muted" style="font-size: 12px">
+                        50 candidates from vector + keyword
+                      </div>
+                    </div>
+                  </div>
+                  <div class="chain-arrow">&darr;</div>
+                  <div class="chain-step">
+                    <div class="chain-num">7</div>
+                    <div>
+                      <div style="font-weight: 600">Rerank</div>
+                      <div class="text-muted" style="font-size: 12px">
+                        5 results (threshold 0.5) | Coverage: 80% (4/5)
+                      </div>
+                    </div>
+                  </div>
+                  <div class="flex gap-8 mt-8">
+                    <button class="btn btn-sm">Copy API Call</button>
+                    <button class="btn btn-sm">Copy as cURL</button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Results -->
+              <h3 class="mb-8">5 results (of 1,234 total)</h3>
+              <div class="flex flex-col gap-12 mb-16">
+                <div class="result-card">
+                  <div class="flex items-center gap-8 mb-4">
+                    <span class="score-pill">#1 0.923</span
+                    ><span class="text-muted" style="font-size: 11px"
+                      >Corp Docs &middot; Default Flow</span
+                    >
+                  </div>
+                  <div style="font-weight: 600">How to Reset Your Laptop Password</div>
+                  <div class="text-muted mt-8" style="font-size: 12px">
+                    Step-by-step guide for resetting your
+                    <mark
+                      style="
+                        background: var(--accent-dim);
+                        color: var(--accent);
+                        padding: 0 2px;
+                        border-radius: 2px;
+                      "
+                      >password</mark
+                    >
+                    on company
+                    <mark
+                      style="
+                        background: var(--accent-dim);
+                        color: var(--accent);
+                        padding: 0 2px;
+                        border-radius: 2px;
+                      "
+                      >laptops</mark
+                    >. Covers Windows and macOS...
+                  </div>
+                  <div class="flex gap-8 mt-8" style="font-size: 11px">
+                    <span class="badge badge-blue">category: troubleshooting</span
+                    ><span class="badge badge-blue">dept: IT</span>
+                  </div>
+                  <div class="flex items-center gap-8 mt-8">
+                    <span class="badge badge-green" style="font-size: 10px"
+                      >password&rarr;credentials (92%)</span
+                    >
+                  </div>
+                  <div
+                    class="text-dim mt-8"
+                    style="font-size: 11px; cursor: pointer"
+                    onclick="
+                      this.nextElementSibling.style.display =
+                        this.nextElementSibling.style.display === 'none' ? 'block' : 'none'
+                    "
+                  >
+                    Score breakdown &#9660;
+                  </div>
+                  <div
+                    style="
+                      display: none;
+                      font-size: 11px;
+                      color: var(--text-muted);
+                      margin-top: 4px;
+                    "
+                  >
+                    vector: 0.89 | filter: +0.03 | rerank: 0.923
+                  </div>
+                </div>
+                <div class="result-card">
+                  <div class="flex items-center gap-8 mb-4">
+                    <span class="score-pill">#2 0.891</span
+                    ><span class="text-muted" style="font-size: 11px"
+                      >Help Center &middot; Web Flow</span
+                    >
+                  </div>
+                  <div style="font-weight: 600">Password Recovery FAQ</div>
+                  <div class="text-muted mt-8" style="font-size: 12px">
+                    Frequently asked questions about
+                    <mark
+                      style="
+                        background: var(--accent-dim);
+                        color: var(--accent);
+                        padding: 0 2px;
+                        border-radius: 2px;
+                      "
+                      >password</mark
+                    >
+                    recovery, including self-service
+                    <mark
+                      style="
+                        background: var(--accent-dim);
+                        color: var(--accent);
+                        padding: 0 2px;
+                        border-radius: 2px;
+                      "
+                      >reset</mark
+                    >
+                    options...
+                  </div>
+                  <div class="flex gap-8 mt-8" style="font-size: 11px">
+                    <span class="badge badge-blue">category: FAQ</span>
+                  </div>
+                  <div class="text-dim mt-8" style="font-size: 11px">
+                    vector: 0.85 | filter: +0.01 | rerank: 0.891
+                  </div>
+                </div>
+                <div class="result-card">
+                  <div class="flex items-center gap-8 mb-4">
+                    <span class="score-pill">#3 0.834</span
+                    ><span class="text-muted" style="font-size: 11px"
+                      >Zendesk &middot; Default Flow</span
+                    >
+                  </div>
+                  <div style="font-weight: 600">Ticket #38291: Credential Reset Not Working</div>
+                  <div class="text-muted mt-8" style="font-size: 12px">
+                    Customer reported inability to
+                    <mark
+                      style="
+                        background: var(--accent-dim);
+                        color: var(--accent);
+                        padding: 0 2px;
+                        border-radius: 2px;
+                      "
+                      >reset</mark
+                    >
+                    <mark
+                      style="
+                        background: var(--accent-dim);
+                        color: var(--accent);
+                        padding: 0 2px;
+                        border-radius: 2px;
+                      "
+                      >credentials</mark
+                    >
+                    after OS update on
+                    <mark
+                      style="
+                        background: var(--accent-dim);
+                        color: var(--accent);
+                        padding: 0 2px;
+                        border-radius: 2px;
+                      "
+                      >laptop</mark
+                    >...
+                  </div>
+                  <div class="text-dim mt-8" style="font-size: 11px">
+                    vector: 0.81 | filter: +0.00 | rerank: 0.834
+                  </div>
+                </div>
+                <div class="result-card">
+                  <div class="flex items-center gap-8 mb-4">
+                    <span class="score-pill">#4 0.778</span
+                    ><span class="text-muted" style="font-size: 11px"
+                      >Corp Docs &middot; PDF Flow</span
+                    >
+                  </div>
+                  <div style="font-weight: 600">
+                    IT Security Policy v2.1 &mdash; Section 4: Authentication
+                  </div>
+                  <div class="text-muted mt-8" style="font-size: 12px">
+                    Policy requirements for
+                    <mark
+                      style="
+                        background: var(--accent-dim);
+                        color: var(--accent);
+                        padding: 0 2px;
+                        border-radius: 2px;
+                      "
+                      >password</mark
+                    >
+                    complexity, rotation schedules, and
+                    <mark
+                      style="
+                        background: var(--accent-dim);
+                        color: var(--accent);
+                        padding: 0 2px;
+                        border-radius: 2px;
+                      "
+                      >reset</mark
+                    >
+                    procedures...
+                  </div>
+                  <div class="text-dim mt-8" style="font-size: 11px">
+                    vector: 0.76 | filter: +0.02 | rerank: 0.778
+                  </div>
+                </div>
+                <div class="result-card">
+                  <div class="flex items-center gap-8 mb-4">
+                    <span class="score-pill">#5 0.712</span
+                    ><span class="text-muted" style="font-size: 11px"
+                      >Jira &middot; Default Flow</span
+                    >
+                  </div>
+                  <div style="font-weight: 600">JIRA-4521: Implement SSO Password Reset Flow</div>
+                  <div class="text-muted mt-8" style="font-size: 12px">
+                    Engineering ticket for implementing single sign-on
+                    <mark
+                      style="
+                        background: var(--accent-dim);
+                        color: var(--accent);
+                        padding: 0 2px;
+                        border-radius: 2px;
+                      "
+                      >password reset</mark
+                    >
+                    integration...
+                  </div>
+                  <div class="text-dim mt-8" style="font-size: 11px">
+                    vector: 0.70 | filter: +0.01 | rerank: 0.712
+                  </div>
+                </div>
+              </div>
+
+              <!-- Query Diagnostic -->
+              <div class="card mb-16" style="border-color: var(--yellow-dim)">
+                <h3 class="mb-8">
+                  <span class="text-yellow">&#9888;</span> Low vocabulary coverage
+                </h3>
+                <div class="grid-3 gap-16" style="font-size: 12px">
+                  <div>
+                    <div class="text-muted" style="font-weight: 600; margin-bottom: 4px">
+                      Data &amp; Indexing
+                    </div>
+                    <div class="text-green">&#10004; 1,234 docs indexed</div>
+                    <div class="text-green">&#10004; Embedding parity</div>
+                  </div>
+                  <div>
+                    <div class="text-muted" style="font-weight: 600; margin-bottom: 4px">
+                      Enrichment
+                    </div>
+                    <div class="text-yellow">
+                      &#128312; "password" not in vocab
+                      <span class="text-accent" style="cursor: pointer">Add term &rarr;</span>
+                    </div>
+                    <div class="text-yellow">
+                      &#128312; 12 mappings pending
+                      <span class="text-accent" style="cursor: pointer">Review &rarr;</span>
+                    </div>
+                  </div>
+                  <div>
+                    <div class="text-muted" style="font-weight: 600; margin-bottom: 4px">
+                      Pipeline
+                    </div>
+                    <div class="text-green">&#10004; Published v3</div>
+                    <div class="text-yellow">
+                      &#128312; 15% chunks from older pipeline
+                      <span class="text-accent" style="cursor: pointer">Reprocess &rarr;</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Query History -->
+              <div class="card mb-16">
+                <h3 class="mb-8">Query History</h3>
+                <table class="table">
+                  <thead>
+                    <tr>
+                      <th>Time</th>
+                      <th>Query</th>
+                      <th>Results</th>
+                      <th>Latency</th>
+                      <th></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td class="text-muted">10:32</td>
+                      <td>how to reset password on laptop</td>
+                      <td>5</td>
+                      <td>234ms</td>
+                      <td><button class="btn btn-sm">Compare</button></td>
+                    </tr>
+                    <tr>
+                      <td class="text-muted">10:28</td>
+                      <td>laptop screen flickering fix</td>
+                      <td>8</td>
+                      <td>189ms</td>
+                      <td><button class="btn btn-sm">Compare</button></td>
+                    </tr>
+                    <tr>
+                      <td class="text-muted">10:15</td>
+                      <td>warranty return policy</td>
+                      <td>3</td>
+                      <td>312ms</td>
+                      <td><button class="btn btn-sm">Compare</button></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <!-- Developer Integration -->
+              <div class="card">
+                <h3
+                  style="cursor: pointer"
+                  onclick="this.nextElementSibling.classList.toggle('open')"
+                >
+                  Developer Integration &#9654;
+                </h3>
+                <div class="collapsible-content" style="margin-top: 12px">
+                  <div class="text-muted" style="font-size: 12px; margin-bottom: 8px">
+                    API Endpoint:
+                  </div>
+                  <code
+                    style="
+                      display: block;
+                      background: var(--bg);
+                      padding: 8px 12px;
+                      border-radius: var(--radius-sm);
+                      font-size: 12px;
+                      color: var(--accent);
+                    "
+                    >POST /api/v1/kb/product-docs/search</code
+                  >
+                  <button class="btn btn-sm mt-12">View API Docs &rarr;</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- SETTINGS OVERLAY -->
+        <div id="settings-overlay" class="settings-overlay">
+          <div class="settings-panel" onclick="event.stopPropagation()">
+            <div class="flex items-center justify-between mb-24">
+              <h2>Settings</h2>
+              <button class="btn btn-sm" onclick="toggleSettings()" style="padding: 4px 8px">
+                &times;
+              </button>
+            </div>
+            <div class="flex flex-col gap-24">
+              <!-- General -->
+              <div>
+                <h3 class="mb-8">General</h3>
+                <div class="flex flex-col gap-12">
+                  <div>
+                    <label
+                      class="text-muted"
+                      style="font-size: 12px; display: block; margin-bottom: 4px"
+                      >Name</label
+                    ><input class="input" value="Product Docs KB" />
+                  </div>
+                  <div>
+                    <label
+                      class="text-muted"
+                      style="font-size: 12px; display: block; margin-bottom: 4px"
+                      >Description</label
+                    ><textarea class="input" rows="3" style="resize: vertical">
+Primary knowledge base for product documentation, support articles, and internal guides.</textarea
+                    >
+                  </div>
+                  <div>
+                    <label
+                      class="text-muted"
+                      style="font-size: 12px; display: block; margin-bottom: 4px"
+                      >Visibility</label
+                    ><select class="input">
+                      <option>Team</option>
+                      <option>Private</option>
+                      <option>Public</option>
+                    </select>
+                  </div>
+                  <div class="text-muted" style="font-size: 12px">Created: March 1, 2026</div>
+                </div>
+              </div>
+              <!-- Index Configuration -->
+              <div>
+                <h3 class="mb-8">Index Configuration</h3>
+                <div class="flex flex-col gap-12">
+                  <div>
+                    <label
+                      class="text-muted"
+                      style="font-size: 12px; display: block; margin-bottom: 4px"
+                      >Embedding Model</label
+                    ><select class="input">
+                      <option>e5-small (1536d)</option>
+                      <option>e5-large (1024d)</option>
+                      <option>ada-002 (1536d)</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label
+                      class="text-muted"
+                      style="font-size: 12px; display: block; margin-bottom: 4px"
+                      >Vector Store</label
+                    ><select class="input">
+                      <option>Qdrant</option>
+                      <option>Pinecone</option>
+                      <option>Weaviate</option>
+                    </select>
+                  </div>
+                  <div class="grid-2 gap-12">
+                    <div>
+                      <label
+                        class="text-muted"
+                        style="font-size: 12px; display: block; margin-bottom: 4px"
+                        >TopK</label
+                      ><input class="input" type="number" value="10" />
+                    </div>
+                    <div>
+                      <label
+                        class="text-muted"
+                        style="font-size: 12px; display: block; margin-bottom: 4px"
+                        >Threshold</label
+                      ><input class="input" type="number" value="0.5" step="0.1" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <!-- Danger Zone -->
+              <div
+                style="
+                  border: 1px solid var(--red-dim);
+                  border-radius: var(--radius);
+                  padding: 16px;
+                "
+              >
+                <h3 class="text-red mb-8">Danger Zone</h3>
+                <div class="flex gap-8">
+                  <button class="btn btn-danger">Rebuild Index</button>
+                  <button class="btn btn-danger">Delete KB</button>
+                </div>
+              </div>
+            </div>
+            <button class="btn btn-primary mt-24 w-full" style="justify-content: center">
+              Save Changes
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // View navigation
+      function showView(view) {
+        document.querySelectorAll('.view').forEach((v) => v.classList.remove('active'));
+        document.getElementById('view-' + view).classList.add('active');
+        document
+          .querySelectorAll('.sidebar-item')
+          .forEach((s, i) => s.classList.toggle('active', i === (view === 'kb-list' ? 0 : 0)));
+      }
+
+      function showKBDetail() {
+        document.querySelectorAll('.view').forEach((v) => v.classList.remove('active'));
+        document.getElementById('view-kb-detail').classList.add('active');
+        document.getElementById('view-kb-detail').style.display = 'flex';
+        switchTab('home');
+      }
+
+      // Tab switching
+      function switchTab(tab) {
+        document
+          .querySelectorAll('.kb-tab[data-tab]')
+          .forEach((t) => t.classList.toggle('active', t.dataset.tab === tab));
+        document.querySelectorAll('.tab-content').forEach((c) => (c.style.display = 'none'));
+        var el = document.getElementById('tab-' + tab);
+        if (el) el.style.display = tab === 'data' ? 'block' : 'block';
+        // Reset intelligence to hub
+        if (tab === 'intelligence') showDrillDown('hub');
+      }
+
+      // Home states
+      function setHomeState(state) {
+        ['new', 'setup', 'mature'].forEach((s) => {
+          document.getElementById('home-' + s).style.display = s === state ? 'block' : 'none';
+          document.getElementById('hs-' + s).classList.toggle('btn-primary', s === state);
+        });
+      }
+
+      // Settings
+      function toggleSettings() {
+        var o = document.getElementById('settings-overlay');
+        o.classList.toggle('active');
+      }
+      document.getElementById('settings-overlay').addEventListener('click', function (e) {
+        if (e.target === this) toggleSettings();
+      });
+
+      // Source sidebar
+      function selectSource(el) {
+        document.querySelectorAll('.source-item').forEach((s) => s.classList.remove('selected'));
+        el.classList.add('selected');
+      }
+
+      function toggleCollapse(header) {
+        var content = header.nextElementSibling;
+        if (content && content.classList.contains('collapsible-content')) {
+          content.classList.toggle('open');
+          var arrow = header.querySelector('span:last-child');
+          if (arrow) arrow.textContent = content.classList.contains('open') ? '\u25BC' : '\u25B6';
+        }
+      }
+
+      // Intelligence drill-downs
+      function showDrillDown(view) {
+        ['hub', 'fields', 'pipeline', 'vocabulary', 'kg', 'llm'].forEach((v) => {
+          var el = document.getElementById('intel-' + v);
+          if (el) el.style.display = v === view ? 'block' : 'none';
+        });
+      }
+
+      // Fields sub-tabs
+      function switchFieldTab(tab) {
+        ['myfields', 'suggested', 'unmapped'].forEach((t) => {
+          var el = document.getElementById('ftab-' + t);
+          if (el) el.style.display = t === tab ? 'block' : 'none';
+        });
+        document
+          .querySelectorAll('[data-ftab]')
+          .forEach((t) => t.classList.toggle('active', t.dataset.ftab === tab));
+      }
+
+      // Field view toggle
+      function setFieldView(view) {
+        document.getElementById('viewByField').classList.toggle('btn-primary', view === 'field');
+        document
+          .getElementById('viewByConnector')
+          .classList.toggle('btn-primary', view === 'connector');
+      }
+
+      // Keyboard shortcuts
+      document.addEventListener('keydown', function (e) {
+        if (e.altKey) {
+          var tabs = ['home', 'data', 'intelligence', 'search'];
+          var num = parseInt(e.key);
+          if (num >= 1 && num <= 4) {
+            e.preventDefault();
+            switchTab(tabs[num - 1]);
+          }
+          if (e.key === ',') {
+            e.preventDefault();
+            toggleSettings();
+          }
+        }
+        if (e.key === 'Escape') {
+          var settings = document.getElementById('settings-overlay');
+          if (settings.classList.contains('active')) {
+            toggleSettings();
+            return;
+          }
+          // Check if in drill-down, go back to hub
+          var hub = document.getElementById('intel-hub');
+          if (hub && hub.style.display === 'none') {
+            showDrillDown('hub');
+            return;
+          }
+          // Go back to list
+          var detail = document.getElementById('view-kb-detail');
+          if (detail.classList.contains('active')) {
+            showView('kb-list');
+          }
+        }
+      });
+
+      // Init
+      setHomeState('mature');
+    </script>
+  </body>
+</html>

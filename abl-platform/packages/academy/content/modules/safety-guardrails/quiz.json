@@ -1,0 +1,85 @@
+{
+  "moduleId": "safety-guardrails",
+  "passThreshold": 0.8,
+  "questions": [
+    {
+      "id": "safety-q1",
+      "type": "mcq",
+      "stem": "A guardrail with 'action: redact' and 'kind: input' detects a credit card number in the user's message. What happens next?",
+      "options": [
+        {
+          "id": "a",
+          "text": "The entire message is blocked and a warning is sent to the user"
+        },
+        {
+          "id": "b",
+          "text": "The credit card number is replaced with a redaction marker, and the sanitized message is passed through to the LLM",
+          "correct": true
+        },
+        {
+          "id": "c",
+          "text": "The message is passed through unchanged, but a warning event is logged for compliance review"
+        }
+      ],
+      "explanation": "The 'redact' action replaces the offending content (the credit card number) with a redaction marker and continues processing. The sanitized content is passed through to the LLM. This differs from 'block' (which rejects the entire message), 'warn' (which allows content through but logs a warning), and 'escalate' (which triggers human review)."
+    },
+    {
+      "id": "safety-q2",
+      "type": "fill-blank",
+      "stem": "ABL guardrails use a three-tier evaluation model: Tier 1 is CEL-based (fast, deterministic), Tier 2 is ______-based (pre-trained safety classification), and Tier 3 is LLM-based (natural language checks).",
+      "answer": "model",
+      "acceptAlternatives": ["Model", "MODEL"],
+      "explanation": "The three-tier guardrail evaluation model provides layered defense: Tier 1 uses CEL (Common Expression Language) for fast, deterministic checks like regex pattern matching. Tier 2 uses pre-trained classification models (e.g., OpenAI Moderation API, Azure AI Content Safety) that score content against safety categories. Tier 3 uses an LLM to evaluate natural language checks defined via 'llm_check' prompts. Each tier trades speed for flexibility."
+    },
+    {
+      "id": "safety-q3",
+      "type": "mcq",
+      "stem": "What is the key difference between GUARDRAILS and CONSTRAINTS in ABL?",
+      "options": [
+        {
+          "id": "a",
+          "text": "Guardrails enforce safety and content policies on message text; constraints enforce business rules against session variables and data",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "Guardrails run before the LLM while constraints run after; both check message content"
+        },
+        {
+          "id": "c",
+          "text": "Guardrails are declarative ABL constructs while constraints are configured via the admin API"
+        }
+      ],
+      "explanation": "Guardrails and constraints serve different purposes. Guardrails enforce safety and content policies by evaluating message text (input/output) — actions include block, warn, redact, escalate, fix, and reask. Constraints enforce business rules by evaluating session variables and data — actions include RESPOND, ESCALATE, HANDOFF, and GOTO. Both are declared in ABL and run at different points in the processing pipeline."
+    },
+    {
+      "id": "safety-q4",
+      "type": "mcq",
+      "stem": "A company wants to extend the built-in PII detection to recognize IBAN account numbers and E.164 international phone numbers. How should they do this?",
+      "options": [
+        {
+          "id": "a",
+          "text": "Modify the built-in PII detector's source code and redeploy the platform"
+        },
+        {
+          "id": "b",
+          "text": "Use the pluggable recognizer registry to register custom regex recognizers for the additional PII patterns",
+          "correct": true
+        },
+        {
+          "id": "c",
+          "text": "Create individual guardrails with separate regex patterns for each new PII type"
+        }
+      ],
+      "explanation": "The platform provides a pluggable recognizer registry for extending PII detection beyond built-in patterns (email, SSN, credit card, US phone, IPv4). The registry accepts three tiers: 'regex' (built-in, fast), 'ml' (NER-based), and 'custom' (domain-specific). This is configured via the 'builtin_pii' adapter type. While individual guardrails with regex patterns could work, the recognizer registry is the architecturally correct approach for PII detection as it integrates with the platform's PII detection pipeline."
+    },
+    {
+      "id": "safety-q5",
+      "type": "fill-blank",
+      "stem": "In the GUARDRAILS block, the ______ property determines evaluation order — lower values are evaluated first, and a block action from any guardrail at this level stops further evaluation.",
+      "answer": "priority",
+      "acceptAlternatives": ["Priority", "PRIORITY"],
+      "explanation": "The 'priority' property controls the order in which guardrails are evaluated. Lower values run first (priority 0 before priority 1, etc.). The default priority is 100. When a guardrail with a 'block' action fires, evaluation stops and subsequent guardrails are not checked. 'warn' actions do not stop evaluation — all remaining guardrails continue to run. This allows you to layer critical checks (priority 0) before less severe ones."
+    }
+  ]
+}

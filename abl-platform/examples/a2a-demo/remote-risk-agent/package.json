@@ -1,0 +1,21 @@
+{
+  "name": "a2a-risk-analyzer",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Remote A2A Risk Analysis Agent — demonstrates async push notification pattern",
+  "scripts": {
+    "start": "node --loader ts-node/esm server.ts",
+    "dev": "node --loader ts-node/esm --watch server.ts"
+  },
+  "dependencies": {
+    "@a2a-js/sdk": "^0.2.5",
+    "express": "^4.21.0"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.0",
+    "@types/node": "^22.0.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.7.0"
+  }
+}

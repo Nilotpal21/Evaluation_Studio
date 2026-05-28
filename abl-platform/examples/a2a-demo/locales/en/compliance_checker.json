@@ -1,0 +1,9 @@
+{
+  "agent_name": "Compliance_Checker",
+  "strings": {
+    "on_start": "Hello! I'm the Compliance Checker. Please provide the contract details and I'll run a quick compliance review.",
+    "gather_contract_id": "Which contract should I check?",
+    "gather_contract_type": "What type of contract?",
+    "complete_success": "Compliance check complete for contract {{contract_id}}.\nType: {{contract_type}}"
+  }
+}

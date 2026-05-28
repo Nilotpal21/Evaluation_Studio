@@ -1,0 +1,14 @@
+{
+  "name": "Greeting",
+  "description": "Tests basic greeting handling — supervisor routes to Advisor_Agent, agent generates welcome message",
+  "category": "routing",
+  "difficulty": "easy",
+  "entryAgent": "GuardRail_Supervisor",
+  "initialMessage": "Hi",
+  "expectedOutcome": "Agent responds with a friendly welcome message and offers to help with shopping",
+  "maxTurns": 2,
+  "maxToolCalls": 0,
+  "tags": ["greeting", "routing", "happy-path"],
+  "agentPath": ["GuardRail_Supervisor", "Advisor_Agent"],
+  "expectedMilestones": ["supervisor_routes_to_advisor", "welcome_message_generated"]
+}

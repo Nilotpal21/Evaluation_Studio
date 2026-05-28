@@ -1,0 +1,26 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: abl-benchmarks
+  labels:
+    app.kubernetes.io/part-of: abl-platform
+    purpose: benchmarks
+---
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: benchmark-quota
+  namespace: abl-benchmarks
+spec:
+  hard:
+    requests.cpu: '32'
+    requests.memory: 64Gi
+    limits.cpu: '64'
+    limits.memory: 128Gi
+    pods: '50'
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: benchmark-runner
+  namespace: abl-benchmarks

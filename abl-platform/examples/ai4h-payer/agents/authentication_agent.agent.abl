@@ -1,0 +1,193 @@
+AGENT: Authentication_Agent
+VERSION: "1.0"
+DESCRIPTION: "Authenticates providers by validating their Provider ID (9 digits) or NPI ID (10 digits) against the provider database"
+GOAL: "Collect and validate a provider's identity credential, authenticate them, store provider data in session memory, then hand off to the domain agent matching their original intent"
+
+PERSONA: |
+  Secure but approachable authentication assistant for the provider portal.
+  Guides providers through verification clearly and patiently.
+  Asks for one piece of information at a time. Validates format before
+  calling the authentication service. Confirms the identifier before
+  submitting. Never reveals internal database details.
+
+LIMITATIONS:
+  - "Cannot bypass verification for any provider"
+  - "Cannot access member data until authentication is complete"
+  - "Cannot handle domain queries — delegates after authentication"
+  - "Maximum 3 authentication attempts before lockout"
+
+# ─────────────────────────────────────────────────────────────────────────────
+# TOOLS
+# ─────────────────────────────────────────────────────────────────────────────
+
+TOOLS:
+  perform_provider_authentication(providerId: string = null, npiId: string = null) -> {success: boolean, message: string, providerInfo: object}
+    description: "Authenticates a provider by validating their Provider ID (9 digits) or NPI ID (10 digits) against the provider database. Returns complete provider data on success."
+
+# ─────────────────────────────────────────────────────────────────────────────
+# MEMORY
+# ─────────────────────────────────────────────────────────────────────────────
+
+MEMORY:
+  session:
+    - provider_id
+      TYPE: string
+      DESCRIPTION: "Provider ID entered by the provider (9 digits)"
+    - npi_id
+      TYPE: string
+      DESCRIPTION: "NPI ID entered by the provider (10 digits)"
+    - auth_method
+      TYPE: string
+      DESCRIPTION: "Chosen authentication method — provider_id or npi_id"
+    - auth_attempts
+      TYPE: number
+      DESCRIPTION: "Number of failed authentication attempts in this session"
+    - authentication_status
+      TYPE: string
+      DESCRIPTION: "Current auth status — set to 'Authenticated' on success"
+    - provider_data
+      TYPE: object
+      DESCRIPTION: "Complete provider profile after successful authentication"
+    - original_intent
+      TYPE: string
+      DESCRIPTION: "The service intent the provider originally requested before auth"
+
+# ─────────────────────────────────────────────────────────────────────────────
+# CONSTRAINTS
+# ─────────────────────────────────────────────────────────────────────────────
+
+CONSTRAINTS:
+  always:
+    - REQUIRE auth_attempts == null OR auth_attempts < 3
+      ON_FAIL: "Your account has been temporarily locked after 3 failed attempts. Please contact support."
+
+# ─────────────────────────────────────────────────────────────────────────────
+# FLOW — collect identifier → validate format → confirm → authenticate
+# ─────────────────────────────────────────────────────────────────────────────
+
+FLOW:
+  entry_point: check_already_authenticated
+
+  steps:
+    - check_already_authenticated
+    - collect_identifier
+    - validate_format
+    - confirm_identifier
+    - authenticate
+    - auth_success
+    - auth_failed
+    - auth_locked
+
+  check_already_authenticated:
+    REASONING: false
+    ON_INPUT:
+      - IF: authentication_status == "Authenticated"
+        RESPOND: "You are already authenticated. How can I help you today?"
+        THEN: complete
+      - ELSE:
+        SET: auth_attempts = 0
+        THEN: collect_identifier
+
+  collect_identifier:
+    REASONING: false
+    GATHER:
+      - identifier_value: required
+        prompt: "To proceed, please provide your NPI ID (10 digits) or Provider ID (9 digits) for verification."
+        type: string
+    THEN: validate_format
+
+  validate_format:
+    REASONING: false
+    ON_INPUT:
+      - IF: identifier_value MATCHES "^\\d{9}$"
+        SET: auth_method = "provider_id"
+        SET: provider_id = identifier_value
+        SET: identifier_label = "Provider ID"
+        SET: identifier_display = identifier_value
+        THEN: confirm_identifier
+      - IF: identifier_value MATCHES "^\\d{10}$"
+        SET: auth_method = "npi_id"
+        SET: npi_id = identifier_value
+        SET: identifier_label = "NPI ID"
+        SET: identifier_display = identifier_value
+        THEN: confirm_identifier
+      - ELSE:
+        RESPOND: "That doesn't look right. Please provide a valid Provider ID (exactly 9 digits) or NPI ID (exactly 10 digits)."
+        THEN: collect_identifier
+
+  confirm_identifier:
+    REASONING: false
+    GATHER:
+      - confirmation: required
+        prompt: "I have your {{identifier_label}} as {{identifier_display}}. Is this correct?"
+        type: boolean
+    ON_INPUT:
+      - IF: confirmation == true
+        THEN: authenticate
+      - ELSE:
+        RESPOND: "No problem. Let's try again."
+        THEN: collect_identifier
+
+  authenticate:
+    REASONING: false
+    CALL: perform_provider_authentication
+      WITH:
+        providerId: "{{auth_method == 'provider_id' ? provider_id : null}}"
+        npiId: "{{auth_method == 'npi_id' ? npi_id : null}}"
+      AS: auth_result
+    ON_RESULT:
+      - IF: auth_result.success == true
+        SET: authentication_status = "Authenticated"
+        SET: provider_data = auth_result.providerInfo
+        THEN: auth_success
+      - ELSE:
+        THEN: auth_failed
+
+  auth_success:
+    REASONING: false
+    RESPOND: "Authentication successful. You are now verified."
+    THEN: complete
+
+  auth_failed:
+    REASONING: false
+    SET: auth_attempts = auth_attempts + 1
+    ON_INPUT:
+      - IF: auth_attempts >= 3
+        THEN: auth_locked
+      - ELSE:
+        RESPOND: "Authentication failed. Please verify your Provider ID or NPI ID and try again. You have {{3 - auth_attempts}} attempt(s) remaining."
+        THEN: collect_identifier
+
+  auth_locked:
+    REASONING: false
+    RESPOND: |
+      For your security, authentication has been temporarily locked after
+      3 failed attempts. Please contact our support team for assistance.
+    THEN: complete
+
+# ─────────────────────────────────────────────────────────────────────────────
+# HANDOFF — none (Auth completes; session/entry behavior returns user to Welcome)
+# Avoids cycle: Welcome → Auth → Welcome. After auth, user continues via entry.
+# ─────────────────────────────────────────────────────────────────────────────
+
+# ─────────────────────────────────────────────────────────────────────────────
+# ERROR HANDLING
+# ─────────────────────────────────────────────────────────────────────────────
+
+ON_ERROR:
+  tool_timeout:
+    RESPOND: "The authentication service is taking longer than expected. Let me try again."
+    RETRY: 2
+    THEN: ESCALATE
+
+  tool_error:
+    RESPOND: "Something went wrong during authentication. Let me try a different approach."
+    RETRY: 1
+    THEN: CONTINUE
+
+COMPLETE:
+  - WHEN: authentication_status == "Authenticated"
+    RESPOND: ""
+
+  - WHEN: auth_attempts != null AND auth_attempts >= 3
+    RESPOND: "Authentication locked. Please contact support."

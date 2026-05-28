@@ -1,0 +1,179 @@
+AGENT: Entity_Reasoning_Test
+GOAL: "Help customers book flights by collecting all required booking details"
+
+ENTITIES:
+  cabin_class:
+    TYPE: enum
+    VALUES: [CLS_ECO, CLS_BIZ, CLS_FIRST]
+    SYNONYMS:
+      CLS_ECO: [economy, coach, regular, standard, basic]
+      CLS_BIZ: [business, biz class, premium, executive, business class]
+      CLS_FIRST: [first class, first, luxury, premium plus, upper class]
+
+  meal_preference:
+    TYPE: enum
+    VALUES: [MEAL_STD, MEAL_VEG, MEAL_VEGAN, MEAL_HALAL, MEAL_KOSHER]
+    SYNONYMS:
+      MEAL_STD: [standard, regular, normal, no preference]
+      MEAL_VEG: [vegetarian, veggie, veg]
+      MEAL_VEGAN: [vegan, plant based, plant-based]
+      MEAL_HALAL: [halal]
+      MEAL_KOSHER: [kosher]
+
+  seat_zone:
+    TYPE: enum
+    VALUES: [ZONE_FRONT, ZONE_MID, ZONE_REAR, ZONE_EXIT, ZONE_WINDOW, ZONE_AISLE]
+    SYNONYMS:
+      ZONE_FRONT: [front, near the front, front of plane]
+      ZONE_MID: [middle, center, mid]
+      ZONE_REAR: [back, rear, back of plane]
+      ZONE_EXIT: [exit row, extra legroom, exit]
+      ZONE_WINDOW: [window, window seat, by the window]
+      ZONE_AISLE: [aisle, aisle seat, on the aisle]
+
+  loyalty_tier:
+    TYPE: enum
+    VALUES: [TIER_BRONZE, TIER_SILVER, TIER_GOLD, TIER_PLAT]
+    SYNONYMS:
+      TIER_BRONZE: [bronze, basic member, basic]
+      TIER_SILVER: [silver, silver member]
+      TIER_GOLD: [gold, gold member, frequent flyer]
+      TIER_PLAT: [platinum, plat, elite, top tier]
+
+  booking_ref:
+    TYPE: pattern
+    PATTERN: "^[A-Z]{2}[0-9]{4,6}$"
+
+  promo_code:
+    TYPE: pattern
+    PATTERN: "^PROMO-[A-Z0-9]{4,8}$"
+
+GATHER:
+  # === System Entity Types (all 6) ===
+  customer_email:
+    TYPE: email
+    PROMPT: "What is your email address for booking confirmation?"
+    REQUIRED: true
+    SENSITIVE: true
+    SENSITIVE_DISPLAY: mask
+    PII_TYPE: email
+    MAX_RETRIES: 3
+    RETRY_PROMPT: "That doesn't look like a valid email. Please provide a valid email address."
+
+  customer_phone:
+    TYPE: phone
+    PROMPT: "What is your contact phone number?"
+    REQUIRED: true
+    SENSITIVE: true
+    SENSITIVE_DISPLAY: mask
+    MASK_CONFIG:
+      show_first: 0
+      show_last: 4
+      char: "*"
+    PII_TYPE: phone
+
+  travel_date:
+    TYPE: date
+    PROMPT: "When would you like to depart?"
+    REQUIRED: true
+
+  preferred_time:
+    TYPE: datetime
+    PROMPT: "Do you have a preferred departure time?"
+    REQUIRED: false
+
+  needs_insurance:
+    TYPE: boolean
+    PROMPT: "Would you like travel insurance for this trip?"
+    REQUIRED: true
+
+  budget:
+    TYPE: currency
+    PROMPT: "What is your budget for this trip?"
+    REQUIRED: false
+
+  # === ENTITY_REF Fields (enum with synonyms) ===
+  cabin:
+    ENTITY_REF: cabin_class
+    PROMPT: "What cabin class would you prefer?"
+    REQUIRED: true
+
+  meal:
+    ENTITY_REF: meal_preference
+    PROMPT: "Do you have a meal preference?"
+    REQUIRED: false
+
+  seating:
+    ENTITY_REF: seat_zone
+    PROMPT: "Do you have a seating preference?"
+    REQUIRED: false
+
+  loyalty:
+    ENTITY_REF: loyalty_tier
+    PROMPT: "Are you a loyalty program member? If so, what tier?"
+    REQUIRED: false
+
+  # === ENTITY_REF Fields (pattern) ===
+  existing_booking:
+    ENTITY_REF: booking_ref
+    PROMPT: "Do you have an existing booking reference to modify?"
+    REQUIRED: false
+
+  promo:
+    ENTITY_REF: promo_code
+    PROMPT: "Do you have a promo code?"
+    REQUIRED: false
+
+  # === Basic Types ===
+  num_passengers:
+    TYPE: number
+    PROMPT: "How many passengers will be traveling?"
+    REQUIRED: true
+    DEFAULT: 1
+
+  destination:
+    TYPE: string
+    PROMPT: "Where would you like to fly to?"
+    REQUIRED: true
+
+  origin:
+    TYPE: string
+    PROMPT: "Where will you be departing from?"
+    REQUIRED: true
+
+  special_requests:
+    TYPE: string
+    PROMPT: "Any special requests or requirements?"
+    REQUIRED: false
+
+TOOLS:
+  search_flights(origin: string, destination: string, date: string, cabin: string, passengers: number = 1) -> {flights: array, prices: array}
+    Search for available flights matching the criteria
+
+  check_availability(flight_id: string, cabin: string, passengers: number) -> {available: boolean, seats_remaining: number, price: number}
+    Check real-time seat availability for a specific flight
+
+  create_booking(flight_id: string, passenger_email: string, passenger_phone: string, cabin: string, passengers: number, meal: string = "MEAL_STD", insurance: boolean = false) -> {booking_ref: string, status: string, total: number}
+    Create a new flight booking
+
+ON_START:
+  RESPOND: "Hello! Welcome to SkyWay Airlines. I can help you book a flight today. Where would you like to fly to?"
+
+PERSONA: |
+  You are a friendly and efficient flight booking assistant for SkyWay Airlines.
+  Help customers find and book flights by collecting their travel details.
+  Be conversational but focused on gathering the required information.
+  Always confirm details before creating a booking.
+  Ask for required fields first (destination, origin, date, email, phone, cabin, passengers, insurance).
+  Then ask about optional fields if the conversation allows.
+  IMPORTANT: Only include details explicitly provided by the user. Never infer, assume, or fabricate booking details that the user has not mentioned.
+
+LIMITATIONS:
+  - Only book flights, cannot book hotels or car rentals
+  - Cannot process payments directly
+  - Cannot change bookings made through other channels
+  - Maximum 9 passengers per booking
+
+COMPLETE:
+  - WHEN: all_fields_gathered == true
+    RESPOND: "Thank you for booking with SkyWay Airlines. Here is your booking summary."

@@ -1,0 +1,12 @@
+{
+  "agent": "Product_Advisor",
+  "locale": "en",
+  "strings": {
+    "category_prompt": "What type of product are you looking for?",
+    "preferences_prompt": "Do you have any specific preferences -- brand, features, or style?",
+    "budget_prompt": "Do you have a budget in mind?",
+    "brand_prompt": "Any brand preference?",
+    "compare_limit": "I can compare up to 4 products at a time. Please narrow down your selection.",
+    "browsing_complete": "Happy to help! Let me know if you need anything else."
+  }
+}

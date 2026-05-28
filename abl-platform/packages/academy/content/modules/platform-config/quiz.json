@@ -1,0 +1,98 @@
+{
+  "moduleId": "platform-config",
+  "passThreshold": 0.8,
+  "questions": [
+    {
+      "id": "cfg-q1",
+      "type": "mcq",
+      "stem": "A business wants to minimize LLM costs for their customer service agents. Most conversations involve simple intent classification and FAQ routing, with occasional complex reasoning for dispute resolution. Which model tier strategy is most cost-effective?",
+      "options": [
+        {
+          "id": "a",
+          "text": "Use a Powerful-tier model for all operations to ensure the best quality"
+        },
+        {
+          "id": "b",
+          "text": "Use a Fast-tier model for classification and routing, and a Powerful-tier model only for complex reasoning tasks",
+          "correct": true
+        },
+        {
+          "id": "c",
+          "text": "Use a Balanced-tier model for all operations as a compromise"
+        }
+      ],
+      "explanation": "The Agent Platform supports model tiers (Fast, Balanced, Powerful, Voice) that decouple agent definitions from specific models. Using a Fast-tier model (e.g., Claude 3.5 Haiku, GPT-4o mini) for classification and routing costs up to 10x less than a Powerful-tier model. Reserve Powerful-tier models (e.g., Claude 4 Opus, o3) for tasks that genuinely require complex reasoning."
+    },
+    {
+      "id": "cfg-q2",
+      "type": "mcq",
+      "stem": "A company's primary LLM provider (Anthropic) experiences a temporary outage. Their agents stop responding. What Agent Platform feature should they have configured to prevent this?",
+      "options": [
+        {
+          "id": "a",
+          "text": "Model tiers with project-level overrides"
+        },
+        {
+          "id": "b",
+          "text": "Fallback chains that automatically retry with alternative providers like OpenAI or Google when the primary fails",
+          "correct": true
+        },
+        {
+          "id": "c",
+          "text": "Daily token budget limits to reduce load on the provider"
+        }
+      ],
+      "explanation": "Fallback chains allow you to configure backup models from different providers. When the primary model fails (timeout, rate limit, or provider error), the Runtime automatically retries with each fallback in order. Each fallback uses its own credentials, so you can fall back from Anthropic to OpenAI or Google. The switch is transparent to the agent and tracked in analytics."
+    },
+    {
+      "id": "cfg-q3",
+      "type": "fill-blank",
+      "stem": "In Agent Platform's identity verification system, an end user who has completed cryptographic proof via HMAC signature, OTP code, or OAuth is classified as identity tier ___.",
+      "answer": "T2",
+      "acceptAlternatives": ["t2", "2", "Verified"],
+      "explanation": "The platform uses a three-tier identity model: T0 (Anonymous, no identity), T1 (Recognized, weak signal like a cookie or caller ID), and T2 (Verified, cryptographic proof via HMAC, OTP, OAuth with PKCE, or email magic link). Tools can be gated by tier -- for example, requiring T2 for sensitive operations like checking account balances."
+    },
+    {
+      "id": "cfg-q4",
+      "type": "mcq",
+      "stem": "A banking agent needs to allow anyone to use its store locator tool but require verified identity before showing account balances. How does the Agent Platform support this?",
+      "options": [
+        {
+          "id": "a",
+          "text": "Create two separate agents: one public and one authenticated"
+        },
+        {
+          "id": "b",
+          "text": "Set identityTierRequired on each tool -- 0 for the store locator and 2 for the balance check -- so the platform enforces verification per tool",
+          "correct": true
+        },
+        {
+          "id": "c",
+          "text": "Use guardrails to block balance requests from unverified users"
+        }
+      ],
+      "explanation": "The platform supports tool-level identity gating through the identityTierRequired property. Setting it to 0 (or omitting it) means any user can call the tool. Setting it to 2 requires T2 verification (cryptographic proof). When an anonymous user tries to call check-balance, the platform returns an IDENTITY_TIER_INSUFFICIENT error, which the agent can use to prompt the user through a verification flow."
+    },
+    {
+      "id": "cfg-q5",
+      "type": "mcq",
+      "stem": "A project team wants to use a different LLM model than the workspace default for their extraction tasks. What does the Agent Platform's model resolution chain allow?",
+      "options": [
+        {
+          "id": "a",
+          "text": "Projects must always use the workspace-level default model with no exceptions"
+        },
+        {
+          "id": "b",
+          "text": "Projects can override model tier assignments for specific operations like extraction, validation, and reasoning, while other operations inherit workspace defaults",
+          "correct": true
+        },
+        {
+          "id": "c",
+          "text": "Projects can only change models by creating a separate workspace"
+        }
+      ],
+      "explanation": "The platform uses a 5-level model resolution chain: deployment override, agent DSL, agent DB config, project DB config, and tenant model. Projects can override which tier maps to which operation (e.g., using a Powerful-tier model for extraction tasks that default to Balanced). This lets teams optimize for their specific workloads without affecting other projects."
+    }
+  ]
+}

@@ -1,0 +1,2411 @@
+{
+  "issue": {
+    "expand": "renderedFields,names,schema,operations,editmeta,changelog,versionedRepresentations",
+    "id": "549769",
+    "self": "https://koreteam.atlassian.net/rest/api/3/issue/549769",
+    "key": "ABLP-1031",
+    "renderedFields": {
+      "statuscategorychangedate": "Tuesday 8:17 PM",
+      "issuetype": null,
+      "timespent": null,
+      "project": null,
+      "fixVersions": null,
+      "aggregatetimespent": null,
+      "statusCategory": null,
+      "resolution": null,
+      "customfield_13700": null,
+      "customfield_15205": null,
+      "resolutiondate": null,
+      "workratio": null,
+      "issuerestriction": null,
+      "watches": null,
+      "lastViewed": null,
+      "created": "Tuesday 8:17 PM",
+      "customfield_15279": null,
+      "priority": null,
+      "customfield_15514": null,
+      "labels": null,
+      "customfield_15508": null,
+      "timeestimate": null,
+      "aggregatetimeoriginalestimate": null,
+      "versions": null,
+      "issuelinks": null,
+      "assignee": null,
+      "updated": "Tuesday 8:22 PM",
+      "status": null,
+      "components": null,
+      "timeoriginalestimate": null,
+      "description": "<h3><a name=\"Summary\"></a>Summary</h3>\n\n<p><tt>HANDOFF</tt> and <tt>DELEGATE</tt> both do the same conceptual thing — transfer work to another agent. Yet their DSL syntax is structurally different enough that:</p>\n\n<ul>\n\t<li>A developer cannot learn one and naturally write the other</li>\n\t<li>Migrating a <tt>HANDOFF</tt> to a <tt>DELEGATE</tt> (or vice versa) requires a near-complete rewrite of that block</li>\n\t<li>The cognitive overhead of keeping two different syntaxes in mind increases the chance of authoring errors</li>\n</ul>\n\n\n<hr />\n\n<h3><a name=\"ProblemDetail\"></a>Problem Detail</h3>\n\n<p>Both constructs target <b>only agents</b> and both carry a condition (<tt>WHEN</tt>), a failure strategy (<tt>ON_FAILURE</tt>), and optional remote configuration (<tt>LOCATION</tt>, <tt>ENDPOINT</tt>, <tt>PROTOCOL</tt>). That is where the similarity ends.</p>\n\n<p><b>Entry-point keyword is different:</b></p>\n\n<div class=\"preformatted panel\" style=\"border-width: 1px;\"><div class=\"preformattedContent panelContent\">\n<pre>HANDOFF:\n  - TO: BillingAgent       # key is TO\n\nDELEGATE:\n  - AGENT: BillingAgent    # key is AGENT\n</pre>\n</div></div>\n\n<p>There is no logical reason for this asymmetry. Both refer to the same kind of entity — an agent name.</p>\n\n<hr />\n\n<p><b>Context/input passing uses a completely different model:</b></p>\n\n<p><tt>HANDOFF</tt> uses a named <tt>CONTEXT</tt> block with its own sub-keys:</p>\n\n<div class=\"preformatted panel\" style=\"border-width: 1px;\"><div class=\"preformattedContent panelContent\">\n<pre>HANDOFF:\n  - TO: BillingAgent\n    CONTEXT:\n      pass: [userId, orderId]\n      summary: \"User is asking about their latest invoice\"\n      history: auto\n</pre>\n</div></div>\n\n<p><tt>DELEGATE</tt> uses flat key-value maps for both directions:</p>\n\n<div class=\"preformatted panel\" style=\"border-width: 1px;\"><div class=\"preformattedContent panelContent\">\n<pre>DELEGATE:\n  - AGENT: BillingAgent\n    INPUT: { child_user: session.userId }\n    RETURNS: { session.result: child.summary }\n    USE_RESULT: \"Use the result to answer the user\"\n</pre>\n</div></div>\n\n<p>A developer moving a use-case from handoff to delegate has to restructure the entire data-passing block — <tt>CONTEXT.pass</tt> → <tt>INPUT</tt>, add <tt>RETURNS</tt> from scratch, add <tt>USE_RESULT</tt>. Nothing maps cleanly.</p>\n\n<hr />\n\n<h3><a name=\"ComparisonTable\"></a>Comparison Table</h3>\n\n<div class='table-wrap'>\n<table class='confluenceTable'><tbody>\n<tr>\n<th class='confluenceTh'>Concern</th>\n<th class='confluenceTh'>HANDOFF</th>\n<th class='confluenceTh'>DELEGATE</th>\n</tr>\n<tr>\n<td class='confluenceTd'>Entry key</td>\n<td class='confluenceTd'><tt>TO:</tt></td>\n<td class='confluenceTd'><tt>AGENT:</tt></td>\n</tr>\n<tr>\n<td class='confluenceTd'>Condition</td>\n<td class='confluenceTd'><tt>WHEN:</tt></td>\n<td class='confluenceTd'><tt>WHEN:</tt></td>\n</tr>\n<tr>\n<td class='confluenceTd'>Input data</td>\n<td class='confluenceTd'><tt>CONTEXT.pass: <span class=\"error\">&#91;...&#93;</span></tt></td>\n<td class='confluenceTd'>{{INPUT: \n{ key: expr }\n<p>}}</p></td>\n</tr>\n<tr>\n<td class='confluenceTd'>Context summary</td>\n<td class='confluenceTd'><tt>CONTEXT.summary:</tt></td>\n<td class='confluenceTd'><tt>PURPOSE:</tt> (different name, slightly different role)</td>\n</tr>\n<tr>\n<td class='confluenceTd'>History</td>\n<td class='confluenceTd'><tt>CONTEXT.history:</tt></td>\n<td class='confluenceTd'>— (not supported)</td>\n</tr>\n<tr>\n<td class='confluenceTd'>Memory access</td>\n<td class='confluenceTd'><tt>CONTEXT.memory_grants:</tt></td>\n<td class='confluenceTd'>— (not supported)</td>\n</tr>\n<tr>\n<td class='confluenceTd'>Return flag</td>\n<td class='confluenceTd'>{{RETURN: true</td>\n<td class='confluenceTd'>false}}</td>\n<td class='confluenceTd'>implicit (always true)</td>\n</tr>\n<tr>\n<td class='confluenceTd'>Result mapping</td>\n<td class='confluenceTd'><tt>ON_RETURN.MAP:</tt></td>\n<td class='confluenceTd'>{{RETURNS: \n{ parent: child }\n<p>}}</p></td>\n</tr>\n<tr>\n<td class='confluenceTd'>Post-return hook</td>\n<td class='confluenceTd'><tt>ON_RETURN.ACTION/HANDLER:</tt></td>\n<td class='confluenceTd'>— (not supported)</td>\n</tr>\n<tr>\n<td class='confluenceTd'>Result instruction</td>\n<td class='confluenceTd'>—</td>\n<td class='confluenceTd'><tt>USE_RESULT:</tt></td>\n</tr>\n<tr>\n<td class='confluenceTd'>Failure</td>\n<td class='confluenceTd'><tt>ON_FAILURE:</tt></td>\n<td class='confluenceTd'><tt>ON_FAILURE:</tt></td>\n</tr>\n<tr>\n<td class='confluenceTd'>Remote config</td>\n<td class='confluenceTd'><tt>LOCATION/ENDPOINT/PROTOCOL</tt></td>\n<td class='confluenceTd'><tt>LOCATION/ENDPOINT/PROTOCOL</tt></td>\n</tr>\n<tr>\n<td class='confluenceTd'>Async</td>\n<td class='confluenceTd'><tt>ASYNC: true/false</tt></td>\n<td class='confluenceTd'>— (not supported)</td>\n</tr>\n<tr>\n<td class='confluenceTd'>Timeout</td>\n<td class='confluenceTd'><tt>TIMEOUT:</tt></td>\n<td class='confluenceTd'><tt>TIMEOUT:</tt></td>\n</tr>\n</tbody></table>\n</div>\n\n\n<p>Shared fields: only <tt>WHEN</tt>, <tt>ON_FAILURE</tt>, <tt>TIMEOUT</tt>, and remote config are syntactically identical. Everything else diverges.</p>\n\n<hr />\n\n<h3><a name=\"Impact\"></a>Impact</h3>\n\n<ul>\n\t<li><b>Authoring friction:</b> A developer writing their first <tt>DELEGATE</tt> after knowing <tt>HANDOFF</tt> (or vice versa) will frequently pick the wrong keyword and structure.</li>\n\t<li><b>Migration cost:</b> Changing a <tt>HANDOFF</tt> to a <tt>DELEGATE</tt> is not a keyword swap — it requires restructuring the data-passing block entirely.</li>\n\t<li><b>Documentation burden:</b> Two separate syntax trees must be documented, taught, and remembered independently even though they serve adjacent purposes.</li>\n\t<li><b>Error surface:</b> Divergent entry keys (<tt>TO</tt> vs <tt>AGENT</tt>) mean a validator cannot catch \"used HANDOFF syntax inside DELEGATE\" early — it just silently ignores the unknown key.</li>\n</ul>\n\n\n<hr />\n\n<h3><a name=\"ProposedDirection\"></a>Proposed Direction</h3>\n\n<p>Align the two constructs on a shared syntactic skeleton. Suggested target shape:</p>\n\n<div class=\"preformatted panel\" style=\"border-width: 1px;\"><div class=\"preformattedContent panelContent\">\n<pre>HANDOFF:\n  - TO: BillingAgent\n    WHEN: &lt;condition&gt;\n    PASS: [userId, orderId]\n    SUMMARY: \"User asking about invoice\"\n    RETURN: true\n    ON_FAILURE: continue\n\nDELEGATE:\n  - TO: BillingAgent        # same key as HANDOFF\n    WHEN: &lt;condition&gt;\n    PASS: { child_user: session.userId }   # same keyword, map form for delegate\n    SUMMARY: \"Summarize order history\"     # same keyword as PURPOSE\n    ON_FAILURE: continue\n</pre>\n</div></div>\n\n<p>Specific alignment changes worth scoping:</p>\n\n<ol>\n\t<li>Unify the entry key to <tt>TO:</tt> for both (parser already accepts <tt>\\w+</tt> — this is a one-line change per construct)</li>\n\t<li>Use <tt>PASS:</tt> for input data in both — list form for handoff, map form for delegate</li>\n\t<li>Rename <tt>PURPOSE:</tt> → <tt>SUMMARY:</tt> on delegate to match handoff</li>\n</ol>\n\n\n<p>This does not require changing runtime semantics — only the parser surface and the IR compilation step need updating. Backward compatibility can be maintained by accepting both the old and new keyword forms during a transition window.</p>",
+      "customfield_15225": "",
+      "customfield_11300": null,
+      "timetracking": {},
+      "security": null,
+      "attachment": [],
+      "aggregatetimeestimate": null,
+      "summary": null,
+      "creator": null,
+      "subtasks": null,
+      "reporter": null,
+      "aggregateprogress": null,
+      "customfield_10002": null,
+      "customfield_10400": null,
+      "customfield_13900": null,
+      "environment": "",
+      "duedate": null,
+      "progress": null,
+      "votes": null,
+      "comment": {
+        "comments": [],
+        "self": "https://koreteam.atlassian.net/rest/api/3/issue/549769/comment",
+        "maxResults": 0,
+        "total": 0,
+        "startAt": 0
+      },
+      "worklog": {
+        "startAt": 0,
+        "maxResults": 20,
+        "total": 0,
+        "worklogs": []
+      }
+    },
+    "changelog": {
+      "startAt": 0,
+      "maxResults": 2,
+      "total": 2,
+      "histories": [
+        {
+          "id": "6165695",
+          "author": {
+            "self": "https://koreteam.atlassian.net/rest/api/3/user?accountId=712020%3A91136b8e-3e83-401e-8f10-8b73bf0fb5c4",
+            "accountId": "712020:91136b8e-3e83-401e-8f10-8b73bf0fb5c4",
+            "avatarUrls": {
+              "48x48": "https://secure.gravatar.com/avatar/b21fb0701436f5fa5b9a0b19b7c2d6d2?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FPG-6.png",
+              "24x24": "https://secure.gravatar.com/avatar/b21fb0701436f5fa5b9a0b19b7c2d6d2?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FPG-6.png",
+              "16x16": "https://secure.gravatar.com/avatar/b21fb0701436f5fa5b9a0b19b7c2d6d2?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FPG-6.png",
+              "32x32": "https://secure.gravatar.com/avatar/b21fb0701436f5fa5b9a0b19b7c2d6d2?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FPG-6.png"
+            },
+            "displayName": "Prathyusha Gopavaram",
+            "active": true,
+            "timeZone": "Asia/Kolkata",
+            "accountType": "atlassian"
+          },
+          "created": "2026-05-12T20:22:03.174+0530",
+          "items": [
+            {
+              "field": "assignee",
+              "fieldtype": "jira",
+              "fieldId": "assignee",
+              "from": null,
+              "fromString": null,
+              "to": "557058:19965570-a9cd-4d76-b059-6af5ae4fdca7",
+              "toString": "Prasanna Arikala",
+              "tmpFromAccountId": null,
+              "tmpToAccountId": "557058:19965570-a9cd-4d76-b059-6af5ae4fdca7"
+            }
+          ]
+        },
+        {
+          "id": "6165694",
+          "author": {
+            "self": "https://koreteam.atlassian.net/rest/api/3/user?accountId=712020%3A91136b8e-3e83-401e-8f10-8b73bf0fb5c4",
+            "accountId": "712020:91136b8e-3e83-401e-8f10-8b73bf0fb5c4",
+            "avatarUrls": {
+              "48x48": "https://secure.gravatar.com/avatar/b21fb0701436f5fa5b9a0b19b7c2d6d2?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FPG-6.png",
+              "24x24": "https://secure.gravatar.com/avatar/b21fb0701436f5fa5b9a0b19b7c2d6d2?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FPG-6.png",
+              "16x16": "https://secure.gravatar.com/avatar/b21fb0701436f5fa5b9a0b19b7c2d6d2?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FPG-6.png",
+              "32x32": "https://secure.gravatar.com/avatar/b21fb0701436f5fa5b9a0b19b7c2d6d2?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FPG-6.png"
+            },
+            "displayName": "Prathyusha Gopavaram",
+            "active": true,
+            "timeZone": "Asia/Kolkata",
+            "accountType": "atlassian"
+          },
+          "created": "2026-05-12T20:21:56.552+0530",
+          "items": [
+            {
+              "field": "description",
+              "fieldtype": "jira",
+              "fieldId": "description",
+              "from": null,
+              "fromString": null,
+              "to": null,
+              "toString": "h3. Summary\n\n{{HANDOFF}} and {{DELEGATE}} both do the same conceptual thing — transfer work to another agent. Yet their DSL syntax is structurally different enough that:\n\n* A developer cannot learn one and naturally write the other\n* Migrating a {{HANDOFF}} to a {{DELEGATE}} (or vice versa) requires a near-complete rewrite of that block\n* The cognitive overhead of keeping two different syntaxes in mind increases the chance of authoring errors\n\n----\n\nh3. Problem Detail\n\nBoth constructs target *only agents* and both carry a condition ({{WHEN}}), a failure strategy ({{ON_FAILURE}}), and optional remote configuration ({{LOCATION}}, {{ENDPOINT}}, {{PROTOCOL}}). That is where the similarity ends.\n\n*Entry-point keyword is different:*\n\n{noformat}HANDOFF:\n  - TO: BillingAgent       # key is TO\n\nDELEGATE:\n  - AGENT: BillingAgent    # key is AGENT\n{noformat}\n\nThere is no logical reason for this asymmetry. Both refer to the same kind of entity — an agent name.\n\n----\n\n*Context/input passing uses a completely different model:*\n\n{{HANDOFF}} uses a named {{CONTEXT}} block with its own sub-keys:\n\n{noformat}HANDOFF:\n  - TO: BillingAgent\n    CONTEXT:\n      pass: [userId, orderId]\n      summary: \"User is asking about their latest invoice\"\n      history: auto\n{noformat}\n\n{{DELEGATE}} uses flat key-value maps for both directions:\n\n{noformat}DELEGATE:\n  - AGENT: BillingAgent\n    INPUT: { child_user: session.userId }\n    RETURNS: { session.result: child.summary }\n    USE_RESULT: \"Use the result to answer the user\"\n{noformat}\n\nA developer moving a use-case from handoff to delegate has to restructure the entire data-passing block — {{CONTEXT.pass}} → {{INPUT}}, add {{RETURNS}} from scratch, add {{USE_RESULT}}. Nothing maps cleanly.\n\n----\n\nh3. Comparison Table\n\n||Concern||HANDOFF||DELEGATE||\n|Entry key|{{TO:}}|{{AGENT:}}|\n|Condition|{{WHEN:}}|{{WHEN:}}|\n|Input data|{{CONTEXT.pass: [...]}}|{{INPUT: { key: expr }}}|\n|Context summary|{{CONTEXT.summary:}}|{{PURPOSE:}} (different name, slightly different role)|\n|History|{{CONTEXT.history:}}|— (not supported)|\n|Memory access|{{CONTEXT.memory_grants:}}|— (not supported)|\n|Return flag|{{RETURN: true|false}}|implicit (always true)|\n|Result mapping|{{ON_RETURN.MAP:}}|{{RETURNS: { parent: child }}}|\n|Post-return hook|{{ON_RETURN.ACTION/HANDLER:}}|— (not supported)|\n|Result instruction|—|{{USE_RESULT:}}|\n|Failure|{{ON_FAILURE:}}|{{ON_FAILURE:}}|\n|Remote config|{{LOCATION/ENDPOINT/PROTOCOL}}|{{LOCATION/ENDPOINT/PROTOCOL}}|\n|Async|{{ASYNC: true/false}}|— (not supported)|\n|Timeout|{{TIMEOUT:}}|{{TIMEOUT:}}|\n\nShared fields: only {{WHEN}}, {{ON_FAILURE}}, {{TIMEOUT}}, and remote config are syntactically identical. Everything else diverges.\n\n----\n\nh3. Impact\n\n* *Authoring friction:* A developer writing their first {{DELEGATE}} after knowing {{HANDOFF}} (or vice versa) will frequently pick the wrong keyword and structure.\n* *Migration cost:* Changing a {{HANDOFF}} to a {{DELEGATE}} is not a keyword swap — it requires restructuring the data-passing block entirely.\n* *Documentation burden:* Two separate syntax trees must be documented, taught, and remembered independently even though they serve adjacent purposes.\n* *Error surface:* Divergent entry keys ({{TO}} vs {{AGENT}}) mean a validator cannot catch \"used HANDOFF syntax inside DELEGATE\" early — it just silently ignores the unknown key.\n\n----\n\nh3. Proposed Direction\n\nAlign the two constructs on a shared syntactic skeleton. Suggested target shape:\n\n{noformat}HANDOFF:\n  - TO: BillingAgent\n    WHEN: <condition>\n    PASS: [userId, orderId]\n    SUMMARY: \"User asking about invoice\"\n    RETURN: true\n    ON_FAILURE: continue\n\nDELEGATE:\n  - TO: BillingAgent        # same key as HANDOFF\n    WHEN: <condition>\n    PASS: { child_user: session.userId }   # same keyword, map form for delegate\n    SUMMARY: \"Summarize order history\"     # same keyword as PURPOSE\n    ON_FAILURE: continue\n{noformat}\n\nSpecific alignment changes worth scoping:\n\n# Unify the entry key to {{TO:}} for both (parser already accepts {{\\w+}} — this is a one-line change per construct)\n# Use {{PASS:}} for input data in both — list form for handoff, map form for delegate\n# Rename {{PURPOSE:}} → {{SUMMARY:}} on delegate to match handoff\n\nThis does not require changing runtime semantics — only the parser surface and the IR compilation step need updating. Backward compatibility can be maintained by accepting both the old and new keyword forms during a transition window."
+            }
+          ]
+        }
+      ]
+    },
+    "fields": {
+      "statuscategorychangedate": "2026-05-12T20:17:23.607+0530",
+      "issuetype": {
+        "self": "https://koreteam.atlassian.net/rest/api/3/issuetype/13402",
+        "id": "13402",
+        "description": "",
+        "iconUrl": "https://koreteam.atlassian.net/rest/api/2/universal_avatar/view/type/issuetype/avatar/10703?size=medium",
+        "name": "Bug",
+        "subtask": false,
+        "avatarId": 10703,
+        "entityId": "ffe81e74-168d-44e4-b40a-87293f5b8180",
+        "hierarchyLevel": 0
+      },
+      "timespent": null,
+      "project": {
+        "self": "https://koreteam.atlassian.net/rest/api/3/project/17286",
+        "id": "17286",
+        "key": "ABLP",
+        "name": "Agent-Platform-v2",
+        "projectTypeKey": "software",
+        "simplified": true,
+        "avatarUrls": {
+          "48x48": "https://koreteam.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/15404",
+          "24x24": "https://koreteam.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/15404?size=small",
+          "16x16": "https://koreteam.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/15404?size=xsmall",
+          "32x32": "https://koreteam.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/15404?size=medium"
+        }
+      },
+      "fixVersions": [],
+      "aggregatetimespent": null,
+      "statusCategory": {
+        "self": "https://koreteam.atlassian.net/rest/api/3/statuscategory/2",
+        "id": 2,
+        "key": "new",
+        "colorName": "blue-gray",
+        "name": "To Do"
+      },
+      "resolution": null,
+      "customfield_13700": "{}",
+      "customfield_15205": null,
+      "resolutiondate": null,
+      "workratio": -1,
+      "issuerestriction": {
+        "issuerestrictions": {},
+        "shouldDisplay": true
+      },
+      "watches": {
+        "self": "https://koreteam.atlassian.net/rest/api/3/issue/ABLP-1031/watchers",
+        "watchCount": 1,
+        "isWatching": false
+      },
+      "lastViewed": null,
+      "created": "2026-05-12T20:17:23.273+0530",
+      "customfield_15279": null,
+      "priority": {
+        "self": "https://koreteam.atlassian.net/rest/api/3/priority/10200",
+        "iconUrl": "https://koreteam.atlassian.net/images/icons/priorities/trivial_new.svg",
+        "name": "None",
+        "id": "10200"
+      },
+      "customfield_15514": null,
+      "labels": [],
+      "customfield_15508": null,
+      "timeestimate": null,
+      "aggregatetimeoriginalestimate": null,
+      "versions": [],
+      "issuelinks": [],
+      "assignee": {
+        "self": "https://koreteam.atlassian.net/rest/api/3/user?accountId=557058%3A19965570-a9cd-4d76-b059-6af5ae4fdca7",
+        "accountId": "557058:19965570-a9cd-4d76-b059-6af5ae4fdca7",
+        "emailAddress": "prasanna@kore.com",
+        "avatarUrls": {
+          "48x48": "https://secure.gravatar.com/avatar/84aa6c5f7ca4865903e52515ef5499c4?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FPA-6.png",
+          "24x24": "https://secure.gravatar.com/avatar/84aa6c5f7ca4865903e52515ef5499c4?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FPA-6.png",
+          "16x16": "https://secure.gravatar.com/avatar/84aa6c5f7ca4865903e52515ef5499c4?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FPA-6.png",
+          "32x32": "https://secure.gravatar.com/avatar/84aa6c5f7ca4865903e52515ef5499c4?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FPA-6.png"
+        },
+        "displayName": "Prasanna Arikala",
+        "active": true,
+        "timeZone": "Asia/Kolkata",
+        "accountType": "atlassian"
+      },
+      "updated": "2026-05-12T20:22:03.174+0530",
+      "status": {
+        "self": "https://koreteam.atlassian.net/rest/api/3/status/13811",
+        "description": "",
+        "iconUrl": "https://koreteam.atlassian.net/images/icons/statuses/generic.png",
+        "name": "To Do",
+        "id": "13811",
+        "statusCategory": {
+          "self": "https://koreteam.atlassian.net/rest/api/3/statuscategory/2",
+          "id": 2,
+          "key": "new",
+          "colorName": "blue-gray",
+          "name": "To Do"
+        }
+      },
+      "components": [],
+      "timeoriginalestimate": null,
+      "description": {
+        "type": "doc",
+        "version": 1,
+        "content": [
+          {
+            "type": "heading",
+            "attrs": {
+              "level": 3,
+              "localId": "ff70805a3727"
+            },
+            "content": [
+              {
+                "type": "text",
+                "text": "Summary"
+              }
+            ]
+          },
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "type": "text",
+                "text": "HANDOFF",
+                "marks": [
+                  {
+                    "type": "code"
+                  }
+                ]
+              },
+              {
+                "type": "text",
+                "text": " and "
+              },
+              {
+                "type": "text",
+                "text": "DELEGATE",
+                "marks": [
+                  {
+                    "type": "code"
+                  }
+                ]
+              },
+              {
+                "type": "text",
+                "text": " both do the same conceptual thing — transfer work to another agent. Yet their DSL syntax is structurally different enough that:"
+              }
+            ],
+            "attrs": {
+              "localId": "34f016338a3c"
+            }
+          },
+          {
+            "type": "bulletList",
+            "content": [
+              {
+                "type": "listItem",
+                "attrs": {
+                  "localId": "133af76fa46c"
+                },
+                "content": [
+                  {
+                    "type": "paragraph",
+                    "content": [
+                      {
+                        "type": "text",
+                        "text": "A developer cannot learn one and naturally write the other"
+                      }
+                    ],
+                    "attrs": {
+                      "localId": "78b2a5c25d9a"
+                    }
+                  }
+                ]
+              },
+              {
+                "type": "listItem",
+                "attrs": {
+                  "localId": "f397f039654e"
+                },
+                "content": [
+                  {
+                    "type": "paragraph",
+                    "content": [
+                      {
+                        "type": "text",
+                        "text": "Migrating a "
+                      },
+                      {
+                        "type": "text",
+                        "text": "HANDOFF",
+                        "marks": [
+                          {
+                            "type": "code"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "text",
+                        "text": " to a "
+                      },
+                      {
+                        "type": "text",
+                        "text": "DELEGATE",
+                        "marks": [
+                          {
+                            "type": "code"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "text",
+                        "text": " (or vice versa) requires a near-complete rewrite of that block"
+                      }
+                    ],
+                    "attrs": {
+                      "localId": "700f5ad4acdb"
+                    }
+                  }
+                ]
+              },
+              {
+                "type": "listItem",
+                "attrs": {
+                  "localId": "c9039ad05efc"
+                },
+                "content": [
+                  {
+                    "type": "paragraph",
+                    "content": [
+                      {
+                        "type": "text",
+                        "text": "The cognitive overhead of keeping two different syntaxes in mind increases the chance of authoring errors"
+                      }
+                    ],
+                    "attrs": {
+                      "localId": "eb139e5dd3ba"
+                    }
+                  }
+                ]
+              }
+            ],
+            "attrs": {
+              "localId": "6879f5970f03"
+            }
+          },
+          {
+            "type": "rule",
+            "attrs": {
+              "localId": "2c7f98da02bb"
+            }
+          },
+          {
+            "type": "heading",
+            "attrs": {
+              "level": 3,
+              "localId": "5039cd5389cd"
+            },
+            "content": [
+              {
+                "type": "text",
+                "text": "Problem Detail"
+              }
+            ]
+          },
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "type": "text",
+                "text": "Both constructs target "
+              },
+              {
+                "type": "text",
+                "text": "only agents",
+                "marks": [
+                  {
+                    "type": "strong"
+                  }
+                ]
+              },
+              {
+                "type": "text",
+                "text": " and both carry a condition ("
+              },
+              {
+                "type": "text",
+                "text": "WHEN",
+                "marks": [
+                  {
+                    "type": "code"
+                  }
+                ]
+              },
+              {
+                "type": "text",
+                "text": "), a failure strategy ("
+              },
+              {
+                "type": "text",
+                "text": "ON_FAILURE",
+                "marks": [
+                  {
+                    "type": "code"
+                  }
+                ]
+              },
+              {
+                "type": "text",
+                "text": "), and optional remote configuration ("
+              },
+              {
+                "type": "text",
+                "text": "LOCATION",
+                "marks": [
+                  {
+                    "type": "code"
+                  }
+                ]
+              },
+              {
+                "type": "text",
+                "text": ", "
+              },
+              {
+                "type": "text",
+                "text": "ENDPOINT",
+                "marks": [
+                  {
+                    "type": "code"
+                  }
+                ]
+              },
+              {
+                "type": "text",
+                "text": ", "
+              },
+              {
+                "type": "text",
+                "text": "PROTOCOL",
+                "marks": [
+                  {
+                    "type": "code"
+                  }
+                ]
+              },
+              {
+                "type": "text",
+                "text": "). That is where the similarity ends."
+              }
+            ],
+            "attrs": {
+              "localId": "ded9269176cd"
+            }
+          },
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "type": "text",
+                "text": "Entry-point keyword is different:",
+                "marks": [
+                  {
+                    "type": "strong"
+                  }
+                ]
+              }
+            ],
+            "attrs": {
+              "localId": "28038dddd9cc"
+            }
+          },
+          {
+            "type": "codeBlock",
+            "attrs": {
+              "localId": "0dcc8134220e"
+            },
+            "content": [
+              {
+                "type": "text",
+                "text": "HANDOFF:\n  - TO: BillingAgent       # key is TO\n\nDELEGATE:\n  - AGENT: BillingAgent    # key is AGENT\n"
+              }
+            ]
+          },
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "type": "text",
+                "text": "There is no logical reason for this asymmetry. Both refer to the same kind of entity — an agent name."
+              }
+            ],
+            "attrs": {
+              "localId": "d6d114072e60"
+            }
+          },
+          {
+            "type": "rule",
+            "attrs": {
+              "localId": "57ebf4a4cd66"
+            }
+          },
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "type": "text",
+                "text": "Context/input passing uses a completely different model:",
+                "marks": [
+                  {
+                    "type": "strong"
+                  }
+                ]
+              }
+            ],
+            "attrs": {
+              "localId": "1562abf5990d"
+            }
+          },
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "type": "text",
+                "text": "HANDOFF",
+                "marks": [
+                  {
+                    "type": "code"
+                  }
+                ]
+              },
+              {
+                "type": "text",
+                "text": " uses a named "
+              },
+              {
+                "type": "text",
+                "text": "CONTEXT",
+                "marks": [
+                  {
+                    "type": "code"
+                  }
+                ]
+              },
+              {
+                "type": "text",
+                "text": " block with its own sub-keys:"
+              }
+            ],
+            "attrs": {
+              "localId": "971bb4d97296"
+            }
+          },
+          {
+            "type": "codeBlock",
+            "attrs": {
+              "localId": "25bff4d957d1"
+            },
+            "content": [
+              {
+                "type": "text",
+                "text": "HANDOFF:\n  - TO: BillingAgent\n    CONTEXT:\n      pass: [userId, orderId]\n      summary: \"User is asking about their latest invoice\"\n      history: auto\n"
+              }
+            ]
+          },
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "type": "text",
+                "text": "DELEGATE",
+                "marks": [
+                  {
+                    "type": "code"
+                  }
+                ]
+              },
+              {
+                "type": "text",
+                "text": " uses flat key-value maps for both directions:"
+              }
+            ],
+            "attrs": {
+              "localId": "9fc89c0d1efc"
+            }
+          },
+          {
+            "type": "codeBlock",
+            "attrs": {
+              "localId": "c8e630d0bc89"
+            },
+            "content": [
+              {
+                "type": "text",
+                "text": "DELEGATE:\n  - AGENT: BillingAgent\n    INPUT: { child_user: session.userId }\n    RETURNS: { session.result: child.summary }\n    USE_RESULT: \"Use the result to answer the user\"\n"
+              }
+            ]
+          },
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "type": "text",
+                "text": "A developer moving a use-case from handoff to delegate has to restructure the entire data-passing block — "
+              },
+              {
+                "type": "text",
+                "text": "CONTEXT.pass",
+                "marks": [
+                  {
+                    "type": "code"
+                  }
+                ]
+              },
+              {
+                "type": "text",
+                "text": " → "
+              },
+              {
+                "type": "text",
+                "text": "INPUT",
+                "marks": [
+                  {
+                    "type": "code"
+                  }
+                ]
+              },
+              {
+                "type": "text",
+                "text": ", add "
+              },
+              {
+                "type": "text",
+                "text": "RETURNS",
+                "marks": [
+                  {
+                    "type": "code"
+                  }
+                ]
+              },
+              {
+                "type": "text",
+                "text": " from scratch, add "
+              },
+              {
+                "type": "text",
+                "text": "USE_RESULT",
+                "marks": [
+                  {
+                    "type": "code"
+                  }
+                ]
+              },
+              {
+                "type": "text",
+                "text": ". Nothing maps cleanly."
+              }
+            ],
+            "attrs": {
+              "localId": "09f91c20b1fa"
+            }
+          },
+          {
+            "type": "rule",
+            "attrs": {
+              "localId": "4fa7566aac68"
+            }
+          },
+          {
+            "type": "heading",
+            "attrs": {
+              "level": 3,
+              "localId": "b75788a630ba"
+            },
+            "content": [
+              {
+                "type": "text",
+                "text": "Comparison Table"
+              }
+            ]
+          },
+          {
+            "type": "table",
+            "attrs": {
+              "isNumberColumnEnabled": false,
+              "layout": "center",
+              "localId": "6746b46c-c9dc-4dd6-ae9a-3d6f2fa3110a"
+            },
+            "content": [
+              {
+                "type": "tableRow",
+                "attrs": {
+                  "localId": "822ead690090"
+                },
+                "content": [
+                  {
+                    "type": "tableHeader",
+                    "attrs": {
+                      "localId": "72f8a0ede86b"
+                    },
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "Concern"
+                          }
+                        ],
+                        "attrs": {
+                          "localId": "3b0cafe090ee"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "type": "tableHeader",
+                    "attrs": {
+                      "localId": "ca27186a83e8"
+                    },
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "HANDOFF"
+                          }
+                        ],
+                        "attrs": {
+                          "localId": "96743647ac8f"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "type": "tableHeader",
+                    "attrs": {
+                      "localId": "ff486b01fd44"
+                    },
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "DELEGATE"
+                          }
+                        ],
+                        "attrs": {
+                          "localId": "3c339fab64cd"
+                        }
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "type": "tableRow",
+                "attrs": {
+                  "localId": "5e42b180fd72"
+                },
+                "content": [
+                  {
+                    "type": "tableCell",
+                    "attrs": {
+                      "localId": "57a0151f956a"
+                    },
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "Entry key"
+                          }
+                        ],
+                        "attrs": {
+                          "localId": "78b05f0e826d"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "type": "tableCell",
+                    "attrs": {
+                      "localId": "f69c7fad3b8f"
+                    },
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "TO:",
+                            "marks": [
+                              {
+                                "type": "code"
+                              }
+                            ]
+                          }
+                        ],
+                        "attrs": {
+                          "localId": "23a8877f26ff"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "type": "tableCell",
+                    "attrs": {
+                      "localId": "ca60262c4a26"
+                    },
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "AGENT:",
+                            "marks": [
+                              {
+                                "type": "code"
+                              }
+                            ]
+                          }
+                        ],
+                        "attrs": {
+                          "localId": "7c1e48d73688"
+                        }
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "type": "tableRow",
+                "attrs": {
+                  "localId": "fe11762faf64"
+                },
+                "content": [
+                  {
+                    "type": "tableCell",
+                    "attrs": {
+                      "localId": "82ef3e7a66ee"
+                    },
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "Condition"
+                          }
+                        ],
+                        "attrs": {
+                          "localId": "55f2dc4b86dc"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "type": "tableCell",
+                    "attrs": {
+                      "localId": "0553a544a315"
+                    },
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "WHEN:",
+                            "marks": [
+                              {
+                                "type": "code"
+                              }
+                            ]
+                          }
+                        ],
+                        "attrs": {
+                          "localId": "e4bc6244c8bb"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "type": "tableCell",
+                    "attrs": {
+                      "localId": "99dacfb15b04"
+                    },
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "WHEN:",
+                            "marks": [
+                              {
+                                "type": "code"
+                              }
+                            ]
+                          }
+                        ],
+                        "attrs": {
+                          "localId": "9f42c00887e5"
+                        }
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "type": "tableRow",
+                "attrs": {
+                  "localId": "65736572ad7b"
+                },
+                "content": [
+                  {
+                    "type": "tableCell",
+                    "attrs": {
+                      "localId": "43938c62e7ef"
+                    },
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "Input data"
+                          }
+                        ],
+                        "attrs": {
+                          "localId": "9ead281e6b4f"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "type": "tableCell",
+                    "attrs": {
+                      "localId": "27a839900048"
+                    },
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "CONTEXT.pass: [...]",
+                            "marks": [
+                              {
+                                "type": "code"
+                              }
+                            ]
+                          }
+                        ],
+                        "attrs": {
+                          "localId": "45292a775880"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "type": "tableCell",
+                    "attrs": {
+                      "localId": "b365149019c4"
+                    },
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "INPUT: { key: expr }",
+                            "marks": [
+                              {
+                                "type": "code"
+                              }
+                            ]
+                          }
+                        ],
+                        "attrs": {
+                          "localId": "a11e7678cd7e"
+                        }
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "type": "tableRow",
+                "attrs": {
+                  "localId": "3d8e6827b3ba"
+                },
+                "content": [
+                  {
+                    "type": "tableCell",
+                    "attrs": {
+                      "localId": "59b66d853001"
+                    },
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "Context summary"
+                          }
+                        ],
+                        "attrs": {
+                          "localId": "37332609982c"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "type": "tableCell",
+                    "attrs": {
+                      "localId": "a432291db2d5"
+                    },
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "CONTEXT.summary:",
+                            "marks": [
+                              {
+                                "type": "code"
+                              }
+                            ]
+                          }
+                        ],
+                        "attrs": {
+                          "localId": "db51814f2672"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "type": "tableCell",
+                    "attrs": {
+                      "localId": "643b75a0a7f9"
+                    },
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "PURPOSE:",
+                            "marks": [
+                              {
+                                "type": "code"
+                              }
+                            ]
+                          },
+                          {
+                            "type": "text",
+                            "text": " (different name, slightly different role)"
+                          }
+                        ],
+                        "attrs": {
+                          "localId": "4878fead4146"
+                        }
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "type": "tableRow",
+                "attrs": {
+                  "localId": "e6ce76e632c0"
+                },
+                "content": [
+                  {
+                    "type": "tableCell",
+                    "attrs": {
+                      "localId": "9c5e5f8d7c78"
+                    },
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "History"
+                          }
+                        ],
+                        "attrs": {
+                          "localId": "a59465fa3b9c"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "type": "tableCell",
+                    "attrs": {
+                      "localId": "bbc3bf51cda2"
+                    },
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "CONTEXT.history:",
+                            "marks": [
+                              {
+                                "type": "code"
+                              }
+                            ]
+                          }
+                        ],
+                        "attrs": {
+                          "localId": "14c45c5e00fe"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "type": "tableCell",
+                    "attrs": {
+                      "localId": "72c89cfeec87"
+                    },
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "— (not supported)"
+                          }
+                        ],
+                        "attrs": {
+                          "localId": "2cd41533cecb"
+                        }
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "type": "tableRow",
+                "attrs": {
+                  "localId": "c01e2a9417ac"
+                },
+                "content": [
+                  {
+                    "type": "tableCell",
+                    "attrs": {
+                      "localId": "e2ff954087ad"
+                    },
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "Memory access"
+                          }
+                        ],
+                        "attrs": {
+                          "localId": "d30755eb6f46"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "type": "tableCell",
+                    "attrs": {
+                      "localId": "90cc26c1c4b2"
+                    },
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "CONTEXT.memory_grants:",
+                            "marks": [
+                              {
+                                "type": "code"
+                              }
+                            ]
+                          }
+                        ],
+                        "attrs": {
+                          "localId": "e4f1fd26c020"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "type": "tableCell",
+                    "attrs": {
+                      "localId": "45204042db5e"
+                    },
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "— (not supported)"
+                          }
+                        ],
+                        "attrs": {
+                          "localId": "d4d7db0fdf70"
+                        }
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "type": "tableRow",
+                "attrs": {
+                  "localId": "b7caae86ae9f"
+                },
+                "content": [
+                  {
+                    "type": "tableCell",
+                    "attrs": {
+                      "localId": "5d6ef837eb6e"
+                    },
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "Return flag"
+                          }
+                        ],
+                        "attrs": {
+                          "localId": "2eb627f7c375"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "type": "tableCell",
+                    "attrs": {
+                      "localId": "afdc0c3c89b8"
+                    },
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "RETURN: true|false",
+                            "marks": [
+                              {
+                                "type": "code"
+                              }
+                            ]
+                          }
+                        ],
+                        "attrs": {
+                          "localId": "9356950882cf"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "type": "tableCell",
+                    "attrs": {
+                      "localId": "cdbaf7dedba3"
+                    },
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "implicit (always true)"
+                          }
+                        ],
+                        "attrs": {
+                          "localId": "34e9af218e87"
+                        }
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "type": "tableRow",
+                "attrs": {
+                  "localId": "f5478b14aa3c"
+                },
+                "content": [
+                  {
+                    "type": "tableCell",
+                    "attrs": {
+                      "localId": "e2c15b60b50c"
+                    },
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "Result mapping"
+                          }
+                        ],
+                        "attrs": {
+                          "localId": "75c64907e889"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "type": "tableCell",
+                    "attrs": {
+                      "localId": "5d62d663b96c"
+                    },
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "ON_RETURN.MAP:",
+                            "marks": [
+                              {
+                                "type": "code"
+                              }
+                            ]
+                          }
+                        ],
+                        "attrs": {
+                          "localId": "a83a2fbf6c3c"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "type": "tableCell",
+                    "attrs": {
+                      "localId": "3da4354de449"
+                    },
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "RETURNS: { parent: child }",
+                            "marks": [
+                              {
+                                "type": "code"
+                              }
+                            ]
+                          }
+                        ],
+                        "attrs": {
+                          "localId": "4010ce42d60f"
+                        }
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "type": "tableRow",
+                "attrs": {
+                  "localId": "6af1254e0f7c"
+                },
+                "content": [
+                  {
+                    "type": "tableCell",
+                    "attrs": {
+                      "localId": "3cd1038bf8b8"
+                    },
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "Post-return hook"
+                          }
+                        ],
+                        "attrs": {
+                          "localId": "eff70de8b205"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "type": "tableCell",
+                    "attrs": {
+                      "localId": "274d391fdf13"
+                    },
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "ON_RETURN.ACTION/HANDLER:",
+                            "marks": [
+                              {
+                                "type": "code"
+                              }
+                            ]
+                          }
+                        ],
+                        "attrs": {
+                          "localId": "eeecc390c6a2"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "type": "tableCell",
+                    "attrs": {
+                      "localId": "c789e96210ed"
+                    },
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "— (not supported)"
+                          }
+                        ],
+                        "attrs": {
+                          "localId": "06fd0c33846a"
+                        }
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "type": "tableRow",
+                "attrs": {
+                  "localId": "d5500cc8ae29"
+                },
+                "content": [
+                  {
+                    "type": "tableCell",
+                    "attrs": {
+                      "localId": "0b883c3a79e6"
+                    },
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "Result instruction"
+                          }
+                        ],
+                        "attrs": {
+                          "localId": "c018e321cf60"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "type": "tableCell",
+                    "attrs": {
+                      "localId": "befc2b04d329"
+                    },
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "—"
+                          }
+                        ],
+                        "attrs": {
+                          "localId": "320ac41ee610"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "type": "tableCell",
+                    "attrs": {
+                      "localId": "715203354044"
+                    },
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "USE_RESULT:",
+                            "marks": [
+                              {
+                                "type": "code"
+                              }
+                            ]
+                          }
+                        ],
+                        "attrs": {
+                          "localId": "529bca0ae4ee"
+                        }
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "type": "tableRow",
+                "attrs": {
+                  "localId": "1606fc62b2f1"
+                },
+                "content": [
+                  {
+                    "type": "tableCell",
+                    "attrs": {
+                      "localId": "1b0ecc0a0dda"
+                    },
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "Failure"
+                          }
+                        ],
+                        "attrs": {
+                          "localId": "13b1851ef409"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "type": "tableCell",
+                    "attrs": {
+                      "localId": "973f1122c03a"
+                    },
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "ON_FAILURE:",
+                            "marks": [
+                              {
+                                "type": "code"
+                              }
+                            ]
+                          }
+                        ],
+                        "attrs": {
+                          "localId": "92a8cb175740"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "type": "tableCell",
+                    "attrs": {
+                      "localId": "fa7b16123842"
+                    },
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "ON_FAILURE:",
+                            "marks": [
+                              {
+                                "type": "code"
+                              }
+                            ]
+                          }
+                        ],
+                        "attrs": {
+                          "localId": "a4c20245d66e"
+                        }
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "type": "tableRow",
+                "attrs": {
+                  "localId": "9d2c78e11f11"
+                },
+                "content": [
+                  {
+                    "type": "tableCell",
+                    "attrs": {
+                      "localId": "44b1427a808b"
+                    },
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "Remote config"
+                          }
+                        ],
+                        "attrs": {
+                          "localId": "31e09f092464"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "type": "tableCell",
+                    "attrs": {
+                      "localId": "134559dee99e"
+                    },
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "LOCATION/ENDPOINT/PROTOCOL",
+                            "marks": [
+                              {
+                                "type": "code"
+                              }
+                            ]
+                          }
+                        ],
+                        "attrs": {
+                          "localId": "a919960973ea"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "type": "tableCell",
+                    "attrs": {
+                      "localId": "755d01df48da"
+                    },
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "LOCATION/ENDPOINT/PROTOCOL",
+                            "marks": [
+                              {
+                                "type": "code"
+                              }
+                            ]
+                          }
+                        ],
+                        "attrs": {
+                          "localId": "b8c3b12721d7"
+                        }
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "type": "tableRow",
+                "attrs": {
+                  "localId": "0932dec32b4d"
+                },
+                "content": [
+                  {
+                    "type": "tableCell",
+                    "attrs": {
+                      "localId": "5d07e7e13388"
+                    },
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "Async"
+                          }
+                        ],
+                        "attrs": {
+                          "localId": "7b12a6721d57"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "type": "tableCell",
+                    "attrs": {
+                      "localId": "9dbe1f010cae"
+                    },
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "ASYNC: true/false",
+                            "marks": [
+                              {
+                                "type": "code"
+                              }
+                            ]
+                          }
+                        ],
+                        "attrs": {
+                          "localId": "ce2dd2cd6cfb"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "type": "tableCell",
+                    "attrs": {
+                      "localId": "24a27a80a8c5"
+                    },
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "— (not supported)"
+                          }
+                        ],
+                        "attrs": {
+                          "localId": "7d6d4c554751"
+                        }
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "type": "tableRow",
+                "attrs": {
+                  "localId": "6803a2eeb463"
+                },
+                "content": [
+                  {
+                    "type": "tableCell",
+                    "attrs": {
+                      "localId": "3152cbbfc266"
+                    },
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "Timeout"
+                          }
+                        ],
+                        "attrs": {
+                          "localId": "afa29c5e951e"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "type": "tableCell",
+                    "attrs": {
+                      "localId": "37c2fb122821"
+                    },
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "TIMEOUT:",
+                            "marks": [
+                              {
+                                "type": "code"
+                              }
+                            ]
+                          }
+                        ],
+                        "attrs": {
+                          "localId": "85992a5e0091"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "type": "tableCell",
+                    "attrs": {
+                      "localId": "99134a76c81f"
+                    },
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "TIMEOUT:",
+                            "marks": [
+                              {
+                                "type": "code"
+                              }
+                            ]
+                          }
+                        ],
+                        "attrs": {
+                          "localId": "e339ce238d27"
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "type": "text",
+                "text": "Shared fields: only "
+              },
+              {
+                "type": "text",
+                "text": "WHEN",
+                "marks": [
+                  {
+                    "type": "code"
+                  }
+                ]
+              },
+              {
+                "type": "text",
+                "text": ", "
+              },
+              {
+                "type": "text",
+                "text": "ON_FAILURE",
+                "marks": [
+                  {
+                    "type": "code"
+                  }
+                ]
+              },
+              {
+                "type": "text",
+                "text": ", "
+              },
+              {
+                "type": "text",
+                "text": "TIMEOUT",
+                "marks": [
+                  {
+                    "type": "code"
+                  }
+                ]
+              },
+              {
+                "type": "text",
+                "text": ", and remote config are syntactically identical. Everything else diverges."
+              }
+            ],
+            "attrs": {
+              "localId": "6d11920c2063"
+            }
+          },
+          {
+            "type": "rule",
+            "attrs": {
+              "localId": "6a5cb913899b"
+            }
+          },
+          {
+            "type": "heading",
+            "attrs": {
+              "level": 3,
+              "localId": "d88cf7260c3c"
+            },
+            "content": [
+              {
+                "type": "text",
+                "text": "Impact"
+              }
+            ]
+          },
+          {
+            "type": "bulletList",
+            "content": [
+              {
+                "type": "listItem",
+                "attrs": {
+                  "localId": "ae1709edf6e5"
+                },
+                "content": [
+                  {
+                    "type": "paragraph",
+                    "content": [
+                      {
+                        "type": "text",
+                        "text": "Authoring friction:",
+                        "marks": [
+                          {
+                            "type": "strong"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "text",
+                        "text": " A developer writing their first "
+                      },
+                      {
+                        "type": "text",
+                        "text": "DELEGATE",
+                        "marks": [
+                          {
+                            "type": "code"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "text",
+                        "text": " after knowing "
+                      },
+                      {
+                        "type": "text",
+                        "text": "HANDOFF",
+                        "marks": [
+                          {
+                            "type": "code"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "text",
+                        "text": " (or vice versa) will frequently pick the wrong keyword and structure."
+                      }
+                    ],
+                    "attrs": {
+                      "localId": "66fc95228850"
+                    }
+                  }
+                ]
+              },
+              {
+                "type": "listItem",
+                "attrs": {
+                  "localId": "a462e8b4d380"
+                },
+                "content": [
+                  {
+                    "type": "paragraph",
+                    "content": [
+                      {
+                        "type": "text",
+                        "text": "Migration cost:",
+                        "marks": [
+                          {
+                            "type": "strong"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "text",
+                        "text": " Changing a "
+                      },
+                      {
+                        "type": "text",
+                        "text": "HANDOFF",
+                        "marks": [
+                          {
+                            "type": "code"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "text",
+                        "text": " to a "
+                      },
+                      {
+                        "type": "text",
+                        "text": "DELEGATE",
+                        "marks": [
+                          {
+                            "type": "code"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "text",
+                        "text": " is not a keyword swap — it requires restructuring the data-passing block entirely."
+                      }
+                    ],
+                    "attrs": {
+                      "localId": "01dbbefbd1de"
+                    }
+                  }
+                ]
+              },
+              {
+                "type": "listItem",
+                "attrs": {
+                  "localId": "fcb4d3ae5080"
+                },
+                "content": [
+                  {
+                    "type": "paragraph",
+                    "content": [
+                      {
+                        "type": "text",
+                        "text": "Documentation burden:",
+                        "marks": [
+                          {
+                            "type": "strong"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "text",
+                        "text": " Two separate syntax trees must be documented, taught, and remembered independently even though they serve adjacent purposes."
+                      }
+                    ],
+                    "attrs": {
+                      "localId": "f8455a27b4cc"
+                    }
+                  }
+                ]
+              },
+              {
+                "type": "listItem",
+                "attrs": {
+                  "localId": "c66102960925"
+                },
+                "content": [
+                  {
+                    "type": "paragraph",
+                    "content": [
+                      {
+                        "type": "text",
+                        "text": "Error surface:",
+                        "marks": [
+                          {
+                            "type": "strong"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "text",
+                        "text": " Divergent entry keys ("
+                      },
+                      {
+                        "type": "text",
+                        "text": "TO",
+                        "marks": [
+                          {
+                            "type": "code"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "text",
+                        "text": " vs "
+                      },
+                      {
+                        "type": "text",
+                        "text": "AGENT",
+                        "marks": [
+                          {
+                            "type": "code"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "text",
+                        "text": ") mean a validator cannot catch \"used HANDOFF syntax inside DELEGATE\" early — it just silently ignores the unknown key."
+                      }
+                    ],
+                    "attrs": {
+                      "localId": "deb7465596ed"
+                    }
+                  }
+                ]
+              }
+            ],
+            "attrs": {
+              "localId": "b287888ff797"
+            }
+          },
+          {
+            "type": "rule",
+            "attrs": {
+              "localId": "e08b60b36e81"
+            }
+          },
+          {
+            "type": "heading",
+            "attrs": {
+              "level": 3,
+              "localId": "330c0eb6bf89"
+            },
+            "content": [
+              {
+                "type": "text",
+                "text": "Proposed Direction"
+              }
+            ]
+          },
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "type": "text",
+                "text": "Align the two constructs on a shared syntactic skeleton. Suggested target shape:"
+              }
+            ],
+            "attrs": {
+              "localId": "281f9e2e3bf6"
+            }
+          },
+          {
+            "type": "codeBlock",
+            "attrs": {
+              "localId": "40363f238583"
+            },
+            "content": [
+              {
+                "type": "text",
+                "text": "HANDOFF:\n  - TO: BillingAgent\n    WHEN: <condition>\n    PASS: [userId, orderId]\n    SUMMARY: \"User asking about invoice\"\n    RETURN: true\n    ON_FAILURE: continue\n\nDELEGATE:\n  - TO: BillingAgent        # same key as HANDOFF\n    WHEN: <condition>\n    PASS: { child_user: session.userId }   # same keyword, map form for delegate\n    SUMMARY: \"Summarize order history\"     # same keyword as PURPOSE\n    ON_FAILURE: continue\n"
+              }
+            ]
+          },
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "type": "text",
+                "text": "Specific alignment changes worth scoping:"
+              }
+            ],
+            "attrs": {
+              "localId": "e36ba273a2d1"
+            }
+          },
+          {
+            "type": "orderedList",
+            "attrs": {
+              "order": 1,
+              "localId": "2fb8834b9ead"
+            },
+            "content": [
+              {
+                "type": "listItem",
+                "attrs": {
+                  "localId": "ff495d0cfd7e"
+                },
+                "content": [
+                  {
+                    "type": "paragraph",
+                    "content": [
+                      {
+                        "type": "text",
+                        "text": "Unify the entry key to "
+                      },
+                      {
+                        "type": "text",
+                        "text": "TO:",
+                        "marks": [
+                          {
+                            "type": "code"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "text",
+                        "text": " for both (parser already accepts "
+                      },
+                      {
+                        "type": "text",
+                        "text": "\\w+",
+                        "marks": [
+                          {
+                            "type": "code"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "text",
+                        "text": " — this is a one-line change per construct)"
+                      }
+                    ],
+                    "attrs": {
+                      "localId": "1c508e41fe0e"
+                    }
+                  }
+                ]
+              },
+              {
+                "type": "listItem",
+                "attrs": {
+                  "localId": "fbfc8d3d4686"
+                },
+                "content": [
+                  {
+                    "type": "paragraph",
+                    "content": [
+                      {
+                        "type": "text",
+                        "text": "Use "
+                      },
+                      {
+                        "type": "text",
+                        "text": "PASS:",
+                        "marks": [
+                          {
+                            "type": "code"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "text",
+                        "text": " for input data in both — list form for handoff, map form for delegate"
+                      }
+                    ],
+                    "attrs": {
+                      "localId": "a85309c37b8e"
+                    }
+                  }
+                ]
+              },
+              {
+                "type": "listItem",
+                "attrs": {
+                  "localId": "a473e2c810d7"
+                },
+                "content": [
+                  {
+                    "type": "paragraph",
+                    "content": [
+                      {
+                        "type": "text",
+                        "text": "Rename "
+                      },
+                      {
+                        "type": "text",
+                        "text": "PURPOSE:",
+                        "marks": [
+                          {
+                            "type": "code"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "text",
+                        "text": " → "
+                      },
+                      {
+                        "type": "text",
+                        "text": "SUMMARY:",
+                        "marks": [
+                          {
+                            "type": "code"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "text",
+                        "text": " on delegate to match handoff"
+                      }
+                    ],
+                    "attrs": {
+                      "localId": "82f1b891ef33"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "type": "text",
+                "text": "This does not require changing runtime semantics — only the parser surface and the IR compilation step need updating. Backward compatibility can be maintained by accepting both the old and new keyword forms during a transition window."
+              }
+            ],
+            "attrs": {
+              "localId": "3acb0b01f960"
+            }
+          }
+        ]
+      },
+      "customfield_15225": null,
+      "customfield_11300": null,
+      "timetracking": {},
+      "security": null,
+      "attachment": [],
+      "aggregatetimeestimate": null,
+      "summary": "DSL syntax inconsistency between HANDOFF and DELEGATE makes authoring and migration unnecessarily difficult ",
+      "creator": {
+        "self": "https://koreteam.atlassian.net/rest/api/3/user?accountId=712020%3A91136b8e-3e83-401e-8f10-8b73bf0fb5c4",
+        "accountId": "712020:91136b8e-3e83-401e-8f10-8b73bf0fb5c4",
+        "avatarUrls": {
+          "48x48": "https://secure.gravatar.com/avatar/b21fb0701436f5fa5b9a0b19b7c2d6d2?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FPG-6.png",
+          "24x24": "https://secure.gravatar.com/avatar/b21fb0701436f5fa5b9a0b19b7c2d6d2?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FPG-6.png",
+          "16x16": "https://secure.gravatar.com/avatar/b21fb0701436f5fa5b9a0b19b7c2d6d2?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FPG-6.png",
+          "32x32": "https://secure.gravatar.com/avatar/b21fb0701436f5fa5b9a0b19b7c2d6d2?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FPG-6.png"
+        },
+        "displayName": "Prathyusha Gopavaram",
+        "active": true,
+        "timeZone": "Asia/Kolkata",
+        "accountType": "atlassian"
+      },
+      "subtasks": [],
+      "reporter": {
+        "self": "https://koreteam.atlassian.net/rest/api/3/user?accountId=712020%3A91136b8e-3e83-401e-8f10-8b73bf0fb5c4",
+        "accountId": "712020:91136b8e-3e83-401e-8f10-8b73bf0fb5c4",
+        "avatarUrls": {
+          "48x48": "https://secure.gravatar.com/avatar/b21fb0701436f5fa5b9a0b19b7c2d6d2?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FPG-6.png",
+          "24x24": "https://secure.gravatar.com/avatar/b21fb0701436f5fa5b9a0b19b7c2d6d2?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FPG-6.png",
+          "16x16": "https://secure.gravatar.com/avatar/b21fb0701436f5fa5b9a0b19b7c2d6d2?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FPG-6.png",
+          "32x32": "https://secure.gravatar.com/avatar/b21fb0701436f5fa5b9a0b19b7c2d6d2?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FPG-6.png"
+        },
+        "displayName": "Prathyusha Gopavaram",
+        "active": true,
+        "timeZone": "Asia/Kolkata",
+        "accountType": "atlassian"
+      },
+      "aggregateprogress": {
+        "progress": 0,
+        "total": 0
+      },
+      "customfield_10002": null,
+      "customfield_10400": "1|i0hu43:",
+      "customfield_13900": null,
+      "environment": null,
+      "duedate": null,
+      "progress": {
+        "progress": 0,
+        "total": 0
+      },
+      "votes": {
+        "self": "https://koreteam.atlassian.net/rest/api/3/issue/ABLP-1031/votes",
+        "votes": 0,
+        "hasVoted": false
+      },
+      "comment": {
+        "comments": [],
+        "self": "https://koreteam.atlassian.net/rest/api/3/issue/549769/comment",
+        "maxResults": 0,
+        "total": 0,
+        "startAt": 0
+      },
+      "worklog": {
+        "startAt": 0,
+        "maxResults": 20,
+        "total": 0,
+        "worklogs": []
+      }
+    }
+  },
+  "comments": {
+    "startAt": 0,
+    "maxResults": 100,
+    "total": 0,
+    "comments": []
+  }
+}

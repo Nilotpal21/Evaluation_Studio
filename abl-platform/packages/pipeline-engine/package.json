@@ -1,0 +1,102 @@
+{
+  "name": "@agent-platform/pipeline-engine",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Configurable pipeline engine using Restate for durable workflow execution",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./client": {
+      "types": "./dist/client.d.ts",
+      "import": "./dist/client.js",
+      "default": "./dist/client.js"
+    },
+    "./validation": {
+      "types": "./dist/pipeline/validation.d.ts",
+      "import": "./dist/pipeline/validation.js",
+      "default": "./dist/pipeline/validation.js"
+    },
+    "./metadata": {
+      "types": "./dist/pipeline/activity-metadata.d.ts",
+      "import": "./dist/pipeline/activity-metadata.js",
+      "default": "./dist/pipeline/activity-metadata.js"
+    },
+    "./node-references": {
+      "types": "./dist/pipeline/node-references.d.ts",
+      "import": "./dist/pipeline/node-references.js",
+      "default": "./dist/pipeline/node-references.js"
+    },
+    "./contracts": {
+      "types": "./dist/pipeline/contracts/index.d.ts",
+      "import": "./dist/pipeline/contracts/index.js",
+      "default": "./dist/pipeline/contracts/index.js"
+    },
+    "./templates": {
+      "types": "./dist/pipeline/template-registry.d.ts",
+      "import": "./dist/pipeline/template-registry.js",
+      "default": "./dist/pipeline/template-registry.js"
+    },
+    "./preview": {
+      "types": "./dist/pipeline/services/preview.service.d.ts",
+      "import": "./dist/pipeline/services/preview.service.js",
+      "default": "./dist/pipeline/services/preview.service.js"
+    },
+    "./schemas": {
+      "types": "./dist/schemas/index.d.ts",
+      "import": "./dist/schemas/index.js",
+      "default": "./dist/schemas/index.js"
+    },
+    "./registry": {
+      "types": "./dist/registry.d.ts",
+      "import": "./dist/registry.js",
+      "default": "./dist/registry.js"
+    },
+    "./triggers": {
+      "types": "./dist/triggers.d.ts",
+      "import": "./dist/triggers.js",
+      "default": "./dist/triggers.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc && cp -r src/pipeline/seed-data dist/pipeline/seed-data && cp -r src/pipeline/templates dist/pipeline/templates",
+    "typecheck": "tsc --noEmit",
+    "dev": "tsx watch --env-file=.env src/pipeline/bootstrap.ts",
+    "test": "vitest run",
+    "test:repro": "vitest run --passWithNoTests --config vitest.repro.config.ts",
+    "test:coverage": "vitest run --coverage",
+    "test:watch": "vitest",
+    "clean": "rm -rf dist tsconfig.tsbuildinfo"
+  },
+  "dependencies": {
+    "@abl/compiler": "workspace:*",
+    "@agent-platform/circuit-breaker": "workspace:*",
+    "@agent-platform/config": "workspace:*",
+    "@agent-platform/llm": "workspace:*",
+    "@agent-platform/database": "workspace:*",
+    "@agent-platform/redis": "workspace:*",
+    "@agent-platform/shared": "workspace:*",
+    "@agent-platform/shared-auth": "workspace:*",
+    "@agent-platform/shared-kernel": "workspace:*",
+    "@azure/identity": "^4.13.0",
+    "@azure/keyvault-keys": "^4.10.0",
+    "@opentelemetry/api": "^1.9.0",
+    "@restatedev/restate-sdk": "^1.4",
+    "@restatedev/restate-sdk-clients": "^1.4",
+    "ajv": "^8.18.0",
+    "ioredis": "5.9.3",
+    "mongoose": "^8.23.0",
+    "zod": "^3.22.0"
+  },
+  "devDependencies": {
+    "@vitest/coverage-v8": "^4.1.4",
+    "mongodb-memory-server": "^11.0.1",
+    "typescript": "^5.3.0",
+    "vitest": "^4.1.4"
+  }
+}

@@ -1,0 +1,301 @@
+AGENT: Transaction_History
+VERSION: "2.0"
+DESCRIPTION: "Displays filtered and formatted transaction history with TRANSFORM pipeline"
+GOAL: "Retrieve, filter, sort, and display customer transaction history with rich formatting and drill-down capability"
+
+EXECUTION:
+  model: gpt-4.1
+  temperature: 0.7
+  max_tokens: 2000
+  max_iterations: 10
+  inline_gather: true
+
+PERSONA: |
+  Detail-oriented banking assistant for transaction inquiries.
+  Presents transaction data in clear, organized format.
+  Helps customers filter and find specific transactions.
+  Uses proper currency and date formatting throughout.
+
+LIMITATIONS:
+  - "Cannot modify or reverse transactions"
+  - "Cannot display transactions from other customers' accounts"
+  - "Maximum 90-day lookback for transaction history"
+  - "Cannot export transaction data to external files"
+
+TOOLS:
+  get_accounts(customer_id: string) -> {accounts: array, status: string}
+    description: "Retrieve all accounts for a customer"
+
+  get_transactions(account_id: string, from_date: string, to_date: string, limit: number) -> {transactions: array, total_count: number, status: string}
+    description: "Retrieve transactions for an account within a date range"
+
+  get_transaction_detail(transaction_id: string) -> {id: string, date: string, description: string, amount: number, type: string, category: string, merchant: string, reference: string, balance_after: number, status: string}
+    description: "Get detailed information about a specific transaction"
+
+MEMORY:
+  session:
+    - customer_id
+    - customer_name
+    - account_id
+    - from_date
+    - to_date
+    - filter_type
+    - page_size
+    - selected_transaction_id
+  persistent:
+    - PATH: workflow.customer_id
+      SCOPE: execution_tree
+      ACCESS: read
+      TYPE: string
+    - PATH: workflow.customer_name
+      SCOPE: execution_tree
+      ACCESS: read
+      TYPE: string
+    - PATH: workflow.default_account_id
+      SCOPE: execution_tree
+      ACCESS: readwrite
+      TYPE: string
+
+# ─────────────────────────────────────────────────────────────────────────────
+# FLOW — init → dates → fetch → transform → display → detail/options
+# ─────────────────────────────────────────────────────────────────────────────
+
+FLOW:
+  entry_point: start
+
+  steps:
+    - start
+    - fetch_accounts
+    - no_accounts
+    - choose_account
+    - collect_date_range
+    - fetch_transactions
+    - no_transactions
+    - apply_filters
+    - display_transactions
+    - apply_filter_choice
+    - transaction_detail
+    - more_options
+
+  start:
+    REASONING: false
+    SET:
+      customer_id = COALESCE(customer_id, workflow.customer_id, user.customer_id, user_id)
+      customer_name = COALESCE(customer_name, workflow.customer_name, user.name, "customer")
+      account_id = COALESCE(account_id, workflow.default_account_id)
+      page_size = COALESCE(page_size, 10)
+      filter_type = COALESCE(filter_type, "all")
+      sort_order = "desc"
+    RESPOND: "Let me pull up your transaction history."
+    THEN: fetch_accounts
+
+  fetch_accounts:
+    REASONING: false
+    CALL: get_accounts
+      WITH:
+        customer_id: customer_id
+      AS: accountsResult
+    ON_RESULT:
+      - IF: accountsResult.accounts != null AND LENGTH(accountsResult.accounts) > 0
+        SET:
+          account_count = LENGTH(accountsResult.accounts)
+        THEN: choose_account
+      - IF: accountsResult.accounts != null AND LENGTH(accountsResult.accounts) == 0
+        THEN: no_accounts
+      - ELSE:
+        RESPOND: "Unable to load your accounts right now. Please try again later."
+        THEN: COMPLETE
+
+  no_accounts:
+    REASONING: false
+    RESPOND: "There are no accounts available to review right now."
+    THEN: COMPLETE
+
+  choose_account:
+    REASONING: false
+    RESPOND: |
+      Available accounts ({{account_count}} found):
+      {{#each accountsResult.accounts}}
+      {{this.id}} — {{this.name}} ({{UPPER(this.type)}})
+      {{/each}}
+      Reply with the account ID you want to review.
+    GATHER:
+      - account_id: required
+        type: string
+    ON_INPUT:
+      - ELSE:
+        SET:
+          workflow.default_account_id = COALESCE(account_id, workflow.default_account_id)
+        THEN: collect_date_range
+
+  collect_date_range:
+    REASONING: false
+    GATHER:
+      - from_date: required
+        type: date
+      - to_date: required
+        type: date
+    ON_INPUT:
+      - ELSE:
+        THEN: fetch_transactions
+
+  fetch_transactions:
+    REASONING: false
+    CALL: get_transactions
+      WITH:
+        account_id: account_id
+        from_date: from_date
+        to_date: to_date
+        limit: MUL(page_size, 3)
+      AS: txnResult
+    ON_RESULT:
+      - IF: txnResult.transactions != null AND LENGTH(txnResult.transactions) > 0
+        THEN: apply_filters
+      - IF: txnResult.transactions != null AND LENGTH(txnResult.transactions) == 0
+        THEN: no_transactions
+      - ELSE:
+        RESPOND: "Unable to retrieve transactions. Please try again later."
+        THEN: COMPLETE
+
+  no_transactions:
+    REASONING: false
+    RESPOND: "No transactions found for the selected period. Would you like to try a different date range?"
+    GATHER:
+      - try_different: required
+    ON_INPUT:
+      - IF: input contains "yes" OR input contains "different" OR input contains "try"
+        CLEAR: from_date, to_date
+        THEN: collect_date_range
+      - ELSE:
+        THEN: COMPLETE
+
+  apply_filters:
+    REASONING: false
+    TRANSFORM: txnResult.transactions AS txn INTO filtered_transactions
+      FILTER: filter_type == "all" OR txn.type == filter_type
+      MAP:
+        id: txn.id
+        date: FORMAT_DATE(txn.date, "MMM DD")
+        description: COALESCE(txn.merchant, txn.description)
+        display_amount: FORMAT_CURRENCY(ABS(txn.amount), "USD")
+        direction: UPPER(SUBSTRING(txn.type, 0, 1))
+        category: UPPER(txn.category)
+      SORT_BY: date DESC
+      LIMIT: page_size
+    SET:
+      result_count = LENGTH(filtered_transactions)
+      filter_label = UPPER(filter_type)
+    THEN: display_transactions
+
+  display_transactions:
+    REASONING: false
+    SET:
+      page_label = ORDINAL(1)
+      line_prefix = PAD_START("", 2, " ")
+    RESPOND: |
+      Transactions ({{filter_label}}) — {{result_count}} shown:
+      {{#each filtered_transactions}}
+      {{this.id}} | {{this.date}} | {{this.direction}} | {{this.display_amount}} | {{this.description}}
+      {{/each}}
+      Enter a transaction ID for details, or choose: filter, change dates, done.
+    GATHER:
+      - user_choice: required
+    ON_INPUT:
+      - IF: input contains "done" OR input contains "exit"
+        THEN: COMPLETE
+      - IF: input contains "filter"
+        THEN: apply_filter_choice
+      - IF: input contains "date" OR input contains "range"
+        CLEAR: from_date, to_date, txnResult, filtered_transactions
+        THEN: collect_date_range
+      - ELSE:
+        SET:
+          selected_transaction_id = user_choice
+        THEN: transaction_detail
+
+  apply_filter_choice:
+    REASONING: false
+    GATHER:
+      - new_filter: required
+    ON_INPUT:
+      - ELSE:
+        SET:
+          filter_type = LOWER(new_filter)
+        THEN: apply_filters
+
+  transaction_detail:
+    REASONING: false
+    CALL: get_transaction_detail
+      WITH:
+        transaction_id: selected_transaction_id
+      AS: detailResult
+    ON_RESULT:
+      - IF: detailResult.id != null
+        SET:
+          detail_amount = FORMAT_CURRENCY(ABS(detailResult.amount), "USD")
+          detail_date = FORMAT_DATE(detailResult.date, "YYYY-MM-DD HH:mm")
+          detail_type = UPPER(detailResult.type)
+          detail_category = COALESCE(detailResult.category, "Uncategorized")
+          detail_ref = COALESCE(detailResult.reference, "N/A")
+          detail_balance = FORMAT_CURRENCY(detailResult.balance_after, "USD")
+        RESPOND: |
+          Transaction Detail:
+          Date:       {{detail_date}}
+          Type:       {{detail_type}}
+          Amount:     {{detail_amount}}
+          Merchant:   {{detailResult.merchant}}
+          Category:   {{detail_category}}
+          Reference:  {{detail_ref}}
+          Balance:    {{detail_balance}}
+          Status:     {{UPPER(detailResult.status)}}
+        THEN: more_options
+      - ELSE:
+        RESPOND: "Could not find details for that transaction."
+        THEN: display_transactions
+
+  more_options:
+    REASONING: false
+    GATHER:
+      - next_action: required
+    ON_INPUT:
+      - IF: input contains "list" OR input contains "back"
+        THEN: display_transactions
+      - IF: input contains "date" OR input contains "range"
+        CLEAR: from_date, to_date, txnResult, filtered_transactions
+        THEN: collect_date_range
+      - IF: input contains "done" OR input contains "exit"
+        THEN: COMPLETE
+      - ELSE:
+        THEN: display_transactions
+
+# ─────────────────────────────────────────────────────────────────────────────
+# ESCALATION
+# ─────────────────────────────────────────────────────────────────────────────
+
+ESCALATE:
+  triggers:
+    - WHEN: user.requests_human == true
+      REASON: "User requested human agent during transaction review"
+      PRIORITY: medium
+
+  context_for_human:
+    - customer_id
+    - account_id
+    - from_date
+    - to_date
+    - conversation_history
+
+COMPLETE:
+  - WHEN: user_choice == "done" OR next_action == "done"
+    RESPOND: "Thank you for using BankNexus transaction history."
+
+ON_ERROR:
+  tool_timeout:
+    RESPOND: "The system is taking a moment. Please wait..."
+    RETRY: 2
+    THEN: ESCALATE
+
+  tool_error:
+    RESPOND: "Something went wrong retrieving transactions."
+    RETRY: 1
+    THEN: CONTINUE

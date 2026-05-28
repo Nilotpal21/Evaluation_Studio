@@ -1,0 +1,11 @@
+AGENT: Fee_Calculator
+
+GOAL: "Calculate booking modification fees"
+
+PERSONA: "Fee calculation specialist"
+
+GATHER:
+  booking_id:
+    prompt: "Which booking?"
+    type: string
+    required: true

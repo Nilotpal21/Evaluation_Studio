@@ -1,0 +1,123 @@
+# Sales Agent — Project Tool Implementations
+
+Tool implementations for `Sales_Agent`. These are configured in **Project Tools**
+(Studio UI or API), not in the agent ABL file.
+
+## HTTP Tools with CONTEXT_ACCESS (Declarative)
+
+HTTP tools declare `CONTEXT_ACCESS` in the agent ABL. At execution time:
+
+- **READ** vars are auto-injected into the request (body `context` key + header `{{_context.key}}`)
+- **WRITE** vars are auto-applied from the tool's `context_updates` response field
+
+### search_flights
+
+```yaml
+TYPE: http
+ENDPOINT: '{{env.SEARCH_API_URL}}/flights'
+METHOD: POST
+AUTH: api_key
+HEADERS:
+  X-Loyalty-Tier: '{{_context.loyalty_tier}}'
+  X-Currency: '{{_context.preferred_currency}}'
+```
+
+The tool receives in the POST body:
+
+```json
+{
+  "origin": "NYC",
+  "destination": "Paris",
+  "departure_date": "2026-04-15",
+  "return_date": "2026-04-20",
+  "passengers": 2,
+  "context": {
+    "preferred_currency": "EUR",
+    "loyalty_tier": "gold"
+  }
+}
+```
+
+The tool can write back via `context_updates`:
+
+```json
+{
+  "flights": [...],
+  "search_id": "srch_abc123",
+  "expires_at": "2026-04-01T12:00:00Z",
+  "context_updates": {
+    "search_expires_at": "2026-04-01T12:00:00Z"
+  }
+}
+```
+
+---
+
+## Sandbox Tool with Imperative Memory API
+
+Sandbox/lambda tools **always** get the `memory` API injected — no DSL config needed.
+Scope is auto-resolved from the agent's `MEMORY` section declarations.
+
+### build_search_summary
+
+```yaml
+TYPE: sandbox
+RUNTIME: javascript
+CODE: |
+  // ── READ from all 3 scopes ────────────────────────────────────────────
+  // Scope is auto-resolved — no scope argument needed.
+
+  // Session scope (in-memory, synchronous under the hood)
+  const results = await memory.get_content("search_results");
+  const resultData = results?.data?.content;
+
+  // User scope (async DB call to user's FactStore)
+  const prefs = await memory.get_content("user.travel_preferences");
+  const prefData = prefs?.data?.content;
+
+  // Project scope (async DB call to shared FactStore)
+  const promos = await memory.get_content("active_promotions");
+  const promoData = promos?.data?.content || [];
+
+  // ── BUILD summary ─────────────────────────────────────────────────────
+  const summary = {
+    search_type: params.search_type,
+    has_preferences: !!prefData,
+    preferred_destinations: prefData?.destination || null,
+    applicable_promotions: promoData.filter(p => p.active),
+    result_count: resultData?.count || 0,
+    personalized: !!prefData,
+  };
+
+  // ── WRITE back to session ─────────────────────────────────────────────
+  await memory.set_content("last_search_summary", summary);
+
+  return summary;
+```
+
+### Memory API Reference
+
+```javascript
+// READ — returns { data: { content: <value> } }
+const result = await memory.get_content('key');
+const value = result?.data?.content;
+
+// WRITE — value can be string, number, object, array
+await memory.set_content('key', value);
+
+// DELETE
+const existed = await memory.delete_content('key');
+
+// ERRORS:
+await memory.get_content('undeclared_key'); // THROWS: key not declared
+await memory.set_content('read_only_key', 'x'); // THROWS: read-only
+```
+
+### Scope Resolution Rules
+
+| Key matches...                                   | Resolved scope | Store                           |
+| ------------------------------------------------ | -------------- | ------------------------------- |
+| `MEMORY.session[].name`                          | session        | session.data.values (in-memory) |
+| `MEMORY.persistent[].path` with `SCOPE: user`    | user           | user FactStore (MongoDB)        |
+| `MEMORY.persistent[].path` with `SCOPE: project` | project        | project FactStore (MongoDB)     |
+| Not declared                                     | ERROR          | Throws immediately              |

@@ -1,0 +1,72 @@
+id: scale
+title: Scale — Payload Size, Batching, Compression
+enforcement: advisory
+severity_default: medium
+rubric_concern: 11
+
+scope:
+  globs:
+    - apps/**/src/**/*.ts
+    - packages/**/src/**/*.ts
+  exclude:
+    - '**/__tests__/**'
+    - '**/*.test.ts'
+
+references:
+  docs:
+    - CLAUDE.md#core-invariants
+  related_concerns:
+    - memory-discipline
+    - cross-pod
+
+detectors:
+  - id: boundary-payload-size-validated
+    kind: model-review
+    severity: medium
+    guidance_ref: ../../prompts/scale-payload-lens.md
+    output_schema:
+      rule_id: boundary-payload-size-validated
+      severity: medium | low
+      location:
+        file: string
+        line: number
+      claim: string
+      reality: string
+      options:
+        A: add a zod max-length / max-item-count at the entry point
+        B: confirm upstream rate-limit or ingress bounds the payload
+        C: this is internal (not boundary) and the caller validated upstream
+    message: |
+      Payload size must be bounded at system boundaries (HTTP routes, queue
+      consumers, WebSocket handlers). An unbounded payload can pin CPU,
+      exhaust Redis memory, or cause MongoDB document size errors.
+    fix_hint: |
+      Use zod .max() on array fields and strings, or an explicit length check
+      before further processing. Document the bound's rationale.
+
+  - id: compression-before-storage
+    kind: model-review
+    severity: medium
+    guidance_ref: ../../prompts/scale-compression-lens.md
+    output_schema:
+      rule_id: compression-before-storage
+      severity: medium | low
+      location:
+        file: string
+        line: number
+      claim: string
+      reality: string
+      options:
+        A: compress via the async gzip helper before storing
+        B: confirm the payload is small and compression adds no value
+        C: this is ephemeral (request-scoped) and never persisted
+    message: |
+      Large payloads (conversation history, trace events, LLM requests/responses)
+      should be compressed (async gzip) before being stored in Redis / MongoDB.
+    fix_hint: |
+      Use the shared compression helper. Store a small header indicating
+      compression + codec; decompress lazily on read.
+
+stage_hooks:
+  - stage: oracle-analysis
+    as_review_lens: true

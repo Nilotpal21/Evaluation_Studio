@@ -1,0 +1,18 @@
+{
+  "id": "safety-compliance",
+  "title": "Safety & Compliance",
+  "lessons": [
+    {
+      "id": "01-safety-pii",
+      "title": "Safety, Guardrails & PII Detection",
+      "sourceFile": "guides/09-safety-and-guardrails.md",
+      "minutes": 28
+    },
+    {
+      "id": "02-security-practices",
+      "title": "Security Practices & Compliance Posture",
+      "sourceFile": "security-trust.md",
+      "minutes": 10
+    }
+  ]
+}

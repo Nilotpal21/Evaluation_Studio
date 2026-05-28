@@ -1,0 +1,85 @@
+{
+  "moduleId": "core-concepts",
+  "passThreshold": 0.8,
+  "questions": [
+    {
+      "id": "cc-q1",
+      "type": "mcq",
+      "stem": "An insurance company needs an agent that collects policy numbers, incident dates, and damage estimates in a strict sequence before processing a claim. Which approach should they use?",
+      "options": [
+        {
+          "id": "a",
+          "text": "Define the agent with a SUPERVISOR declaration to route between specialist agents"
+        },
+        {
+          "id": "b",
+          "text": "Define the agent without a FLOW section and let the LLM decide the conversation order"
+        },
+        {
+          "id": "c",
+          "text": "Add a FLOW section with named steps and GATHER fields so the conversation follows a defined sequence",
+          "correct": true
+        }
+      ],
+      "explanation": "When a process has a defined sequence that must be followed (especially for regulated or compliance-driven workflows), you add a FLOW section with named steps. Each step collects specific data with GATHER and transitions explicitly via THEN. An agent without a FLOW section would let the LLM decide the order, which is not suitable for strict sequential requirements."
+    },
+    {
+      "id": "cc-q2",
+      "type": "fill-blank",
+      "stem": "In ABL, a ________ is a special agent that routes conversations to the right specialist using HANDOFF rules, rather than handling domain tasks directly.",
+      "answer": "Supervisor",
+      "acceptAlternatives": ["supervisor", "SUPERVISOR"],
+      "explanation": "A Supervisor evaluates the user's intent against HANDOFF rules and transfers control to the appropriate specialist agent. It holds the 'map' of your organization's capabilities while each agent holds deep domain knowledge. Supervisors do not handle domain tasks directly."
+    },
+    {
+      "id": "cc-q3",
+      "type": "mcq",
+      "stem": "Within a single FLOW, an agent has a data collection step (REASONING: false) followed by an assessment step (REASONING: true). What does setting REASONING: true on the assessment step accomplish?",
+      "options": [
+        {
+          "id": "a",
+          "text": "It creates a new, separate agent type that operates independently from the original agent"
+        },
+        {
+          "id": "b",
+          "text": "It gives the LLM full autonomy for that step to make intelligent decisions, call tools, and reason about context",
+          "correct": true
+        },
+        {
+          "id": "c",
+          "text": "It disables all tool access for that step so the LLM can only generate text responses"
+        }
+      ],
+      "explanation": "Per-step reasoning control lets you mix deterministic and LLM-driven behavior within one agent. REASONING: true gives the LLM full autonomy for that step -- it can call tools from AVAILABLE_TOOLS, reason about results, and make judgment calls. REASONING: false makes the step run deterministically. This does not create a different agent type."
+    },
+    {
+      "id": "cc-q4",
+      "type": "mcq",
+      "stem": "How does Agent Platform determine an agent's execution mode?",
+      "options": [
+        {
+          "id": "a",
+          "text": "The developer must set an explicit MODE: keyword to 'reasoning' or 'scripted' at the top of the agent file"
+        },
+        {
+          "id": "b",
+          "text": "The platform infers it from the definition structure: no FLOW section means reasoning mode, a FLOW section adds structured steps, and a SUPERVISOR declaration means routing",
+          "correct": true
+        },
+        {
+          "id": "c",
+          "text": "The execution mode is configured in the project settings, not in the agent definition file"
+        }
+      ],
+      "explanation": "ABL does not have an explicit MODE keyword (it is deprecated and produces a parser error). The platform derives execution mode from the agent definition structure: no FLOW section means reasoning by default, a FLOW section adds step-based execution, and SUPERVISOR declarations create routers."
+    },
+    {
+      "id": "cc-q5",
+      "type": "fill-blank",
+      "stem": "A ________ represents a single conversation between a user and one or more agents, tracking messages, gathered data, which agent is active, and flow progress across multiple turns.",
+      "answer": "session",
+      "acceptAlternatives": ["Session", "SESSION"],
+      "explanation": "A session is a stateful conversation that persists across messages. It carries conversation state, tracks which agent is active, manages data collected from users via GATHER, and maintains the full history including multi-agent handoffs. Sessions are scoped to a single user within a single project."
+    }
+  ]
+}

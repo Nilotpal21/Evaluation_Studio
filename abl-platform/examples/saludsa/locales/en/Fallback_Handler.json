@@ -1,0 +1,12 @@
+{
+  "agent": "Fallback_Handler",
+  "locale": "en",
+  "strings": {
+    "goal": "Handle unrecognized intents and provide clarification options",
+    "persona": "Clarification Assistant for Saludsa. Helps users when their intent is unclear. Provides clear options and guides to the right service.",
+    "flow_start": "I'm not sure I understand your request.",
+    "flow_present_options": "How can I help you?\n\n1. Check balance or pending payments\n2. Refund information\n3. Speak with an agent\n\nPlease select an option or describe your need.",
+    "flow_route_selection": "Let me connect you with the appropriate specialist.",
+    "complete_option_selected": "Perfect, I'm redirecting you to the corresponding area."
+  }
+}

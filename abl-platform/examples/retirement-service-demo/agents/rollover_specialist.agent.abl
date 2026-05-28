@@ -1,0 +1,178 @@
+AGENT: Rollover_Specialist
+VERSION: "1.0"
+DESCRIPTION: "Coordinates rollover intake and advisor follow-up for retirement plan transfers"
+GOAL: "Open a clean rollover case and make sure a specialist can coordinate the next step"
+
+PERSONA: |
+  High-touch rollover specialist.
+  Keeps the process calm and organized, explains what happens next, and
+  packages advisor follow-up so the user never has to repeat themselves.
+
+LIMITATIONS:
+  - "Uses a demo rollover workflow instead of initiating a real transfer"
+  - "Does not provide individualized tax advice"
+  - "Escalates basis, Roth conversion, and plan-specific exceptions to an advisor"
+
+TOOLS:
+  extract_rollover_source(text: string) -> {sourceFound: boolean, sourceAccountType?: string}
+    description: "Extract a likely rollover source account type from the user's original request"
+  start_rollover_case(source_account_type: string, destination_account_type: string, amount_estimate: string, notes?: string) -> {success: boolean, caseId: string, queue: string, destinationAccountType: string, nextStep: string, summary: string}
+    description: "Open a demo rollover case and return the next operational step"
+  schedule_rollover_callback(request_summary: string) -> {success: boolean, callbackRequestId: string, queue: string, summary: string}
+    description: "Package a rollover-operations callback request for transfer follow-up"
+
+GATHER:
+  source_account_type:
+    prompt: "What account is the rollover coming from? For example: former 401(k), 403(b), or another IRA."
+    type: enum
+    required: true
+    options:
+      - "former 401(k)"
+      - "403(b)"
+      - "another IRA"
+    retry_prompt: "Please choose one of these source plans for the demo: former 401(k), 403(b), or another IRA."
+    max_retries: 2
+
+  amount_estimate:
+    prompt: "What balance or amount should I use for the rollover intake?"
+    type: string
+    required: true
+    retry_prompt: "Please share the approximate rollover amount, for example 180000 or full balance."
+    max_retries: 2
+
+MEMORY:
+  session:
+    - customer_id
+      TYPE: string
+      DESCRIPTION: "Demo customer id for the current household"
+    - customer_name
+      TYPE: string
+      DESCRIPTION: "Display name for the demo customer"
+    - source_account_type
+      TYPE: string
+      DESCRIPTION: "The retirement plan the rollover is coming from"
+    - destination_account_type
+      TYPE: string
+      DESCRIPTION: "The target IRA or retirement account for the rollover"
+    - amount_estimate
+      TYPE: string
+      DESCRIPTION: "Approximate amount or balance involved in the rollover"
+    - rollover_case_id
+      TYPE: string
+      DESCRIPTION: "Case id returned by the demo rollover tool"
+  persistent:
+    - PATH: workflow.customer_id
+      SCOPE: execution_tree
+      ACCESS: read
+      TYPE: string
+    - PATH: workflow.customer_name
+      SCOPE: execution_tree
+      ACCESS: read
+      TYPE: string
+    - PATH: workflow.default_account_id
+      SCOPE: execution_tree
+      ACCESS: read
+      TYPE: string
+
+FLOW:
+  entry_point: init
+
+  steps:
+    - init
+    - choose_roth_destination
+    - choose_default_destination
+    - capture_source_plan
+    - resolve_source_plan
+    - ask_source_plan
+    - ask_amount
+    - start_rollover
+    - schedule_followup
+    - present_rollover
+
+  init:
+    REASONING: false
+    SET:
+      customer_id = "demo-vanguard-household"
+      customer_name = "Vanguard client"
+      workflow.customer_id = "demo-vanguard-household"
+      workflow.customer_name = "Vanguard client"
+    THEN: choose_roth_destination
+
+  choose_roth_destination:
+    REASONING: false
+    CHECK: LOWER(input) contains "roth"
+    ON_FAIL: choose_default_destination
+    SET: destination_account_type = "Roth IRA"
+    THEN: capture_source_plan
+
+  choose_default_destination:
+    REASONING: false
+    SET: destination_account_type = "Traditional IRA"
+    THEN: capture_source_plan
+
+  capture_source_plan:
+    REASONING: false
+    CALL: extract_rollover_source
+      WITH:
+        text: _raw_input
+      AS: requested_source_result
+    THEN: resolve_source_plan
+
+  resolve_source_plan:
+    REASONING: false
+    CHECK: requested_source_result.sourceFound == true
+    ON_FAIL: ask_source_plan
+    SET: source_account_type = requested_source_result.sourceAccountType
+    THEN: ask_amount
+
+  ask_source_plan:
+    REASONING: false
+    PRESENT: "What account is the rollover coming from? For example: former 401(k), 403(b), or another IRA."
+    GATHER:
+      - source_account_type: required
+    STRATEGY: hybrid
+    THEN: ask_amount
+
+  ask_amount:
+    REASONING: false
+    PRESENT: "What balance or amount should I use for the rollover intake?"
+    GATHER:
+      - amount_estimate: required
+    STRATEGY: hybrid
+    THEN: start_rollover
+
+  start_rollover:
+    REASONING: false
+    CALL: start_rollover_case
+      WITH:
+        source_account_type: source_account_type
+        destination_account_type: destination_account_type
+        amount_estimate: amount_estimate
+        notes: _raw_input
+      AS: rollover_case
+    ON_RESULT:
+      - IF: rollover_case.success == true
+        THEN: schedule_followup
+      - ELSE:
+        RESPOND: "I gathered the rollover intake, but I couldn't open the demo rollover case right now."
+        THEN: COMPLETE
+
+  schedule_followup:
+    REASONING: false
+    CALL: schedule_rollover_callback
+      WITH:
+        request_summary: rollover_case.summary
+      AS: advisor_callback
+    ON_RESULT:
+      - IF: advisor_callback.success == true
+        THEN: present_rollover
+      - ELSE:
+        THEN: present_rollover
+
+  present_rollover:
+    REASONING: false
+    RESPOND: |
+      I opened rollover case {{rollover_case.caseId}} for moving the {{source_account_type}} balance into a {{destination_account_type}}.
+      Next step: {{rollover_case.nextStep}}
+      I also packaged advisor follow-up request {{advisor_callback.callbackRequestId}} with the {{advisor_callback.queue}} queue so paperwork and plan-specific questions can be coordinated smoothly.
+    THEN: COMPLETE

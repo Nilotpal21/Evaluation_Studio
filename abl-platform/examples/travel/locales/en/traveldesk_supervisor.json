@@ -1,0 +1,12 @@
+{
+  "agent": "TravelDesk_Supervisor",
+  "locale": "en",
+  "strings": {
+    "welcome": "Welcome! I'm your travel assistant.\nI can help you search and book flights, hotels, or packages — manage an existing booking — or connect you with our support team.\nWhat can I help you with today?",
+    "handoff_success": "I've connected you with the right specialist.",
+    "session_goodbye": "Thank you for using our travel service. Have a great trip!",
+    "routing_error": "I'm having trouble understanding your request. Let me connect you with someone who can help.",
+    "agent_unavailable_msg": "That service is temporarily unavailable. Let me try an alternative.",
+    "timeout_msg": "I apologize for the delay. Let me try again."
+  }
+}

@@ -1,0 +1,47 @@
+{
+  "name": "@agent-platform/agent-transfer",
+  "version": "1.0.0",
+  "description": "Agent-to-human transfer SDK for ABL Platform — adapters, session management, and transfer tools",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "test:fast": "vitest run",
+    "test:integration": "vitest run --config vitest.integration.config.ts",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist tsconfig.tsbuildinfo"
+  },
+  "dependencies": {
+    "@abl/compiler": "workspace:*",
+    "@agent-platform/circuit-breaker": "workspace:*",
+    "@agent-platform/config": "workspace:*",
+    "@agent-platform/redis": "workspace:*",
+    "@agent-platform/shared": "workspace:*",
+    "@opentelemetry/api": "^1.9.0",
+    "ioredis": "^5.7.0",
+    "undici": "^7.24.0",
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "@vitest/coverage-v8": "^4.1.4",
+    "ioredis-mock": "^8.9.0",
+    "nock": "^14.0.1",
+    "typescript": "^5.3.0",
+    "vitest": "^4.1.4"
+  }
+}

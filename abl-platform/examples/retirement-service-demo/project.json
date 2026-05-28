@@ -1,0 +1,84 @@
+{
+  "format_version": "2.0",
+  "name": "Vanguard Service Orchestration Demo",
+  "slug": "vanguard-service-orchestration-demo",
+  "description": "Deck-aligned multi-agent retirement-service demo with portfolio review, contribution management, rollover coordination, and market insights.",
+  "abl_version": "1.0",
+  "exported_at": "2026-04-20T00:00:00.000Z",
+  "entry_agent": "Vanguard_Supervisor",
+  "dsl_format": "legacy",
+  "layers_included": ["core", "search"],
+  "agents": {
+    "Vanguard_Supervisor": {
+      "path": "agents/vanguard_supervisor.agent.abl",
+      "type": "supervisor",
+      "description": "Routes investors to the right retirement-service specialist"
+    },
+    "Portfolio_Review": {
+      "path": "agents/portfolio_review.agent.abl",
+      "type": "agent",
+      "description": "Reviews retirement account balances and position snapshots"
+    },
+    "Contribution_Manager": {
+      "path": "agents/contribution_manager.agent.abl",
+      "type": "agent",
+      "description": "Checks IRA limits and schedules demo contributions"
+    },
+    "Rollover_Specialist": {
+      "path": "agents/rollover_specialist.agent.abl",
+      "type": "agent",
+      "description": "Coordinates rollover intake and advisor follow-up"
+    },
+    "Market_Insights": {
+      "path": "agents/market_insights.agent.abl",
+      "type": "agent",
+      "description": "Provides general market and policy guidance"
+    }
+  },
+  "tools": {
+    "get_household_accounts": {
+      "path": "tools/get_household_accounts.tools.abl",
+      "description": "Demo household account list and top-line summary"
+    },
+    "get_portfolio_snapshot": {
+      "path": "tools/get_portfolio_snapshot.tools.abl",
+      "description": "Demo position snapshot for the selected account"
+    },
+    "check_ira_limits": {
+      "path": "tools/check_ira_limits.tools.abl",
+      "description": "Demo-safe 2026 IRA contribution guidance"
+    },
+    "extract_contribution_amount": {
+      "path": "tools/extract_contribution_amount.tools.abl",
+      "description": "Parse an explicitly requested contribution amount from the user's message"
+    },
+    "execute_contribution": {
+      "path": "tools/execute_contribution.tools.abl",
+      "description": "Demo contribution confirmation generator"
+    },
+    "extract_rollover_source": {
+      "path": "tools/extract_rollover_source.tools.abl",
+      "description": "Parse a likely rollover source plan from the user's message"
+    },
+    "start_rollover_case": {
+      "path": "tools/start_rollover_case.tools.abl",
+      "description": "Demo rollover case intake tool"
+    },
+    "schedule_rollover_callback": {
+      "path": "tools/schedule_rollover_callback.tools.abl",
+      "description": "Demo rollover follow-up packaging tool"
+    },
+    "search_demo_policy_library": {
+      "path": "tools/search_demo_policy_library.tools.abl",
+      "description": "Curated fallback policy and market knowledge search"
+    }
+  },
+  "metadata": {
+    "entity_counts": {
+      "agents": 5,
+      "tools": 9,
+      "locales": 0
+    },
+    "required_env_vars": []
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "id": "memory-state",
+  "title": "Memory & State Management",
+  "lessons": [
+    {
+      "id": "01-memory-guide",
+      "title": "Memory, State & Constraints",
+      "sourceFile": "guides/08-memory-and-state.md",
+      "minutes": 18
+    },
+    {
+      "id": "02-memory-reference",
+      "title": "Memory & Constraints Reference (ABL Syntax)",
+      "sourceFile": "reference/abl/06-memory-and-constraints.md",
+      "minutes": 15
+    }
+  ]
+}

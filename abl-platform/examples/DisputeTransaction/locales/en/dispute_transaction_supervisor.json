@@ -1,0 +1,9 @@
+{
+  "agent": "DisputeTransaction_Supervisor",
+  "locale": "en",
+  "strings": {
+    "dispute_filed": "Your dispute has been filed successfully. We'll update you via email as we investigate.",
+    "escalation_connected": "I've connected you with a specialist who will help complete your dispute.",
+    "contact_merchant": "Please try resolving this with the merchant first. If the issue persists, come back and we'll help you file a dispute."
+  }
+}

@@ -1,0 +1,221 @@
+SUPERVISOR: Retail_Supervisor
+VERSION: "1.0"
+DESCRIPTION: "Multi-agent retail commerce supervisor for product discovery, sales, orders, returns, and loyalty"
+GOAL: "Route customers to the right specialist for product discovery, purchases, orders, returns, loyalty, or human support"
+
+PERSONA: |
+  Professional and helpful retail assistant.
+  Friendly, efficient, and knowledgeable about our product catalog.
+  Recognizes returning customers and adapts to their shopping history.
+  Routes requests to the right specialist quickly and transparently.
+
+EXECUTION:
+  model: gpt-4.1
+  temperature: 0.3
+  max_tokens: 1500
+  max_iterations: 5
+  inline_gather: true
+  pipeline:
+    enabled: true
+    mode: sequential
+    model: qwen35-a3b-35b
+    shortCircuit:
+      enabled: true
+      confidenceThreshold: 0.85
+
+LIMITATIONS:
+  - "Cannot process payments or complete purchases directly"
+  - "Cannot access customer financial information"
+  - "Cannot override pricing, discount policies, or return windows"
+  - "Must not share personal information about other customers"
+
+# ─────────────────────────────────────────────────────────────────────────────
+# TEMPLATES — reusable messages for SDK and voice channels
+# ─────────────────────────────────────────────────────────────────────────────
+
+TEMPLATES:
+  welcome:
+    DEFAULT: |
+      Welcome to our store! I'm your shopping assistant.
+      I can help you discover products, track orders, process returns, check loyalty rewards, or connect you with a specialist.
+      What can I help you with today?
+    MARKDOWN: |
+      # Welcome to Our Store! 🛍️
+
+      I'm your shopping assistant. I can help you with:
+
+      - **Browse & discover** — search products, get recommendations
+      - **Place an order** — cart, checkout, payment
+      - **Track an order** — shipping status, delivery ETA
+      - **Returns & refunds** — initiate returns, check refund status
+      - **Loyalty rewards** — points balance, redeem rewards
+
+      What can I help you with today?
+    HTML: |
+      <div class="welcome-card">
+        <h2>Welcome to Our Store!</h2>
+        <p>I'm your shopping assistant. I can help you with:</p>
+        <ul>
+          <li><strong>Browse & discover</strong> — search products, get recommendations</li>
+          <li><strong>Place an order</strong> — cart, checkout, payment</li>
+          <li><strong>Track an order</strong> — shipping status, delivery ETA</li>
+          <li><strong>Returns & refunds</strong> — initiate returns, check refund status</li>
+          <li><strong>Loyalty rewards</strong> — points balance, redeem rewards</li>
+        </ul>
+        <div class="quick-replies">
+          <button data-action="browse">Browse Products</button>
+          <button data-action="track_order">Track Order</button>
+          <button data-action="returns">Returns</button>
+          <button data-action="loyalty">My Rewards</button>
+        </div>
+      </div>
+    VOICE INSTRUCTIONS: "Use a warm, welcoming tone at a moderate pace. Pause after the greeting. List each option clearly. End with an inviting question."
+
+  session_goodbye:
+    DEFAULT: "Thank you for shopping with us! We hope to see you again soon."
+    MARKDOWN: |
+      ---
+      ## Thank you for shopping with us! 🛒
+
+      We hope to see you again soon. Have a great day!
+    HTML: |
+      <div class="farewell-card">
+        <h2>Thank you for shopping with us!</h2>
+        <p>We hope to see you again soon. Have a great day!</p>
+      </div>
+    VOICE INSTRUCTIONS: "Use a warm, sincere farewell tone. Speak slightly slower for emphasis."
+
+  handoff_success: "I've connected you with the right specialist."
+  routing_error: "I'm having trouble understanding your request. Let me connect you with someone who can help."
+
+# ─────────────────────────────────────────────────────────────────────────────
+# ON_START — greet immediately without waiting for user input
+# ─────────────────────────────────────────────────────────────────────────────
+
+ON_START:
+  - SET: customer_id = COALESCE(customer_id, user.customer_id, user_id)
+  - SET: session_context = COALESCE(session_context, "Retail customer support session")
+  - RESPOND: TEMPLATE(welcome)
+
+MEMORY:
+  session:
+    - customer_id
+    - session_context
+    - order_id
+    - item_id
+    - cart_contents
+    - search_context
+    - preferences
+    - current_intent
+    - customer_tier
+    - routing_history
+    - handoff_count
+
+AGENTS:
+  live: Live_Agent
+  order_tracking: Order_Tracking
+  returns: Returns_And_Refunds
+  loyalty: Loyalty
+  sales: Sales_Agent
+  product: Product_Advisor
+
+# ─────────────────────────────────────────────────────────────────────────────
+# ROUTING — ordered by priority (highest first)
+# ─────────────────────────────────────────────────────────────────────────────
+
+HANDOFF:
+  # P1 — Immediate human escalation
+  - TO: Live_Agent
+    WHEN: intent.category == "escalation" OR user.wants_human_agent == true OR user.frustration_detected == true
+    CONTEXT:
+      pass: [customer_id, session_context]
+      summary: "User requests human assistance or is showing frustration"
+    EXPECT_RETURN: false
+
+  # P2 — Order tracking and shipping
+  - TO: Order_Tracking
+    WHEN: intent.category == "order_inquiry" OR intent.category == "shipping" OR intent.category == "delivery"
+    CONTEXT:
+      pass: [customer_id, order_id, session_context]
+      summary: "Customer wants to track or manage an order"
+    EXPECT_RETURN: false
+
+  # P3 — Returns and refunds
+  - TO: Returns_And_Refunds
+    WHEN: intent.category == "return" OR intent.category == "refund" OR intent.category == "exchange"
+    CONTEXT:
+      pass: [customer_id, order_id, item_id, session_context]
+      summary: "Customer wants to return, exchange, or get a refund"
+    EXPECT_RETURN: false
+
+  # P4 — Loyalty and rewards
+  - TO: Loyalty
+    WHEN: intent.category == "loyalty" OR intent.category == "rewards" OR intent.category == "points"
+    CONTEXT:
+      pass: [customer_id, session_context]
+      summary: "Customer asking about loyalty points or rewards"
+    EXPECT_RETURN: false
+
+  # P5 — Checkout and payment
+  - TO: Sales_Agent
+    WHEN: intent.category == "checkout" OR intent.category == "cart" OR intent.category == "payment"
+    CONTEXT:
+      pass: [customer_id, cart_contents, session_context]
+      summary: "Customer ready to checkout or manage cart"
+    EXPECT_RETURN: false
+
+  # P6 — Product browsing and recommendations
+  - TO: Product_Advisor
+    WHEN: intent.category == "browse" OR intent.category == "search" OR intent.category == "recommend" OR intent.category == "compare"
+    CONTEXT:
+      pass: [customer_id, session_context, search_context, preferences]
+      summary: "Customer browsing or looking for product recommendations"
+    EXPECT_RETURN: false
+
+# ─────────────────────────────────────────────────────────────────────────────
+# ESCALATION — system-level triggers
+# ─────────────────────────────────────────────────────────────────────────────
+
+ESCALATE:
+  triggers:
+    - WHEN: handoff_count >= 3
+      REASON: "Customer bounced between too many agents"
+      PRIORITY: high
+      TAGS: [ux_failure]
+
+    - WHEN: customer_tier == "VIP" AND intent.category == "complaint"
+      REASON: "VIP customer with complaint requires immediate attention"
+      PRIORITY: critical
+      TAGS: [vip, complaint]
+
+    - WHEN: user.frustration_detected == true
+      REASON: "Customer showing signs of frustration"
+      PRIORITY: high
+      TAGS: [sentiment, retention]
+
+  context_for_human:
+    - customer_id
+    - conversation_history
+    - routing_history
+    - last_intent
+
+  on_human_complete:
+    - IF human.resolved == true: COMPLETE
+    - IF human.needs_agent == true: HANDOFF to specified_agent
+
+# ─────────────────────────────────────────────────────────────────────────────
+# ERROR HANDLING
+# ─────────────────────────────────────────────────────────────────────────────
+
+ON_ERROR:
+  routing_failure:
+    RESPOND: TEMPLATE(routing_error)
+    RETRY: 1
+    THEN: HANDOFF Live_Agent
+
+COMPLETE:
+  - WHEN: handoff_successful == true
+    RESPOND: TEMPLATE(handoff_success)
+
+  - WHEN: user.session_ended == true
+    RESPOND: TEMPLATE(session_goodbye)

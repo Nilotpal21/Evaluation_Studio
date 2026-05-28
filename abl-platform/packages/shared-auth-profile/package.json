@@ -1,0 +1,59 @@
+{
+  "name": "@agent-platform/shared-auth-profile",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": "./dist/index.js",
+    "./aws-sts-verify": {
+      "import": "./dist/aws-sts-verify.js",
+      "types": "./dist/aws-sts-verify.d.ts"
+    },
+    "./reserved-principals": {
+      "import": "./dist/reserved-principals.js",
+      "types": "./dist/reserved-principals.d.ts"
+    },
+    "./client-credentials-service": {
+      "import": "./dist/client-credentials-service.js",
+      "types": "./dist/client-credentials-service.d.ts"
+    },
+    "./legacy-auth-profile": {
+      "import": "./dist/legacy-auth-profile.js",
+      "types": "./dist/legacy-auth-profile.d.ts"
+    },
+    "./trace-events": {
+      "import": "./dist/trace-events.js",
+      "types": "./dist/trace-events.d.ts"
+    },
+    "./update-validator": {
+      "import": "./dist/update-validator.js",
+      "types": "./dist/update-validator.d.ts"
+    },
+    "./linked-app-validator": {
+      "import": "./dist/linked-app-validator.js",
+      "types": "./dist/linked-app-validator.d.ts"
+    },
+    "./oauth-provider-key": {
+      "import": "./dist/oauth-provider-key.js",
+      "types": "./dist/oauth-provider-key.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsc"
+  },
+  "dependencies": {
+    "@agent-platform/auth-enterprise": "workspace:^",
+    "@agent-platform/redis": "workspace:*",
+    "@agent-platform/shared-kernel": "workspace:^",
+    "@smithy/hash-node": "^4.2.5",
+    "@smithy/protocol-http": "^5.3.5",
+    "@smithy/signature-v4": "^5.3.5",
+    "@agent-platform/shared-observability": "workspace:*"
+  },
+  "devDependencies": {
+    "@agent-platform/database": "workspace:*",
+    "typescript": "^5.3.0"
+  }
+}

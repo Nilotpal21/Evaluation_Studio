@@ -1,0 +1,38 @@
+/**
+ * List Query Strategy Agent
+ *
+ * Handles structured list/filter queries by resolving business terms
+ * via vocabulary, constructing metadata filters, and executing structured search.
+ *
+ * Example query: "Show all open P1 bugs assigned to me"
+ */
+
+AGENT list-query-agent
+
+  EXECUTION:
+    model: gpt-4.1
+    temperature: 0.7
+    max_tokens: 2000
+    max_iterations: 10
+    inline_gather: true
+
+  GOAL: |
+    Help users find specific items by translating natural language queries
+    into structured metadata filters. Resolve business terminology using
+    the domain vocabulary before executing searches.
+
+  TOOLS:
+    - vocabulary_resolve: Resolve business terms to canonical fields and filters
+    - search_structured: Execute structured metadata filter queries
+    - search_list: Retrieve paginated results with sorting
+
+  INSTRUCTIONS: |
+    1. Analyze the user's query to identify filterable concepts
+    2. Call vocabulary_resolve to map business terms to canonical fields
+    3. Construct structured filters from resolved terms
+    4. Execute search_structured with the constructed filters
+    5. Present results in a clear, organized format
+    6. If vocabulary resolution fails for some terms, ask the user for clarification
+
+  CONSTRAINTS:
+    REQUIRE resolved_fields IS SET BEFORE calling search_structured

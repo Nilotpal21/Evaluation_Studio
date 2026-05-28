@@ -1,0 +1,27 @@
+{
+  "name": "external-a2a-bridge-vercel-agent",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "next dev --port 4010",
+    "build": "next build",
+    "start": "next start --port 4010"
+  },
+  "dependencies": {
+    "@ai-sdk/anthropic": "3.0.71",
+    "@ai-sdk/google": "3.0.64",
+    "@ai-sdk/openai": "3.0.53",
+    "ai": "6.0.168",
+    "next": "16.2.6",
+    "react": "19.2.5",
+    "react-dom": "19.2.5",
+    "zod": "4.3.6"
+  },
+  "devDependencies": {
+    "@types/node": "25.6.0",
+    "@types/react": "19.2.14",
+    "@types/react-dom": "19.2.3",
+    "typescript": "6.0.3"
+  }
+}

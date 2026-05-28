@@ -1,0 +1,1417 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Interactions Tab — Spec Gap Wireframes</title>
+    <style>
+      :root {
+        --bg-primary: #0f172a;
+        --bg-secondary: #1e293b;
+        --bg-tertiary: #334155;
+        --bg-card: #1e293b;
+        --border-default: #334155;
+        --text-primary: #f1f5f9;
+        --text-secondary: #94a3b8;
+        --text-muted: #64748b;
+
+        /* Semantic intents matching design tokens */
+        --info-bg: rgba(59, 130, 246, 0.08);
+        --info-border: rgba(59, 130, 246, 0.3);
+        --info-text: #60a5fa;
+        --info-dot: #3b82f6;
+
+        --success-bg: rgba(34, 197, 94, 0.08);
+        --success-border: rgba(34, 197, 94, 0.3);
+        --success-text: #4ade80;
+        --success-dot: #22c55e;
+
+        --warning-bg: rgba(245, 158, 11, 0.08);
+        --warning-border: rgba(245, 158, 11, 0.3);
+        --warning-text: #fbbf24;
+        --warning-dot: #f59e0b;
+
+        --error-bg: rgba(239, 68, 68, 0.08);
+        --error-border: rgba(239, 68, 68, 0.3);
+        --error-text: #f87171;
+        --error-dot: #ef4444;
+
+        --purple-bg: rgba(168, 85, 247, 0.08);
+        --purple-border: rgba(168, 85, 247, 0.3);
+        --purple-text: #c084fc;
+        --purple-dot: #a855f7;
+
+        --orange-bg: rgba(249, 115, 22, 0.08);
+        --orange-border: rgba(249, 115, 22, 0.3);
+        --orange-text: #fb923c;
+        --orange-dot: #f97316;
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        background: var(--bg-primary);
+        color: var(--text-primary);
+        font-family:
+          'Inter',
+          -apple-system,
+          BlinkMacSystemFont,
+          'Segoe UI',
+          sans-serif;
+        font-size: 13px;
+        line-height: 1.5;
+        padding: 32px;
+      }
+
+      /* ── Page Layout ── */
+      .page-header {
+        text-align: center;
+        margin-bottom: 48px;
+        padding-bottom: 24px;
+        border-bottom: 1px solid var(--border-default);
+      }
+      .page-header h1 {
+        font-size: 24px;
+        font-weight: 600;
+        margin-bottom: 8px;
+      }
+      .page-header p {
+        color: var(--text-secondary);
+        font-size: 14px;
+      }
+
+      .wireframe-grid {
+        display: flex;
+        flex-direction: column;
+        gap: 48px;
+        max-width: 900px;
+        margin: 0 auto;
+      }
+
+      /* ── Wireframe Section ── */
+      .wireframe-section {
+        background: var(--bg-secondary);
+        border: 1px solid var(--border-default);
+        border-radius: 12px;
+        overflow: hidden;
+      }
+
+      .section-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 16px 20px;
+        border-bottom: 1px solid var(--border-default);
+        background: var(--bg-tertiary);
+      }
+      .section-number {
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 13px;
+        flex-shrink: 0;
+      }
+      .section-number.small {
+        background: var(--success-bg);
+        color: var(--success-text);
+        border: 1px solid var(--success-border);
+      }
+      .section-number.medium {
+        background: var(--warning-bg);
+        color: var(--warning-text);
+        border: 1px solid var(--warning-border);
+      }
+      .section-header h2 {
+        font-size: 16px;
+        font-weight: 600;
+      }
+      .effort-badge {
+        margin-left: auto;
+        font-size: 11px;
+        font-weight: 600;
+        padding: 2px 10px;
+        border-radius: 99px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+      .effort-badge.small {
+        background: var(--success-bg);
+        color: var(--success-text);
+        border: 1px solid var(--success-border);
+      }
+      .effort-badge.medium {
+        background: var(--warning-bg);
+        color: var(--warning-text);
+        border: 1px solid var(--warning-border);
+      }
+
+      .section-description {
+        padding: 16px 20px;
+        color: var(--text-secondary);
+        font-size: 13px;
+        border-bottom: 1px solid var(--border-default);
+        background: rgba(51, 65, 85, 0.3);
+      }
+
+      .section-body {
+        padding: 24px 20px;
+      }
+
+      .before-after {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+      }
+
+      .ba-column h3 {
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-bottom: 12px;
+        padding-bottom: 6px;
+        border-bottom: 1px dashed var(--border-default);
+      }
+      .ba-column h3.current {
+        color: var(--text-muted);
+      }
+      .ba-column h3.proposed {
+        color: var(--info-text);
+      }
+
+      .annotation {
+        margin-top: 16px;
+        padding: 10px 14px;
+        background: var(--info-bg);
+        border: 1px solid var(--info-border);
+        border-radius: 8px;
+        font-size: 12px;
+        color: var(--info-text);
+        line-height: 1.6;
+      }
+      .annotation strong {
+        color: var(--text-primary);
+      }
+
+      /* ── Mockup Components ── */
+
+      /* Session Header */
+      .mock-session-header {
+        background: var(--bg-primary);
+        border: 1px solid var(--border-default);
+        border-radius: 8px;
+        padding: 12px 16px;
+      }
+      .session-top-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 8px;
+      }
+      .session-id {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 12px;
+        color: var(--text-secondary);
+      }
+      .status-badge {
+        font-size: 10px;
+        font-weight: 600;
+        padding: 2px 8px;
+        border-radius: 99px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+      .status-badge.active {
+        background: var(--success-bg);
+        color: var(--success-text);
+        border: 1px solid var(--success-border);
+      }
+      .status-badge.resolved {
+        background: var(--info-bg);
+        color: var(--info-text);
+        border: 1px solid var(--info-border);
+      }
+
+      .session-stats {
+        display: flex;
+        gap: 16px;
+        font-size: 12px;
+        color: var(--text-muted);
+      }
+      .session-stat {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+      }
+      .stat-value {
+        color: var(--text-secondary);
+        font-weight: 500;
+      }
+
+      /* Guardrail Summary (NEW) */
+      .guardrail-summary {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-top: 10px;
+        padding-top: 10px;
+        border-top: 1px dashed var(--border-default);
+      }
+      .guardrail-summary-label {
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: var(--text-muted);
+        margin-right: 4px;
+      }
+      .guard-count {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        font-size: 11px;
+        font-weight: 600;
+        padding: 2px 8px;
+        border-radius: 99px;
+      }
+      .guard-count.pass {
+        background: var(--success-bg);
+        color: var(--success-text);
+        border: 1px solid var(--success-border);
+      }
+      .guard-count.warn {
+        background: var(--warning-bg);
+        color: var(--warning-text);
+        border: 1px solid var(--warning-border);
+      }
+      .guard-count.fail {
+        background: var(--error-bg);
+        color: var(--error-text);
+        border: 1px solid var(--error-border);
+      }
+      .guard-icon {
+        font-size: 12px;
+      }
+
+      /* Step Cards */
+      .mock-step {
+        border-radius: 8px;
+        padding: 10px 14px;
+        margin-bottom: 8px;
+        border-left: 3px solid;
+      }
+      .mock-step.user-input {
+        background: var(--info-bg);
+        border-color: var(--info-dot);
+      }
+      .mock-step.tool-call {
+        background: var(--success-bg);
+        border-color: var(--success-dot);
+      }
+      .mock-step.decision {
+        background: var(--warning-bg);
+        border-color: var(--warning-dot);
+      }
+      .mock-step.error {
+        background: var(--error-bg);
+        border-color: var(--error-dot);
+      }
+      .mock-step.response {
+        background: var(--purple-bg);
+        border-color: var(--purple-dot);
+      }
+      .mock-step.memory {
+        background: var(--orange-bg);
+        border-color: var(--orange-dot);
+      }
+      .mock-step.gather {
+        background: var(--info-bg);
+        border-color: var(--info-dot);
+      }
+      .mock-step.guard {
+        background: var(--success-bg);
+        border-color: var(--success-dot);
+      }
+      .mock-step.parallel {
+        background: var(--info-bg);
+        border-color: var(--info-dot);
+      }
+      .mock-step.flow {
+        background: var(--warning-bg);
+        border-color: var(--warning-dot);
+      }
+
+      .step-header {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 4px;
+      }
+      .step-badge {
+        font-size: 9px;
+        font-weight: 700;
+        padding: 1px 6px;
+        border-radius: 4px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+      .step-badge.info {
+        background: var(--info-border);
+        color: #fff;
+      }
+      .step-badge.success {
+        background: var(--success-border);
+        color: #fff;
+      }
+      .step-badge.warning {
+        background: var(--warning-border);
+        color: #fff;
+      }
+      .step-badge.error-b {
+        background: var(--error-border);
+        color: #fff;
+      }
+      .step-badge.purple {
+        background: var(--purple-border);
+        color: #fff;
+      }
+      .step-badge.orange {
+        background: var(--orange-border);
+        color: #fff;
+      }
+
+      .step-label {
+        font-size: 12px;
+        font-weight: 500;
+        color: var(--text-primary);
+      }
+      .step-sublabel {
+        font-size: 11px;
+        color: var(--text-muted);
+      }
+      .step-content {
+        font-size: 12px;
+        color: var(--text-secondary);
+        margin-top: 4px;
+      }
+
+      /* Destructive Banner (NEW) */
+      .destructive-banner {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        margin-top: 8px;
+        padding: 6px 10px;
+        background: rgba(239, 68, 68, 0.12);
+        border: 1px dashed var(--error-border);
+        border-radius: 6px;
+        font-size: 11px;
+        font-weight: 600;
+        color: var(--error-text);
+      }
+      .destructive-icon {
+        font-size: 14px;
+      }
+
+      /* NEW indicator */
+      .new-indicator {
+        position: relative;
+      }
+      .new-indicator::after {
+        content: 'NEW';
+        position: absolute;
+        top: -6px;
+        right: -8px;
+        font-size: 8px;
+        font-weight: 800;
+        padding: 1px 4px;
+        border-radius: 3px;
+        background: #ef4444;
+        color: white;
+        letter-spacing: 0.5px;
+      }
+
+      .highlight-box {
+        border: 2px dashed var(--info-border);
+        border-radius: 10px;
+        padding: 4px;
+        position: relative;
+      }
+      .highlight-label {
+        position: absolute;
+        top: -10px;
+        left: 12px;
+        background: var(--info-dot);
+        color: white;
+        font-size: 9px;
+        font-weight: 700;
+        padding: 1px 6px;
+        border-radius: 3px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+
+      /* Memory Diff */
+      .mock-diff {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 11px;
+        border-radius: 6px;
+        overflow: hidden;
+        border: 1px solid var(--border-default);
+      }
+      .diff-line {
+        padding: 3px 12px;
+        display: flex;
+        gap: 8px;
+      }
+      .diff-prefix {
+        width: 16px;
+        text-align: center;
+        flex-shrink: 0;
+      }
+      .diff-added {
+        background: rgba(34, 197, 94, 0.1);
+        color: var(--success-text);
+      }
+      .diff-removed {
+        background: rgba(239, 68, 68, 0.1);
+        color: var(--error-text);
+      }
+      .diff-changed {
+        background: rgba(245, 158, 11, 0.1);
+        color: var(--warning-text);
+      }
+      .diff-unchanged {
+        background: var(--bg-primary);
+        color: var(--text-muted);
+      }
+
+      .error-diff-footer {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 12px;
+        background: rgba(239, 68, 68, 0.08);
+        border-top: 1px solid var(--error-border);
+        font-size: 11px;
+        color: var(--error-text);
+      }
+
+      .error-tint .diff-added,
+      .error-tint .diff-changed {
+        border-left: 2px solid var(--error-dot);
+      }
+
+      /* Swim Lane */
+      .swim-lane-container {
+        background: var(--bg-primary);
+        border: 1px solid var(--border-default);
+        border-radius: 8px;
+        padding: 16px;
+      }
+      .swim-lane-header {
+        font-size: 11px;
+        font-weight: 600;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 12px;
+      }
+      .time-ruler {
+        display: flex;
+        justify-content: space-between;
+        font-size: 10px;
+        color: var(--text-muted);
+        margin-bottom: 8px;
+        padding: 0 4px;
+      }
+      .swim-lanes {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+      .swim-lane {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        height: 28px;
+      }
+      .lane-label {
+        font-size: 11px;
+        color: var(--text-secondary);
+        width: 80px;
+        flex-shrink: 0;
+        text-align: right;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .lane-bar-track {
+        flex: 1;
+        height: 20px;
+        background: var(--bg-tertiary);
+        border-radius: 4px;
+        position: relative;
+        overflow: visible;
+      }
+      .lane-bar {
+        height: 100%;
+        border-radius: 4px;
+        position: absolute;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 10px;
+        font-weight: 600;
+        color: white;
+      }
+      .lane-bar.info-bar {
+        background: var(--info-border);
+        left: 0;
+        width: 60%;
+      }
+      .lane-bar.success-bar {
+        background: var(--success-border);
+        left: 10%;
+        width: 50%;
+      }
+      .lane-bar.warning-bar {
+        background: var(--warning-border);
+        left: 0;
+        width: 40%;
+      }
+
+      /* Dependency Arrow */
+      .dependency-arrow {
+        position: absolute;
+        z-index: 5;
+      }
+      .dep-arrow-svg {
+        overflow: visible;
+      }
+
+      .swim-time-saved {
+        margin-top: 10px;
+        text-align: right;
+        font-size: 11px;
+        color: var(--success-text);
+        font-weight: 500;
+      }
+
+      /* Gather */
+      .gather-field {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 12px;
+        background: var(--bg-primary);
+        border-radius: 6px;
+        margin-bottom: 6px;
+      }
+      .field-name {
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--text-primary);
+        width: 80px;
+        flex-shrink: 0;
+      }
+      .field-value {
+        font-size: 12px;
+        color: var(--text-secondary);
+        flex: 1;
+      }
+      .confidence-bar-track {
+        width: 60px;
+        height: 6px;
+        background: var(--bg-tertiary);
+        border-radius: 3px;
+        overflow: hidden;
+        flex-shrink: 0;
+      }
+      .confidence-bar-fill {
+        height: 100%;
+        border-radius: 3px;
+      }
+      .confidence-bar-fill.high {
+        background: var(--success-dot);
+        width: 92%;
+      }
+      .confidence-bar-fill.medium {
+        background: var(--warning-dot);
+        width: 65%;
+      }
+
+      .source-highlight {
+        display: inline;
+        padding: 1px 4px;
+        border-radius: 3px;
+        font-weight: 600;
+      }
+      .source-highlight.field-city {
+        background: rgba(59, 130, 246, 0.2);
+        color: var(--info-text);
+        border-bottom: 2px solid var(--info-dot);
+      }
+      .source-highlight.field-beds {
+        background: rgba(34, 197, 94, 0.2);
+        color: var(--success-text);
+        border-bottom: 2px solid var(--success-dot);
+      }
+      .source-highlight.field-budget {
+        background: rgba(245, 158, 11, 0.2);
+        color: var(--warning-text);
+        border-bottom: 2px solid var(--warning-dot);
+      }
+
+      .user-input-text {
+        font-size: 13px;
+        color: var(--text-primary);
+        line-height: 1.8;
+        padding: 8px 12px;
+        background: var(--bg-primary);
+        border-radius: 6px;
+        border: 1px solid var(--border-default);
+      }
+
+      .source-legend {
+        display: flex;
+        gap: 12px;
+        margin-top: 8px;
+        font-size: 10px;
+        color: var(--text-muted);
+      }
+      .legend-item {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+      }
+      .legend-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 2px;
+      }
+      .legend-dot.city {
+        background: var(--info-dot);
+      }
+      .legend-dot.beds {
+        background: var(--success-dot);
+      }
+      .legend-dot.budget {
+        background: var(--warning-dot);
+      }
+
+      /* Flow Breadcrumb */
+      .flow-breadcrumb {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        padding: 12px 16px;
+        background: var(--bg-primary);
+        border: 1px solid var(--border-default);
+        border-radius: 8px;
+        overflow-x: auto;
+      }
+      .flow-node {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 12px;
+        border-radius: 6px;
+        font-size: 11px;
+        font-weight: 600;
+        white-space: nowrap;
+        border: 1px solid;
+      }
+      .flow-node.visited {
+        background: var(--bg-tertiary);
+        border-color: var(--border-default);
+        color: var(--text-secondary);
+      }
+      .flow-node.active {
+        background: var(--success-bg);
+        border-color: var(--success-border);
+        color: var(--success-text);
+      }
+      .flow-node.upcoming {
+        background: transparent;
+        border-color: var(--border-default);
+        color: var(--text-muted);
+        border-style: dashed;
+      }
+      .flow-node.error-node {
+        background: var(--error-bg);
+        border-color: var(--error-border);
+        color: var(--error-text);
+      }
+      .flow-node.error-path {
+        background: rgba(239, 68, 68, 0.05);
+        border-color: var(--error-border);
+        color: var(--error-text);
+        border-style: dashed;
+      }
+
+      .flow-arrow {
+        color: var(--text-muted);
+        font-size: 14px;
+        flex-shrink: 0;
+      }
+      .flow-arrow.error-arrow {
+        color: var(--error-text);
+      }
+
+      .flow-node-icon {
+        font-size: 12px;
+      }
+
+      /* Single wireframe (no before/after) */
+      .single-wireframe {
+        max-width: 100%;
+      }
+
+      /* Phantom highlight */
+      .phantom-pulse {
+        animation: pulse-border 2s ease-in-out infinite;
+      }
+      @keyframes pulse-border {
+        0%,
+        100% {
+          border-color: rgba(59, 130, 246, 0.3);
+        }
+        50% {
+          border-color: rgba(59, 130, 246, 0.8);
+        }
+      }
+
+      /* Full width */
+      .full-width {
+        grid-column: 1 / -1;
+      }
+
+      /* Spec reference */
+      .spec-ref {
+        font-size: 11px;
+        color: var(--text-muted);
+        font-style: italic;
+        margin-top: 4px;
+      }
+
+      /* Step inner detail */
+      .step-detail-row {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        margin-top: 4px;
+        font-size: 11px;
+        color: var(--text-muted);
+      }
+      .detail-key {
+        font-weight: 600;
+        color: var(--text-secondary);
+      }
+
+      /* Swim lane with arrows */
+      .swim-lane-with-deps {
+        position: relative;
+      }
+
+      .dep-connector {
+        position: absolute;
+        width: 2px;
+        background: var(--warning-text);
+        z-index: 10;
+      }
+      .dep-connector::after {
+        content: '';
+        position: absolute;
+        bottom: -4px;
+        left: -3px;
+        width: 0;
+        height: 0;
+        border-left: 4px solid transparent;
+        border-right: 4px solid transparent;
+        border-top: 5px solid var(--warning-text);
+      }
+
+      .dep-label {
+        position: absolute;
+        font-size: 9px;
+        color: var(--warning-text);
+        font-weight: 600;
+        background: var(--bg-primary);
+        padding: 0 4px;
+        border-radius: 2px;
+        white-space: nowrap;
+        z-index: 11;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page-header">
+      <h1>Interactions Tab — Spec Gap Wireframes</h1>
+      <p>
+        6 enhancements from the design spec not yet implemented. All are additive — no existing
+        features change.
+      </p>
+    </div>
+
+    <div class="wireframe-grid">
+      <!-- ================================================================ -->
+      <!-- GAP 1: Guardrail Summary in Session Header -->
+      <!-- ================================================================ -->
+      <div class="wireframe-section">
+        <div class="section-header">
+          <div class="section-number small">1</div>
+          <h2>Guardrail Summary in Session Header</h2>
+          <span class="effort-badge small">Small</span>
+        </div>
+        <div class="section-description">
+          <strong>Spec Section 3:</strong> "Session Header shows total guardrail pass/warn/fail
+          counts." Currently the session header shows interactions, duration, tokens, and cost — but
+          no guardrail summary.
+        </div>
+        <div class="section-body">
+          <div class="before-after">
+            <div class="ba-column">
+              <h3 class="current">Current</h3>
+              <div class="mock-session-header">
+                <div class="session-top-row">
+                  <span class="session-id">ses_a1b2c3d4</span>
+                  <span class="status-badge active">Active</span>
+                </div>
+                <div class="session-stats">
+                  <span class="session-stat">Interactions: <span class="stat-value">4</span></span>
+                  <span class="session-stat">Duration: <span class="stat-value">12.3s</span></span>
+                  <span class="session-stat">Tokens: <span class="stat-value">2,847</span></span>
+                  <span class="session-stat">Cost: <span class="stat-value">$0.042</span></span>
+                </div>
+              </div>
+            </div>
+            <div class="ba-column">
+              <h3 class="proposed">Proposed</h3>
+              <div class="mock-session-header">
+                <div class="session-top-row">
+                  <span class="session-id">ses_a1b2c3d4</span>
+                  <span class="status-badge active">Active</span>
+                </div>
+                <div class="session-stats">
+                  <span class="session-stat">Interactions: <span class="stat-value">4</span></span>
+                  <span class="session-stat">Duration: <span class="stat-value">12.3s</span></span>
+                  <span class="session-stat">Tokens: <span class="stat-value">2,847</span></span>
+                  <span class="session-stat">Cost: <span class="stat-value">$0.042</span></span>
+                </div>
+                <div class="highlight-box phantom-pulse" style="margin-top: 2px">
+                  <span class="highlight-label">New</span>
+                  <div class="guardrail-summary">
+                    <span class="guardrail-summary-label">Guardrails</span>
+                    <span class="guard-count pass"
+                      ><span class="guard-icon">&#10003;</span> 8 pass</span
+                    >
+                    <span class="guard-count warn"
+                      ><span class="guard-icon">&#9888;</span> 2 warn</span
+                    >
+                    <span class="guard-count fail"
+                      ><span class="guard-icon">&#10007;</span> 1 fail</span
+                    >
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="annotation">
+            <strong>Data source:</strong> Aggregate from all <code>guardrail_*</code> events via
+            <code>extractGuardrailChecks()</code> (already exported as a pure function). Pass =
+            <code>guardrail_check</code> with pass outcome. Warn = <code>guardrail_warning</code>.
+            Fail = <code>guardrail_violation</code> + <code>guardrail_*_blocked</code>.
+          </div>
+        </div>
+      </div>
+
+      <!-- ================================================================ -->
+      <!-- GAP 2: Destructive Action Detection -->
+      <!-- ================================================================ -->
+      <div class="wireframe-section">
+        <div class="section-header">
+          <div class="section-number small">2</div>
+          <h2>Destructive Action Detection</h2>
+          <span class="effort-badge small">Small</span>
+        </div>
+        <div class="section-description">
+          <strong>Spec Section 5:</strong> "Destructive tool calls are flagged with an amber warning
+          banner showing the action and scope." Currently tool calls display normally regardless of
+          destructive potential.
+        </div>
+        <div class="section-body">
+          <div class="before-after">
+            <div class="ba-column">
+              <h3 class="current">Current</h3>
+              <div class="mock-step tool-call">
+                <div class="step-header">
+                  <span class="step-badge success">TOOL CALL</span>
+                  <span class="step-label">delete_all_records</span>
+                </div>
+                <div class="step-content">
+                  <div class="step-detail-row"><span class="detail-key">Method:</span> DELETE</div>
+                  <div class="step-detail-row">
+                    <span class="detail-key">Target:</span> /api/records?scope=all
+                  </div>
+                </div>
+              </div>
+              <div style="margin-top: 8px">
+                <div class="mock-step tool-call">
+                  <div class="step-header">
+                    <span class="step-badge success">TOOL CALL</span>
+                    <span class="step-label">search_records</span>
+                  </div>
+                  <div class="step-content">
+                    <div class="step-detail-row"><span class="detail-key">Method:</span> GET</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="ba-column">
+              <h3 class="proposed">Proposed</h3>
+              <div class="mock-step tool-call" style="border-color: var(--error-dot)">
+                <div class="step-header">
+                  <span class="step-badge success">TOOL CALL</span>
+                  <span class="step-label">delete_all_records</span>
+                </div>
+                <div class="step-content">
+                  <div class="step-detail-row"><span class="detail-key">Method:</span> DELETE</div>
+                  <div class="step-detail-row">
+                    <span class="detail-key">Target:</span> /api/records?scope=all
+                  </div>
+                </div>
+                <div class="highlight-box phantom-pulse" style="margin-top: 4px">
+                  <span class="highlight-label">New</span>
+                  <div class="destructive-banner">
+                    <span class="destructive-icon">&#9888;</span>
+                    Destructive action: DELETE on /api/records (scope: all)
+                  </div>
+                </div>
+              </div>
+              <div style="margin-top: 8px">
+                <div class="mock-step tool-call">
+                  <div class="step-header">
+                    <span class="step-badge success">TOOL CALL</span>
+                    <span class="step-label">search_records</span>
+                  </div>
+                  <div class="step-content">
+                    <div class="step-detail-row"><span class="detail-key">Method:</span> GET</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="annotation">
+            <strong>Detection heuristic:</strong> Check tool event <code>data.method</code> for
+            DELETE/PUT or <code>data.destructive === true</code> flag from runtime. The amber/red
+            banner only appears on tool_call steps matching the heuristic — safe calls remain
+            unchanged.
+          </div>
+        </div>
+      </div>
+
+      <!-- ================================================================ -->
+      <!-- GAP 3: Error-Correlated Memory Diff -->
+      <!-- ================================================================ -->
+      <div class="wireframe-section">
+        <div class="section-header">
+          <div class="section-number small">3</div>
+          <h2>Error-Correlated Memory Diff Highlighting</h2>
+          <span class="effort-badge small">Small</span>
+        </div>
+        <div class="section-description">
+          <strong>Spec Section 8:</strong> "When an error occurred in the same turn, memory changes
+          get a red tint and an error/retry footer." Currently memory diffs always render with the
+          standard green/amber diff colors regardless of turn outcome.
+        </div>
+        <div class="section-body">
+          <div class="before-after">
+            <div class="ba-column">
+              <h3 class="current">Current (always same colors)</h3>
+              <div class="mock-step memory">
+                <div class="step-header">
+                  <span class="step-badge orange">MEMORY</span>
+                  <span class="step-label">Memory Stored</span>
+                </div>
+                <div style="margin-top: 8px">
+                  <div class="mock-diff">
+                    <div class="diff-line diff-added">
+                      <span class="diff-prefix">+</span> city: "Austin"
+                    </div>
+                    <div class="diff-line diff-changed">
+                      <span class="diff-prefix">~</span> budget: 1500 &rarr; 2000
+                    </div>
+                    <div class="diff-line diff-unchanged">
+                      <span class="diff-prefix">&nbsp;</span> bedrooms: 2
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="ba-column">
+              <h3 class="proposed">Proposed (error turn = red tint)</h3>
+              <div
+                class="mock-step memory"
+                style="border-color: var(--error-dot); background: var(--error-bg)"
+              >
+                <div class="step-header">
+                  <span class="step-badge orange">MEMORY</span>
+                  <span class="step-label">Memory Stored</span>
+                  <span class="step-badge error-b" style="margin-left: auto; font-size: 8px"
+                    >ERROR TURN</span
+                  >
+                </div>
+                <div style="margin-top: 8px">
+                  <div class="highlight-box phantom-pulse">
+                    <span class="highlight-label">New</span>
+                    <div class="mock-diff error-tint">
+                      <div class="diff-line diff-added">
+                        <span class="diff-prefix">+</span> city: "Austin"
+                      </div>
+                      <div class="diff-line diff-changed">
+                        <span class="diff-prefix">~</span> budget: 1500 &rarr; 2000
+                      </div>
+                      <div class="diff-line diff-unchanged">
+                        <span class="diff-prefix">&nbsp;</span> bedrooms: 2
+                      </div>
+                      <div class="error-diff-footer">
+                        <span>&#9888;</span> Written during error — may be rolled back on retry
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="annotation">
+            <strong>Logic:</strong> Pass <code>hasError</code> boolean to MemoryDiff from the parent
+            interaction (already computed in <code>buildSummary</code>). When true: add red
+            border-left to changed lines, show error footer, change step card background to error
+            tint.
+          </div>
+        </div>
+      </div>
+
+      <!-- ================================================================ -->
+      <!-- GAP 4: Dependency Arrows in Swim Lanes -->
+      <!-- ================================================================ -->
+      <div class="wireframe-section">
+        <div class="section-header">
+          <div class="section-number medium">4</div>
+          <h2>Dependency Arrows in Swim Lanes</h2>
+          <span class="effort-badge medium">Medium</span>
+        </div>
+        <div class="section-description">
+          <strong>Spec Section 9:</strong> "Dependency arrows between parallel tasks — e.g., task B
+          starts after task A's output, shown as an arrow from A's end to B's start." Currently swim
+          lanes show bars without dependency relationships.
+        </div>
+        <div class="section-body">
+          <div class="before-after">
+            <div class="ba-column">
+              <h3 class="current">Current</h3>
+              <div class="swim-lane-container">
+                <div class="swim-lane-header">Parallel Execution &mdash; 3 tasks</div>
+                <div class="time-ruler">
+                  <span>0ms</span><span>200ms</span><span>400ms</span><span>600ms</span>
+                </div>
+                <div class="swim-lanes">
+                  <div class="swim-lane">
+                    <span class="lane-label">search_db</span>
+                    <div class="lane-bar-track">
+                      <div class="lane-bar info-bar">320ms</div>
+                    </div>
+                  </div>
+                  <div class="swim-lane">
+                    <span class="lane-label">fetch_api</span>
+                    <div class="lane-bar-track">
+                      <div class="lane-bar success-bar">280ms</div>
+                    </div>
+                  </div>
+                  <div class="swim-lane">
+                    <span class="lane-label">merge_results</span>
+                    <div class="lane-bar-track">
+                      <div class="lane-bar warning-bar" style="left: 55%; width: 30%">180ms</div>
+                    </div>
+                  </div>
+                </div>
+                <div class="swim-time-saved">&#9889; Saved 420ms via parallel execution</div>
+              </div>
+            </div>
+            <div class="ba-column">
+              <h3 class="proposed">Proposed</h3>
+              <div class="swim-lane-container">
+                <div class="swim-lane-header">Parallel Execution &mdash; 3 tasks</div>
+                <div class="time-ruler">
+                  <span>0ms</span><span>200ms</span><span>400ms</span><span>600ms</span>
+                </div>
+                <div class="swim-lanes swim-lane-with-deps">
+                  <div class="swim-lane">
+                    <span class="lane-label">search_db</span>
+                    <div class="lane-bar-track">
+                      <div class="lane-bar info-bar">320ms</div>
+                    </div>
+                  </div>
+                  <div class="swim-lane">
+                    <span class="lane-label">fetch_api</span>
+                    <div class="lane-bar-track">
+                      <div class="lane-bar success-bar">280ms</div>
+                    </div>
+                  </div>
+                  <div class="swim-lane">
+                    <span class="lane-label">merge_results</span>
+                    <div class="lane-bar-track">
+                      <div class="lane-bar warning-bar" style="left: 55%; width: 30%">180ms</div>
+                    </div>
+                  </div>
+                  <!-- Dependency arrows (CSS-based approximation) -->
+                  <div
+                    class="highlight-box phantom-pulse"
+                    style="
+                      position: absolute;
+                      top: 14px;
+                      right: 15px;
+                      width: 42%;
+                      height: 60px;
+                      pointer-events: none;
+                    "
+                  >
+                    <span class="highlight-label">New: Dependency Arrows</span>
+                  </div>
+                </div>
+                <div
+                  style="
+                    margin-top: 8px;
+                    padding: 6px 10px;
+                    background: var(--warning-bg);
+                    border: 1px solid var(--warning-border);
+                    border-radius: 6px;
+                    font-size: 11px;
+                    color: var(--warning-text);
+                  "
+                >
+                  <strong>search_db</strong> &#10230; merge_results &nbsp;&bull;&nbsp;
+                  <strong>fetch_api</strong> &#10230; merge_results
+                  <span style="color: var(--text-muted); margin-left: 8px"
+                    >(merge waits for both)</span
+                  >
+                </div>
+                <div class="swim-time-saved">&#9889; Saved 420ms via parallel execution</div>
+              </div>
+            </div>
+          </div>
+          <div class="annotation">
+            <strong>Data source:</strong> <code>fan_out_task_start</code> events carry
+            <code>data.dependsOn: string[]</code> (task IDs this task waits for). Arrows render from
+            the end of dependency bar to the start of dependent bar. When <code>dependsOn</code> is
+            absent, no arrows shown (pure parallel).
+          </div>
+        </div>
+      </div>
+
+      <!-- ================================================================ -->
+      <!-- GAP 5: Gather Source Text Highlighting -->
+      <!-- ================================================================ -->
+      <div class="wireframe-section">
+        <div class="section-header">
+          <div class="section-number medium">5</div>
+          <h2>Gather Source Text Highlighting</h2>
+          <span class="effort-badge medium">Medium</span>
+        </div>
+        <div class="section-description">
+          <strong>Spec Section 5:</strong> "Source text highlighting — which words in the user's
+          message triggered each field extraction." Currently the gather step shows extracted fields
+          with confidence but doesn't connect them back to source text spans.
+        </div>
+        <div class="section-body">
+          <div class="before-after">
+            <div class="ba-column">
+              <h3 class="current">Current</h3>
+              <div class="mock-step gather">
+                <div class="step-header">
+                  <span class="step-badge info">GATHER</span>
+                  <span class="step-label">Field Collection</span>
+                </div>
+                <div style="margin-top: 8px">
+                  <div class="gather-field">
+                    <span class="field-name">city</span>
+                    <span class="field-value">"Austin"</span>
+                    <div class="confidence-bar-track">
+                      <div class="confidence-bar-fill high"></div>
+                    </div>
+                  </div>
+                  <div class="gather-field">
+                    <span class="field-name">bedrooms</span>
+                    <span class="field-value">3</span>
+                    <div class="confidence-bar-track">
+                      <div class="confidence-bar-fill high"></div>
+                    </div>
+                  </div>
+                  <div class="gather-field">
+                    <span class="field-name">budget</span>
+                    <span class="field-value">2000</span>
+                    <div class="confidence-bar-track">
+                      <div class="confidence-bar-fill medium"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="ba-column">
+              <h3 class="proposed">Proposed</h3>
+              <div class="mock-step gather">
+                <div class="step-header">
+                  <span class="step-badge info">GATHER</span>
+                  <span class="step-label">Field Collection</span>
+                </div>
+                <div class="highlight-box phantom-pulse" style="margin-top: 8px">
+                  <span class="highlight-label">New: Source Spans</span>
+                  <div class="user-input-text">
+                    I'm looking for a
+                    <span class="source-highlight field-beds">3 bedroom</span>
+                    place in
+                    <span class="source-highlight field-city">Austin</span>
+                    under
+                    <span class="source-highlight field-budget">$2000/month</span>
+                  </div>
+                  <div class="source-legend">
+                    <span class="legend-item"><span class="legend-dot city"></span> city</span>
+                    <span class="legend-item"><span class="legend-dot beds"></span> bedrooms</span>
+                    <span class="legend-item"><span class="legend-dot budget"></span> budget</span>
+                  </div>
+                </div>
+                <div style="margin-top: 8px">
+                  <div class="gather-field">
+                    <span class="field-name" style="color: var(--info-text)">city</span>
+                    <span class="field-value">"Austin"</span>
+                    <div class="confidence-bar-track">
+                      <div class="confidence-bar-fill high"></div>
+                    </div>
+                  </div>
+                  <div class="gather-field">
+                    <span class="field-name" style="color: var(--success-text)">bedrooms</span>
+                    <span class="field-value">3</span>
+                    <div class="confidence-bar-track">
+                      <div class="confidence-bar-fill high"></div>
+                    </div>
+                  </div>
+                  <div class="gather-field">
+                    <span class="field-name" style="color: var(--warning-text)">budget</span>
+                    <span class="field-value">2000</span>
+                    <div class="confidence-bar-track">
+                      <div class="confidence-bar-fill medium"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="annotation">
+            <strong>Data source:</strong> <code>entity_extraction</code> events may carry
+            <code>data.spans: Array&lt;{field, start, end}&gt;</code> or
+            <code>data.sourceText</code>. If spans exist, render highlighted user input above the
+            field table. Color-code each span to match its field row. <strong>Fallback:</strong> If
+            no span data, hide the source section (current behavior).
+          </div>
+        </div>
+      </div>
+
+      <!-- ================================================================ -->
+      <!-- GAP 6: Error Flow State / onFailAction -->
+      <!-- ================================================================ -->
+      <div class="wireframe-section">
+        <div class="section-header">
+          <div class="section-number small">6</div>
+          <h2>Error Flow State / onFailAction Path</h2>
+          <span class="effort-badge small">Small</span>
+        </div>
+        <div class="section-description">
+          <strong>Spec Section 11:</strong> "When a flow step errors, show the error node and the
+          onFailAction recovery path (retry/skip/escalate) in the breadcrumb." Currently flow
+          breadcrumbs show visited/active/upcoming states but not error or recovery paths.
+        </div>
+        <div class="section-body">
+          <div class="before-after">
+            <div class="ba-column">
+              <h3 class="current">Current</h3>
+              <div class="flow-breadcrumb">
+                <div class="flow-node visited">
+                  <span class="flow-node-icon">&#10003;</span> Welcome
+                </div>
+                <span class="flow-arrow">&rarr;</span>
+                <div class="flow-node visited">
+                  <span class="flow-node-icon">&#10003;</span> Collect Info
+                </div>
+                <span class="flow-arrow">&rarr;</span>
+                <div class="flow-node active">
+                  <span class="flow-node-icon">&#9654;</span> Search
+                </div>
+                <span class="flow-arrow">&rarr;</span>
+                <div class="flow-node upcoming">Present Results</div>
+              </div>
+            </div>
+            <div class="ba-column">
+              <h3 class="proposed">Proposed (error + recovery path)</h3>
+              <div class="highlight-box phantom-pulse">
+                <span class="highlight-label">New: Error + Recovery</span>
+                <div class="flow-breadcrumb">
+                  <div class="flow-node visited">
+                    <span class="flow-node-icon">&#10003;</span> Welcome
+                  </div>
+                  <span class="flow-arrow">&rarr;</span>
+                  <div class="flow-node visited">
+                    <span class="flow-node-icon">&#10003;</span> Collect Info
+                  </div>
+                  <span class="flow-arrow">&rarr;</span>
+                  <div class="flow-node error-node">
+                    <span class="flow-node-icon">&#10007;</span> Search
+                  </div>
+                  <span class="flow-arrow error-arrow">&darr;</span>
+                  <div class="flow-node error-path">
+                    <span class="flow-node-icon">&#8634;</span> retry (1/3)
+                  </div>
+                  <span class="flow-arrow">&rarr;</span>
+                  <div class="flow-node upcoming">Present Results</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="annotation">
+            <strong>Node states added:</strong>
+            <code>error</code> (red fill + &#10007; icon) — step that emitted an error event.
+            <code>error-path</code> (red dashed border + &#8634; icon) — the
+            <code>onFailAction</code> recovery node showing action type (retry/skip/escalate) and
+            attempt count. <br /><br />
+            <strong>Data source:</strong> <code>flow_step_exit</code> with
+            <code>data.status === 'error'</code> triggers error state.
+            <code>data.onFailAction</code> and <code>data.retryCount</code> populate the recovery
+            node.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div
+      style="
+        text-align: center;
+        margin-top: 48px;
+        padding: 24px;
+        color: var(--text-muted);
+        font-size: 12px;
+        border-top: 1px solid var(--border-default);
+      "
+    >
+      Interactions Tab Spec Gap Wireframes &mdash; Generated 2026-04-01 &mdash; Branch:
+      KI0326/feature/debug-log-interactions
+    </div>
+  </body>
+</html>

@@ -1,0 +1,10 @@
+{
+  "agent": "list-query-agent",
+  "locale": "en",
+  "strings": {
+    "goal": "Help users find specific items by translating natural language queries into structured metadata filters.",
+    "tool_vocabulary_resolve": "Resolve business terms to canonical fields and filters",
+    "tool_search_structured": "Execute structured metadata filter queries",
+    "tool_search_list": "Retrieve paginated results with sorting"
+  }
+}

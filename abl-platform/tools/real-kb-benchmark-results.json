@@ -1,0 +1,404 @@
+{
+  "timestamp": "2026-04-17T10:37:19.198Z",
+  "indexId": "019d7c23-6b7a-7d73-a04d-b5788427fab7",
+  "tenantId": "tenant-dev-001",
+  "results": [
+    {
+      "name": "Q1: Semantic + Rerank (short)",
+      "success": true,
+      "totalMs": 222,
+      "latency": {
+        "vocabularyResolveMs": 4,
+        "vectorSearchMs": 142,
+        "structuredFilterMs": 0,
+        "rerankMs": 0,
+        "totalMs": 146,
+        "permissionFilterMs": 0,
+        "preprocessingMs": 0,
+        "aliasResolveMs": 0,
+        "searchExecutionMs": 142
+      },
+      "resultCount": 10,
+      "topScore": 0.6153395,
+      "queryType": "semantic",
+      "rerank": true
+    },
+    {
+      "name": "Q2: Semantic + Rerank (medium)",
+      "success": true,
+      "totalMs": 125,
+      "latency": {
+        "vocabularyResolveMs": 0,
+        "vectorSearchMs": 101,
+        "structuredFilterMs": 0,
+        "rerankMs": 0,
+        "totalMs": 101,
+        "permissionFilterMs": 0,
+        "preprocessingMs": 0,
+        "aliasResolveMs": 0,
+        "searchExecutionMs": 101
+      },
+      "resultCount": 10,
+      "topScore": 0.6120607,
+      "queryType": "semantic",
+      "rerank": true
+    },
+    {
+      "name": "Q3: Semantic No Rerank",
+      "success": true,
+      "totalMs": 1596,
+      "latency": {
+        "vocabularyResolveMs": 0,
+        "vectorSearchMs": 1582,
+        "structuredFilterMs": 0,
+        "rerankMs": 0,
+        "totalMs": 1582,
+        "permissionFilterMs": 0,
+        "preprocessingMs": 0,
+        "aliasResolveMs": 0,
+        "searchExecutionMs": 1582
+      },
+      "resultCount": 10,
+      "topScore": 0.6139433,
+      "queryType": "vector",
+      "rerank": false
+    },
+    {
+      "name": "Q4: Semantic + Rerank (long)",
+      "success": true,
+      "totalMs": 381,
+      "latency": {
+        "vocabularyResolveMs": 0,
+        "vectorSearchMs": 357,
+        "structuredFilterMs": 0,
+        "rerankMs": 0,
+        "totalMs": 357,
+        "permissionFilterMs": 0,
+        "preprocessingMs": 0,
+        "aliasResolveMs": 0,
+        "searchExecutionMs": 357
+      },
+      "resultCount": 10,
+      "topScore": 0.6365024,
+      "queryType": "semantic",
+      "rerank": true
+    },
+    {
+      "name": "Q5: Hybrid + Rerank",
+      "success": true,
+      "totalMs": 499,
+      "latency": {
+        "vocabularyResolveMs": 0,
+        "vectorSearchMs": 470,
+        "structuredFilterMs": 0,
+        "rerankMs": 0,
+        "totalMs": 470,
+        "permissionFilterMs": 0,
+        "preprocessingMs": 0,
+        "aliasResolveMs": 0,
+        "searchExecutionMs": 470
+      },
+      "resultCount": 10,
+      "topScore": 0.9841269841269842,
+      "queryType": "hybrid",
+      "rerank": true
+    },
+    {
+      "name": "Q6: Hybrid + Rerank + Filter",
+      "success": true,
+      "totalMs": 441,
+      "latency": {
+        "vocabularyResolveMs": 0,
+        "vectorSearchMs": 414,
+        "structuredFilterMs": 0,
+        "rerankMs": 0,
+        "totalMs": 422,
+        "permissionFilterMs": 0,
+        "preprocessingMs": 0,
+        "aliasResolveMs": 8,
+        "searchExecutionMs": 414
+      },
+      "resultCount": 10,
+      "topScore": 0.58837366,
+      "queryType": "hybrid",
+      "rerank": true
+    },
+    {
+      "name": "Q7: Hybrid No Rerank",
+      "success": true,
+      "totalMs": 410,
+      "latency": {
+        "vocabularyResolveMs": 0,
+        "vectorSearchMs": 379,
+        "structuredFilterMs": 0,
+        "rerankMs": 0,
+        "totalMs": 379,
+        "permissionFilterMs": 0,
+        "preprocessingMs": 0,
+        "aliasResolveMs": 0,
+        "searchExecutionMs": 379
+      },
+      "resultCount": 10,
+      "topScore": 0.9552238805970148,
+      "queryType": "hybrid",
+      "rerank": false
+    },
+    {
+      "name": "Q8: Structured (single filter)",
+      "success": true,
+      "totalMs": 83,
+      "latency": {
+        "vocabularyResolveMs": 0,
+        "vectorSearchMs": 61,
+        "structuredFilterMs": 0,
+        "rerankMs": 0,
+        "totalMs": 61,
+        "permissionFilterMs": 0,
+        "preprocessingMs": 0,
+        "aliasResolveMs": 0,
+        "searchExecutionMs": 61
+      },
+      "resultCount": 20,
+      "topScore": 1,
+      "queryType": "structured",
+      "rerank": false
+    },
+    {
+      "name": "Q9: Structured (multi filter)",
+      "success": true,
+      "totalMs": 38,
+      "latency": {
+        "vocabularyResolveMs": 0,
+        "vectorSearchMs": 14,
+        "structuredFilterMs": 0,
+        "rerankMs": 0,
+        "totalMs": 14,
+        "permissionFilterMs": 0,
+        "preprocessingMs": 0,
+        "aliasResolveMs": 0,
+        "searchExecutionMs": 14
+      },
+      "resultCount": 0,
+      "queryType": "structured",
+      "rerank": false
+    },
+    {
+      "name": "Q10: Aggregation (source_type)",
+      "success": true,
+      "totalMs": 108,
+      "latency": {
+        "vocabularyResolveMs": 0,
+        "vectorSearchMs": 81,
+        "structuredFilterMs": 0,
+        "rerankMs": 0,
+        "totalMs": 81,
+        "permissionFilterMs": 0,
+        "preprocessingMs": 0,
+        "aliasResolveMs": 0,
+        "searchExecutionMs": 81
+      },
+      "resultCount": 1,
+      "queryType": "aggregation",
+      "rerank": false
+    },
+    {
+      "name": "Q11: Aggregation (language)",
+      "success": true,
+      "totalMs": 67,
+      "latency": {
+        "vocabularyResolveMs": 0,
+        "vectorSearchMs": 8,
+        "structuredFilterMs": 0,
+        "rerankMs": 0,
+        "totalMs": 8,
+        "permissionFilterMs": 0,
+        "preprocessingMs": 0,
+        "aliasResolveMs": 0,
+        "searchExecutionMs": 8
+      },
+      "resultCount": 0,
+      "queryType": "aggregation",
+      "rerank": false
+    },
+    {
+      "name": "Q12: Semantic Short Query",
+      "success": true,
+      "totalMs": 411,
+      "latency": {
+        "vocabularyResolveMs": 0,
+        "vectorSearchMs": 389,
+        "structuredFilterMs": 0,
+        "rerankMs": 0,
+        "totalMs": 389,
+        "permissionFilterMs": 0,
+        "preprocessingMs": 0,
+        "aliasResolveMs": 0,
+        "searchExecutionMs": 389
+      },
+      "resultCount": 5,
+      "topScore": 0.6015532,
+      "queryType": "semantic",
+      "rerank": true
+    },
+    {
+      "name": "Q13: Semantic topK=20",
+      "success": true,
+      "totalMs": 466,
+      "latency": {
+        "vocabularyResolveMs": 0,
+        "vectorSearchMs": 436,
+        "structuredFilterMs": 0,
+        "rerankMs": 0,
+        "totalMs": 436,
+        "permissionFilterMs": 0,
+        "preprocessingMs": 0,
+        "aliasResolveMs": 0,
+        "searchExecutionMs": 436
+      },
+      "resultCount": 18,
+      "topScore": 0.62854135,
+      "queryType": "semantic",
+      "rerank": true
+    },
+    {
+      "name": "Q14: Semantic Full Pipeline",
+      "success": true,
+      "totalMs": 202,
+      "latency": {
+        "vocabularyResolveMs": 0,
+        "vectorSearchMs": 60,
+        "structuredFilterMs": 0,
+        "rerankMs": 0,
+        "totalMs": 174,
+        "permissionFilterMs": 0,
+        "preprocessingMs": 114,
+        "aliasResolveMs": 0,
+        "searchExecutionMs": 60
+      },
+      "resultCount": 10,
+      "topScore": 0.6153395,
+      "queryType": "semantic",
+      "rerank": true
+    },
+    {
+      "name": "Q15: Hybrid Full Pipeline",
+      "success": true,
+      "totalMs": 474,
+      "latency": {
+        "vocabularyResolveMs": 0,
+        "vectorSearchMs": 409,
+        "structuredFilterMs": 0,
+        "rerankMs": 0,
+        "totalMs": 450,
+        "permissionFilterMs": 0,
+        "preprocessingMs": 41,
+        "aliasResolveMs": 0,
+        "searchExecutionMs": 409
+      },
+      "resultCount": 10,
+      "topScore": 0.6279385,
+      "queryType": "hybrid",
+      "rerank": true
+    },
+    {
+      "name": "Q16: Hybrid Multi-Filter",
+      "success": true,
+      "totalMs": 430,
+      "latency": {
+        "vocabularyResolveMs": 0,
+        "vectorSearchMs": 401,
+        "structuredFilterMs": 0,
+        "rerankMs": 0,
+        "totalMs": 402,
+        "permissionFilterMs": 0,
+        "preprocessingMs": 0,
+        "aliasResolveMs": 1,
+        "searchExecutionMs": 401
+      },
+      "resultCount": 10,
+      "topScore": 0.600598,
+      "queryType": "hybrid",
+      "rerank": true
+    },
+    {
+      "name": "Q17: Vector Only",
+      "success": true,
+      "totalMs": 434,
+      "latency": {
+        "vocabularyResolveMs": 0,
+        "vectorSearchMs": 405,
+        "structuredFilterMs": 0,
+        "rerankMs": 0,
+        "totalMs": 405,
+        "permissionFilterMs": 0,
+        "preprocessingMs": 0,
+        "aliasResolveMs": 0,
+        "searchExecutionMs": 405
+      },
+      "resultCount": 10,
+      "topScore": 0.605091,
+      "queryType": "vector",
+      "rerank": false
+    },
+    {
+      "name": "Q18: Very Short",
+      "success": true,
+      "totalMs": 429,
+      "latency": {
+        "vocabularyResolveMs": 0,
+        "vectorSearchMs": 397,
+        "structuredFilterMs": 0,
+        "rerankMs": 0,
+        "totalMs": 397,
+        "permissionFilterMs": 0,
+        "preprocessingMs": 0,
+        "aliasResolveMs": 0,
+        "searchExecutionMs": 397
+      },
+      "resultCount": 10,
+      "topScore": 0.6237306,
+      "queryType": "semantic",
+      "rerank": true
+    },
+    {
+      "name": "Q19: Complex Query",
+      "success": true,
+      "totalMs": 461,
+      "latency": {
+        "vocabularyResolveMs": 0,
+        "vectorSearchMs": 441,
+        "structuredFilterMs": 0,
+        "rerankMs": 0,
+        "totalMs": 441,
+        "permissionFilterMs": 0,
+        "preprocessingMs": 0,
+        "aliasResolveMs": 0,
+        "searchExecutionMs": 441
+      },
+      "resultCount": 10,
+      "topScore": 0.62838376,
+      "queryType": "semantic",
+      "rerank": true
+    },
+    {
+      "name": "Q20: Structured Complex",
+      "success": true,
+      "totalMs": 95,
+      "latency": {
+        "vocabularyResolveMs": 0,
+        "vectorSearchMs": 70,
+        "structuredFilterMs": 0,
+        "rerankMs": 0,
+        "totalMs": 70,
+        "permissionFilterMs": 0,
+        "preprocessingMs": 0,
+        "aliasResolveMs": 0,
+        "searchExecutionMs": 70
+      },
+      "resultCount": 20,
+      "topScore": 1,
+      "queryType": "structured",
+      "rerank": false
+    }
+  ]
+}

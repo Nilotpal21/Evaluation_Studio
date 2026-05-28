@@ -1,0 +1,19 @@
+{
+  "name": "Multi-Agent Delegation",
+  "description": "Tests combined product + policy query that requires delegation to both Advisor_Agent and Store_Policy_Agent",
+  "category": "delegation",
+  "difficulty": "hard",
+  "entryAgent": "GuardRail_Supervisor",
+  "initialMessage": "I want to buy red sneakers and what is the return policy for clothing?",
+  "expectedOutcome": "Agent handles both intents — performs product search for red sneakers AND retrieves return policy from knowledge base, combining both in response",
+  "maxTurns": 4,
+  "maxToolCalls": 2,
+  "tags": ["multi-intent", "delegation", "product-search", "policy-search"],
+  "agentPath": ["GuardRail_Supervisor", "Advisor_Agent", "Store_Policy_Agent"],
+  "expectedMilestones": [
+    "multi_intent_detected",
+    "product_search_executed",
+    "policy_search_executed",
+    "combined_response_delivered"
+  ]
+}

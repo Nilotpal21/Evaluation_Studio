@@ -1,0 +1,52 @@
+{
+  "organizationName": "Vanguard",
+  "industry": "Financial Services",
+  "keyTerms": [
+    "index fund",
+    "low-cost investing",
+    "ETF",
+    "mutual fund",
+    "asset allocation",
+    "expense ratio",
+    "admiral shares",
+    "target retirement",
+    "brokerage account",
+    "financial advisor",
+    "passive investing",
+    "diversification",
+    "retirement planning"
+  ],
+  "acronyms": {
+    "ETF": "Exchange-Traded Fund",
+    "NAV": "Net Asset Value",
+    "AUM": "Assets Under Management",
+    "VOO": "Vanguard S&P 500 ETF",
+    "VTSAX": "Vanguard Total Stock Market Index Fund Admiral Shares",
+    "TDF": "Target-Date Fund",
+    "IRA": "Individual Retirement Account",
+    "RMD": "Required Minimum Distribution"
+  },
+  "departmentBoundaries": [
+    {
+      "product1": "index-funds",
+      "product2": "etfs",
+      "reasoning": "Both are passive investment vehicles; index funds trade at NAV once daily while ETFs trade intraday like stocks, causing confusion about which to choose"
+    },
+    {
+      "product1": "target-retirement-funds",
+      "product2": "balanced-funds",
+      "reasoning": "Both provide diversified asset allocation; target-date funds automatically adjust over time while balanced funds maintain fixed allocation, users often confuse the two"
+    },
+    {
+      "product1": "admiral-shares",
+      "product2": "investor-shares",
+      "reasoning": "Same underlying fund with different minimum investments and expense ratios; Admiral shares require higher minimums but offer lower fees"
+    }
+  ],
+  "productSpecificNames": {
+    "index-funds": ["Admiral Shares", "Investor Shares", "Institutional Shares"],
+    "target-retirement-funds": ["Target Retirement Funds", "LifeStrategy Funds"],
+    "brokerage-services": ["Personal Advisor Services", "Digital Advisor"],
+    "etfs": ["Vanguard ETFs", "Index ETFs"]
+  }
+}

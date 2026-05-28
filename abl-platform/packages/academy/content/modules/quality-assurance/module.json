@@ -1,0 +1,20 @@
+{
+  "id": "quality-assurance",
+  "title": "Quality Assurance",
+  "lessons": [
+    {
+      "id": "01-testing-overview",
+      "title": "Testing & Evaluation Overview",
+      "sourceFile": "guides/10-testing-and-evaluation.md",
+      "minutes": 15,
+      "personaFilter": "concepts-only"
+    },
+    {
+      "id": "02-safety-business",
+      "title": "Safety & Guardrails for Business",
+      "sourceFile": "guides/09-safety-and-guardrails.md",
+      "minutes": 15,
+      "personaFilter": "concepts-only"
+    }
+  ]
+}

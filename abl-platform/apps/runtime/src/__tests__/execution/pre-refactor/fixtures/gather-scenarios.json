@@ -1,0 +1,17 @@
+[
+  {
+    "name": "simple-single-field-gather",
+    "description": "Gather a single text field with no validation",
+    "dsl": "AGENT gather-test\nGOAL: collect user name\nGATHER:\n  - name: userName\n    type: text\n    prompt: What is your name?"
+  },
+  {
+    "name": "multi-field-gather",
+    "description": "Gather multiple fields sequentially",
+    "dsl": "AGENT gather-test\nGOAL: collect info\nGATHER:\n  - name: email\n    type: text\n    prompt: What is your email?\n  - name: phone\n    type: text\n    prompt: What is your phone?"
+  },
+  {
+    "name": "gather-with-optional-field",
+    "description": "Gather with one required and one optional field",
+    "dsl": "AGENT gather-test\nGOAL: collect info\nGATHER:\n  - name: fullName\n    type: text\n    prompt: What is your full name?\n  - name: nickname\n    type: text\n    prompt: Do you have a nickname?\n    required: false"
+  }
+]

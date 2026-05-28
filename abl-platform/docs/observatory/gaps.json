@@ -1,0 +1,214 @@
+{
+  "$schema": "observatory-spec",
+  "type": "gap-analysis",
+  "version": "2026-03-10-v2",
+  "lastUpdated": "2026-03-10",
+  "categories": [
+    {
+      "id": "5.1",
+      "name": "Data Gaps",
+      "gaps": [
+        {
+          "id": "5.1.1",
+          "title": "ClickHouse appendEvent writes randomUUID() as span_id and empty parent_span_id",
+          "impact": "Historical sessions loaded from ClickHouse have no span hierarchy -- SpanTree renders flat list or 'No spans'",
+          "severity": "critical",
+          "status": "fixed",
+          "fixedIn": "2026-03-10",
+          "resolution": "runtime-executor.ts createCentralizedTraceHandler now passes traceEvent.id as spanId and tracks lastLlmSpanId for parent-child linking (tool_call → llm_call). clickhouse-trace-store.ts appendEvent() uses event.spanId and event.parentSpanId.",
+          "file": "apps/runtime/src/services/stores/clickhouse-trace-store.ts",
+          "verifiedBy": "observatory-api-e2e.test.ts: FIX-1.3-A, FIX-1.3-B (28/28 pass)"
+        },
+        {
+          "id": "5.1.2",
+          "title": "ClickHouse appendEvent writes empty agent_name",
+          "impact": "Historical traces have no agent attribution -- WaterfallPanel cannot group by agent",
+          "severity": "high",
+          "status": "fixed",
+          "fixedIn": "2026-03-10",
+          "resolution": "runtime-executor.ts passes traceEvent.agentName to CH appendEvent. clickhouse-trace-store.ts uses event.agentName.",
+          "file": "apps/runtime/src/services/stores/clickhouse-trace-store.ts",
+          "verifiedBy": "observatory-api-e2e.test.ts: FIX-1.3-C (28/28 pass)"
+        },
+        {
+          "id": "5.1.3",
+          "title": "message.content can be ContentBlock[] not string",
+          "impact": "Conversation tree shows 'User input' or '[object Object]' instead of actual text",
+          "severity": "medium",
+          "status": "open",
+          "fix": "In buildConversationTree, extract text from ContentBlock array: Array.isArray(content) ? content.filter(b => b.type === 'text').map(b => b.text).join('') : content"
+        },
+        {
+          "id": "5.1.4",
+          "title": "In-memory TraceStore has 120-minute TTL and 500-event ring buffer",
+          "impact": "Sessions older than 2 hours or with >500 events lose traces from memory",
+          "severity": "medium",
+          "status": "mitigated",
+          "resolution": "ClickHouse is now the canonical persistent store. In-memory is hot cache only. All read paths fall back to ClickHouse when memory is empty."
+        },
+        {
+          "id": "5.1.5",
+          "title": "No per-span cost in ClickHouse writes",
+          "impact": "Historical LLM cost is lost after memory eviction",
+          "severity": "medium",
+          "status": "fixed",
+          "fixedIn": "2026-03-10",
+          "resolution": "createCentralizedTraceHandler creates chData with cost: 0 default for llm_call events. All LLM trace events now include cost field in ClickHouse data blob.",
+          "verifiedBy": "observatory-api-e2e.test.ts: RT-FIX-8 (28/28 pass)"
+        },
+        {
+          "id": "5.1.6",
+          "title": "replayTraceEventsIntoObservatory creates synthetic spanId",
+          "impact": "Replayed spans don't form parent-child hierarchy, waterfall is flat",
+          "severity": "high",
+          "status": "fixed",
+          "fixedIn": "2026-03-10",
+          "resolution": "replay-trace-events.ts:145 already prefers real spanId from eventData: `eventData.spanId || 'span-' + event.id`. parentSpanId also extracted at line 146. Combined with ClickHouse storing real span_id/parent_span_id (5.1.1), historical sessions now produce correct hierarchies.",
+          "file": "apps/studio/src/utils/replay-trace-events.ts",
+          "lines": "145-146",
+          "verifiedBy": "Code inspection: replay-trace-events.ts uses eventData.spanId and eventData.parentSpanId"
+        }
+      ]
+    },
+    {
+      "id": "5.2",
+      "name": "View Gaps",
+      "gaps": [
+        {
+          "id": "5.2.1",
+          "title": "TracesTab shows 'No spans' for historical sessions",
+          "impact": "Users cannot debug historical sessions",
+          "severity": "critical",
+          "status": "fixed",
+          "fixedIn": "2026-03-10",
+          "resolution": "Three-part fix: (1) ClickHouse stores real span_id/parent_span_id (5.1.1). (2) replay-trace-events.ts prefers real spanId/parentSpanId from eventData (5.1.6). (3) DebugTabs.tsx shows contextual 'traces_not_stored' message when spans Map is empty but aggregate metrics exist, instead of misleading 'Start a conversation' prompt.",
+          "dependsOn": ["5.1.1", "5.1.6"],
+          "verifiedBy": "Code inspection: DebugTabs.tsx:356-368, replay-trace-events.ts:145-146"
+        },
+        {
+          "id": "5.2.2",
+          "title": "No session list filters in UI",
+          "impact": "Users must scroll through all sessions to find specific ones",
+          "severity": "medium",
+          "status": "open",
+          "fix": "Add time range picker, status dropdown, channel dropdown, and session ID search. API already supports status and channel filters."
+        },
+        {
+          "id": "5.2.3",
+          "title": "No CSV export button in UI",
+          "impact": "Export endpoint exists but is unreachable from the UI",
+          "severity": "low",
+          "status": "open",
+          "fix": "Add export button to session list and session detail. Wire to GET /sessions/export?sessionIds=..."
+        },
+        {
+          "id": "5.2.4",
+          "title": "Analysis endpoint not wired to UI",
+          "impact": "Server-side trace analysis is unused -- users cannot see automated diagnostics",
+          "severity": "medium",
+          "status": "open",
+          "fix": "Add an 'Analysis' tab or panel in SessionDetailPage that calls GET /sessions/:id/analysis."
+        },
+        {
+          "id": "5.2.5",
+          "title": "Agent-spec endpoint only works for active sessions",
+          "impact": "Cannot view DSL/IR for historical sessions",
+          "severity": "medium",
+          "status": "open",
+          "fix": "Add DB fallback in /agent-spec endpoint: look up agent by name from the session's currentAgent field."
+        },
+        {
+          "id": "5.2.6",
+          "title": "Performance tab only shows in-memory data",
+          "impact": "No LLM call history for historical sessions",
+          "severity": "medium",
+          "status": "mitigated",
+          "resolution": "Generations endpoint now falls back to ClickHouse when in-memory is empty (FIX-1.13-A). Performance tab can use this.",
+          "remaining": "Wire useSessionTraces with types=llm_call filter in the UI component"
+        },
+        {
+          "id": "5.2.7",
+          "title": "No cost breakdown visualization",
+          "impact": "Users see total cost but cannot identify which LLM calls are expensive",
+          "severity": "low",
+          "status": "open",
+          "fix": "Add a cost waterfall or bar chart to the Performance tab, aggregating per-LLM-call cost from trace events."
+        }
+      ]
+    },
+    {
+      "id": "5.3",
+      "name": "API Gaps",
+      "gaps": [
+        {
+          "id": "5.3.1",
+          "title": "No dedicated GET /sessions/:id/metrics endpoint",
+          "impact": "Client must fetch all traces and compute metrics locally (unreliable for large sessions)",
+          "severity": "medium",
+          "status": "fixed",
+          "fixedIn": "2026-03-10",
+          "resolution": "Dedicated GET /sessions/:id/metrics endpoint implemented. Returns totalLLMCalls, totalToolCalls, totalTokensIn, totalTokensOut, totalTokens, totalCost, totalDurationMs, errorCount. Falls back to ClickHouse when in-memory is empty.",
+          "verifiedBy": "observatory-api-e2e.test.ts: NEW-API-2 (28/28 pass)"
+        },
+        {
+          "id": "5.3.2",
+          "title": "Generations endpoint only scans in-memory TraceStore (max 100 sessions)",
+          "impact": "LLM call history is lost after memory eviction",
+          "severity": "high",
+          "status": "fixed",
+          "fixedIn": "2026-03-10",
+          "resolution": "GET /sessions/generations now falls back to ClickHouse when in-memory returns empty and sessionId filter is provided.",
+          "verifiedBy": "observatory-api-e2e.test.ts: FIX-1.13-A (28/28 pass)"
+        },
+        {
+          "id": "5.3.3",
+          "title": "Export endpoint only reads from in-memory TraceStore",
+          "impact": "Cannot export traces for historical sessions",
+          "severity": "medium",
+          "status": "fixed",
+          "fixedIn": "2026-03-10",
+          "resolution": "Export endpoint now resolves runtimeSessionId from DB and falls back to queryClickHouseCanonicalTraces when in-memory is empty (FIX-1.12-A)."
+        },
+        {
+          "id": "5.3.4",
+          "title": "No GET /sessions/:id/messages endpoint",
+          "impact": "Messages are bundled in the full session detail response -- cannot paginate messages independently",
+          "severity": "low",
+          "status": "open",
+          "fix": "Add a dedicated paginated messages endpoint. DB already supports findMessagesForSessionCursor()."
+        },
+        {
+          "id": "5.3.5",
+          "title": "OBS_TRACE_CANONICAL_READ env var gates ClickHouse trace reads",
+          "impact": "ClickHouse canonical traces are opt-in, meaning most deployments use the lossy platform_events fallback",
+          "severity": "medium",
+          "status": "fixed",
+          "fixedIn": "2026-03-10",
+          "resolution": "OBS_TRACE_CANONICAL_READ flag removed entirely. ClickHouse canonical traces are always read when isClickHouseTraceEnabled() returns true (USE_MONGO_CLICKHOUSE=true). No feature flag gating."
+        },
+        {
+          "id": "5.3.6",
+          "title": "No bulk trace query across sessions",
+          "impact": "Cannot correlate traces across related sessions (e.g., handoff chain)",
+          "severity": "low",
+          "status": "open",
+          "fix": "Add GET /sessions/traces?sessionIds=x,y,z that returns merged, chronologically sorted traces."
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "total": 19,
+    "bySeverity": {
+      "critical": 2,
+      "high": 3,
+      "medium": 10,
+      "low": 4
+    },
+    "byStatus": {
+      "fixed": 9,
+      "mitigated": 2,
+      "open": 8
+    }
+  }
+}

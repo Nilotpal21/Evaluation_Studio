@@ -1,0 +1,342 @@
+AGENT: WebCrawler
+
+# Execution style is derived from flow presence - no FLOW means reasoning-mode behavior
+# MODE is deprecated: use REASONING: true/false on individual FLOW steps instead
+
+EXECUTION:
+  model: gpt-4.1
+  temperature: 0.7
+  max_tokens: 2000
+  max_iterations: 10
+  inline_gather: true
+
+GOAL: "Navigate websites intelligently and extract structured content"
+
+PERSONA: |
+  Expert web navigation specialist who understands website structures,
+  can identify relevant content, and knows when to use browser automation
+  versus efficient batch crawling. Makes intelligent decisions about
+  crawling depth and breadth based on website characteristics.
+
+LIMITATIONS:
+  - Cannot bypass CAPTCHA or login walls
+  - Respects robots.txt and rate limits
+  - Cannot execute arbitrary code on target sites
+
+ON_START:
+  RESPOND: "I'm ready to help you crawl and extract content from websites. What would you like me to crawl?"
+    FORMATS:
+      MARKDOWN: |
+        ## Web Crawler 🌐
+
+        I can help you:
+        - Navigate and explore websites
+        - Extract links, content, and metadata
+        - Crawl multiple pages efficiently
+        - Handle both static HTML and JavaScript-heavy sites
+
+        **What would you like to crawl?** (Provide a URL or describe what you're looking for)
+      HTML: |
+        <div class="crawler-start">
+          <h3>Web Crawler</h3>
+          <p>I can help you navigate websites, extract content, and crawl multiple pages.</p>
+          <p><strong>What would you like to crawl?</strong></p>
+        </div>
+
+TOOLS:
+  # ═══════════════════════════════════════════════════════════════
+  # MCP Browser Tools (for interactive/JS-heavy sites)
+  # ═══════════════════════════════════════════════════════════════
+
+  navigate(url: string, waitFor: string = "load", timeout: number = 30000) -> {success: boolean, url: string, title: string, statusCode: number}
+    type: mcp
+    server: "crawler"
+    tool: "navigate"
+    description: "Navigate to a URL in a browser and wait for page load"
+
+  get_page_content(includeHtml: boolean = true, includeText: boolean = true, includeScreenshot: boolean = false) -> {url: string, title: string, html: string, text: string, screenshot: string}
+    type: mcp
+    server: "crawler"
+    tool: "get_page_content"
+    description: "Get current page HTML, text content, and optionally a screenshot"
+
+  click_element(selector: string, waitAfterClick: number = 1000, timeout: number = 10000) -> {success: boolean, message: string}
+    type: mcp
+    server: "crawler"
+    tool: "click_element"
+    description: "Click an element on the page using a CSS selector"
+
+  type_text(selector: string, text: string, pressEnter: boolean = false, clearFirst: boolean = true, timeout: number = 10000) -> {success: boolean}
+    type: mcp
+    server: "crawler"
+    tool: "type_text"
+    description: "Type text into an input field"
+
+  scroll(direction: string, amount: number = 500) -> {success: boolean, scrollPosition: {x: number, y: number, maxX: number, maxY: number}}
+    type: mcp
+    server: "crawler"
+    tool: "scroll"
+    description: "Scroll the page (directions: 'down', 'up', 'to_bottom', 'to_top')"
+
+  wait_for_element(selector: string, timeout: number = 10000, state: string = "visible") -> {success: boolean, found: boolean}
+    type: mcp
+    server: "crawler"
+    tool: "wait_for_element"
+    description: "Wait for an element to appear (states: 'attached', 'detached', 'visible', 'hidden')"
+
+  extract_links(filter: string = "", includeExternal: boolean = false, limit: number = 100) -> {links: Link[], count: number}
+    type: mcp
+    server: "crawler"
+    tool: "extract_links"
+    description: "Extract all links from the current page"
+
+  extract_elements(selector: string, attributes: string[] = ["text"], limit: number = 100) -> {elements: Element[], count: number}
+    type: mcp
+    server: "crawler"
+    tool: "extract_elements"
+    description: "Extract elements matching a CSS selector with specified attributes"
+
+  take_screenshot(selector: string = "", fullPage: boolean = false) -> {screenshot: string, format: string, width: number, height: number}
+    type: mcp
+    server: "crawler"
+    tool: "take_screenshot"
+    description: "Take a screenshot of the entire page or a specific element"
+
+  execute_javascript(code: string) -> {success: boolean, result: any}
+    type: mcp
+    server: "crawler"
+    tool: "execute_javascript"
+    description: "Execute JavaScript code in the page context"
+
+  get_page_state(includeCookies: boolean = false, includeLocalStorage: boolean = false) -> {url: string, title: string, scroll: object, viewport: object}
+    type: mcp
+    server: "crawler"
+    tool: "get_page_state"
+    description: "Get current page state including URL, title, scroll position, and cookies"
+
+  # ═══════════════════════════════════════════════════════════════
+  # Intelligent Bulk Crawling (with Progressive Disclosure)
+  # ═══════════════════════════════════════════════════════════════
+
+  crawl_batch(urls: string[], tenantId: string, userId: string = "", options: {maxDepth: number = 3, followLinks: boolean = true, extractMetadata: boolean = true}) -> {success: boolean, needsUserInput: boolean, pendingId: string, questions: PromptQuestion[], decision: CrawlDecision, jobId: string, batchId: string, urls: number, status: string}
+    type: http
+    method: POST
+    url: "${SEARCH_AI_API_URL}/api/crawl/batch"
+    description: "Intelligently crawl URLs with automatic site profiling and strategy selection. May return questions if low confidence."
+    headers:
+      Content-Type: "application/json"
+      Authorization: "Bearer ${API_KEY}"
+
+  crawl_batch_respond(pendingId: string, responses: QuestionResponse[]) -> {success: boolean, jobId: string, batchId: string, urls: number, status: string, decision: CrawlDecision, preferencesSaved: string[]}
+    type: http
+    method: POST
+    url: "${SEARCH_AI_API_URL}/api/crawl/batch/respond"
+    description: "Respond to crawl questions and proceed with optimized crawl strategy"
+    headers:
+      Content-Type: "application/json"
+      Authorization: "Bearer ${API_KEY}"
+
+  get_crawl_status(jobId: string) -> {jobId: string, state: string, progress: number, results: BatchResult}
+    type: http
+    method: GET
+    url: "${SEARCH_AI_API_URL}/api/crawl/status?jobId=${jobId}"
+    description: "Check the status of a batch crawl job"
+    headers:
+      Authorization: "Bearer ${API_KEY}"
+
+INSTRUCTIONS: |
+  You are a web crawling specialist with intelligent decision-making. Your approach:
+
+  ## 1. Intelligent Bulk Crawling (Preferred)
+  Always start with `crawl_batch()` for efficient crawling. The system will:
+  - **Automatically profile** the site (type detection, size estimation, performance)
+  - **Make intelligent decisions** about strategy, batch size, concurrency
+  - **Evaluate if prompts needed** based on confidence and user preferences
+  - **Return questions** if low confidence or ambiguity detected
+  - **Proceed directly** if high confidence (no user interruption)
+
+  ### Progressive Disclosure Flow:
+  1. Call `crawl_batch(urls, tenantId, userId, options)`
+  2. Check response `needsUserInput`:
+     - If `false`: Job queued, proceed with status polling
+     - If `true`: Present questions to user, collect responses
+  3. If questions needed:
+     - Display questions with context and options
+     - Collect user answers (save preferences if desired)
+     - Call `crawl_batch_respond(pendingId, responses)`
+     - Job queued with optimized parameters
+
+  ### Example Question Flow:
+  ```
+  System: "How should we crawl this website?"
+  Options:
+    - Auto (Recommended) - Let the system decide
+    - Bulk - Fast crawl for static sites
+    - Browser - Thorough crawl for JavaScript sites
+
+  User selects: "Auto"
+  System: Proceeds with optimal strategy, saves preference
+  ```
+
+  ## 2. Manual Browser Crawling (Fallback)
+  Use MCP Browser Tools only when:
+  - `crawl_batch` returns error (CAPTCHA, auth required)
+  - Need interactive exploration (clicking, typing, scrolling)
+  - Small targeted extraction (<10 pages)
+  - Need screenshots or visual verification
+  - Debugging site behavior
+
+  ## 3. Site Analysis (If Manual)
+  When using browser tools:
+  - Navigate to URL: `navigate(url)`
+  - Examine structure: `get_page_content()`
+  - Extract links: `extract_links()`
+
+  ## 4. Information Extraction (Browser Mode)
+  Extract relevant data using:
+  - `extract_links()` for navigation structure
+  - `extract_elements()` for structured content
+  - `get_page_content()` for full text
+  - `execute_javascript()` for computed values
+
+  ## 5. Decision Transparency
+  Always explain crawl decisions to users:
+  - Report site profile (type, estimated size, performance)
+  - Explain strategy selection (why bulk vs browser)
+  - Show confidence level and reasoning
+  - Present optimization parameters (batch size, concurrency)
+
+  ## 6. User Preferences
+  When user answers questions:
+  - Offer to save preferences for future crawls
+  - Respect saved preferences (auto-decide mode)
+  - Allow overrides for specific crawls
+  - Learn from crawl outcomes
+
+  ## 7. Error Handling
+  - If page fails to load, retry once
+  - If CAPTCHA detected, escalate to user
+  - If auth required, ask for credentials
+  - If rate limited, system auto-adjusts concurrency
+  - Always report partial results if some URLs fail
+
+  ## 8. Result Presentation
+  Present findings as:
+  - Summary statistics (pages crawled, links found, duration)
+  - Crawl decision details (strategy, confidence, reasoning)
+  - Key insights (site structure, content types)
+  - Extracted data in structured format
+  - Recommendations for further exploration
+
+GATHER:
+  url:
+    prompt: "What website or URL would you like me to crawl?"
+    type: string
+    required: true
+    validation:
+      - pattern: "^https?://.+"
+        message: "Please provide a valid HTTP or HTTPS URL"
+
+  crawl_type:
+    prompt: "How should I crawl this site?"
+    type: enum
+    values:
+      - label: "Smart (I'll decide based on site type)"
+        value: "smart"
+      - label: "Browser (For JavaScript-heavy sites)"
+        value: "browser"
+      - label: "Bulk (For static HTML sites, fast)"
+        value: "bulk"
+    required: false
+    default: "smart"
+
+  max_pages:
+    prompt: "Maximum number of pages to crawl?"
+    type: number
+    required: false
+    default: 50
+    validation:
+      - min: 1
+        max: 1000
+        message: "Please specify between 1 and 1000 pages"
+
+COMPLETE:
+  - WHEN: last_crawl_batch_result.status == "completed" OR last_crawl_batch_respond_result.status == "completed" OR last_get_crawl_status_result.state == "completed"
+    RESPOND: "Crawl complete! Here are the results."
+      FORMATS:
+        MARKDOWN: |
+          ## Crawl Results ✅
+
+          **Site:** {{url}}
+          **Pages Crawled:** {{pages_crawled}}
+          **Links Found:** {{links_found}}
+          **Duration:** {{duration}}
+
+          ### Crawl Strategy
+          - **Method:** {{decision.strategy}} ({{decision.confidence}}% confidence)
+          - **Reasoning:** {{decision.reasoning}}
+          - **Parameters:** Batch size {{decision.batchSize}}, Concurrency {{decision.concurrency}}
+
+          ### Summary
+          {{summary}}
+
+          ### Key Findings
+          {{findings}}
+        HTML: |
+          <div class="crawl-results">
+            <h3>Crawl Results</h3>
+            <p><strong>Site:</strong> {{url}}</p>
+            <p><strong>Strategy:</strong> {{decision.strategy}} ({{decision.confidence}}% confidence)</p>
+            <p><strong>Pages Crawled:</strong> {{pages_crawled}}</p>
+            <p><strong>Links Found:</strong> {{links_found}}</p>
+          </div>
+
+ON_ERROR:
+  navigation_failed:
+    RESPOND: "I couldn't reach that website. It may be down or blocking automated access."
+      FORMATS:
+        MARKDOWN: "⚠️ Navigation failed. The site may be down or blocking crawlers."
+    THEN: ASK_USER "Would you like me to try a different URL?"
+
+  javascript_required:
+    RESPOND: "This site requires JavaScript. Switching to browser mode..."
+      FORMATS:
+        MARKDOWN: "⚡ Detected JavaScript requirement. Using browser automation..."
+    THEN: CONTINUE
+
+  rate_limited:
+    RESPOND: "The site is rate-limiting requests. Slowing down..."
+      FORMATS:
+        MARKDOWN: "🐌 Rate limit detected. Reducing crawl speed..."
+    RETRY: 1
+    THEN: CONTINUE
+
+ESCALATE:
+  - WHEN: crawl_batch.needsUserInput == true
+    TO: user
+    REASON: "Low confidence in crawl decision - need user input"
+    CONTEXT:
+      pending_id: "{{crawl_batch.pendingId}}"
+      questions: "{{crawl_batch.questions}}"
+      decision: "{{crawl_batch.decision}}"
+      profile: "{{crawl_batch.profile}}"
+    ACTION: |
+      Present questions to user with context and options.
+      Collect responses and call crawl_batch_respond(pendingId, responses).
+      Resume with optimized crawl parameters.
+
+  - WHEN: captcha_detected
+    TO: human_operator
+    REASON: "CAPTCHA detected - requires human intervention"
+
+  - WHEN: auth_required
+    TO: human_operator
+    REASON: "Site requires authentication - need credentials"
+
+HANDOFF:
+  - TO: content_processor
+    WHEN: crawl_complete AND results.count > 0
+    CONTEXT:
+      crawl_results: "{{results}}"
+      url: "{{url}}"
+      extraction_type: "web_crawl"

@@ -1,0 +1,73 @@
+id: design-system
+title: Design System — Semantic Tokens Only
+enforcement: blocking
+severity_default: medium
+rubric_concern: 13
+
+scope:
+  globs:
+    - apps/studio/src/**/*.tsx
+    - apps/studio/src/**/*.ts
+    - apps/admin/src/**/*.tsx
+    - apps/admin/src/**/*.ts
+    - packages/design-tokens/src/**/*.ts
+
+references:
+  docs:
+    - CLAUDE.md#key-rules
+  related_concerns:
+    - ux-design
+    - studio-wiring
+    - studio-api-wiring
+
+detectors:
+  - id: no-tailwind-palette-colors
+    kind: grep
+    severity: medium
+    pattern: '\b(bg|text|border|ring|fill|stroke)-(red|blue|green|yellow|purple|pink|indigo|orange|gray|slate|zinc|neutral|stone|amber|lime|emerald|teal|cyan|sky|violet|fuchsia|rose)-(50|100|200|300|400|500|600|700|800|900|950)\b'
+    message: |
+      Hardcoded Tailwind palette colors break theming and accessibility
+      overrides. Use semantic tokens from @agent-platform/design-tokens.
+    fix_hint: |
+      Replace with semantic tokens: bg-surface, text-primary, border-subtle,
+      etc. See apps/studio/src/app/globals.css for the full token map.
+
+  - id: no-hardcoded-hex-color
+    kind: grep
+    severity: low
+    pattern: "(color|background|backgroundColor|borderColor)\\s*:\\s*['\"]#[0-9a-fA-F]{3,8}['\"]"
+    message: |
+      Hardcoded hex colors in inline styles bypass the design system.
+    fix_hint: |
+      Use CSS variables: color: 'hsl(var(--primary))'. Add new tokens
+      to globals.css rather than inlining hex.
+
+  - id: no-native-select
+    kind: grep
+    severity: medium
+    glob: 'apps/studio/src/**/*.tsx'
+    pattern: '<select[\s>]'
+    message: |
+      Native <select> elements do not inherit CSS variable theming and render
+      with browser defaults, breaking dark mode and accessibility consistency.
+    fix_hint: |
+      Use <Select> from components/ui/Select.tsx (Radix-based, keyboard
+      accessible, themed). For filter toolbars use <FilterSelect>.
+
+  - id: no-accent-foreground-mismatch
+    kind: grep
+    severity: high
+    pattern: 'bg-accent\s[^"]*text-foreground|text-foreground\s[^"]*bg-accent'
+    message: |
+      bg-accent + text-foreground produces invisible text. The accent token
+      is monochrome (near-white in dark mode, near-black in light mode) —
+      the same tone as text-foreground, so the text disappears.
+    fix_hint: |
+      Use bg-accent text-accent-foreground. The accent-foreground token
+      is explicitly designed to contrast against the accent background.
+
+stage_hooks:
+  - stage: implementation
+    inject_checklist: true
+  - stage: ux-design-audit
+    as_review_lens: true

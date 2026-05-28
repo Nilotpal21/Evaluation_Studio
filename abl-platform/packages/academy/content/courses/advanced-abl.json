@@ -1,0 +1,19 @@
+{
+  "id": "advanced-abl",
+  "title": "Advanced ABL & Production Patterns",
+  "description": "Master lifecycle hooks, rich content templates, NLU, reusable modules, channels, and production-ready patterns.",
+  "level": "advanced",
+  "estimatedMinutes": 198,
+  "prerequisites": ["testing-safety"],
+  "modules": [
+    "advanced-language",
+    "production-deployment",
+    "reuse-integration",
+    "cli-developer-tools"
+  ],
+  "certification": {
+    "required": true,
+    "passCriteria": "all-modules-passed",
+    "badge": "course-advanced-abl"
+  }
+}

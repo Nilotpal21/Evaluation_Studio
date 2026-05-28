@@ -1,0 +1,158 @@
+AGENT: Farewell_Agent
+VERSION: "2.0"
+DESCRIPTION: "Ends conversations gracefully with feedback collection"
+GOAL: "Collect a 1-5 satisfaction rating, thank the customer, and close the conversation"
+
+PERSONA: |
+  Warm and appreciative farewell specialist.
+  Thanks customers genuinely for using our travel service.
+  Asks for feedback naturally, never pushes.
+  Invites them to return.
+
+EXECUTION:
+  temperature: 0.7
+  max_tokens: 2000
+  max_iterations: 10
+  inline_gather: true
+
+LIMITATIONS:
+  - "Cannot start new bookings or transactions"
+  - "Cannot access account information"
+  - "Cannot address unresolved issues — routes back to support if needed"
+
+# ─────────────────────────────────────────────────────────────────────────────
+# TEMPLATES — reusable messages for SDK and voice channels
+# ─────────────────────────────────────────────────────────────────────────────
+
+TEMPLATES:
+  need_help_redirect: "It sounds like you still need help. Let me connect you with the right person."
+  new_request_redirect: "Let me get you back to our main assistant."
+  invalid_rating: "Please enter a number between 1 and 5."
+  feedback_thanks:
+    DEFAULT: "Thank you for your feedback!"
+    MARKDOWN: "**Thank you** for your feedback! 🙏 Your rating helps us improve."
+    HTML: "<div class='feedback-ack'><strong>Thank you</strong> for your feedback! Your rating helps us improve.</div>"
+  feedback_save_fail: "I wasn't able to save your feedback, but thank you for sharing!"
+  goodbye_message:
+    DEFAULT: |
+      Thank you for using our travel service!
+      We hope to help you with your next adventure. Have a great day!
+    MARKDOWN: |
+      ---
+      ## Thank you for using our travel service! 🌍
+
+      We hope to help you with your next adventure.
+
+      Have a great day! ✨
+    HTML: |
+      <div class="farewell-card">
+        <h2>Thank you for using our travel service!</h2>
+        <p>We hope to help you with your next adventure.</p>
+        <p><em>Have a great day!</em></p>
+      </div>
+  farewell_final:
+    DEFAULT: "Goodbye! We look forward to helping you again soon."
+    MARKDOWN: "**Goodbye!** We look forward to helping you again soon. 👋"
+  error_fallback: "Thank you for your time! Have a wonderful day."
+
+TOOLS:
+  submit_feedback(session_id: string, rating: number, comment: string) -> {submitted: boolean, ticket_id: string}
+    description: "Submit customer satisfaction feedback (1-5 scale)"
+
+# ─────────────────────────────────────────────────────────────────────────────
+# FLOW — ask feedback → thank → goodbye
+# ─────────────────────────────────────────────────────────────────────────────
+
+FLOW:
+  entry_point: offer_feedback
+  steps:
+    - offer_feedback
+    - collect_rating
+    - collect_comment
+    - submit
+    - goodbye
+
+  global_digressions:
+    REASONING: false
+    - INTENT: "need_help"
+      RESPOND: TEMPLATE(need_help_redirect)
+      GOTO: route_back
+
+    - INTENT: "new_request"
+      RESPOND: TEMPLATE(new_request_redirect)
+      GOTO: route_back
+
+offer_feedback:
+  REASONING: false
+  GATHER:
+    - wants_feedback: required
+  ON_INPUT:
+    - IF: input contains "yes" OR input contains "sure" OR input contains "ok"
+      THEN: collect_rating
+    - IF: input contains "no" OR input contains "skip"
+      THEN: goodbye
+    - IF: input is_number AND input >= 1 AND input <= 5
+      SET: feedback_rating = input
+      THEN: collect_comment
+    - ELSE:
+      THEN: goodbye
+
+collect_rating:
+  REASONING: false
+  GATHER:
+    - feedback_rating: required
+      type: number
+  ON_INPUT:
+    - IF: input is_number AND input >= 1 AND input <= 5
+      SET: feedback_rating = input
+      THEN: collect_comment
+    - ELSE:
+      RESPOND: TEMPLATE(invalid_rating)
+      THEN: collect_rating
+
+collect_comment:
+  REASONING: false
+  GATHER:
+    - feedback_comment: required
+  ON_INPUT:
+    - IF: input contains "skip" OR input contains "no"
+      SET: feedback_comment = ""
+      THEN: submit
+    - ELSE:
+      SET: feedback_comment = input
+      THEN: submit
+
+submit:
+  REASONING: false
+  CALL: submit_feedback(session_id, feedback_rating, feedback_comment)
+  ON_SUCCESS:
+    RESPOND: TEMPLATE(feedback_thanks)
+    THEN: goodbye
+  ON_FAIL:
+    RESPOND: TEMPLATE(feedback_save_fail)
+    THEN: goodbye
+
+goodbye:
+  REASONING: false
+  RESPOND: TEMPLATE(goodbye_message)
+    VOICE:
+      INSTRUCTIONS: "Use a warm, sincere farewell tone. Slow down slightly for emphasis."
+  THEN: complete
+
+HANDOFF:
+  - TO: Live_Agent_Transfer
+    WHEN: user.has_unresolved_issue == true
+    CONTEXT:
+      pass: [session_context, conversation_summary]
+      summary: "Customer has unresolved issue during farewell"
+    RETURN: false
+
+COMPLETE:
+  - WHEN: farewell_given == true
+    RESPOND: TEMPLATE(farewell_final)
+
+ON_ERROR:
+  tool_error:
+    RESPOND: TEMPLATE(error_fallback)
+    RETRY: 0
+    THEN: COMPLETE

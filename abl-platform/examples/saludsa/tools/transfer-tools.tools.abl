@@ -1,0 +1,15 @@
+/**
+ * Saludsa Transfer/Handoff Tools
+ *
+ * Tools for transferring to human agents (SAC), queue management, and callbacks.
+ */
+
+TOOLS:
+  get_queue_status(queue_name: string) -> QueueStatus:
+    description: "Check the current status and wait times for a support queue"
+
+  prepare_handoff_context(user_id: string, conversation_summary: string) -> HandoffContext:
+    description: "Prepare context summary for human agent handoff"
+
+  schedule_callback(user_id: string, preferred_time: string) -> CallbackResult:
+    description: "Schedule a callback from a human agent"

@@ -1,0 +1,110 @@
+{
+  "environment": "local-dev",
+  "capturedAt": "2026-04-15",
+  "sourceOfTruth": {
+    "workspace": "abl-platform-1",
+    "studioUrl": "http://localhost:5173",
+    "runtimeUrl": "http://localhost:3112",
+    "endpoint": "POST /api/v1/chat/agent",
+    "projectName": "chat-agent-qps-baseline",
+    "projectId": "019d9005-af19-7f21-9bca-2df019e8ff97",
+    "agentName": "benchmark_agent",
+    "tenantId": "tenant-dev-001",
+    "modelId": "mock-model",
+    "credentialName": "bench-mock-cred"
+  },
+  "measurementMethod": {
+    "scenario": {
+      "sessionCreateRequests": 1,
+      "followUpTurns": 15,
+      "totalRequests": 16
+    },
+    "captureWindow": {
+      "postResponseDrainMs": 1500,
+      "interRequestPauseMs": 200
+    },
+    "mongodb": {
+      "database": "abl_platform",
+      "method": "system.profile",
+      "profileLevel": 2,
+      "slowms": 0
+    },
+    "redis": {
+      "method": "MONITOR",
+      "classification": {
+        "reads": "direct read commands only",
+        "writes": "direct mutating commands only",
+        "scripts": "EVAL and EVALSHA counted separately"
+      }
+    },
+    "runtimeBehavior": {
+      "responseMode": "mock llm",
+      "mockResponse": "This is a mock LLM response."
+    }
+  },
+  "baseline": {
+    "firstTurn": {
+      "durationMs": 1061,
+      "mongodb": {
+        "reads": 27,
+        "writes": 6,
+        "total": 33
+      },
+      "redis": {
+        "reads": 49,
+        "writes": 71,
+        "scripts": 11,
+        "total": 131
+      }
+    },
+    "followUpAverage": {
+      "durationMs": 1043.73,
+      "mongodb": {
+        "reads": 15.73,
+        "writes": 4.13,
+        "total": 19.87
+      },
+      "redis": {
+        "reads": 48.4,
+        "writes": 84.27,
+        "scripts": 12.6,
+        "total": 145.27
+      }
+    },
+    "overallAverage": {
+      "durationMs": 1044.81,
+      "mongodb": {
+        "reads": 16.44,
+        "writes": 4.25,
+        "total": 20.69
+      },
+      "redis": {
+        "reads": 48.44,
+        "writes": 83.44,
+        "scripts": 12.5,
+        "total": 144.38
+      }
+    }
+  },
+  "theoreticalMathInputs": {
+    "followUpTurnPerSecondFormulas": {
+      "mongodbReadQps": "15.73 * turnsPerSecond",
+      "mongodbWriteQps": "4.13 * turnsPerSecond",
+      "redisReadQps": "48.4 * turnsPerSecond",
+      "redisWriteQps": "84.27 * turnsPerSecond",
+      "redisScriptQps": "12.6 * turnsPerSecond"
+    },
+    "sessionCreatePerSecondFormulas": {
+      "mongodbReadQps": "27 * sessionCreatesPerSecond",
+      "mongodbWriteQps": "6 * sessionCreatesPerSecond",
+      "redisReadQps": "49 * sessionCreatesPerSecond",
+      "redisWriteQps": "71 * sessionCreatesPerSecond",
+      "redisScriptQps": "11 * sessionCreatesPerSecond"
+    }
+  },
+  "notes": [
+    "Use followUpAverage for steady-state turn math and firstTurn for session-creation overhead.",
+    "Redis script counts are separated because EVAL and EVALSHA may perform both reads and writes internally.",
+    "These numbers are empirical local-dev baselines captured with a mock LLM, so they represent platform datastore overhead rather than external model latency."
+  ]
+}

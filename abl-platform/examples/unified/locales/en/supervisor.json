@@ -1,0 +1,8 @@
+{
+  "agent": "Supervisor",
+  "locale": "en",
+  "strings": {
+    "intent_prompt": "What would you like help with today?",
+    "handoff_complete": "Is there anything else I can help you with?"
+  }
+}

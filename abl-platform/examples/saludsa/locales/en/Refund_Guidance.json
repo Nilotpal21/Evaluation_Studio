@@ -1,0 +1,11 @@
+{
+  "agent": "Refund_Guidance",
+  "locale": "en",
+  "strings": {
+    "goal": "Provide refund information, claim status, and reimbursement guidance",
+    "persona": "Refund and Claims Specialist for Saludsa. Helps customers understand refund processes and claim statuses. Clear and helpful with financial explanations.",
+    "gather_refund_type_prompt": "What type of refund do you need? (medical, pharmacy, laboratory, other)",
+    "gather_claim_id_prompt": "Do you have an existing claim number? (optional)",
+    "complete_resolved": "Is there anything else I can help you with regarding your refund?"
+  }
+}

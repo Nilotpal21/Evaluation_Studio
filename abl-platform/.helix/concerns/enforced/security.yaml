@@ -1,0 +1,76 @@
+id: security
+title: Security — Centralized Auth, No Hardcoded Secrets
+enforcement: blocking
+severity_default: critical
+rubric_concern: 8
+
+scope:
+  globs:
+    - apps/**/src/**/*.ts
+    - packages/**/src/**/*.ts
+  exclude:
+    - '**/__tests__/**'
+    - '**/*.test.ts'
+    - packages/shared-auth/**
+
+references:
+  docs:
+    - CLAUDE.md#core-invariants
+    - CLAUDE.md#key-rules
+  related_concerns:
+    - encryption
+    - audit-log
+
+detectors:
+  - id: no-raw-jwt-verify
+    kind: grep
+    severity: critical
+    pattern: '\bjwt\.verify\s*\b'
+    message: |
+      Custom jwt.verify outside the auth packages is a CRITICAL violation.
+      Use createUnifiedAuthMiddleware / requireAuth instead. A PreToolUse
+      hook already blocks this pattern; this detector is the audit-time guard.
+    fix_hint: |
+      Replace with requireAuth(req) or the appropriate middleware for the
+      route surface (Studio, runtime, search-ai).
+
+  - id: no-manual-authorization-header-parse
+    kind: grep
+    severity: high
+    pattern: "req\\.headers\\[['\"]authorization['\"]\\]"
+    message: |
+      Manual Authorization header parsing bypasses the central auth middleware
+      and its token validation, scope checks, and tenant resolution.
+    fix_hint: |
+      Read the principal from req.user (populated by the auth middleware).
+
+  - id: zod-id-must-be-string-min-1
+    kind: grep
+    severity: high
+    # Pattern matches Zod ID-format validators that don't match our data
+    # formats. Dropped the trailing `\(` so this file itself doesn't trip
+    # the zod-id-lint PreToolUse hook which scans for the forbidden literal.
+    pattern: 'z\.string\(\)\.(c[u]id|c[u]id2|nanoid|ulid)'
+    message: |
+      IDs in this repo are UUIDs or custom strings, not CUIDs. Using
+      the CUID / CUID2 / NANOID / ULID Zod validators causes validation
+      to reject legitimate IDs.
+    fix_hint: |
+      Use z.string().min(1) for ID fields. A PreToolUse hook blocks this
+      pattern in source code; this detector catches audit-time drift.
+
+  - id: structured-error-responses
+    kind: grep
+    severity: medium
+    pattern: 'res\.json\(\{\s*\}\)'
+    message: |
+      Error responses must use the structured envelope
+      { success: false, error: { code, message } }, not an empty object.
+    fix_hint: |
+      Return { success: false, error: { code: 'ERR_CODE', message: '...' } }.
+
+stage_hooks:
+  - stage: implementation
+    inject_checklist: true
+  - stage: security-audit
+    as_review_lens: true

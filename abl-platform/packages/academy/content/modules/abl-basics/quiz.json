@@ -1,0 +1,85 @@
+{
+  "moduleId": "abl-basics",
+  "passThreshold": 0.8,
+  "questions": [
+    {
+      "id": "ab-q1",
+      "type": "mcq",
+      "stem": "A developer creates an agent file but the parser reports an error about missing required sections. Which two sections are required in every ABL agent document?",
+      "options": [
+        {
+          "id": "a",
+          "text": "AGENT: and GOAL: -- the agent name and its primary objective",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "AGENT: and EXECUTION: -- the agent name and the LLM model configuration"
+        },
+        {
+          "id": "c",
+          "text": "AGENT: and FLOW: -- the agent name and the step-based execution definition"
+        }
+      ],
+      "explanation": "Every ABL agent document must contain AGENT: (the agent name) and GOAL: (the agent's objective). All other sections -- including EXECUTION, FLOW, PERSONA, TOOLS, and others -- are optional. If EXECUTION is omitted, the platform applies built-in defaults."
+    },
+    {
+      "id": "ab-q2",
+      "type": "fill-blank",
+      "stem": "ABL agent definition files use the file extension ________.",
+      "answer": ".agent.abl",
+      "acceptAlternatives": [".agent.abl", "agent.abl"],
+      "explanation": "ABL uses .agent.abl as the standard file extension for agent definitions. Reusable tool libraries use .tools.abl, and YAML-format agent definitions use .agent.yaml. Both ABL and YAML formats produce the same intermediate representation."
+    },
+    {
+      "id": "ab-q3",
+      "type": "mcq",
+      "stem": "A team wants multiple agents to share the same hotel search API tool. What is the recommended approach in ABL?",
+      "options": [
+        {
+          "id": "a",
+          "text": "Copy and paste the tool definition into each agent file individually"
+        },
+        {
+          "id": "b",
+          "text": "Define the tools in a shared .tools.abl file and import them using FROM ... USE syntax",
+          "correct": true
+        },
+        {
+          "id": "c",
+          "text": "Define all agents in a single .agent.abl file so they automatically share tools"
+        }
+      ],
+      "explanation": "ABL supports reusable tool files (.tools.abl) that can be shared across agents. You define tools with shared configuration (base_url, auth, timeout, retry) in a .tools.abl file, then import specific tools using 'FROM \"./path/to/file.tools.abl\" USE: tool_name' syntax in each agent that needs them."
+    },
+    {
+      "id": "ab-q4",
+      "type": "mcq",
+      "stem": "In ABL syntax, section keywords like AGENT:, GOAL:, and TOOLS: follow which convention?",
+      "options": [
+        {
+          "id": "a",
+          "text": "They must be written in lowercase and are case-sensitive"
+        },
+        {
+          "id": "b",
+          "text": "They are case-insensitive at the parser level, but uppercase is the canonical convention",
+          "correct": true
+        },
+        {
+          "id": "c",
+          "text": "They must alternate between uppercase and lowercase depending on the section type"
+        }
+      ],
+      "explanation": "Section keywords are uppercase by convention and followed by a colon. The parser is case-insensitive -- AGENT:, agent:, and Agent: all parse identically. However, uppercase is the canonical style for ABL format files. In YAML format files (.agent.yaml), lowercase keys are used exclusively."
+    },
+    {
+      "id": "ab-q5",
+      "type": "fill-blank",
+      "stem": "ABL supports template interpolation using double-brace syntax, such as \"Hello, {{customer_name}}.\" These expressions are resolved at ________ against session variables and tool results.",
+      "answer": "runtime",
+      "acceptAlternatives": ["Runtime", "run time", "run-time"],
+      "explanation": "Template expressions using double-brace syntax (e.g., {{customer_name}}, {{balance}}) are resolved at runtime against session variables and tool results. ABL also supports Handlebars-style conditional blocks like {{#if exchange_rate}}."
+    }
+  ]
+}

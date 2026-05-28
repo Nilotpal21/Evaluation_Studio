@@ -1,0 +1,11 @@
+{
+  "testId": "test-1771846477-docs-kore-ai",
+  "site": "docs.kore.ai",
+  "startUrl": "https://docs.kore.ai/",
+  "testedAt": "2026-02-23T11:34:38Z",
+  "config": {
+    "maxPages": 5,
+    "maxDepth": 1
+  },
+  "status": "running"
+}

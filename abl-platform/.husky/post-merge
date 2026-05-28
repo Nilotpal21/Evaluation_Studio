@@ -1,0 +1,12 @@
+# Auto-regenerate pnpm-lock.yaml after merge
+# When .gitattributes merge=ours resolves lockfile conflicts, the lockfile
+# may be out of sync with merged package.json changes. This hook detects
+# that and regenerates it automatically.
+
+CHANGED_PACKAGES=$(git diff-tree -r --name-only --no-commit-id ORIG_HEAD HEAD -- '**/package.json' 'pnpm-workspace.yaml')
+
+if [ -n "$CHANGED_PACKAGES" ]; then
+  echo "📦 package.json files changed — regenerating pnpm-lock.yaml..."
+  pnpm install --no-frozen-lockfile
+  echo "✅ pnpm-lock.yaml regenerated. Remember to commit it if updated."
+fi

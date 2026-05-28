@@ -1,0 +1,236 @@
+{
+  "$schema": "observatory-spec",
+  "type": "data-flows",
+  "version": "2026-03-10-v2",
+  "lastUpdated": "2026-03-10",
+  "flows": [
+    {
+      "id": "4.1",
+      "name": "Session Detail Page Data Flow",
+      "steps": [
+        { "step": 1, "action": "User navigates to /projects/:projectId/sessions/:sessionId" },
+        { "step": 2, "action": "useSessionDetail(sessionId, projectId) triggers SWR fetch" },
+        {
+          "step": 3,
+          "action": "SWR fetch: /api/runtime/sessions/:id?projectId=X (Studio Next.js proxy)"
+        },
+        { "step": 4, "action": "Runtime: GET /api/projects/:projectId/sessions/:id" },
+        {
+          "step": 5,
+          "action": "Lookup chain",
+          "branches": [
+            {
+              "condition": "RuntimeExecutor.getSessionDetail(id) found",
+              "result": "Return active session (messages, traceEvents, state, threads)"
+            },
+            {
+              "condition": "Not found in RuntimeExecutor",
+              "substeps": [
+                "findSessionById(id, tenantId)",
+                "If not found: findSessionByRuntimeId(id, tenantId)",
+                "findMessagesForSession(dbSession.id)",
+                "Trace fallback: TraceStore.getEvents(runtimeSessionId) -> ClickHouse abl_platform.traces -> Empty traces"
+              ]
+            }
+          ]
+        },
+        {
+          "step": 6,
+          "action": "Response: { success: true, session: { id, messages, traceEvents, ... } }"
+        },
+        { "step": 7, "action": "fetchSessionDetail() parses response" },
+        {
+          "step": 8,
+          "action": "If traceEvents empty -> fallback: GET /api/runtime/sessions/:runtimeSessionId/traces?projectId=X"
+        },
+        { "step": 9, "action": "replayTraceEventsIntoObservatory(traceEvents, sessionId)" },
+        {
+          "step": 10,
+          "action": "For each event: observatory-store.addEvent(extendedEvent)",
+          "sideEffects": [
+            "Creates/updates spans Map",
+            "Appends to events[]",
+            "Creates flowNodes for agents",
+            "Creates flowEdges for handoffs/delegates",
+            "Tracks metrics (tokens, LLM calls, tool calls)",
+            "Updates staticGraph execution state"
+          ]
+        },
+        {
+          "step": 11,
+          "action": "hydrateSessionStoreFromDetail(session)",
+          "sideEffects": ["session-store.restoreSession({ sessionId, agent, messages, state })"]
+        },
+        { "step": 12, "action": "buildConversationTree(messages, traceEvents)" },
+        { "step": 13, "action": "computeMetrics(traceEvents) with DB fallback" },
+        {
+          "step": 14,
+          "action": "Render: SessionDetailPage",
+          "components": [
+            "AgentConversationTree (tree)",
+            "SessionSummaryPanel (metrics, traceEvents, tree)",
+            "DebugTabs -> TracesTab/DataTab/ConversationTab/PerformanceTab/IRTab"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "4.2",
+      "name": "Live Chat Debug Data Flow",
+      "steps": [
+        {
+          "step": 1,
+          "action": "WebSocket connect -> ws://runtime:3112/ws with Sec-WebSocket-Protocol: web-debug-auth,<access_token>"
+        },
+        { "step": 2, "action": "Client sends: { type: 'start_session', agentId: '...' }" },
+        { "step": 3, "action": "Handler creates RuntimeSession + TraceEmitter" },
+        { "step": 4, "action": "Client sends: { type: 'user_message', text: '...' }" },
+        { "step": 5, "action": "RuntimeExecutor processes message" },
+        {
+          "step": 6,
+          "action": "createCentralizedTraceHandler() processes each trace event",
+          "destinations": [
+            "In-memory TraceStore.addEvent(sessionId, traceEventWithId)",
+            "ClickHouse: getClickHouseTraceStore(tenantId).appendEvent(sessionId, {spanId, parentSpanId, agentName, data, ...})",
+            "EventStore dual-write (analytics → abl_platform.platform_events)",
+            "WebSocket.send({ type: 'trace_event', sessionId, event })"
+          ],
+          "enrichment": [
+            "spanId = traceEvent.id (consistent with in-memory store)",
+            "parentSpanId = lastLlmSpanId for tool_call events (auto-derived)",
+            "agentName = event.data.agentName || session agentName",
+            "cost = 0 default for llm_call events missing cost"
+          ]
+        },
+        { "step": 7, "action": "Client (WebSocketContext) receives trace_event" },
+        { "step": 8, "action": "observatory-store.addEvent(extendedEvent)" },
+        {
+          "step": 9,
+          "action": "React re-renders: FloatingDebugPanel -> DebugTabs -> TracesTab -> WaterfallPanel -> SpanTree"
+        }
+      ]
+    },
+    {
+      "id": "4.3",
+      "name": "Trace Storage & Retrieval Flow",
+      "writeTime": {
+        "trigger": "createCentralizedTraceHandler() in RuntimeExecutor",
+        "destinations": [
+          {
+            "name": "In-memory TraceStore",
+            "type": "ring buffer",
+            "config": {
+              "maxEventsPerSession": 500,
+              "ttlMinutes": 120,
+              "cleanupIntervalSeconds": 60
+            },
+            "role": "Hot cache for active sessions"
+          },
+          {
+            "name": "ClickHouse BufferedWriter",
+            "table": "abl_platform.traces",
+            "config": { "bufferSize": 10000, "flushIntervalSeconds": 5 },
+            "columns": [
+              "tenant_id",
+              "session_id",
+              "trace_id",
+              "timestamp",
+              "span_id",
+              "parent_span_id",
+              "event_type",
+              "agent_name",
+              "data",
+              "duration_ms",
+              "has_error",
+              "error_message",
+              "node_id",
+              "sequence"
+            ],
+            "role": "Canonical persistent store",
+            "dataQuality": {
+              "span_id": "Real event ID from traceEvent.id (matches in-memory store)",
+              "parent_span_id": "Auto-derived: tool_call → preceding llm_call span_id; or explicit from event.data.parentSpanId",
+              "agent_name": "Real agent name from traceEvent.agentName",
+              "data.cost": "Present on all llm_call events (default 0)"
+            }
+          },
+          {
+            "name": "EventStore dual-write",
+            "table": "abl_platform.platform_events",
+            "description": "Lossy type translation, analytics-optimized. Last-resort fallback for reads."
+          }
+        ]
+      },
+      "readTime": {
+        "trigger": "GET /sessions/:id/traces",
+        "fallbackChain": [
+          {
+            "priority": 1,
+            "source": "In-memory TraceStore",
+            "behavior": "Immediate return if found. Returns TraceEventWithId with id, sessionId, agentName."
+          },
+          {
+            "priority": 2,
+            "source": "ClickHouse abl_platform.traces",
+            "gate": "isClickHouseTraceEnabled() (USE_MONGO_CLICKHOUSE=true)",
+            "features": [
+              "Preserves original event types",
+              "Real span_id/parent_span_id hierarchy",
+              "Real agent_name",
+              "Cost in llm_call data",
+              "Encryption/decryption via interceptor"
+            ]
+          },
+          {
+            "priority": 3,
+            "source": "ClickHouse abl_platform.platform_events",
+            "behavior": "Last-resort fallback",
+            "limitations": ["Lossy type mapping", "Max 500 events", "No span hierarchy"]
+          }
+        ],
+        "notes": "OBS_TRACE_CANONICAL_READ feature flag removed (2026-03-10). ClickHouse canonical reads are always attempted when ClickHouse is enabled."
+      }
+    },
+    {
+      "id": "4.4",
+      "name": "Metrics Aggregation Flow",
+      "description": "GET /sessions/:id/metrics endpoint data flow",
+      "steps": [
+        { "step": 1, "action": "Client requests GET /sessions/:id/metrics" },
+        {
+          "step": 2,
+          "action": "Try in-memory TraceStore first",
+          "substeps": [
+            "getTraceStore().getEvents(sessionId)",
+            "If events found: aggregate locally (count llm_call, tool_call, sum tokens, sum cost, sum duration)"
+          ]
+        },
+        {
+          "step": 3,
+          "action": "ClickHouse fallback when in-memory is empty",
+          "substeps": [
+            "queryClickHouseCanonicalTraces(sessionId, tenantId)",
+            "Parse data JSON blobs for tokensIn, tokensOut, cost",
+            "Aggregate counts and sums"
+          ]
+        },
+        {
+          "step": 4,
+          "action": "Return SessionMetrics",
+          "response": {
+            "totalEvents": "count of all events",
+            "totalLLMCalls": "count of llm_call events",
+            "totalToolCalls": "count of tool_call events",
+            "totalTokensIn": "sum of data.tokensIn",
+            "totalTokensOut": "sum of data.tokensOut",
+            "totalTokens": "totalTokensIn + totalTokensOut",
+            "totalCost": "sum of data.cost (rounded to 6 dp)",
+            "totalDurationMs": "sum of durationMs",
+            "errorCount": "count of error events",
+            "source": "memory | clickhouse"
+          }
+        }
+      ]
+    }
+  ]
+}

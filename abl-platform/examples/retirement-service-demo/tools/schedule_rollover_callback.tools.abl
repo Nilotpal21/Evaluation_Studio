@@ -1,0 +1,23 @@
+schedule_rollover_callback(request_summary: string) -> {success: boolean, callbackRequestId: string, queue: string, summary: string}
+  description: "Package a rollover-operations callback request for transfer follow-up"
+  type: sandbox
+  confirm: never
+  runtime: "javascript"
+  timeout: 5000
+  memory_mb: 128
+  params:
+    request_summary:
+      description: "Rollover summary that should be passed to the callback queue"
+  code: |
+    function normalize(value) {
+      return String(value || '').trim().replace(/\s+/g, ' ');
+    }
+
+    const requestSummary = normalize(typeof $request_summary !== 'undefined' ? $request_summary : '');
+
+    return JSON.stringify({
+      success: true,
+      callbackRequestId: 'CB-' + Date.now().toString().slice(-8),
+      queue: 'Rollover Operations',
+      summary: (requestSummary || 'Rollover follow-up requested').slice(0, 240)
+    });

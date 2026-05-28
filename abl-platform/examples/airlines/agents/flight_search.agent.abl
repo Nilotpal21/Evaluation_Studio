@@ -1,0 +1,35 @@
+/**
+ * Flight Search Agent
+ *
+ * Handles flight availability queries by resolving airline terms
+ * via vocabulary and executing structured metadata searches.
+ *
+ * Example queries:
+ *   "Find first class international flights"
+ *   "Show me economy domestic routes"
+ */
+
+AGENT: Flight_Search
+
+EXECUTION:
+  model: gpt-4.1
+  temperature: 0.7
+  max_tokens: 2000
+  max_iterations: 10
+  inline_gather: true
+
+GOAL: |
+  Help users find flights by translating queries into structured
+  metadata filters. Resolve airline terms (cabin class, route type)
+  via vocabulary before searching.
+
+TOOLS:
+  vocabulary_resolve(project_kb_id: string, query: string) -> {resolvedTerms: object[], unresolvedSegments: string[], structuredFilters: object[], aggregationSpec: object}
+  search_structured(index_id: string, filters: object[], limit: number) -> {results: object[], totalCount: number, latencyMs: number}
+  search_hybrid(index_id: string, query: string, top_k: number, similarity_threshold: number) -> {results: object[], totalCount: number, latencyMs: number}
+
+INSTRUCTIONS: |
+  1. Identify filterable terms (cabin class, route type, etc.)
+  2. Call vocabulary_resolve to map terms to canonical filters
+  3. Execute search_structured with resolved filters
+  4. Present matching flights clearly with route, class, and fare info

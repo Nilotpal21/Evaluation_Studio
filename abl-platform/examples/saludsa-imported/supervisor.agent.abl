@@ -1,0 +1,177 @@
+SUPERVISOR: Supervisor
+GOAL: "Enrutar las solicitudes de los usuarios al agente especialista apropiado según el análisis de intención"
+
+PERSONA: |
+  Eres Samy, el asistente virtual de Saludsa. Tu rol es entender rápidamente
+  las necesidades del usuario y delegarlas al especialista correcto.
+  Responde siempre en español y sé amable y profesional.
+
+LIMITATIONS:
+  - "No puedo manejar tareas directamente - debo delegar a agentes especialistas"
+  - "No puedo procesar datos ni hacer cambios sin delegar"
+  - "No modifico ni reformulo las respuestas de los agentes"
+
+MEMORY:
+  session:
+    - current_intent
+    - routing_history
+    - user_channel
+  persistent:
+    - transfer_metadata
+    - userInfo
+
+# ==============================================================================
+# ROUTING RULES - Ordered by priority (first match wins)
+# ==============================================================================
+
+HANDOFF:
+  # --- Priority Transfers (check first) ---
+
+  - TO: Pca_And_Xpr_Associated_Product_Transfer
+    WHEN: userInfo.priorityTransfer == "PCA" OR userInfo.priorityTransfer == "XPR"
+    CONTEXT:
+      pass: [userInfo, conversation_context]
+      summary: "Usuario con producto PCA/XPR requiere transferencia prioritaria"
+    RETURN: false
+
+  - TO: Transfer_To_Vitality
+    WHEN: userInfo.priorityTransfer == "VITALITY"
+    CONTEXT:
+      pass: [userInfo, conversation_context]
+      summary: "Usuario del programa Vitality requiere transferencia"
+    RETURN: false
+
+  - TO: Transfer_To_Sac
+    WHEN: userInfo.requiresSAC == true OR intent == "hablar_con_agente"
+    CONTEXT:
+      pass: [userInfo, conversation_context]
+      summary: "Usuario requiere atención del equipo SAC"
+    RETURN: false
+
+  # --- Channel Verification ---
+
+  - TO: Whatsapp_User_Check
+    WHEN: user_channel == "whatsapp" AND userInfo.isValidated != true
+    CONTEXT:
+      pass: [userInfo, user_channel]
+      summary: "Verificación de usuario de WhatsApp requerida"
+    RETURN: true
+
+  # --- Broker/BR Greetings ---
+
+  - TO: Greetings_Br_And_Broker
+    WHEN: userInfo.userRole == "broker" OR userInfo.userRole == "BR"
+    CONTEXT:
+      pass: [userInfo]
+      summary: "Saludo personalizado para broker/BR"
+    RETURN: true
+
+  # --- Password & Security ---
+
+  - TO: Password_Reset_Agent
+    WHEN: intent == "restablecer_contraseña" OR intent == "olvidé_contraseña" OR intent == "cambiar_clave"
+    CONTEXT:
+      pass: [userInfo, conversation_context]
+      summary: "Usuario solicita restablecimiento de contraseña"
+    RETURN: false
+
+  # --- Refunds (Reembolsos) ---
+
+  - TO: Refund_Status
+    WHEN: intent == "estado_reembolso" OR intent == "consultar_reembolso" OR intent == "seguimiento_reembolso"
+    CONTEXT:
+      pass: [userInfo, conversation_context]
+      summary: "Usuario consulta estado de reembolso"
+    RETURN: false
+
+  - TO: Refund_Guidance_Agent
+    WHEN: intent == "como_reembolsar" OR intent == "proceso_reembolso" OR intent == "pasos_reembolso" OR intent == "solicitar_reembolso"
+    CONTEXT:
+      pass: [userInfo, conversation_context, user_channel]
+      summary: "Usuario necesita guía para proceso de reembolso"
+    RETURN: false
+
+  # --- Contracts (Contratos) ---
+
+  - TO: Contract_Data_Assistant
+    WHEN: intent == "datos_contrato" OR intent == "información_contrato" OR intent == "estado_contrato" OR intent == "consultar_contrato"
+    CONTEXT:
+      pass: [userInfo, conversation_context]
+      summary: "Usuario consulta información de contrato"
+    RETURN: false
+
+  - TO: Contract_Sending_Agent
+    WHEN: intent == "enviar_contrato" OR intent == "recibir_contrato" OR intent == "copia_contrato"
+    CONTEXT:
+      pass: [userInfo, conversation_context]
+      summary: "Usuario solicita envío de contrato"
+    RETURN: false
+
+  # --- Payments (Pagos) ---
+
+  - TO: Pending_Payments_Amount
+    WHEN: intent == "pagos_pendientes" OR intent == "deuda" OR intent == "saldo" OR intent == "cuanto_debo"
+    CONTEXT:
+      pass: [userInfo, conversation_context]
+      summary: "Usuario consulta pagos pendientes"
+    RETURN: false
+
+  # --- Coverage & Certificates ---
+
+  - TO: Issuance_Of_Coverage_Certificates_Coverage_Travel
+    WHEN: intent == "certificado_cobertura" OR intent == "cobertura_viaje" OR intent == "certificado_viaje"
+    CONTEXT:
+      pass: [userInfo, conversation_context]
+      summary: "Usuario solicita certificado de cobertura o viaje"
+    RETURN: false
+
+  # --- Other Services ---
+
+  - TO: Other_Services
+    WHEN: intent == "cobertura_dental" OR intent == "otros_servicios" OR intent == "servicios_adicionales"
+    CONTEXT:
+      pass: [userInfo, conversation_context]
+      summary: "Usuario consulta otros servicios"
+    RETURN: false
+
+  - TO: Transfer_Services
+    WHEN: intent == "autorización_dr_salud" OR intent == "transferir_servicio"
+    CONTEXT:
+      pass: [userInfo, conversation_context]
+      summary: "Usuario requiere autorización o transferencia de servicio"
+    RETURN: false
+
+  # --- Conversation Flow ---
+
+  - TO: Farewell_Handler
+    WHEN: intent == "despedida" OR intent == "adios" OR intent == "hasta_luego" OR intent == "gracias_adios"
+    CONTEXT:
+      pass: [conversation_context]
+      summary: "Usuario se despide"
+    RETURN: false
+
+  # --- Fallback (must be last) ---
+
+  - TO: Fallback_Handler
+    WHEN: intent == "desconocido" OR intent == "no_entendido" OR intent IS NOT SET
+    CONTEXT:
+      pass: [conversation_context, userInfo]
+      summary: "Intención no reconocida, requiere manejo de fallback"
+    RETURN: true
+
+ESCALATE:
+  TO: human_agent
+  WHEN: routing_failures >= 3 OR user_frustration_detected == true
+  CONTEXT:
+    pass: [conversation_history, routing_history, userInfo]
+    summary: "Usuario requiere atención humana"
+
+ON_ERROR:
+  routing_failure:
+    RESPOND: "Disculpe, estoy teniendo dificultades para entender su solicitud. Permítame intentarlo de nuevo."
+    RETRY: 1
+    THEN: ESCALATE
+
+COMPLETE:
+  - WHEN: handoff_successful == true
+    RESPOND: "Le he conectado con el especialista adecuado."

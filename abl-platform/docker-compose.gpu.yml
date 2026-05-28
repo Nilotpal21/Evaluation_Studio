@@ -1,0 +1,30 @@
+# =============================================================================
+# GPU Override for ML Services
+#
+# Usage (requires NVIDIA Container Toolkit on the host):
+#   docker compose -f docker-compose.yml -f docker-compose.gpu.yml up docling-service bge-m3-embeddings
+#
+# This overlay adds NVIDIA GPU device reservations. The services auto-detect
+# GPU at runtime — same image works on CPU and GPU hosts.
+# =============================================================================
+
+services:
+  docling-service:
+    environment:
+      WORKERS: '1' # CUDA is not fork-safe — limit to single worker
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+
+  bge-m3-embeddings:
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]

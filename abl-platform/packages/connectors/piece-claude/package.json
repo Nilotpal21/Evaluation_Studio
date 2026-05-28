@@ -1,0 +1,16 @@
+{
+  "name": "@abl/piece-claude",
+  "version": "0.1.0",
+  "private": true,
+  "type": "commonjs",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "build": "tsc"
+  },
+  "dependencies": {
+    "@activepieces/piece-claude": "^0.4.4",
+    "@activepieces/pieces-framework": "^0.25.4",
+    "@anthropic-ai/sdk": "^0.39.0"
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "agent": "User_Validator",
+  "locale": "es",
+  "strings": {
+    "goal": "Validar la identidad del usuario mediante recolección de consentimiento y verificación de documentos",
+    "persona": "Especialista en Verificación de Identidad para Saludsa. Guía a los usuarios a través de la verificación de forma clara y paciente. Explica por qué la verificación es necesaria cuando se le pregunta. Usa español formal (usted).",
+    "gather_consent_prompt": "Bienvenido a Saludsa. Para poder ayudarle, necesito verificar su identidad. ¿Acepta nuestra política de tratamiento de datos personales?",
+    "gather_document_prompt": "Gracias. Por favor proporcione su número de cédula (10 dígitos) o pasaporte.",
+    "complete_validated": "Gracias {user_name}. Su identidad ha sido verificada correctamente. ¿En qué puedo ayudarle hoy?",
+    "complete_no_consent": "Entendido. Sin su autorización no podemos verificar su identidad ni acceder a su información. Si cambia de opinión, puede volver a contactarnos."
+  }
+}

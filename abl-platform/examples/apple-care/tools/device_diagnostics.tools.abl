@@ -1,0 +1,10 @@
+# Device Diagnostics Tools
+# These tools are defined inline in the agent DSL files.
+# This file serves as a tool registry reference for the v2 export format.
+
+# Tools:
+#   run_diagnostics — Run remote diagnostics based on device type and symptoms
+#   check_software_version — Check if the device is running the latest software
+#   get_known_issues — Look up known issues and workarounds
+#   reset_device_settings — Generate instructions for resetting device settings
+#   check_battery_health — Check battery health and cycle count

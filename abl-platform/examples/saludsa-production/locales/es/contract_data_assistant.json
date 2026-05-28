@@ -1,0 +1,6 @@
+{
+  "security_question_intro": "Antes de continuar, necesito hacerle una pregunta de validacion para proteger su informacion. Por favor proporcione la respuesta a la siguiente pregunta de seguridad.",
+  "not_eligible": "En este momento, su perfil no tiene acceso a este tipo de informacion o servicio. \u00bfLe puedo servir en algo adicional?",
+  "closing_question": "\u00bfHay algo mas en lo que le pueda servir?",
+  "api_error": "Lo sentimos, tenemos dificultades tecnicas. Por favor intente mas tarde."
+}

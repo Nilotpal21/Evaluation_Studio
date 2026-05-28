@@ -1,0 +1,9 @@
+{
+  "variables": [
+    {
+      "key": "KORE_AI_API_TOKEN",
+      "description": "Bearer token for authenticating with Kore.ai integration APIs (card list, transactions)",
+      "required": true
+    }
+  ]
+}

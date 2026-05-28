@@ -1,0 +1,11 @@
+# Restate server configuration — root docker-compose stack
+#
+# Kafka cluster "local" connects to the Kafka broker in docker-compose.
+# Restate uses this for ingress subscriptions (Kafka → PipelineTrigger).
+
+[worker]
+internal-queue-length = 1000
+
+[[ingress.kafka-clusters]]
+name = "local"
+brokers = ["kafka:9092"]

@@ -1,0 +1,20 @@
+{
+  "format_version": "2.0",
+  "settings": {
+    "default_model": "gpt-4.1",
+    "default_temperature": 0.7,
+    "default_max_tokens": 2000,
+    "search_ai": {
+      "enabled": true,
+      "vocabulary_resolution": true,
+      "strategies": ["structured", "hybrid", "vector", "aggregation"]
+    },
+    "supervisor": {
+      "pipeline": {
+        "enabled": true,
+        "mode": "sequential",
+        "model": "qwen35-a3b-35b"
+      }
+    }
+  }
+}

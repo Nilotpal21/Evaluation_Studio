@@ -1,0 +1,129 @@
+AGENT: Digression_Certification_Agent
+VERSION: "1.0"
+DESCRIPTION: "Self-contained certification agent for canonical digressions, lexical fallback, condition gates, and ordered DO execution."
+GOAL: "Collect a small support request while making digression behavior easy to certify in local development"
+
+PERSONA: |
+  Precise, concise, and predictable.
+  This agent is intentionally simple so manual certification focuses on digression behavior,
+  not on open-ended reasoning or external tools.
+
+FLOW:
+  entry_point: choose_support_mode
+  steps:
+    - choose_support_mode
+    - capture_issue
+    - capture_priority
+    - review
+    - cancelled
+
+  global_digressions:
+    - INTENT: help_request
+      KEYWORDS: [help, what can you do, explain the flow]
+      CONDITION: support_mode != "handoff_only"
+      DO:
+        - RESPOND: |
+            I can:
+            - explain the certification flow
+            - collect an issue summary
+            - explain the priority labels
+            - cancel the workflow
+
+            You are still in the same step.
+        - SET:
+            last_digression = help_request
+        - RESUME
+
+    - INTENT: cancel_workflow
+      KEYWORDS: [cancel, quit, stop]
+      DO:
+        - RESPOND: "Cancelling the certification flow now."
+        - CLEAR: [issue_summary, priority]
+        - SET:
+            last_digression = cancel_workflow
+        - GOTO: cancelled
+
+    - INTENT: weather_query
+      DO:
+        - RESPOND: "This digression should only run from semantic classification."
+        - SET:
+            last_digression = weather_query
+        - RESUME
+
+choose_support_mode:
+  REASONING: false
+  RESPOND: |
+    Digression certification demo.
+
+    Reply with one mode:
+    - guided
+    - handoff only
+  ON_INPUT:
+    - IF: input contains "handoff"
+      SET: support_mode = "handoff_only"
+      SET: last_digression = "none"
+      RESPOND: "Handoff-only mode selected. Help digressions are now gated off."
+      THEN: capture_issue
+    - IF: input contains "guided"
+      SET: support_mode = "guided"
+      SET: last_digression = "none"
+      RESPOND: "Guided mode selected. Help digressions are available."
+      THEN: capture_issue
+    - ELSE:
+      RESPOND: 'Please reply with "guided" or "handoff only".'
+      THEN: choose_support_mode
+
+capture_issue:
+  REASONING: false
+  GATHER:
+    - issue_summary: required
+      prompt: "Describe the issue you want to certify."
+  THEN: capture_priority
+
+capture_priority:
+  REASONING: false
+  GATHER:
+    - priority: required
+      TYPE: enum
+      OPTIONS: [low, medium, high]
+      prompt: "Set a priority: low, medium, or high."
+  DIGRESSIONS:
+    - INTENT: priority_reference
+      KEYWORDS: [priority bands, explain priority, what do low medium and high mean]
+      CONDITION: support_mode != "handoff_only"
+      DO:
+        - RESPOND: |
+            Priority guide:
+            - low: minor inconvenience
+            - medium: work is blocked but there is a workaround
+            - high: urgent blocker with no workaround
+        - SET:
+            last_digression = priority_reference
+        - RESUME
+
+    - INTENT: restart_issue
+      KEYWORDS: [change issue, different issue]
+      DO:
+        - RESPOND: "Okay, let's replace the issue summary first."
+        - CLEAR: [issue_summary, priority]
+        - SET:
+            last_digression = restart_issue
+        - GOTO: capture_issue
+  THEN: review
+
+review:
+  REASONING: false
+  RESPOND: |
+    Certification summary:
+    - mode: {{support_mode}}
+    - issue: {{issue_summary}}
+    - priority: {{priority}}
+    - last digression: {{last_digression}}
+  THEN: COMPLETE
+
+cancelled:
+  REASONING: false
+  RESPOND: |
+    The certification flow is cancelled.
+    Last digression: {{last_digression}}
+  THEN: COMPLETE

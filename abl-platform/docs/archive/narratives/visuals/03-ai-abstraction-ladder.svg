@@ -1,0 +1,173 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 820" font-family="'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif">
+  <defs>
+    <linearGradient id="bgGrad3" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#FFF5F5"/>
+      <stop offset="50%" stop-color="#FFFBF0"/>
+      <stop offset="100%" stop-color="#F0FFF4"/>
+    </linearGradient>
+    <linearGradient id="redCard" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#FFF0F0"/>
+      <stop offset="100%" stop-color="#FFE0E0"/>
+    </linearGradient>
+    <linearGradient id="amberCard" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#FFF8E1"/>
+      <stop offset="100%" stop-color="#FFECB3"/>
+    </linearGradient>
+    <linearGradient id="greenCard" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#E8F5E9"/>
+      <stop offset="100%" stop-color="#C8E6C9"/>
+    </linearGradient>
+    <linearGradient id="koreHighlight" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#E0F2F1"/>
+      <stop offset="100%" stop-color="#B2DFDB"/>
+    </linearGradient>
+    <filter id="cardShadow">
+      <feDropShadow dx="0" dy="4" stdDeviation="8" flood-color="#000" flood-opacity="0.08"/>
+    </filter>
+    <filter id="greenGlow">
+      <feDropShadow dx="0" dy="0" stdDeviation="12" flood-color="#00BFA6" flood-opacity="0.3"/>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="960" height="820" fill="url(#bgGrad3)"/>
+
+  <!-- Title -->
+  <text x="480" y="45" text-anchor="middle" font-size="24" font-weight="700" fill="#1A1A2E" letter-spacing="0.5">AI is only as good as what it's programming.</text>
+
+  <!-- Column headers -->
+  <text x="220" y="90" text-anchor="middle" font-size="13" font-weight="700" fill="#6B7280" letter-spacing="2">WHAT AI PROGRAMS</text>
+  <text x="560" y="90" text-anchor="middle" font-size="13" font-weight="700" fill="#6B7280" letter-spacing="2">WHAT YOU GET</text>
+  <text x="850" y="90" text-anchor="middle" font-size="13" font-weight="700" fill="#6B7280" letter-spacing="2">THE MATH</text>
+
+  <!-- ═══════════════════ TIER 1: RAW CODE (Red) ═══════════════════ -->
+
+  <!-- Left card -->
+  <rect x="55" y="115" width="330" height="165" rx="12" fill="url(#redCard)" stroke="#EF5350" stroke-width="1.5" filter="url(#cardShadow)"/>
+  <!-- Red X icon -->
+  <circle cx="85" cy="145" r="14" fill="#EF5350"/>
+  <text x="85" y="150" text-anchor="middle" font-size="16" font-weight="700" fill="#FFF">X</text>
+  <text x="108" y="150" font-size="16" font-weight="700" fill="#C62828">Raw Code</text>
+  <text x="108" y="168" font-size="12" fill="#8B4545">(Python / JavaScript)</text>
+  <line x1="75" y1="180" x2="365" y2="180" stroke="#EF9A9A" stroke-width="0.5"/>
+  <text x="75" y="200" font-size="12.5" fill="#5D3A3A" font-style="italic">"Call the API, parse response,</text>
+  <text x="75" y="218" font-size="12.5" fill="#5D3A3A" font-style="italic">check PII, retry if failed"</text>
+  <text x="75" y="248" font-size="11" fill="#B71C1C" font-weight="600">Every agent = a new codebase</text>
+  <text x="75" y="266" font-size="11" fill="#B71C1C" font-weight="600">AI knows nothing about your system</text>
+
+  <!-- Right card -->
+  <rect x="405" y="115" width="310" height="165" rx="12" fill="url(#redCard)" stroke="#EF5350" stroke-width="1" filter="url(#cardShadow)"/>
+  <text x="425" y="145" font-size="28" font-weight="800" fill="#C62828">~400</text>
+  <text x="510" y="145" font-size="14" fill="#8B4545">lines per feature</text>
+  <line x1="425" y1="158" x2="695" y2="158" stroke="#EF9A9A" stroke-width="0.5"/>
+  <text x="425" y="180" font-size="12" fill="#5D3A3A">No compiler validation</text>
+  <text x="425" y="198" font-size="12" fill="#5D3A3A">No governance framework</text>
+  <text x="425" y="216" font-size="12" fill="#5D3A3A">No observability primitives</text>
+  <text x="425" y="234" font-size="12" fill="#5D3A3A">Breaks when requirements change</text>
+  <text x="425" y="258" font-size="11" fill="#B71C1C" font-weight="600">Maintain everything yourself, forever</text>
+
+  <!-- Math column -->
+  <rect x="735" y="115" width="180" height="165" rx="12" fill="#FFF0F0" stroke="#EF5350" stroke-width="0.5"/>
+  <text x="825" y="155" text-anchor="middle" font-size="36" font-weight="800" fill="#C62828">400</text>
+  <text x="825" y="175" text-anchor="middle" font-size="11" fill="#8B4545">lines of code</text>
+  <text x="825" y="205" text-anchor="middle" font-size="22" font-weight="700" fill="#EF5350">0</text>
+  <text x="825" y="220" text-anchor="middle" font-size="11" fill="#8B4545">compiler checks</text>
+  <text x="825" y="250" text-anchor="middle" font-size="22" font-weight="700" fill="#EF5350">0</text>
+  <text x="825" y="265" text-anchor="middle" font-size="11" fill="#8B4545">runtime primitives</text>
+
+  <!-- Arrow down -->
+  <line x1="220" y1="290" x2="220" y2="330" stroke="#BDBDBD" stroke-width="2"/>
+  <polygon points="212,325 220,340 228,325" fill="#BDBDBD"/>
+  <text x="240" y="318" font-size="11" fill="#9E9E9E" font-style="italic">"Can I at least use a framework?"</text>
+
+  <!-- ═══════════════════ TIER 2: FRAMEWORK (Amber) ═══════════════════ -->
+
+  <!-- Left card -->
+  <rect x="55" y="350" width="330" height="165" rx="12" fill="url(#amberCard)" stroke="#FFA726" stroke-width="1.5" filter="url(#cardShadow)"/>
+  <!-- Amber triangle icon -->
+  <polygon points="85,370 72,394 98,394" fill="#FFA726" stroke="#F57C00" stroke-width="1"/>
+  <text x="108" y="388" font-size="16" font-weight="700" fill="#E65100">Framework Code</text>
+  <text x="108" y="406" font-size="12" fill="#8B6914">(LangGraph, CrewAI, AutoGen)</text>
+  <line x1="75" y1="416" x2="365" y2="416" stroke="#FFE082" stroke-width="0.5"/>
+  <text x="75" y="436" font-size="12.5" fill="#5D4A1A" font-style="italic">"Build a graph with these</text>
+  <text x="75" y="454" font-size="12.5" fill="#5D4A1A" font-style="italic">nodes, edges, and state"</text>
+  <text x="75" y="484" font-size="11" fill="#E65100" font-weight="600">Locked into one paradigm</text>
+  <text x="75" y="502" font-size="11" fill="#E65100" font-weight="600">AI generates plausible but unvalidated code</text>
+
+  <!-- Right card -->
+  <rect x="405" y="350" width="310" height="165" rx="12" fill="url(#amberCard)" stroke="#FFA726" stroke-width="1" filter="url(#cardShadow)"/>
+  <text x="425" y="380" font-size="28" font-weight="800" fill="#E65100">~200</text>
+  <text x="510" y="380" font-size="14" fill="#8B6914">lines per feature</text>
+  <line x1="425" y1="393" x2="695" y2="393" stroke="#FFE082" stroke-width="0.5"/>
+  <text x="425" y="415" font-size="12" fill="#5D4A1A">Framework conventions help</text>
+  <text x="425" y="433" font-size="12" fill="#5D4A1A">Still your problem: governance,</text>
+  <text x="425" y="451" font-size="12" fill="#5D4A1A">  observability, compliance, deploy</text>
+  <text x="425" y="475" font-size="11" fill="#E65100" font-weight="600">Better, but you still own the hard parts</text>
+  <text x="425" y="495" font-size="11" fill="#E65100" font-weight="600">Graph paradigm ≠ flow paradigm ≠ loop paradigm</text>
+
+  <!-- Math column -->
+  <rect x="735" y="350" width="180" height="165" rx="12" fill="#FFF8E1" stroke="#FFA726" stroke-width="0.5"/>
+  <text x="825" y="390" text-anchor="middle" font-size="36" font-weight="800" fill="#E65100">200</text>
+  <text x="825" y="410" text-anchor="middle" font-size="11" fill="#8B6914">lines of code</text>
+  <text x="825" y="440" text-anchor="middle" font-size="22" font-weight="700" fill="#FFA726">0</text>
+  <text x="825" y="455" text-anchor="middle" font-size="11" fill="#8B6914">compiler checks</text>
+  <text x="825" y="485" text-anchor="middle" font-size="22" font-weight="700" fill="#FFA726">3</text>
+  <text x="825" y="500" text-anchor="middle" font-size="11" fill="#8B6914">runtime primitives</text>
+
+  <!-- Arrow down -->
+  <line x1="220" y1="525" x2="220" y2="565" stroke="#BDBDBD" stroke-width="2"/>
+  <polygon points="212,560 220,575 228,560" fill="#BDBDBD"/>
+  <text x="240" y="553" font-size="11" fill="#9E9E9E" font-style="italic">"What if AI had better primitives?"</text>
+
+  <!-- ═══════════════════ TIER 3: PLATFORM (Green/Teal) ═══════════════════ -->
+
+  <!-- Left card -->
+  <rect x="45" y="585" width="345" height="185" rx="14" fill="url(#koreHighlight)" stroke="#00BFA6" stroke-width="2.5" filter="url(#greenGlow)"/>
+  <!-- Star icon -->
+  <polygon points="85,608 89,620 102,620 92,628 95,640 85,633 75,640 78,628 68,620 81,620" fill="#00BFA6"/>
+  <text x="112" y="625" font-size="17" font-weight="700" fill="#004D40">Platform Abstractions</text>
+  <text x="112" y="644" font-size="13" fill="#2E7D65" font-weight="600">(ABL + Arch)</text>
+  <line x1="70" y1="655" x2="370" y2="655" stroke="#80CBC4" stroke-width="0.5"/>
+  <text x="70" y="677" font-size="13" fill="#1B5E40" font-style="italic">"Define an agent with goals,</text>
+  <text x="70" y="695" font-size="13" fill="#1B5E40" font-style="italic">tools, guardrails, handoff policy"</text>
+  <text x="70" y="725" font-size="11.5" fill="#00695C" font-weight="600">Same definition when you switch providers</text>
+  <text x="70" y="743" font-size="11.5" fill="#00695C" font-weight="600">Same definition when you add guardrails</text>
+  <text x="70" y="761" font-size="11.5" fill="#00695C" font-weight="600">Same definition when you scale to 50 agents</text>
+
+  <!-- Right card -->
+  <rect x="400" y="585" width="320" height="185" rx="14" fill="url(#greenCard)" stroke="#00BFA6" stroke-width="2" filter="url(#greenGlow)"/>
+  <text x="425" y="620" font-size="32" font-weight="800" fill="#00695C">~15</text>
+  <text x="490" y="620" font-size="15" fill="#2E7D65">lines per feature</text>
+  <line x1="425" y1="635" x2="700" y2="635" stroke="#A5D6A7" stroke-width="0.5"/>
+  <text x="425" y="658" font-size="12.5" fill="#1B5E40">Compiler-validated before deploy</text>
+  <text x="425" y="678" font-size="12.5" fill="#1B5E40">Governance, observability built in</text>
+  <text x="425" y="698" font-size="12.5" fill="#1B5E40">All paradigms: flow + reasoning + hybrid</text>
+  <text x="425" y="724" font-size="11.5" fill="#00695C" font-weight="700">AI is MORE RELIABLE because</text>
+  <text x="425" y="742" font-size="11.5" fill="#00695C" font-weight="700">the abstraction handles the edge cases</text>
+
+  <!-- Math column -->
+  <rect x="735" y="585" width="180" height="185" rx="14" fill="#E0F2F1" stroke="#00BFA6" stroke-width="1.5" filter="url(#greenGlow)"/>
+  <text x="825" y="630" text-anchor="middle" font-size="42" font-weight="800" fill="#00695C">15</text>
+  <text x="825" y="650" text-anchor="middle" font-size="11" fill="#2E7D65">lines of YAML</text>
+  <text x="825" y="685" text-anchor="middle" font-size="14" font-weight="700" fill="#00BFA6">COMPILER</text>
+  <text x="825" y="700" text-anchor="middle" font-size="11" fill="#2E7D65">catches AI mistakes</text>
+  <text x="825" y="735" text-anchor="middle" font-size="24" font-weight="800" fill="#00BFA6">20+</text>
+  <text x="825" y="753" text-anchor="middle" font-size="11" fill="#2E7D65">runtime primitives</text>
+
+  <!-- Bottom summary bar -->
+  <rect x="55" y="790" width="850" height="3" rx="1.5" fill="#E0E0E0"/>
+
+  <!-- Progression dots -->
+  <circle cx="177" cy="791" r="8" fill="#EF5350"/>
+  <text x="177" y="795" text-anchor="middle" font-size="8" font-weight="700" fill="#FFF">400</text>
+
+  <circle cx="480" cy="791" r="8" fill="#FFA726"/>
+  <text x="480" y="795" text-anchor="middle" font-size="8" font-weight="700" fill="#FFF">200</text>
+
+  <circle cx="783" cy="791" r="12" fill="#00BFA6"/>
+  <text x="783" y="796" text-anchor="middle" font-size="10" font-weight="700" fill="#FFF">15</text>
+
+  <text x="177" y="812" text-anchor="middle" font-size="10" fill="#9E9E9E">Fragile</text>
+  <text x="480" y="812" text-anchor="middle" font-size="10" fill="#9E9E9E">Better</text>
+  <text x="783" y="812" text-anchor="middle" font-size="10" font-weight="700" fill="#00695C">Production</text>
+</svg>

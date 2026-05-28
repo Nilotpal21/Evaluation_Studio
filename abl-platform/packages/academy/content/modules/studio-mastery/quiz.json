@@ -1,0 +1,98 @@
+{
+  "moduleId": "studio-mastery",
+  "passThreshold": 0.8,
+  "questions": [
+    {
+      "id": "sm-q1",
+      "type": "mcq",
+      "stem": "A team is using the Concierge orchestration pattern. They have already created the first agent in their project and now create a second agent. What role does Studio automatically assign to the second agent?",
+      "options": [
+        {
+          "id": "a",
+          "text": "Concierge, since every project needs redundancy"
+        },
+        {
+          "id": "b",
+          "text": "Specialist, since the Concierge role was assigned to the first agent",
+          "correct": true
+        },
+        {
+          "id": "c",
+          "text": "Triage, since the second agent handles routing"
+        }
+      ],
+      "explanation": "In the Concierge pattern, the first agent gets the Concierge role and all subsequent agents are automatically assigned the Specialist role. The Triage role is used in Router and Tiered patterns, not Concierge."
+    },
+    {
+      "id": "sm-q2",
+      "type": "mcq",
+      "stem": "A developer notices that the Studio chat preview renders rich content templates and action buttons identically to the production widget. Which architectural decision makes this possible?",
+      "options": [
+        {
+          "id": "a",
+          "text": "Studio uses a custom mock renderer that simulates the production widget"
+        },
+        {
+          "id": "b",
+          "text": "Studio wraps the same Web SDK ChatWidget via AgentProvider with a StudioTransport adapter bridging the WebSocket connection",
+          "correct": true
+        },
+        {
+          "id": "c",
+          "text": "Studio opens an iframe pointing to the deployed production widget URL"
+        }
+      ],
+      "explanation": "Studio's chat preview is powered by the same Web SDK components (ChatWidget via AgentProvider) that end users see in deployed widgets. Studio wraps the SDK with a StudioTransport adapter that bridges the existing WebSocket connection, so the preview accurately reflects production rendering including rich content and streaming behavior."
+    },
+    {
+      "id": "sm-q3",
+      "type": "fill-blank",
+      "stem": "The Insights dashboard KPI metric that measures the percentage of sessions resolved without human escalation is called the ___ Rate.",
+      "answer": "Containment",
+      "acceptAlternatives": ["containment", "containment rate", "Containment Rate"],
+      "explanation": "The Containment Rate is one of the five KPI metric cards on the Insights dashboard. It shows the percentage of sessions resolved without human escalation, alongside Sessions, Messages, Tokens, and Estimated Cost."
+    },
+    {
+      "id": "sm-q4",
+      "type": "mcq",
+      "stem": "A project manager wants to set up automated notifications when the error rate exceeds 5% over 15 minutes. Where in Studio should they configure this?",
+      "options": [
+        {
+          "id": "a",
+          "text": "Operate > Alerts > Alert Rules tab, creating a rule with trigger condition and notification target",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "Settings > Runtime Config, adjusting the error threshold slider"
+        },
+        {
+          "id": "c",
+          "text": "Insights > Quality Monitor, enabling the auto-alert toggle"
+        }
+      ],
+      "explanation": "The Alert Rules tab under Operate > Alerts lets you configure automated notifications for events like error rate spikes, session volume changes, SLA breaches, and evaluation score drops. Each rule has a trigger condition and notification target (in-app, email, or webhook)."
+    },
+    {
+      "id": "sm-q5",
+      "type": "mcq",
+      "stem": "An agent builder imports a previously exported project package into an existing project. The package contains an agent with the same name as one already in the project. What happens?",
+      "options": [
+        {
+          "id": "a",
+          "text": "The existing agent is silently overwritten with the imported version"
+        },
+        {
+          "id": "b",
+          "text": "The import process flags the naming conflict without overwriting the existing agent",
+          "correct": true
+        },
+        {
+          "id": "c",
+          "text": "The import fails entirely and no agents are imported"
+        }
+      ],
+      "explanation": "Importing does not overwrite existing agents. If an agent with the same name already exists, the import process flags the conflict. This prevents accidental loss of work when merging configurations from different sources."
+    }
+  ]
+}

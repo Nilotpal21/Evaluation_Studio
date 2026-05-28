@@ -1,0 +1,98 @@
+{
+  "moduleId": "production-deployment",
+  "passThreshold": 0.8,
+  "questions": [
+    {
+      "id": "pd-q1",
+      "type": "mcq",
+      "stem": "A team deploys version 2.0 of their agents to production. What happens to the previous active deployment in that environment?",
+      "options": [
+        {
+          "id": "a",
+          "text": "It is immediately retired and all existing sessions are terminated"
+        },
+        {
+          "id": "b",
+          "text": "It transitions to draining status -- no new sessions are accepted, but existing sessions complete naturally",
+          "correct": true
+        },
+        {
+          "id": "c",
+          "text": "It remains active alongside the new deployment for a configurable overlap period"
+        }
+      ],
+      "explanation": "Only one deployment per environment can be active at a time. When a new deployment is created, the previous active deployment automatically transitions to 'draining' status, meaning it accepts no new sessions but allows existing sessions to complete naturally. From draining, it eventually moves to 'retired'."
+    },
+    {
+      "id": "pd-q2",
+      "type": "fill-blank",
+      "stem": "Environment variables referenced in ABL agent definitions use the syntax {{env.___}} and are resolved at session start.",
+      "answer": "KEY",
+      "acceptAlternatives": ["key", "KEY", "VARIABLE_NAME", "variable_name"],
+      "explanation": "Environment variables are referenced in ABL as {{env.KEY}} and resolved at session start. This means existing sessions use the values from when they were created, while new sessions pick up the latest values. This is important during variable updates -- changes do not affect in-progress conversations."
+    },
+    {
+      "id": "pd-q3",
+      "type": "mcq",
+      "stem": "A developer wants to implement a GitOps workflow where pushing to the 'main' branch automatically deploys to production. Which Studio feature combination achieves this?",
+      "options": [
+        {
+          "id": "a",
+          "text": "Git Integration with auto-sync enabled plus Auto-Deploy configured to watch the main branch for the production environment",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "Git Integration with webhooks plus a custom CI/CD pipeline that calls the import API"
+        },
+        {
+          "id": "c",
+          "text": "Git Integration with manual pull-and-deploy from the Studio Git settings page"
+        }
+      ],
+      "explanation": "Studio's Git Integration supports auto-deploy: configure it to watch a specific branch (e.g., main) and target a specific environment (e.g., production). When a push lands on the configured branch, the platform pulls the latest files, validates and compiles all agents, creates auto-versioned snapshots, and deploys to the target environment. This enables branch-per-environment workflows (develop->dev, staging->staging, main->production)."
+    },
+    {
+      "id": "pd-q4",
+      "type": "mcq",
+      "stem": "A user starts a support conversation on the web chat widget, then calls the support phone line the next day. The platform recognizes them by caller ID but without cryptographic verification. What identity tier does this caller receive?",
+      "options": [
+        {
+          "id": "a",
+          "text": "Tier 0 (anonymous), since phone calls cannot carry web session data"
+        },
+        {
+          "id": "b",
+          "text": "Tier 1 (weak), since caller ID is a channel artifact that could be spoofed",
+          "correct": true
+        },
+        {
+          "id": "c",
+          "text": "Tier 2 (strong), since the platform matched the caller to a known identity"
+        }
+      ],
+      "explanation": "The platform classifies identity into two tiers. T1 (weak) means the identity is remembered but not cryptographically verified -- the caller is recognized by a channel artifact like caller ID or a cookie but could be spoofed. T2 (strong) requires cryptographic verification such as OAuth tokens or OTP confirmation. Unverified sessions start at Tier 0 (anonymous)."
+    },
+    {
+      "id": "pd-q5",
+      "type": "mcq",
+      "stem": "When configuring a Slack channel connection, the platform returns a webhookUrl. What must be done with this URL in the Slack app settings?",
+      "options": [
+        {
+          "id": "a",
+          "text": "Paste it as the OAuth Redirect URL under OAuth & Permissions"
+        },
+        {
+          "id": "b",
+          "text": "Paste it as the Request URL under Event Subscriptions, then subscribe to message.im and app_mention bot events",
+          "correct": true
+        },
+        {
+          "id": "c",
+          "text": "Paste it as the Slash Command URL and the Interactivity URL only"
+        }
+      ],
+      "explanation": "The webhookUrl from the channel connection response must be pasted into the Slack app's Event Subscriptions as the Request URL. Slack sends a verification challenge that the platform responds to automatically. You then subscribe to bot events (message.im for direct messages, app_mention for @mentions). Interactivity and slash commands also use this URL but are optional configurations."
+    }
+  ]
+}

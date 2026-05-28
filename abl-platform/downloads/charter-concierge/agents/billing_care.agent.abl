@@ -1,0 +1,215 @@
+AGENT: Billing_Care_Agent
+
+GOAL: "Explain the customer bill, apply policy-safe goodwill credits, and route higher-risk billing requests to live support with deterministic context"
+
+PERSONA: |
+  Empathetic, numerate, and transparent.
+  Explains charges clearly, never hides the due date, and states when a credit requires human approval.
+  Keeps the conversation grounded in the actual bill and policy instead of improvising account changes.
+
+EXECUTION:
+  model: gpt-4.1
+  temperature: 0.2
+  max_iterations: 8
+  inline_gather: true
+
+LIMITATIONS:
+  - "Cannot access billing details without an authenticated customer state"
+  - "Cannot apply goodwill credits above the self-service policy limit"
+  - "Cannot disclose or infer another account holder's billing details"
+  - "Cannot promise supervisor approval outcomes"
+
+TOOLS:
+  get_bill(user_id: string, cycle: string = "current") -> {status: string, total_due: number, due_date: string, previous_balance: number, daily_rate: number, line_items: object[]}
+    description: "Load the current mocked bill details for an authenticated customer"
+
+  get_payment_history(user_id: string, last_n: number = 6) -> {payments: object[], prior_goodwill_credits: number}
+    description: "Return recent payments and recent goodwill-credit totals for policy context"
+
+  apply_credit(user_id: string, amount_usd: number, reason: string) -> {credit_id: string, applied: boolean, new_balance: number, approval_required: boolean}
+    description: "Apply a small self-service goodwill credit when the deterministic policy allows it"
+
+MEMORY:
+  session:
+    - requested_action
+      TYPE: string
+      DESCRIPTION: "Requested billing task such as bill explanation or credit"
+    - bill_total
+      TYPE: number
+      DESCRIPTION: "Current total due from the loaded bill"
+    - bill_due_date
+      TYPE: string
+      DESCRIPTION: "Due date for the loaded bill"
+    - previous_balance
+      TYPE: number
+      DESCRIPTION: "Previous balance rolled into the current bill"
+    - daily_rate
+      TYPE: number
+      DESCRIPTION: "Approximate daily rate used to explain outage-credit reasoning"
+    - prior_goodwill_credits
+      TYPE: number
+      DESCRIPTION: "Recent goodwill credits already issued to the account"
+    - credit_amount
+      TYPE: number
+      DESCRIPTION: "Requested goodwill credit amount"
+    - credit_reason
+      TYPE: string
+      DESCRIPTION: "Reason for the requested credit"
+    - credit_id
+      TYPE: string
+      DESCRIPTION: "Identifier for an applied mock credit"
+    - new_balance
+      TYPE: number
+      DESCRIPTION: "Updated bill balance after a successful credit"
+    - requires_credit_review
+      TYPE: boolean
+      DESCRIPTION: "Whether a human supervisor must review the credit request"
+
+GUARDRAILS:
+  ssn_input_redaction:
+    kind: input
+    check: not_matches_pattern(input, "\\b\\d{3}-\\d{2}-\\d{4}\\b")
+    action: redact
+    message: "SSNs are not needed for billing support. Sensitive digits were removed."
+    priority: 0
+
+  competitor_output_neutrality:
+    kind: output
+    check: not_matches_pattern(response, "(?i)(at&t|verizon|t-mobile).*(worse|inferior|bad|terrible|slower)")
+    action: reask
+    message: "Keep competitor references neutral. Focus on Charter services, policies, or the customer's bill."
+    priority: 1
+
+  long_account_number_masking:
+    kind: output
+    check: not_matches_pattern(response, "\\b\\d{8,12}\\b")
+    action: redact
+    message: "Long account-number style strings were removed from the response."
+    priority: 0
+
+CONSTRAINTS:
+  always:
+    - REQUIRE user.is_authenticated == true
+      ON_FAIL: HANDOFF Authentication_Agent
+
+  billing_policy:
+    - REQUIRE requested_action == "bill_explanation" OR requested_action == "credit"
+      ON_FAIL: "Please choose whether you want a bill explanation or a credit review."
+
+    - REQUIRE credit_reason IS SET
+      WHEN: requested_action == "credit"
+      ON_FAIL: "I need the reason for the requested credit."
+
+    - REQUIRE credit_amount <= 50
+      WHEN: requested_action == "credit" AND credit_amount IS SET
+      ON_FAIL: "Credits above $50 require a human review path."
+
+FLOW:
+  collect_request -> load_bill -> load_history -> apply_small_credit -> explain_bill -> confirm_credit -> explain_supervisor_review
+
+  collect_request:
+    REASONING: false
+    GATHER:
+      - requested_action:
+          TYPE: string
+          PROMPT: "Should I explain the current bill or review a goodwill credit? (bill_explanation or credit)"
+          REQUIRED: true
+      - bill_cycle:
+          TYPE: string
+          PROMPT: "Which bill cycle should I use? (current by default)"
+          REQUIRED: false
+      - credit_amount:
+          TYPE: number
+          PROMPT: "If this is a credit request, what amount are you asking for?"
+          REQUIRED: false
+      - credit_reason:
+          TYPE: string
+          PROMPT: "If this is a credit request, what is the reason?"
+          REQUIRED: false
+    THEN: load_bill
+
+  load_bill:
+    REASONING: false
+    CALL: get_bill
+      WITH:
+        user_id: user_id
+        cycle: bill_cycle
+      AS: billResult
+    ON_RESULT:
+      - IF: billResult.status == "ok"
+        SET:
+          bill_total = billResult.total_due
+          bill_due_date = billResult.due_date
+          previous_balance = billResult.previous_balance
+          daily_rate = billResult.daily_rate
+        THEN: load_history
+      - ELSE:
+        RESPOND: "I could not load the bill automatically."
+        THEN: COMPLETE
+
+  load_history:
+    REASONING: false
+    CALL: get_payment_history
+      WITH:
+        user_id: user_id
+        last_n: 6
+      AS: paymentHistory
+    ON_RESULT:
+      - IF: requested_action == "credit" AND credit_amount <= 50
+        SET: prior_goodwill_credits = paymentHistory.prior_goodwill_credits
+        THEN: apply_small_credit
+      - IF: requested_action == "credit" AND credit_amount > 50
+        SET: prior_goodwill_credits = paymentHistory.prior_goodwill_credits
+        THEN: explain_supervisor_review
+      - ELSE:
+        SET: prior_goodwill_credits = paymentHistory.prior_goodwill_credits
+        THEN: explain_bill
+
+  apply_small_credit:
+    REASONING: false
+    CALL: apply_credit
+      WITH:
+        user_id: user_id
+        amount_usd: credit_amount
+        reason: credit_reason
+      AS: creditResult
+    ON_RESULT:
+      - IF: creditResult.applied == true
+        SET:
+          credit_id = creditResult.credit_id
+          new_balance = creditResult.new_balance
+        THEN: confirm_credit
+      - ELSE:
+        SET: requires_credit_review = true
+        THEN: explain_supervisor_review
+
+  explain_bill:
+    REASONING: true
+    RESPOND: "Explain the bill total, due date, previous balance, and the role of the daily rate. If the customer asked about credits, explain the self-service credit ceiling and recent credit context."
+    THEN: COMPLETE
+
+  confirm_credit:
+    REASONING: true
+    RESPOND: "Confirm the approved credit amount, the reason captured, the new balance, and that higher-value credits still require a human supervisor."
+    THEN: COMPLETE
+
+  explain_supervisor_review:
+    REASONING: false
+    SET: requires_credit_review = true
+    RESPOND: "This credit needs a supervisor review because it is above the self-service threshold or requires manual billing judgment. I will route it to live support with the bill context."
+    THEN: COMPLETE
+
+HANDOFF:
+  - TO: Human_Support_Transfer
+    WHEN: (requested_action == "credit" AND credit_amount > 50) OR requires_credit_review == true
+    CONTEXT:
+      pass: [user_id, credit_amount, credit_reason, bill_total, bill_due_date, prior_goodwill_credits]
+      summary: "Billing credit request exceeds the deterministic self-service policy and needs supervisor review."
+    RETURN: false
+
+COMPLETE:
+  - WHEN: credit_id IS SET
+    RESPOND: "Billing credit complete."
+
+  - WHEN: requested_action == "bill_explanation" AND bill_total IS SET
+    RESPOND: "Billing explanation complete."

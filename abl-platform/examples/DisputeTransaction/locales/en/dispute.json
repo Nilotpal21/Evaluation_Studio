@@ -1,0 +1,13 @@
+{
+  "agent": "Dispute",
+  "locale": "en",
+  "strings": {
+    "start": "I'll help you dispute this transaction. Let me gather some information.",
+    "card_retrieval": "Let me retrieve your cards...",
+    "timeline_notice": "The dispute process typically takes 6-8 weeks.",
+    "contact_merchant_first": "I recommend contacting the merchant first to resolve this directly.",
+    "final_confirmation_proceed": "Perfect. I'll submit your dispute now.",
+    "final_confirmation_cancel": "No problem. Your dispute has not been filed. Is there anything else I can help you with?",
+    "complete": "Thank you for providing all the information."
+  }
+}

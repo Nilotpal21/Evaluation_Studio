@@ -1,0 +1,71 @@
+{
+  "name": "LLM-as-judge Scoring",
+  "description": "Custom rubric evaluation with configurable prompt. Edit the userPrompt in the LLM Evaluate node to define your scoring criteria. Results default to the shared custom pipeline results table.",
+  "supportedTriggers": [
+    {
+      "id": "session-ended",
+      "type": "kafka",
+      "kafkaTopic": "abl.session.ended",
+      "strategy": "default",
+      "label": "Session Ended",
+      "description": "Fires when a conversation session ends.",
+      "inputSchema": {
+        "required": ["tenantId", "sessionId"],
+        "properties": {
+          "tenantId": { "type": "string", "description": "Tenant ID from session event" },
+          "sessionId": { "type": "string", "description": "Session ID to analyze" }
+        }
+      },
+      "exampleOutput": {
+        "tenantId": "tenant-dev-001",
+        "sessionId": "sess-abc-123"
+      }
+    }
+  ],
+  "defaultTriggerIds": ["session-ended"],
+  "nodes": [
+    {
+      "id": "read-conversation",
+      "type": "read-conversation",
+      "label": "Read Conversation",
+      "config": {
+        "enrichWithTraces": false
+      },
+      "transitions": [{ "target": "llm-evaluate" }],
+      "position": { "x": -280, "y": 0 },
+      "contractVersion": 1
+    },
+    {
+      "id": "llm-evaluate",
+      "type": "llm-evaluate",
+      "label": "LLM Evaluate",
+      "config": {
+        "systemPrompt": "You are a conversation quality judge. Evaluate the conversation below on the dimensions provided and return a JSON object with numeric scores.",
+        "userPrompt": "Conversation:\n{{steps.read-conversation.output.transcript}}\n\nEvaluate and return scores as JSON.",
+        "tag": "evaluation",
+        "strict": false
+      },
+      "transitions": [{ "target": "store-results" }],
+      "position": { "x": 0, "y": 0 },
+      "contractVersion": 1
+    },
+    {
+      "id": "store-results",
+      "type": "store-results",
+      "label": "Store Results",
+      "config": {
+        "destination": "clickhouse",
+        "storageStrategy": "score_and_document",
+        "sourceStep": "llm-evaluate",
+        "scorePath": "steps.llm-evaluate.output.score",
+        "scoreName": "score",
+        "documentPath": "steps.llm-evaluate.output"
+      },
+      "transitions": [],
+      "position": { "x": 280, "y": 0 },
+      "contractVersion": 1
+    }
+  ],
+  "entryNodeId": "read-conversation",
+  "configSchema": { "fields": [] }
+}

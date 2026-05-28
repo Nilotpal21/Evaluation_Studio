@@ -1,0 +1,42 @@
+{
+  "format_version": "2.0",
+  "name": "BankNexus",
+  "slug": "banknexus",
+  "description": "Digital banking assistant with balance inquiry, fund transfer, and transaction history capabilities",
+  "abl_version": "1.0",
+  "exported_at": "2026-03-12T00:00:00.000Z",
+  "entry_agent": "BankNexus_Supervisor",
+  "dsl_format": "legacy",
+  "layers_included": ["core"],
+  "agents": {
+    "BankNexus_Supervisor": {
+      "path": "agents/BankNexus_Supervisor.agent.abl",
+      "type": "supervisor",
+      "description": "Top-level orchestrator for the BankNexus digital banking assistant"
+    },
+    "Fund_Transfer": {
+      "path": "agents/fund_transfer.agent.abl",
+      "type": "agent",
+      "description": "Handles fund transfers with validation, limits checking, fee calculation, and execution"
+    },
+    "Get_Balance": {
+      "path": "agents/get_balance.agent.abl",
+      "type": "agent",
+      "description": "Retrieves and displays account balances with formatted output"
+    },
+    "Transaction_History": {
+      "path": "agents/transaction_history.agent.abl",
+      "type": "agent",
+      "description": "Displays filtered and formatted transaction history with TRANSFORM pipeline"
+    }
+  },
+  "tools": {},
+  "metadata": {
+    "entity_counts": {
+      "agents": 4,
+      "tools": 0,
+      "locales": 4
+    },
+    "required_env_vars": []
+  }
+}

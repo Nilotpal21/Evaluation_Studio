@@ -1,0 +1,2554 @@
+{
+  "metadata": {
+    "version": "1.0.0",
+    "source": "synthetic_typo",
+    "base_dataset": "../tests/fixtures/stackoverflow-ground-truth.json",
+    "generated_queries": 100,
+    "base_documents": 50,
+    "distribution": {
+      "typo": 40,
+      "informal": 30,
+      "conversational": 20,
+      "edge_case": 10
+    },
+    "random_seed": 42
+  },
+  "documents": [
+    {
+      "id": "doc_001",
+      "title": "How can I use local Docker images with Minikube?",
+      "content": "<p>I have several Docker images that I want to use with <a href=\"https://kubernetes.io/docs/tasks/tools/install-minikube/\" rel=\"noreferrer\">Minikube</a>. I don't want to first have to upload and then download the same image instead of just using the local image directly. How do I do this?</p>\n<p>Stuff I tried:</p>\n<p><br>1. I tried running these commands (separately, deleting the instances of Minikube both times and starting fresh)</p>\n<pre class=\"lang-none prettyprint-override\"><code>kubectl ru",
+      "metadata": {
+        "category": "stackoverflow",
+        "topic": "devops",
+        "score": 688,
+        "tags": ["linux", "docker", "kubernetes", "docker-compose", "minikube"],
+        "url": "https://stackoverflow.com/questions/42564058/how-can-i-use-local-docker-images-with-minikube"
+      }
+    },
+    {
+      "id": "doc_002",
+      "title": "Answer to: How can I use local Docker images with Minikube?",
+      "content": "<p>As <a href=\"https://minikube.sigs.k8s.io/docs/handbook/pushing/#1-pushing-directly-to-the-in-cluster-docker-daemon-docker-env\" rel=\"noreferrer\">the handbook</a> describes, you can reuse the Docker daemon from Minikube with <code>eval $(minikube docker-env)</code>.</p>\n<p>So to use an image without uploading it, you can follow these steps:</p>\n<ol>\n<li>Set the environment variables with <code>eval $(minikube docker-env)</code></li>\n<li>Build the image with the Docker daemon of Minikube (e.g., ",
+      "metadata": {
+        "category": "stackoverflow",
+        "topic": "answer",
+        "score": 813,
+        "is_accepted": true
+      }
+    },
+    {
+      "id": "doc_003",
+      "title": "Answer to: How can I use local Docker images with Minikube?",
+      "content": "<p>There is one easy and effective way to push your local Docker image directly to Minikube, which will save time from building the images in Minikube again.</p>\n<pre class=\"lang-none prettyprint-override\"><code>minikube image load &lt;image name&gt;\n</code></pre>\n<p>(<em><code>minikube cache add &lt;image name&gt;</code></em>\u2014the old deprecated way, for reference)</p>\n<p>More details are <a href=\"https://minikube.sigs.k8s.io/docs/handbook/pushing/#2-push-images-using-cache-command\" rel=\"norefer",
+      "metadata": {
+        "category": "stackoverflow",
+        "topic": "answer",
+        "score": 367,
+        "is_accepted": false
+      }
+    },
+    {
+      "id": "doc_004",
+      "title": "Answer to: How can I use local Docker images with Minikube?",
+      "content": "<p>What worked for me, based on <a href=\"https://stackoverflow.com/questions/42564058/how-can-i-use-local-docker-images-with-minikube/42564211#42564211\">the solution by svenwltr</a>:</p>\n<pre><code># Start minikube\nminikube start\n\n# Set docker env\neval $(minikube docker-env)             # Unix shells\nminikube docker-env | Invoke-Expression # PowerShell\n\n# Build image\ndocker build -t foo:0.0.1 .\n\n# Run in Minikube\nkubectl run hello-foo --image=foo:0.0.1 --image-pull-policy=Never\n\n# Check that it'",
+      "metadata": {
+        "category": "stackoverflow",
+        "topic": "answer",
+        "score": 320,
+        "is_accepted": false
+      }
+    },
+    {
+      "id": "doc_002",
+      "title": "Pods stuck in Terminating status",
+      "content": "<p>I tried to delete a <code>ReplicationController</code> with 12 pods and I could see that some of the pods are stuck in <code>Terminating</code> status. </p>\n\n<p>My Kubernetes cluster consists of one control plane node and three worker nodes installed on Ubuntu virtual machines. </p>\n\n<p>What could be the reason for this issue?</p>\n\n<pre><code>NAME        READY     STATUS        RESTARTS   AGE\npod-186o2   1/1       Terminating   0          2h\npod-4b6qc   1/1       Terminating   0          2h\np",
+      "metadata": {
+        "category": "stackoverflow",
+        "topic": "devops",
+        "score": 581,
+        "tags": ["kubernetes"],
+        "url": "https://stackoverflow.com/questions/35453792/pods-stuck-in-terminating-status"
+      }
+    },
+    {
+      "id": "doc_006",
+      "title": "Answer to: Pods stuck in Terminating status",
+      "content": "<p>You can use following command to delete the POD forcefully.</p>\n\n<pre><code>kubectl delete pod &lt;PODNAME&gt; --grace-period=0 --force --namespace &lt;NAMESPACE&gt;\n</code></pre>\n",
+      "metadata": {
+        "category": "stackoverflow",
+        "topic": "answer",
+        "score": 1027,
+        "is_accepted": true
+      }
+    },
+    {
+      "id": "doc_003",
+      "title": "Difference between ClusterIP, NodePort and LoadBalancer service types in Kubernetes?",
+      "content": "<p><strong>Question 1</strong> - I'm reading the documentation and I'm slightly confused with the wording. It says:</p>\n<blockquote>\n<p><strong>ClusterIP</strong>: Exposes the service on a cluster-internal IP. Choosing this value makes the service only reachable from within the cluster. This is the default ServiceType</p>\n<p><strong>NodePort</strong>: Exposes the service on each Node\u2019s IP at a static port (the NodePort). A ClusterIP service, to which the NodePort service will route, is automatic",
+      "metadata": {
+        "category": "stackoverflow",
+        "topic": "devops",
+        "score": 560,
+        "tags": ["kubernetes", "containers", "kubernetes-service"],
+        "url": "https://stackoverflow.com/questions/41509439/difference-between-clusterip-nodeport-and-loadbalancer-service-types-in-kuberne"
+      }
+    },
+    {
+      "id": "doc_008",
+      "title": "Answer to: Difference between ClusterIP, NodePort and LoadBalancer service types in Kubernetes?",
+      "content": "<p>A ClusterIP exposes the following:</p>\n<ul>\n<li><code>spec.clusterIp:spec.ports[*].port</code></li>\n</ul>\n<p>You can only access this service while inside the cluster. It is accessible from its <code>spec.clusterIp</code> port. If a <code>spec.ports[*].targetPort</code> is set it will route from the port to the targetPort. The CLUSTER-IP you get when calling <code>kubectl get services</code> is the IP assigned to this service within the cluster internally.</p>\n<p>A NodePort exposes the follow",
+      "metadata": {
+        "category": "stackoverflow",
+        "topic": "answer",
+        "score": 488,
+        "is_accepted": true
+      }
+    },
+    {
+      "id": "doc_009",
+      "title": "Answer to: Difference between ClusterIP, NodePort and LoadBalancer service types in Kubernetes?",
+      "content": "<p>To clarify for anyone who is looking for what is the difference between the 3 on a simpler level. You can expose your service with minimal ClusterIp (within k8s cluster) or larger exposure with NodePort (within cluster external to k8s cluster) or LoadBalancer (external world or whatever you defined in your LB).</p>\n\n<p><strong>ClusterIp exposure &lt; NodePort exposure &lt; LoadBalancer exposure</strong></p>\n\n<ul>\n<li><strong>ClusterIp</strong><br>\nExpose service through <strong>k8s cluster</s",
+      "metadata": {
+        "category": "stackoverflow",
+        "topic": "answer",
+        "score": 268,
+        "is_accepted": false
+      }
+    },
+    {
+      "id": "doc_004",
+      "title": "kubectl apply vs kubectl create?",
+      "content": "<p>What I understood by the documentation is that:</p>\n<ul>\n<li>\n<pre class=\"lang-sh prettyprint-override\"><code>kubectl create\n</code></pre>\nCreates a new k8s resource in the cluster</li>\n<li>\n<pre class=\"lang-sh prettyprint-override\"><code>kubectl replace\n</code></pre>\nUpdates a resource in the live cluster</li>\n<li>\n<pre class=\"lang-sh prettyprint-override\"><code>kubectl apply\n</code></pre>\nIf I want to do create + replace (<em><a href=\"https://kubernetes.io/docs/user-guide/kubectl-overview/\"",
+      "metadata": {
+        "category": "stackoverflow",
+        "topic": "devops",
+        "score": 484,
+        "tags": ["kubernetes", "kubectl"],
+        "url": "https://stackoverflow.com/questions/47369351/kubectl-apply-vs-kubectl-create"
+      }
+    },
+    {
+      "id": "doc_011",
+      "title": "Answer to: kubectl apply vs kubectl create?",
+      "content": "<p>Those are two different approaches:</p>\n<h3>Imperative Management</h3>\n<p><code>kubectl create</code> is what we call <a href=\"https://kubernetes.io/docs/tutorials/object-management-kubectl/imperative-object-management-configuration/\" rel=\"noreferrer\">Imperative Management</a>. On this approach you tell the Kubernetes API what you want to create, replace or delete, not how you want your K8s cluster world to look like.</p>\n<h3>Declarative Management</h3>\n<p><code>kubectl apply</code> is part o",
+      "metadata": {
+        "category": "stackoverflow",
+        "topic": "answer",
+        "score": 530,
+        "is_accepted": true
+      }
+    },
+    {
+      "id": "doc_005",
+      "title": "Ingress vs Load Balancer",
+      "content": "<p>I am quite confused about the roles of Ingress and Load Balancer in Kubernetes.</p>\n\n<p>As far as I understand Ingress is used to map incoming traffic from the internet to the services running in the cluster.</p>\n\n<p>The role of load balancer is to forward traffic to a host. In that regard how does ingress differ from load balancer? Also what is the concept of load balancer inside kubernetes as compared to Amazon ELB and ALB?</p>\n",
+      "metadata": {
+        "category": "stackoverflow",
+        "topic": "devops",
+        "score": 471,
+        "tags": ["kubernetes", "load-balancing", "kubernetes-ingress"],
+        "url": "https://stackoverflow.com/questions/45079988/ingress-vs-load-balancer"
+      }
+    },
+    {
+      "id": "doc_013",
+      "title": "Answer to: Ingress vs Load Balancer",
+      "content": "<p><strong>Load Balancer:</strong> A kubernetes LoadBalancer service is a service that points to external load balancers that are NOT in your kubernetes cluster, but exist elsewhere. They can work with your pods, assuming that your pods are externally routable. Google and AWS provide this capability natively. In terms of Amazon, this maps directly with ELB and kubernetes when running in AWS can automatically provision and configure an ELB instance for each LoadBalancer service deployed.</p>\n<p><",
+      "metadata": {
+        "category": "stackoverflow",
+        "topic": "answer",
+        "score": 345,
+        "is_accepted": true
+      }
+    },
+    {
+      "id": "doc_006",
+      "title": "What&#39;s the difference between Docker Compose and Kubernetes?",
+      "content": "<p>While diving into Docker, Google Cloud and Kubernetes, and without clearly understanding all three of them yet, it seems to me these products are overlapping, yet they're not compatible.</p>\n\n<p>For example, a <code>docker-compose.yml</code> file needs to be re-written so an app can be deployed to Kubernetes.</p>\n\n<p>Could someone provide a high-level, rough description of where Docker, Docker Compose, Docker Cloud, and Kubernetes overlap and where one is dependent on the other?</p>\n",
+      "metadata": {
+        "category": "stackoverflow",
+        "topic": "devops",
+        "score": 448,
+        "tags": ["docker", "kubernetes", "docker-compose"],
+        "url": "https://stackoverflow.com/questions/47536536/whats-the-difference-between-docker-compose-and-kubernetes"
+      }
+    },
+    {
+      "id": "doc_015",
+      "title": "Answer to: What&#39;s the difference between Docker Compose and Kubernetes?",
+      "content": "<p><strong><a href=\"https://www.docker.com/resources/what-container\" rel=\"noreferrer\">Containers</a></strong>:</p>\n<ul>\n<li>Containers are at the core of the other technologies listed here</li>\n</ul>\n<p><strong><a href=\"https://www.docker.com/\" rel=\"noreferrer\">Docker</a></strong>:</p>\n<ul>\n<li>Docker is a popular implementation of the technology that allows applications to be bundled into a container.</li>\n<li><code>docker</code> is a command-line tool to manage images, containers, volumes, and",
+      "metadata": {
+        "category": "stackoverflow",
+        "topic": "answer",
+        "score": 874,
+        "is_accepted": true
+      }
+    },
+    {
+      "id": "doc_016",
+      "title": "Answer to: What&#39;s the difference between Docker Compose and Kubernetes?",
+      "content": "<p>In addition to <a href=\"https://stackoverflow.com/users/6603816/yamenk\">@yamenk's</a> answer, I'd like to add a few details here which might help people with their journey of understanding Kubernetes.</p>\n<h2>Short answer:</h2>\n<ul>\n<li><code>docker-compose</code>: is a <strong>tool</strong> that takes a YAML file which describes your <strong>multi-container</strong> application and helps you <em>create</em>, <em>start/stop</em>, <em>remove</em> all those containers without having to type mul",
+      "metadata": {
+        "category": "stackoverflow",
+        "topic": "answer",
+        "score": 243,
+        "is_accepted": false
+      }
+    },
+    {
+      "id": "doc_017",
+      "title": "Answer to: What&#39;s the difference between Docker Compose and Kubernetes?",
+      "content": "<p>If you are networking containers within the same host go for <strong>docker compose</strong>.</p>\n<p>If you are networking containers across multiple hosts go for <strong>kubernetes</strong>.</p>\n<p>Completing this response:</p>\n<p>\u200d</p>\n<ul>\n<li>Multi-Node Management</li>\n</ul>\n<p>Docker Compose is designed to run containers on a single host system. In contrast, Kubernetes can manage containers deployed across multiple nodes(computers). This makes Kubernetes useful for large-scale applicatio",
+      "metadata": {
+        "category": "stackoverflow",
+        "topic": "answer",
+        "score": 192,
+        "is_accepted": false
+      }
+    },
+    {
+      "id": "doc_007",
+      "title": "What&#39;s the difference between Apache&#39;s Mesos and Google&#39;s Kubernetes",
+      "content": "<p>What exactly is the difference between Apache's Mesos and Google's Kubernetes?\nI understand both are server cluster management software. Can anyone elaborate where the main differences are - when would which framework be preferred?</p>\n\n<p>Why would you want to use <a href=\"http://googlecloudplatform.blogspot.ch/2014/08/mesosphere-collaborates-with-kubernetes-and-google-cloud-platform.html\">Kubernetes on top of Mesosphere</a>?</p>\n",
+      "metadata": {
+        "category": "stackoverflow",
+        "topic": "devops",
+        "score": 428,
+        "tags": ["kubernetes", "mesosphere"],
+        "url": "https://stackoverflow.com/questions/26705201/whats-the-difference-between-apaches-mesos-and-googles-kubernetes"
+      }
+    },
+    {
+      "id": "doc_019",
+      "title": "Answer to: What&#39;s the difference between Apache&#39;s Mesos and Google&#39;s Kubernetes",
+      "content": "<p>Kubernetes is an open source project that brings 'Google style' cluster management capabilities  to the world of virtual machines, or 'on the metal' scenarios.  It works very well with modern operating system environments (like CoreOS or Red Hat Atomic) that offer up lightweight computing 'nodes' that are managed for you.  It is written in Golang and is lightweight, modular, portable and extensible.  We (the Kubernetes team) are working with a number of different technology companies (includi",
+      "metadata": {
+        "category": "stackoverflow",
+        "topic": "answer",
+        "score": 566,
+        "is_accepted": true
+      }
+    },
+    {
+      "id": "doc_008",
+      "title": "What is the difference between a pod and a deployment?",
+      "content": "<p>I have been creating pods with <code>type:deployment</code> but I see that some documentation uses <code>type:pod</code>, more specifically <a href=\"http://kubernetes.io/docs/user-guide/pods/multi-container/\" rel=\"noreferrer\">the documentation for multi-container pods</a>:</p>\n\n<pre><code>apiVersion: v1\nkind: Pod\nmetadata:\n  name: \"\"\n  labels:\n    name: \"\"\n  namespace: \"\"\n  annotations: []\n  generateName: \"\"\nspec:\n  ? \"// See 'The spec schema' for details.\"\n  : ~\n</code></pre>\n\n<p>But to crea",
+      "metadata": {
+        "category": "stackoverflow",
+        "topic": "devops",
+        "score": 416,
+        "tags": ["kubernetes"],
+        "url": "https://stackoverflow.com/questions/41325087/what-is-the-difference-between-a-pod-and-a-deployment"
+      }
+    },
+    {
+      "id": "doc_021",
+      "title": "Answer to: What is the difference between a pod and a deployment?",
+      "content": "<p>Radek's answer is very good, but I would like to pitch in from my experience, you will almost never use an <strong>object</strong> with the <strong>kind</strong> <strong>pod</strong>, because that doesn't make any sense in practice. </p>\n\n<p>Because you need a <strong>deployment</strong> object - or other Kubernetes API objects like a <strong>replication controller</strong> or <strong>replicaset</strong> - that needs to keep the <strong>replicas</strong> (pods) alive (that's kind of the point",
+      "metadata": {
+        "category": "stackoverflow",
+        "topic": "answer",
+        "score": 377,
+        "is_accepted": false
+      }
+    },
+    {
+      "id": "doc_022",
+      "title": "Answer to: What is the difference between a pod and a deployment?",
+      "content": "<p>Both Pod and Deployment are full-fledged objects in the Kubernetes API.  Deployment manages creating Pods by means of ReplicaSets. What it boils down to is that Deployment will create Pods with spec taken from the template. It is rather unlikely that you will ever need to create Pods directly for a production use-case.</p>\n",
+      "metadata": {
+        "category": "stackoverflow",
+        "topic": "answer",
+        "score": 310,
+        "is_accepted": true
+      }
+    },
+    {
+      "id": "doc_009",
+      "title": "Command to delete all pods in all kubernetes namespaces",
+      "content": "<p>Upon looking at the docs, there is an API call to delete a single pod, but is there a way to delete <em>all</em> pods in all namespaces?</p>\n",
+      "metadata": {
+        "category": "stackoverflow",
+        "topic": "devops",
+        "score": 390,
+        "tags": ["kubernetes"],
+        "url": "https://stackoverflow.com/questions/33509194/command-to-delete-all-pods-in-all-kubernetes-namespaces"
+      }
+    },
+    {
+      "id": "doc_024",
+      "title": "Answer to: Command to delete all pods in all kubernetes namespaces",
+      "content": "<p>There is no command to do exactly what you asked.</p>\n<p>Here are some close matches.</p>\n<p><strong>Be careful before running any of these commands.  Make sure you are connected to the right cluster, if you use multiple clusters.  Consider running. <code>kubectl config view</code> first.</strong></p>\n<p>You can delete all the pods in a single namespace with this command:</p>\n<pre><code>kubectl delete --all pods --namespace=foo\n</code></pre>\n<p>You can also delete all deployments in namespace",
+      "metadata": {
+        "category": "stackoverflow",
+        "topic": "answer",
+        "score": 659,
+        "is_accepted": true
+      }
+    },
+    {
+      "id": "doc_010",
+      "title": "Where does the convention of using /healthz for application health checks come from?",
+      "content": "<p>In the Kubernetes/Docker ecosystem there is a convention of using <code>/healthz</code> as a health-check endpoint for applications.</p>\n\n<p>Where does the name 'healthz' come from, and are there any particular semantics associated with that name?</p>\n",
+      "metadata": {
+        "category": "stackoverflow",
+        "topic": "devops",
+        "score": 376,
+        "tags": ["docker", "kubernetes", "kubernetes-health-check"],
+        "url": "https://stackoverflow.com/questions/43380939/where-does-the-convention-of-using-healthz-for-application-health-checks-come-f"
+      }
+    },
+    {
+      "id": "doc_026",
+      "title": "Answer to: Where does the convention of using /healthz for application health checks come from?",
+      "content": "<p>It historically comes from Google\u2019s internal practices. They're called &quot;z-pages&quot;.</p>\n<p>The reason it ends with <code>z</code> is to reduce collisions with actual application endpoints with the same name (like <code>/status</code>). See this talk for more: <a href=\"https://vimeo.com/173610242\" rel=\"nofollow noreferrer\">https://vimeo.com/173610242</a> (26:50-)</p>\n<p>Similar endpoints (at least inside Google) are <code>/varz</code>, <code>/statusz</code>, <code>/rpcz</code>. Service",
+      "metadata": {
+        "category": "stackoverflow",
+        "topic": "answer",
+        "score": 481,
+        "is_accepted": true
+      }
+    },
+    {
+      "id": "doc_011",
+      "title": "How do I force Kubernetes to re-pull an image?",
+      "content": "<p>I have the following replication controller in Kubernetes on GKE:</p>\n\n<pre><code>apiVersion: v1\nkind: ReplicationController\nmetadata:\n  name: myapp\n  labels:\n    app: myapp\nspec:\n  replicas: 2\n  selector:\n    app: myapp\n    deployment: initial\n  template:\n    metadata:\n      labels:\n        app: myapp\n        deployment: initial\n    spec:\n      containers:\n      - name: myapp\n        image: myregistry.com/myapp:5c3dda6b\n        ports:\n        - containerPort: 80\n      imagePullPolicy: Always",
+      "metadata": {
+        "category": "stackoverflow",
+        "topic": "devops",
+        "score": 365,
+        "tags": ["image", "pull", "kubernetes"],
+        "url": "https://stackoverflow.com/questions/33112789/how-do-i-force-kubernetes-to-re-pull-an-image"
+      }
+    },
+    {
+      "id": "doc_028",
+      "title": "Answer to: How do I force Kubernetes to re-pull an image?",
+      "content": "<p>Kubernetes will pull upon Pod creation if either (see <a href=\"https://kubernetes.io/docs/concepts/containers/images/#updating-images\" rel=\"noreferrer\">updating-images doc</a>):</p>\n<ul>\n<li>Using images tagged <code>:latest</code></li>\n<li><code>imagePullPolicy: Always</code> is specified</li>\n</ul>\n<p>This is great if you want to always pull. But what if you want to do it <strong>on demand</strong>: For example, if you want to use <code>some-public-image:latest</code> but only want to pull ",
+      "metadata": {
+        "category": "stackoverflow",
+        "topic": "answer",
+        "score": 315,
+        "is_accepted": false
+      }
+    },
+    {
+      "id": "doc_012",
+      "title": "How can I trigger a Kubernetes Scheduled Job manually?",
+      "content": "<p>I've created a <a href=\"https://kubernetes.io/docs/user-guide/cron-jobs/\" rel=\"noreferrer\">Kubernetes Scheduled Job</a>, which runs twice a day according to its schedule. However, I would like to trigger it manually for testing purposes. How can I do this?</p>\n",
+      "metadata": {
+        "category": "stackoverflow",
+        "topic": "devops",
+        "score": 350,
+        "tags": ["scheduled-tasks", "kubernetes", "google-kubernetes-engine"],
+        "url": "https://stackoverflow.com/questions/40401795/how-can-i-trigger-a-kubernetes-scheduled-job-manually"
+      }
+    },
+    {
+      "id": "doc_030",
+      "title": "Answer to: How can I trigger a Kubernetes Scheduled Job manually?",
+      "content": "<p>The issue <a href=\"https://github.com/kubernetes/kubernetes/issues/47538\" rel=\"noreferrer\">#47538</a> that <a href=\"https://stackoverflow.com/a/46062397/2884309\">@jdf mentioned</a> is now closed and this is now possible. The original implementation can be found <a href=\"https://github.com/kubernetes/kubernetes/commit/5b57c2db0067c8a16681fe9ec57ace3ad0342c8f\" rel=\"noreferrer\">here</a> but the syntax has changed.</p>\n<p>With kubectl v1.10.1+ the command is:</p>\n<p><code>kubectl create job --fro",
+      "metadata": {
+        "category": "stackoverflow",
+        "topic": "answer",
+        "score": 564,
+        "is_accepted": true
+      }
+    },
+    {
+      "id": "doc_013",
+      "title": "Namespace &quot;stuck&quot; as Terminating. How do I remove it?",
+      "content": "<p>I've had a &quot;stuck&quot; namespace that I deleted showing in this eternal &quot;terminating&quot; status.</p>\n",
+      "metadata": {
+        "category": "stackoverflow",
+        "topic": "devops",
+        "score": 349,
+        "tags": ["kubernetes", "namespaces"],
+        "url": "https://stackoverflow.com/questions/52369247/namespace-stuck-as-terminating-how-do-i-remove-it"
+      }
+    },
+    {
+      "id": "doc_032",
+      "title": "Answer to: Namespace &quot;stuck&quot; as Terminating. How do I remove it?",
+      "content": "<p>Assuming you've already tried to force-delete resources like: \n<a href=\"https://stackoverflow.com/q/35453792\">Pods stuck at terminating status</a>, and your at your wits' end trying to recover the namespace...</p>\n\n<p>You can force-delete the namespace (perhaps leaving dangling resources):</p>\n\n<pre><code>(\nNAMESPACE=your-rogue-namespace\nkubectl proxy &amp;\nkubectl get namespace $NAMESPACE -o json |jq '.spec = {\"finalizers\":[]}' &gt;temp.json\ncurl -k -H \"Content-Type: application/json\" -X PUT",
+      "metadata": {
+        "category": "stackoverflow",
+        "topic": "answer",
+        "score": 373,
+        "is_accepted": false
+      }
+    },
+    {
+      "id": "doc_033",
+      "title": "Answer to: Namespace &quot;stuck&quot; as Terminating. How do I remove it?",
+      "content": "<p>As mentioned before in this thread there is another way to terminate a namespace using API not exposed by kubectl by using a modern version of kubectl where <code>kubectl replace --raw</code> is available (not sure from which version). This way you will not have to spawn a <code>kubectl proxy</code> process and avoid dependency with curl (that in some environment like busybox is not available). In the hope that this will help someone else I left this here:</p>\n\n<pre><code>kubectl get namespac",
+      "metadata": {
+        "category": "stackoverflow",
+        "topic": "answer",
+        "score": 220,
+        "is_accepted": false
+      }
+    },
+    {
+      "id": "doc_014",
+      "title": "How do I get logs from all pods of a Kubernetes replication controller?",
+      "content": "<p>Running <code>kubectl logs</code> shows me the stderr/stdout of one Kubernetes container.  </p>\n\n<p>How can I get the aggregated stderr/stdout of a set of pods, preferably those created by a certain replication controller?</p>\n",
+      "metadata": {
+        "category": "stackoverflow",
+        "topic": "devops",
+        "score": 337,
+        "tags": ["logging", "kubernetes", "google-kubernetes-engine"],
+        "url": "https://stackoverflow.com/questions/33069736/how-do-i-get-logs-from-all-pods-of-a-kubernetes-replication-controller"
+      }
+    },
+    {
+      "id": "doc_035",
+      "title": "Answer to: How do I get logs from all pods of a Kubernetes replication controller?",
+      "content": "<p>You can use labels</p>\n<pre><code>kubectl logs -l app=elasticsearch\n</code></pre>\n<p>And you'd probably want to specify <code>--max-log-requests --all-containers --ignore-errors</code> in order to:</p>\n<ul>\n<li>Specify the number of concurrent log streams (default is 5)</li>\n<li>Include logs from pods with multiple containers</li>\n<li>Continue to next pod on fatal error (e.g. logs could not be retrieved)</li>\n</ul>\n",
+      "metadata": {
+        "category": "stackoverflow",
+        "topic": "answer",
+        "score": 490,
+        "is_accepted": true
+      }
+    },
+    {
+      "id": "doc_015",
+      "title": "How to switch namespace in kubernetes",
+      "content": "<p>Say, I have two namespaces k8s-app1 and k8s-app2</p>\n\n<p>I can list all pods from specific namespace using the below command</p>\n\n<pre><code>kubectl get pods -n &lt;namespace&gt;\n</code></pre>\n\n<p>We need to append namespace to all commands to list objects from the respective namespaces. Is there a way to set specific namespace and list objects without including the namespace explicitly?</p>\n",
+      "metadata": {
+        "category": "stackoverflow",
+        "topic": "devops",
+        "score": 334,
+        "tags": ["kubernetes", "namespaces"],
+        "url": "https://stackoverflow.com/questions/55373686/how-to-switch-namespace-in-kubernetes"
+      }
+    },
+    {
+      "id": "doc_037",
+      "title": "Answer to: How to switch namespace in kubernetes",
+      "content": "<p>I like my answers short, to the point and with references to official documentation:</p>\n<p><strong>Answer</strong>:</p>\n<p>This is the command, but please consider that <em>it will edit your kubeconfig file</em></p>\n<pre><code>kubectl config set-context --current --namespace=my-namespace\n</code></pre>\n<p><strong>From</strong>:</p>\n<p><a href=\"https://kubernetes.io/docs/reference/kubectl/cheatsheet/\" rel=\"nofollow noreferrer\">https://kubernetes.io/docs/reference/kubectl/cheatsheet/</a></p>\n",
+      "metadata": {
+        "category": "stackoverflow",
+        "topic": "answer",
+        "score": 548,
+        "is_accepted": false
+      }
+    },
+    {
+      "id": "doc_016",
+      "title": "Difference between targetPort and port in Kubernetes Service definition",
+      "content": "<p>A Kubernetes <a href=\"https://kubernetes.io/docs/concepts/services-networking/service/\" rel=\"noreferrer\"><code>Service</code></a> can have a <code>targetPort</code> and <code>port</code> in the service definition:</p>\n\n<pre class=\"lang-yaml prettyprint-override\"><code>kind: Service\napiVersion: v1\nmetadata:\n  name: my-service\nspec:\n  selector:\n    app: MyApp\n  ports:\n  - protocol: TCP\n    port: 80\n    targetPort: 9376\n</code></pre>\n\n<p>What is the difference between the <code>port</code> and <",
+      "metadata": {
+        "category": "stackoverflow",
+        "topic": "devops",
+        "score": 332,
+        "tags": ["service", "kubernetes", "port"],
+        "url": "https://stackoverflow.com/questions/49981601/difference-between-targetport-and-port-in-kubernetes-service-definition"
+      }
+    },
+    {
+      "id": "doc_039",
+      "title": "Answer to: Difference between targetPort and port in Kubernetes Service definition",
+      "content": "<p><strong>Service:</strong> This directs the traffic to a pod.</p>\n<p><strong>TargetPort:</strong> This is the actual port on which your application is running inside the container.</p>\n<p><strong>Port:</strong> Sometimes your application inside the container serves different services on a different port.</p>\n<p><strong>Example:</strong> The actual application can run on port 8080 and health checks for this application can run on port 8089 of the container.\nSo if you hit the service without a p",
+      "metadata": {
+        "category": "stackoverflow",
+        "topic": "answer",
+        "score": 251,
+        "is_accepted": true
+      }
+    },
+    {
+      "id": "doc_040",
+      "title": "Answer to: Difference between targetPort and port in Kubernetes Service definition",
+      "content": "<p>It helps me to think of things from the perspective <strong>of the service</strong>.</p>\n<ul>\n<li><code>nodePort</code>: The port on the node where external traffic will come in on</li>\n<li><code>port</code>: The port <strong>of this service</strong></li>\n<li><code>targetPort</code> The target port on the pod(s) to forward traffic to</li>\n</ul>\n<p>Traffic comes in on <code>nodePort</code>, forwards to <code>port</code> on the service which then routes to <code>targetPort</code> on the pod(s).",
+      "metadata": {
+        "category": "stackoverflow",
+        "topic": "answer",
+        "score": 236,
+        "is_accepted": false
+      }
+    },
+    {
+      "id": "doc_017",
+      "title": "Kubernetes service external ip pending",
+      "content": "<p>I am trying to deploy nginx on kubernetes, kubernetes version is v1.5.2,\nI have deployed nginx with 3 replica, YAML file is below,</p>\n<pre><code>apiVersion: extensions/v1beta1\nkind: Deployment\nmetadata:\n  name: deployment-example\nspec:\n  replicas: 3\n  revisionHistoryLimit: 2\n  template:\n    metadata:\n      labels:\n        app: nginx\n    spec:\n      containers:\n      - name: nginx\n        image: nginx:1.10\n        ports:\n        - containerPort: 80\n</code></pre>\n<p>and now I want to expose it",
+      "metadata": {
+        "category": "stackoverflow",
+        "topic": "devops",
+        "score": 331,
+        "tags": ["kubernetes", "nginx", "ip", "load-balancing"],
+        "url": "https://stackoverflow.com/questions/44110876/kubernetes-service-external-ip-pending"
+      }
+    },
+    {
+      "id": "doc_042",
+      "title": "Answer to: Kubernetes service external ip pending",
+      "content": "<p>If you are using Minikube, there is a magic command!</p>\n\n<pre><code>$ minikube tunnel\n</code></pre>\n\n<p>Hopefully someone can save a few minutes with this.</p>\n\n<p>Reference link\n<a href=\"https://minikube.sigs.k8s.io/docs/handbook/accessing/#using-minikube-tunnel\" rel=\"noreferrer\">https://minikube.sigs.k8s.io/docs/handbook/accessing/#using-minikube-tunnel</a></p>\n",
+      "metadata": {
+        "category": "stackoverflow",
+        "topic": "answer",
+        "score": 314,
+        "is_accepted": false
+      }
+    },
+    {
+      "id": "doc_043",
+      "title": "Answer to: Kubernetes service external ip pending",
+      "content": "<p>It looks like you are using a custom Kubernetes Cluster (using <code>minikube</code>, <code>kubeadm</code> or the like). In this case, there is no LoadBalancer integrated (unlike AWS or Google Cloud). With this default setup, you can only use <a href=\"https://kubernetes.io/docs/concepts/services-networking/service/#nodeport\" rel=\"noreferrer\"><code>NodePort</code></a> or an Ingress Controller.</p>\n\n<p>With the <a href=\"https://kubernetes.io/docs/concepts/services-networking/ingress/#ingress-cl",
+      "metadata": {
+        "category": "stackoverflow",
+        "topic": "answer",
+        "score": 307,
+        "is_accepted": true
+      }
+    },
+    {
+      "id": "doc_018",
+      "title": "How can I keep a container running on Kubernetes?",
+      "content": "<p>I'm now trying to run a simple container with shell (/bin/bash) on a Kubernetes cluster.</p>\n\n<p>I thought that there was a way to keep a container running on a Docker container by using <code>pseudo-tty</code> and detach option (<code>-td</code> option on <code>docker run</code> command).</p>\n\n<p>For example,</p>\n\n<pre><code>$ sudo docker run -td ubuntu:latest\n</code></pre>\n\n<p>Is there an option like this in Kubernetes?</p>\n\n<p>I've tried running a container by using a <code>kubectl run-con",
+      "metadata": {
+        "category": "stackoverflow",
+        "topic": "devops",
+        "score": 310,
+        "tags": ["docker", "kubernetes", "google-kubernetes-engine"],
+        "url": "https://stackoverflow.com/questions/31870222/how-can-i-keep-a-container-running-on-kubernetes"
+      }
+    },
+    {
+      "id": "doc_045",
+      "title": "Answer to: How can I keep a container running on Kubernetes?",
+      "content": "<p>Containers are meant to run to completion.  You need to provide your container with a task that will never finish.  Something like this should work:</p>\n\n<pre class=\"lang-yaml prettyprint-override\"><code>apiVersion: v1\nkind: Pod\nmetadata:\n  name: ubuntu\nspec:\n  containers:\n  - name: ubuntu\n    image: ubuntu:latest\n    # Just spin &amp; wait forever\n    command: [ \"/bin/bash\", \"-c\", \"--\" ]\n    args: [ \"while true; do sleep 30; done;\" ]\n</code></pre>\n",
+      "metadata": {
+        "category": "stackoverflow",
+        "topic": "answer",
+        "score": 379,
+        "is_accepted": false
+      }
+    },
+    {
+      "id": "doc_046",
+      "title": "Answer to: How can I keep a container running on Kubernetes?",
+      "content": "<p>You could use this CMD in your <code>Dockerfile</code>:</p>\n<pre><code>CMD exec /bin/bash -c &quot;trap : TERM INT; sleep infinity &amp; wait&quot;\n</code></pre>\n<p>This will keep your container alive until it is told to stop. Using trap and wait will make your container <strong>react immediately to a stop request</strong>. Without trap/wait stopping will take a few seconds.</p>\n<p>For busybox based images (used in alpine based images) sleep does not know about the infinity argument. This wor",
+      "metadata": {
+        "category": "stackoverflow",
+        "topic": "answer",
+        "score": 229,
+        "is_accepted": false
+      }
+    },
+    {
+      "id": "doc_019",
+      "title": "Kubernetes pod gets recreated when deleted",
+      "content": "<p>I have started pods with command</p>\n<pre class=\"lang-sh prettyprint-override\"><code>$ kubectl run busybox \\\n--image=busybox \\\n--restart=Never \\\n--tty \\\n-i \\\n--generator=run-pod/v1\n</code></pre>\n<p>Something went wrong, and now I can't delete this <code>Pod</code>.</p>\n<p>I tried using the methods described below but the <code>Pod</code> keeps being recreated.</p>\n<pre class=\"lang-sh prettyprint-override\"><code>$ kubectl delete pods  busybox-na3tm\npod &quot;busybox-na3tm&quot; deleted\n\n$ kube",
+      "metadata": {
+        "category": "stackoverflow",
+        "topic": "devops",
+        "score": 307,
+        "tags": ["kubernetes", "kubectl"],
+        "url": "https://stackoverflow.com/questions/40686151/kubernetes-pod-gets-recreated-when-deleted"
+      }
+    },
+    {
+      "id": "doc_048",
+      "title": "Answer to: Kubernetes pod gets recreated when deleted",
+      "content": "<p>You need to delete the deployment, which should in turn delete the pods and the replica sets <a href=\"https://github.com/kubernetes/kubernetes/issues/24137\" rel=\"noreferrer\">https://github.com/kubernetes/kubernetes/issues/24137</a></p>\n<p>To list all deployments:</p>\n<pre><code>kubectl get deployments --all-namespaces\n</code></pre>\n<p>Then to delete the deployment:</p>\n<pre><code>kubectl delete -n NAMESPACE deployment DEPLOYMENT\n</code></pre>\n<p>Where NAMESPACE is the namespace it's in, and D",
+      "metadata": {
+        "category": "stackoverflow",
+        "topic": "answer",
+        "score": 551,
+        "is_accepted": true
+      }
+    },
+    {
+      "id": "doc_020",
+      "title": "Get YAML for deployed Kubernetes services?",
+      "content": "<p>I am trying to deploy my app to <em>Kubernetes</em> running in <em>Google Container\nEngine</em>.</p>\n\n<p>The app can be found at: <a href=\"https://github.com/Industrial/docker-znc\" rel=\"noreferrer\">https://github.com/Industrial/docker-znc</a>.</p>\n\n<p>The <em>Dockerfile</em> is built into an image on <em>Google Container Registry</em>.</p>\n\n<p>I have deployed the app in <em>Kubernetes</em> via the + button. I don't have the YAML\nfor this.</p>\n\n<p>I have inserted a <em>Secret</em> in <em>Kuber",
+      "metadata": {
+        "category": "stackoverflow",
+        "topic": "devops",
+        "score": 301,
+        "tags": ["kubernetes", "google-kubernetes-engine"],
+        "url": "https://stackoverflow.com/questions/43941772/get-yaml-for-deployed-kubernetes-services"
+      }
+    },
+    {
+      "id": "doc_050",
+      "title": "Answer to: Get YAML for deployed Kubernetes services?",
+      "content": "<p>To get the yaml for a deployment (service, pod, secret, etc):</p>\n<pre><code>kubectl get deploy deploymentname -o yaml\n</code></pre>\n",
+      "metadata": {
+        "category": "stackoverflow",
+        "topic": "answer",
+        "score": 431,
+        "is_accepted": false
+      }
+    }
+  ],
+  "queries": [
+    {
+      "id": "synth_query_001",
+      "query": "kbuectl apply vs kubectl create?",
+      "original_query": "kubectl apply vs kubectl create?",
+      "category": "typo",
+      "relevant_docs": [
+        {
+          "doc_id": "doc_004",
+          "relevance": 1
+        },
+        {
+          "doc_id": "doc_011",
+          "relevance": 3
+        }
+      ],
+      "expected_improvement_with_preprocessing": true,
+      "preprocessing_helps_with": ["spell_correction"]
+    },
+    {
+      "id": "synth_query_002",
+      "query": "IIngress vs Load Balancer",
+      "original_query": "Ingress vs Load Balancer",
+      "category": "typo",
+      "relevant_docs": [
+        {
+          "doc_id": "doc_005",
+          "relevance": 1
+        },
+        {
+          "doc_id": "doc_013",
+          "relevance": 3
+        }
+      ],
+      "expected_improvement_with_preprocessing": true,
+      "preprocessing_helps_with": ["spell_correction"]
+    },
+    {
+      "id": "synth_query_003",
+      "query": "How can I use local Docer images with Minikube?",
+      "original_query": "How can I use local Docker images with Minikube?",
+      "category": "typo",
+      "relevant_docs": [
+        {
+          "doc_id": "doc_001",
+          "relevance": 1
+        },
+        {
+          "doc_id": "doc_002",
+          "relevance": 3
+        },
+        {
+          "doc_id": "doc_003",
+          "relevance": 2
+        },
+        {
+          "doc_id": "doc_004",
+          "relevance": 2
+        }
+      ],
+      "expected_improvement_with_preprocessing": true,
+      "preprocessing_helps_with": ["spell_correction"]
+    },
+    {
+      "id": "synth_query_004",
+      "query": "Kubernetes seervice external ip pending",
+      "original_query": "Kubernetes service external ip pending",
+      "category": "typo",
+      "relevant_docs": [
+        {
+          "doc_id": "doc_017",
+          "relevance": 1
+        },
+        {
+          "doc_id": "doc_042",
+          "relevance": 2
+        },
+        {
+          "doc_id": "doc_043",
+          "relevance": 3
+        }
+      ],
+      "expected_improvement_with_preprocessing": true,
+      "preprocessing_helps_with": ["spell_correction"]
+    },
+    {
+      "id": "synth_query_005",
+      "query": "How to swicth namespace in kubernetes",
+      "original_query": "How to switch namespace in kubernetes",
+      "category": "typo",
+      "relevant_docs": [
+        {
+          "doc_id": "doc_015",
+          "relevance": 1
+        },
+        {
+          "doc_id": "doc_037",
+          "relevance": 2
+        }
+      ],
+      "expected_improvement_with_preprocessing": true,
+      "preprocessing_helps_with": ["spell_correction"]
+    },
+    {
+      "id": "synth_query_006",
+      "query": "How do I force Kuberentes to re-pull an image?",
+      "original_query": "How do I force Kubernetes to re-pull an image?",
+      "category": "typo",
+      "relevant_docs": [
+        {
+          "doc_id": "doc_011",
+          "relevance": 1
+        },
+        {
+          "doc_id": "doc_028",
+          "relevance": 2
+        }
+      ],
+      "expected_improvement_with_preprocessing": true,
+      "preprocessing_helps_with": ["spell_correction"]
+    },
+    {
+      "id": "synth_query_007",
+      "query": "How do I force Kubernetis to re-pull an image?",
+      "original_query": "How do I force Kubernetes to re-pull an image?",
+      "category": "typo",
+      "relevant_docs": [
+        {
+          "doc_id": "doc_011",
+          "relevance": 1
+        },
+        {
+          "doc_id": "doc_028",
+          "relevance": 2
+        }
+      ],
+      "expected_improvement_with_preprocessing": true,
+      "preprocessing_helps_with": ["spell_correction"]
+    },
+    {
+      "id": "synth_query_008",
+      "query": "kbectl apply vs kubectl create?",
+      "original_query": "kubectl apply vs kubectl create?",
+      "category": "typo",
+      "relevant_docs": [
+        {
+          "doc_id": "doc_004",
+          "relevance": 1
+        },
+        {
+          "doc_id": "doc_011",
+          "relevance": 3
+        }
+      ],
+      "expected_improvement_with_preprocessing": true,
+      "preprocessing_helps_with": ["spell_correction"]
+    },
+    {
+      "id": "synth_query_009",
+      "query": "How to switch nameslace in kubernetes",
+      "original_query": "How to switch namespace in kubernetes",
+      "category": "typo",
+      "relevant_docs": [
+        {
+          "doc_id": "doc_015",
+          "relevance": 1
+        },
+        {
+          "doc_id": "doc_037",
+          "relevance": 2
+        }
+      ],
+      "expected_improvement_with_preprocessing": true,
+      "preprocessing_helps_with": ["spell_correction"]
+    },
+    {
+      "id": "synth_query_010",
+      "query": "Get YAML for deployed Kbuernetes services?",
+      "original_query": "Get YAML for deployed Kubernetes services?",
+      "category": "typo",
+      "relevant_docs": [
+        {
+          "doc_id": "doc_020",
+          "relevance": 1
+        },
+        {
+          "doc_id": "doc_050",
+          "relevance": 2
+        }
+      ],
+      "expected_improvement_with_preprocessing": true,
+      "preprocessing_helps_with": ["spell_correction"]
+    },
+    {
+      "id": "synth_query_011",
+      "query": "Pods stuck in Termunating status",
+      "original_query": "Pods stuck in Terminating status",
+      "category": "typo",
+      "relevant_docs": [
+        {
+          "doc_id": "doc_002",
+          "relevance": 1
+        },
+        {
+          "doc_id": "doc_006",
+          "relevance": 3
+        }
+      ],
+      "expected_improvement_with_preprocessing": true,
+      "preprocessing_helps_with": ["spell_correction"]
+    },
+    {
+      "id": "synth_query_012",
+      "query": "Namspace &quot;stuck&quot; as Terminating. How do I remove it?",
+      "original_query": "Namespace &quot;stuck&quot; as Terminating. How do I remove it?",
+      "category": "typo",
+      "relevant_docs": [
+        {
+          "doc_id": "doc_013",
+          "relevance": 1
+        },
+        {
+          "doc_id": "doc_032",
+          "relevance": 2
+        },
+        {
+          "doc_id": "doc_033",
+          "relevance": 2
+        }
+      ],
+      "expected_improvement_with_preprocessing": true,
+      "preprocessing_helps_with": ["spell_correction"]
+    },
+    {
+      "id": "synth_query_013",
+      "query": "What&#39;s the difference between Docker Compose and Kuberentes?",
+      "original_query": "What&#39;s the difference between Docker Compose and Kubernetes?",
+      "category": "typo",
+      "relevant_docs": [
+        {
+          "doc_id": "doc_006",
+          "relevance": 1
+        },
+        {
+          "doc_id": "doc_015",
+          "relevance": 3
+        },
+        {
+          "doc_id": "doc_016",
+          "relevance": 2
+        },
+        {
+          "doc_id": "doc_017",
+          "relevance": 2
+        }
+      ],
+      "expected_improvement_with_preprocessing": true,
+      "preprocessing_helps_with": ["spell_correction"]
+    },
+    {
+      "id": "synth_query_014",
+      "query": "Commnad to delete all pods in all kubernetes namespaces",
+      "original_query": "Command to delete all pods in all kubernetes namespaces",
+      "category": "typo",
+      "relevant_docs": [
+        {
+          "doc_id": "doc_009",
+          "relevance": 1
+        },
+        {
+          "doc_id": "doc_024",
+          "relevance": 3
+        }
+      ],
+      "expected_improvement_with_preprocessing": true,
+      "preprocessing_helps_with": ["spell_correction"]
+    },
+    {
+      "id": "synth_query_015",
+      "query": "What is the difference between a pod and a deployment?",
+      "original_query": "What is the difference between a pod and a deployment?",
+      "category": "typo",
+      "relevant_docs": [
+        {
+          "doc_id": "doc_008",
+          "relevance": 1
+        },
+        {
+          "doc_id": "doc_021",
+          "relevance": 2
+        },
+        {
+          "doc_id": "doc_022",
+          "relevance": 3
+        }
+      ],
+      "expected_improvement_with_preprocessing": true,
+      "preprocessing_helps_with": ["spell_correction"]
+    },
+    {
+      "id": "synth_query_016",
+      "query": "Command to dlete all pods in all kubernetes namespaces",
+      "original_query": "Command to delete all pods in all kubernetes namespaces",
+      "category": "typo",
+      "relevant_docs": [
+        {
+          "doc_id": "doc_009",
+          "relevance": 1
+        },
+        {
+          "doc_id": "doc_024",
+          "relevance": 3
+        }
+      ],
+      "expected_improvement_with_preprocessing": true,
+      "preprocessing_helps_with": ["spell_correction"]
+    },
+    {
+      "id": "synth_query_017",
+      "query": "What is the difference bettween a pod and a deployment?",
+      "original_query": "What is the difference between a pod and a deployment?",
+      "category": "typo",
+      "relevant_docs": [
+        {
+          "doc_id": "doc_008",
+          "relevance": 1
+        },
+        {
+          "doc_id": "doc_021",
+          "relevance": 2
+        },
+        {
+          "doc_id": "doc_022",
+          "relevance": 3
+        }
+      ],
+      "expected_improvement_with_preprocessing": true,
+      "preprocessing_helps_with": ["spell_correction"]
+    },
+    {
+      "id": "synth_query_018",
+      "query": "Difference between ClusterIP, NodePort and LoadBalancer service types in Kubernets?",
+      "original_query": "Difference between ClusterIP, NodePort and LoadBalancer service types in Kubernetes?",
+      "category": "typo",
+      "relevant_docs": [
+        {
+          "doc_id": "doc_003",
+          "relevance": 1
+        },
+        {
+          "doc_id": "doc_008",
+          "relevance": 3
+        },
+        {
+          "doc_id": "doc_009",
+          "relevance": 2
+        }
+      ],
+      "expected_improvement_with_preprocessing": true,
+      "preprocessing_helps_with": ["spell_correction"]
+    },
+    {
+      "id": "synth_query_019",
+      "query": "What&#39;s the difference between Apaache&#39;s Mesos and Google&#39;s Kubernetes",
+      "original_query": "What&#39;s the difference between Apache&#39;s Mesos and Google&#39;s Kubernetes",
+      "category": "typo",
+      "relevant_docs": [
+        {
+          "doc_id": "doc_007",
+          "relevance": 1
+        },
+        {
+          "doc_id": "doc_019",
+          "relevance": 3
+        }
+      ],
+      "expected_improvement_with_preprocessing": true,
+      "preprocessing_helps_with": ["spell_correction"]
+    },
+    {
+      "id": "synth_query_020",
+      "query": "Command to delete all pods in all kubernets namespaces",
+      "original_query": "Command to delete all pods in all kubernetes namespaces",
+      "category": "typo",
+      "relevant_docs": [
+        {
+          "doc_id": "doc_009",
+          "relevance": 1
+        },
+        {
+          "doc_id": "doc_024",
+          "relevance": 3
+        }
+      ],
+      "expected_improvement_with_preprocessing": true,
+      "preprocessing_helps_with": ["spell_correction"]
+    },
+    {
+      "id": "synth_query_021",
+      "query": "Kubernetis pod gets recreated when deleted",
+      "original_query": "Kubernetes pod gets recreated when deleted",
+      "category": "typo",
+      "relevant_docs": [
+        {
+          "doc_id": "doc_019",
+          "relevance": 1
+        },
+        {
+          "doc_id": "doc_048",
+          "relevance": 3
+        }
+      ],
+      "expected_improvement_with_preprocessing": true,
+      "preprocessing_helps_with": ["spell_correction"]
+    },
+    {
+      "id": "synth_query_022",
+      "query": "How can I trigger a Kuberentes Scheduled Job manually?",
+      "original_query": "How can I trigger a Kubernetes Scheduled Job manually?",
+      "category": "typo",
+      "relevant_docs": [
+        {
+          "doc_id": "doc_012",
+          "relevance": 1
+        },
+        {
+          "doc_id": "doc_030",
+          "relevance": 3
+        }
+      ],
+      "expected_improvement_with_preprocessing": true,
+      "preprocessing_helps_with": ["spell_correction"]
+    },
+    {
+      "id": "synth_query_023",
+      "query": "Kuberntes service external ip pending",
+      "original_query": "Kubernetes service external ip pending",
+      "category": "typo",
+      "relevant_docs": [
+        {
+          "doc_id": "doc_017",
+          "relevance": 1
+        },
+        {
+          "doc_id": "doc_042",
+          "relevance": 2
+        },
+        {
+          "doc_id": "doc_043",
+          "relevance": 3
+        }
+      ],
+      "expected_improvement_with_preprocessing": true,
+      "preprocessing_helps_with": ["spell_correction"]
+    },
+    {
+      "id": "synth_query_024",
+      "query": "kubectl aapply vs kubectl create?",
+      "original_query": "kubectl apply vs kubectl create?",
+      "category": "typo",
+      "relevant_docs": [
+        {
+          "doc_id": "doc_004",
+          "relevance": 1
+        },
+        {
+          "doc_id": "doc_011",
+          "relevance": 3
+        }
+      ],
+      "expected_improvement_with_preprocessing": true,
+      "preprocessing_helps_with": ["spell_correction"]
+    },
+    {
+      "id": "synth_query_025",
+      "query": "Nameespace &quot;stuck&quot; as Terminating. How do I remove it?",
+      "original_query": "Namespace &quot;stuck&quot; as Terminating. How do I remove it?",
+      "category": "typo",
+      "relevant_docs": [
+        {
+          "doc_id": "doc_013",
+          "relevance": 1
+        },
+        {
+          "doc_id": "doc_032",
+          "relevance": 2
+        },
+        {
+          "doc_id": "doc_033",
+          "relevance": 2
+        }
+      ],
+      "expected_improvement_with_preprocessing": true,
+      "preprocessing_helps_with": ["spell_correction"]
+    },
+    {
+      "id": "synth_query_026",
+      "query": "Kuberntes service external ip pending",
+      "original_query": "Kubernetes service external ip pending",
+      "category": "typo",
+      "relevant_docs": [
+        {
+          "doc_id": "doc_017",
+          "relevance": 1
+        },
+        {
+          "doc_id": "doc_042",
+          "relevance": 2
+        },
+        {
+          "doc_id": "doc_043",
+          "relevance": 3
+        }
+      ],
+      "expected_improvement_with_preprocessing": true,
+      "preprocessing_helps_with": ["spell_correction"]
+    },
+    {
+      "id": "synth_query_027",
+      "query": "kbectl apply vs kubectl create?",
+      "original_query": "kubectl apply vs kubectl create?",
+      "category": "typo",
+      "relevant_docs": [
+        {
+          "doc_id": "doc_004",
+          "relevance": 1
+        },
+        {
+          "doc_id": "doc_011",
+          "relevance": 3
+        }
+      ],
+      "expected_improvement_with_preprocessing": true,
+      "preprocessing_helps_with": ["spell_correction"]
+    },
+    {
+      "id": "synth_query_028",
+      "query": "Where does the convention of using /healthz for aplication health checks come from?",
+      "original_query": "Where does the convention of using /healthz for application health checks come from?",
+      "category": "typo",
+      "relevant_docs": [
+        {
+          "doc_id": "doc_010",
+          "relevance": 1
+        },
+        {
+          "doc_id": "doc_026",
+          "relevance": 3
+        }
+      ],
+      "expected_improvement_with_preprocessing": true,
+      "preprocessing_helps_with": ["spell_correction"]
+    },
+    {
+      "id": "synth_query_029",
+      "query": "How can I use local Docker imagse with Minikube?",
+      "original_query": "How can I use local Docker images with Minikube?",
+      "category": "typo",
+      "relevant_docs": [
+        {
+          "doc_id": "doc_001",
+          "relevance": 1
+        },
+        {
+          "doc_id": "doc_002",
+          "relevance": 3
+        },
+        {
+          "doc_id": "doc_003",
+          "relevance": 2
+        },
+        {
+          "doc_id": "doc_004",
+          "relevance": 2
+        }
+      ],
+      "expected_improvement_with_preprocessing": true,
+      "preprocessing_helps_with": ["spell_correction"]
+    },
+    {
+      "id": "synth_query_030",
+      "query": "kbuectl apply vs kubectl create?",
+      "original_query": "kubectl apply vs kubectl create?",
+      "category": "typo",
+      "relevant_docs": [
+        {
+          "doc_id": "doc_004",
+          "relevance": 1
+        },
+        {
+          "doc_id": "doc_011",
+          "relevance": 3
+        }
+      ],
+      "expected_improvement_with_preprocessing": true,
+      "preprocessing_helps_with": ["spell_correction"]
+    },
+    {
+      "id": "synth_query_031",
+      "query": "How can I triger a Kubernetes Scheduled Job manually?",
+      "original_query": "How can I trigger a Kubernetes Scheduled Job manually?",
+      "category": "typo",
+      "relevant_docs": [
+        {
+          "doc_id": "doc_012",
+          "relevance": 1
+        },
+        {
+          "doc_id": "doc_030",
+          "relevance": 3
+        }
+      ],
+      "expected_improvement_with_preprocessing": true,
+      "preprocessing_helps_with": ["spell_correction"]
+    },
+    {
+      "id": "synth_query_032",
+      "query": "How can I use local Docekr images with Minikube?",
+      "original_query": "How can I use local Docker images with Minikube?",
+      "category": "typo",
+      "relevant_docs": [
+        {
+          "doc_id": "doc_001",
+          "relevance": 1
+        },
+        {
+          "doc_id": "doc_002",
+          "relevance": 3
+        },
+        {
+          "doc_id": "doc_003",
+          "relevance": 2
+        },
+        {
+          "doc_id": "doc_004",
+          "relevance": 2
+        }
+      ],
+      "expected_improvement_with_preprocessing": true,
+      "preprocessing_helps_with": ["spell_correction"]
+    },
+    {
+      "id": "synth_query_033",
+      "query": "Where does the convention of using /healthz for appliation health checks come from?",
+      "original_query": "Where does the convention of using /healthz for application health checks come from?",
+      "category": "typo",
+      "relevant_docs": [
+        {
+          "doc_id": "doc_010",
+          "relevance": 1
+        },
+        {
+          "doc_id": "doc_026",
+          "relevance": 3
+        }
+      ],
+      "expected_improvement_with_preprocessing": true,
+      "preprocessing_helps_with": ["spell_correction"]
+    },
+    {
+      "id": "synth_query_034",
+      "query": "Kuubernetes pod gets recreated when deleted",
+      "original_query": "Kubernetes pod gets recreated when deleted",
+      "category": "typo",
+      "relevant_docs": [
+        {
+          "doc_id": "doc_019",
+          "relevance": 1
+        },
+        {
+          "doc_id": "doc_048",
+          "relevance": 3
+        }
+      ],
+      "expected_improvement_with_preprocessing": true,
+      "preprocessing_helps_with": ["spell_correction"]
+    },
+    {
+      "id": "synth_query_035",
+      "query": "How can I keep a conntainer running on Kubernetes?",
+      "original_query": "How can I keep a container running on Kubernetes?",
+      "category": "typo",
+      "relevant_docs": [
+        {
+          "doc_id": "doc_018",
+          "relevance": 1
+        },
+        {
+          "doc_id": "doc_045",
+          "relevance": 2
+        },
+        {
+          "doc_id": "doc_046",
+          "relevance": 2
+        }
+      ],
+      "expected_improvement_with_preprocessing": true,
+      "preprocessing_helps_with": ["spell_correction"]
+    },
+    {
+      "id": "synth_query_036",
+      "query": "Command to delete all pods in all kubernetes namespacse",
+      "original_query": "Command to delete all pods in all kubernetes namespaces",
+      "category": "typo",
+      "relevant_docs": [
+        {
+          "doc_id": "doc_009",
+          "relevance": 1
+        },
+        {
+          "doc_id": "doc_024",
+          "relevance": 3
+        }
+      ],
+      "expected_improvement_with_preprocessing": true,
+      "preprocessing_helps_with": ["spell_correction"]
+    },
+    {
+      "id": "synth_query_037",
+      "query": "What&#39;s the difference between Apache&#9;s Mesos and Google&#39;s Kubernetes",
+      "original_query": "What&#39;s the difference between Apache&#39;s Mesos and Google&#39;s Kubernetes",
+      "category": "typo",
+      "relevant_docs": [
+        {
+          "doc_id": "doc_007",
+          "relevance": 1
+        },
+        {
+          "doc_id": "doc_019",
+          "relevance": 3
+        }
+      ],
+      "expected_improvement_with_preprocessing": true,
+      "preprocessing_helps_with": ["spell_correction"]
+    },
+    {
+      "id": "synth_query_038",
+      "query": "Kuberentes service external ip pending",
+      "original_query": "Kubernetes service external ip pending",
+      "category": "typo",
+      "relevant_docs": [
+        {
+          "doc_id": "doc_017",
+          "relevance": 1
+        },
+        {
+          "doc_id": "doc_042",
+          "relevance": 2
+        },
+        {
+          "doc_id": "doc_043",
+          "relevance": 3
+        }
+      ],
+      "expected_improvement_with_preprocessing": true,
+      "preprocessing_helps_with": ["spell_correction"]
+    },
+    {
+      "id": "synth_query_039",
+      "query": "What is the difference between a pod and a deployment?",
+      "original_query": "What is the difference between a pod and a deployment?",
+      "category": "typo",
+      "relevant_docs": [
+        {
+          "doc_id": "doc_008",
+          "relevance": 1
+        },
+        {
+          "doc_id": "doc_021",
+          "relevance": 2
+        },
+        {
+          "doc_id": "doc_022",
+          "relevance": 3
+        }
+      ],
+      "expected_improvement_with_preprocessing": true,
+      "preprocessing_helps_with": ["spell_correction"]
+    },
+    {
+      "id": "synth_query_040",
+      "query": "Kubernetes pod gets recreated when edleted",
+      "original_query": "Kubernetes pod gets recreated when deleted",
+      "category": "typo",
+      "relevant_docs": [
+        {
+          "doc_id": "doc_019",
+          "relevance": 1
+        },
+        {
+          "doc_id": "doc_048",
+          "relevance": 3
+        }
+      ],
+      "expected_improvement_with_preprocessing": true,
+      "preprocessing_helps_with": ["spell_correction"]
+    },
+    {
+      "id": "synth_query_041",
+      "query": "difference between clusterip, nodeport and loadbalancer service types in kubernetes",
+      "original_query": "Difference between ClusterIP, NodePort and LoadBalancer service types in Kubernetes?",
+      "category": "informal",
+      "relevant_docs": [
+        {
+          "doc_id": "doc_003",
+          "relevance": 1
+        },
+        {
+          "doc_id": "doc_008",
+          "relevance": 3
+        },
+        {
+          "doc_id": "doc_009",
+          "relevance": 2
+        }
+      ],
+      "expected_improvement_with_preprocessing": true,
+      "preprocessing_helps_with": ["synonym_expansion", "query_normalization"]
+    },
+    {
+      "id": "synth_query_042",
+      "query": "pods just stuck in terminating status",
+      "original_query": "Pods stuck in Terminating status",
+      "category": "informal",
+      "relevant_docs": [
+        {
+          "doc_id": "doc_002",
+          "relevance": 1
+        },
+        {
+          "doc_id": "doc_006",
+          "relevance": 3
+        }
+      ],
+      "expected_improvement_with_preprocessing": true,
+      "preprocessing_helps_with": ["synonym_expansion", "query_normalization"]
+    },
+    {
+      "id": "synth_query_043",
+      "query": "difference between clusterip, nodeport and loadbalancer service types in kubernetes",
+      "original_query": "Difference between ClusterIP, NodePort and LoadBalancer service types in Kubernetes?",
+      "category": "informal",
+      "relevant_docs": [
+        {
+          "doc_id": "doc_003",
+          "relevance": 1
+        },
+        {
+          "doc_id": "doc_008",
+          "relevance": 3
+        },
+        {
+          "doc_id": "doc_009",
+          "relevance": 2
+        }
+      ],
+      "expected_improvement_with_preprocessing": true,
+      "preprocessing_helps_with": ["synonym_expansion", "query_normalization"]
+    },
+    {
+      "id": "synth_query_044",
+      "query": "command to delete all pods in all kubernetes namespaces",
+      "original_query": "Command to delete all pods in all kubernetes namespaces",
+      "category": "informal",
+      "relevant_docs": [
+        {
+          "doc_id": "doc_009",
+          "relevance": 1
+        },
+        {
+          "doc_id": "doc_024",
+          "relevance": 3
+        }
+      ],
+      "expected_improvement_with_preprocessing": true,
+      "preprocessing_helps_with": ["synonym_expansion", "query_normalization"]
+    },
+    {
+      "id": "synth_query_045",
+      "query": "what&#39;s the difference between apache&#39;s mesos and google&#39;s kubernetes",
+      "original_query": "What&#39;s the difference between Apache&#39;s Mesos and Google&#39;s Kubernetes",
+      "category": "informal",
+      "relevant_docs": [
+        {
+          "doc_id": "doc_007",
+          "relevance": 1
+        },
+        {
+          "doc_id": "doc_019",
+          "relevance": 3
+        }
+      ],
+      "expected_improvement_with_preprocessing": true,
+      "preprocessing_helps_with": ["synonym_expansion", "query_normalization"]
+    },
+    {
+      "id": "synth_query_046",
+      "query": "kubernetes pod gets recreated when deleted",
+      "original_query": "Kubernetes pod gets recreated when deleted",
+      "category": "informal",
+      "relevant_docs": [
+        {
+          "doc_id": "doc_019",
+          "relevance": 1
+        },
+        {
+          "doc_id": "doc_048",
+          "relevance": 3
+        }
+      ],
+      "expected_improvement_with_preprocessing": true,
+      "preprocessing_helps_with": ["synonym_expansion", "query_normalization"]
+    },
+    {
+      "id": "synth_query_047",
+      "query": "whats the difference between a pod and a deployment",
+      "original_query": "What is the difference between a pod and a deployment?",
+      "category": "informal",
+      "relevant_docs": [
+        {
+          "doc_id": "doc_008",
+          "relevance": 1
+        },
+        {
+          "doc_id": "doc_021",
+          "relevance": 2
+        },
+        {
+          "doc_id": "doc_022",
+          "relevance": 3
+        }
+      ],
+      "expected_improvement_with_preprocessing": true,
+      "preprocessing_helps_with": ["synonym_expansion", "query_normalization"]
+    },
+    {
+      "id": "synth_query_048",
+      "query": "how do really i get logs from all pods of a kubernetes replication controller",
+      "original_query": "How do I get logs from all pods of a Kubernetes replication controller?",
+      "category": "informal",
+      "relevant_docs": [
+        {
+          "doc_id": "doc_014",
+          "relevance": 1
+        },
+        {
+          "doc_id": "doc_035",
+          "relevance": 3
+        }
+      ],
+      "expected_improvement_with_preprocessing": true,
+      "preprocessing_helps_with": ["synonym_expansion", "query_normalization"]
+    },
+    {
+      "id": "synth_query_049",
+      "query": "how can i trigger a kubernetes scheduled job like manually",
+      "original_query": "How can I trigger a Kubernetes Scheduled Job manually?",
+      "category": "informal",
+      "relevant_docs": [
+        {
+          "doc_id": "doc_012",
+          "relevance": 1
+        },
+        {
+          "doc_id": "doc_030",
+          "relevance": 3
+        }
+      ],
+      "expected_improvement_with_preprocessing": true,
+      "preprocessing_helps_with": ["synonym_expansion", "query_normalization"]
+    },
+    {
+      "id": "synth_query_050",
+      "query": "kubectl apply vs like kubectl create",
+      "original_query": "kubectl apply vs kubectl create?",
+      "category": "informal",
+      "relevant_docs": [
+        {
+          "doc_id": "doc_004",
+          "relevance": 1
+        },
+        {
+          "doc_id": "doc_011",
+          "relevance": 3
+        }
+      ],
+      "expected_improvement_with_preprocessing": true,
+      "preprocessing_helps_with": ["synonym_expansion", "query_normalization"]
+    },
+    {
+      "id": "synth_query_051",
+      "query": "whats the difference between a pod and a basically deployment",
+      "original_query": "What is the difference between a pod and a deployment?",
+      "category": "informal",
+      "relevant_docs": [
+        {
+          "doc_id": "doc_008",
+          "relevance": 1
+        },
+        {
+          "doc_id": "doc_021",
+          "relevance": 2
+        },
+        {
+          "doc_id": "doc_022",
+          "relevance": 3
+        }
+      ],
+      "expected_improvement_with_preprocessing": true,
+      "preprocessing_helps_with": ["synonym_expansion", "query_normalization"]
+    },
+    {
+      "id": "synth_query_052",
+      "query": "how do i get logs from all pods basically of a kubernetes replication controller",
+      "original_query": "How do I get logs from all pods of a Kubernetes replication controller?",
+      "category": "informal",
+      "relevant_docs": [
+        {
+          "doc_id": "doc_014",
+          "relevance": 1
+        },
+        {
+          "doc_id": "doc_035",
+          "relevance": 3
+        }
+      ],
+      "expected_improvement_with_preprocessing": true,
+      "preprocessing_helps_with": ["synonym_expansion", "query_normalization"]
+    },
+    {
+      "id": "synth_query_053",
+      "query": "difference between clusterip, nodeport and loadbalancer service types in like kubernetes",
+      "original_query": "Difference between ClusterIP, NodePort and LoadBalancer service types in Kubernetes?",
+      "category": "informal",
+      "relevant_docs": [
+        {
+          "doc_id": "doc_003",
+          "relevance": 1
+        },
+        {
+          "doc_id": "doc_008",
+          "relevance": 3
+        },
+        {
+          "doc_id": "doc_009",
+          "relevance": 2
+        }
+      ],
+      "expected_improvement_with_preprocessing": true,
+      "preprocessing_helps_with": ["synonym_expansion", "query_normalization"]
+    },
+    {
+      "id": "synth_query_054",
+      "query": "pods stuck in terminating status",
+      "original_query": "Pods stuck in Terminating status",
+      "category": "informal",
+      "relevant_docs": [
+        {
+          "doc_id": "doc_002",
+          "relevance": 1
+        },
+        {
+          "doc_id": "doc_006",
+          "relevance": 3
+        }
+      ],
+      "expected_improvement_with_preprocessing": true,
+      "preprocessing_helps_with": ["synonym_expansion", "query_normalization"]
+    },
+    {
+      "id": "synth_query_055",
+      "query": "how can i keep a container running on kubernetes",
+      "original_query": "How can I keep a container running on Kubernetes?",
+      "category": "informal",
+      "relevant_docs": [
+        {
+          "doc_id": "doc_018",
+          "relevance": 1
+        },
+        {
+          "doc_id": "doc_045",
+          "relevance": 2
+        },
+        {
+          "doc_id": "doc_046",
+          "relevance": 2
+        }
+      ],
+      "expected_improvement_with_preprocessing": true,
+      "preprocessing_helps_with": ["synonym_expansion", "query_normalization"]
+    },
+    {
+      "id": "synth_query_056",
+      "query": "difference between clusterip, nodeport and loadbalancer service types in kubernetes",
+      "original_query": "Difference between ClusterIP, NodePort and LoadBalancer service types in Kubernetes?",
+      "category": "informal",
+      "relevant_docs": [
+        {
+          "doc_id": "doc_003",
+          "relevance": 1
+        },
+        {
+          "doc_id": "doc_008",
+          "relevance": 3
+        },
+        {
+          "doc_id": "doc_009",
+          "relevance": 2
+        }
+      ],
+      "expected_improvement_with_preprocessing": true,
+      "preprocessing_helps_with": ["synonym_expansion", "query_normalization"]
+    },
+    {
+      "id": "synth_query_057",
+      "query": "whats the difference between a pod and a really deployment",
+      "original_query": "What is the difference between a pod and a deployment?",
+      "category": "informal",
+      "relevant_docs": [
+        {
+          "doc_id": "doc_008",
+          "relevance": 1
+        },
+        {
+          "doc_id": "doc_021",
+          "relevance": 2
+        },
+        {
+          "doc_id": "doc_022",
+          "relevance": 3
+        }
+      ],
+      "expected_improvement_with_preprocessing": true,
+      "preprocessing_helps_with": ["synonym_expansion", "query_normalization"]
+    },
+    {
+      "id": "synth_query_058",
+      "query": "what&#39;s the difference between apache&#39;s mesos and google&#39;s kubernetes",
+      "original_query": "What&#39;s the difference between Apache&#39;s Mesos and Google&#39;s Kubernetes",
+      "category": "informal",
+      "relevant_docs": [
+        {
+          "doc_id": "doc_007",
+          "relevance": 1
+        },
+        {
+          "doc_id": "doc_019",
+          "relevance": 3
+        }
+      ],
+      "expected_improvement_with_preprocessing": true,
+      "preprocessing_helps_with": ["synonym_expansion", "query_normalization"]
+    },
+    {
+      "id": "synth_query_059",
+      "query": "pods really stuck in terminating status",
+      "original_query": "Pods stuck in Terminating status",
+      "category": "informal",
+      "relevant_docs": [
+        {
+          "doc_id": "doc_002",
+          "relevance": 1
+        },
+        {
+          "doc_id": "doc_006",
+          "relevance": 3
+        }
+      ],
+      "expected_improvement_with_preprocessing": true,
+      "preprocessing_helps_with": ["synonym_expansion", "query_normalization"]
+    },
+    {
+      "id": "synth_query_060",
+      "query": "command to delete all pods in all kubernetes namespaces",
+      "original_query": "Command to delete all pods in all kubernetes namespaces",
+      "category": "informal",
+      "relevant_docs": [
+        {
+          "doc_id": "doc_009",
+          "relevance": 1
+        },
+        {
+          "doc_id": "doc_024",
+          "relevance": 3
+        }
+      ],
+      "expected_improvement_with_preprocessing": true,
+      "preprocessing_helps_with": ["synonym_expansion", "query_normalization"]
+    },
+    {
+      "id": "synth_query_061",
+      "query": "how to switch namespace in really kubernetes",
+      "original_query": "How to switch namespace in kubernetes",
+      "category": "informal",
+      "relevant_docs": [
+        {
+          "doc_id": "doc_015",
+          "relevance": 1
+        },
+        {
+          "doc_id": "doc_037",
+          "relevance": 2
+        }
+      ],
+      "expected_improvement_with_preprocessing": true,
+      "preprocessing_helps_with": ["synonym_expansion", "query_normalization"]
+    },
+    {
+      "id": "synth_query_062",
+      "query": "ingress like vs load balancer",
+      "original_query": "Ingress vs Load Balancer",
+      "category": "informal",
+      "relevant_docs": [
+        {
+          "doc_id": "doc_005",
+          "relevance": 1
+        },
+        {
+          "doc_id": "doc_013",
+          "relevance": 3
+        }
+      ],
+      "expected_improvement_with_preprocessing": true,
+      "preprocessing_helps_with": ["synonym_expansion", "query_normalization"]
+    },
+    {
+      "id": "synth_query_063",
+      "query": "kubernetes pod gets recreated when deleted",
+      "original_query": "Kubernetes pod gets recreated when deleted",
+      "category": "informal",
+      "relevant_docs": [
+        {
+          "doc_id": "doc_019",
+          "relevance": 1
+        },
+        {
+          "doc_id": "doc_048",
+          "relevance": 3
+        }
+      ],
+      "expected_improvement_with_preprocessing": true,
+      "preprocessing_helps_with": ["synonym_expansion", "query_normalization"]
+    },
+    {
+      "id": "synth_query_064",
+      "query": "pods stuck in terminating status",
+      "original_query": "Pods stuck in Terminating status",
+      "category": "informal",
+      "relevant_docs": [
+        {
+          "doc_id": "doc_002",
+          "relevance": 1
+        },
+        {
+          "doc_id": "doc_006",
+          "relevance": 3
+        }
+      ],
+      "expected_improvement_with_preprocessing": true,
+      "preprocessing_helps_with": ["synonym_expansion", "query_normalization"]
+    },
+    {
+      "id": "synth_query_065",
+      "query": "pods stuck in terminating basically status",
+      "original_query": "Pods stuck in Terminating status",
+      "category": "informal",
+      "relevant_docs": [
+        {
+          "doc_id": "doc_002",
+          "relevance": 1
+        },
+        {
+          "doc_id": "doc_006",
+          "relevance": 3
+        }
+      ],
+      "expected_improvement_with_preprocessing": true,
+      "preprocessing_helps_with": ["synonym_expansion", "query_normalization"]
+    },
+    {
+      "id": "synth_query_066",
+      "query": "pods stuck in terminating status",
+      "original_query": "Pods stuck in Terminating status",
+      "category": "informal",
+      "relevant_docs": [
+        {
+          "doc_id": "doc_002",
+          "relevance": 1
+        },
+        {
+          "doc_id": "doc_006",
+          "relevance": 3
+        }
+      ],
+      "expected_improvement_with_preprocessing": true,
+      "preprocessing_helps_with": ["synonym_expansion", "query_normalization"]
+    },
+    {
+      "id": "synth_query_067",
+      "query": "difference between clusterip, nodeport and loadbalancer service types in kubernetes",
+      "original_query": "Difference between ClusterIP, NodePort and LoadBalancer service types in Kubernetes?",
+      "category": "informal",
+      "relevant_docs": [
+        {
+          "doc_id": "doc_003",
+          "relevance": 1
+        },
+        {
+          "doc_id": "doc_008",
+          "relevance": 3
+        },
+        {
+          "doc_id": "doc_009",
+          "relevance": 2
+        }
+      ],
+      "expected_improvement_with_preprocessing": true,
+      "preprocessing_helps_with": ["synonym_expansion", "query_normalization"]
+    },
+    {
+      "id": "synth_query_068",
+      "query": "difference between clusterip, nodeport and loadbalancer service types in kubernetes",
+      "original_query": "Difference between ClusterIP, NodePort and LoadBalancer service types in Kubernetes?",
+      "category": "informal",
+      "relevant_docs": [
+        {
+          "doc_id": "doc_003",
+          "relevance": 1
+        },
+        {
+          "doc_id": "doc_008",
+          "relevance": 3
+        },
+        {
+          "doc_id": "doc_009",
+          "relevance": 2
+        }
+      ],
+      "expected_improvement_with_preprocessing": true,
+      "preprocessing_helps_with": ["synonym_expansion", "query_normalization"]
+    },
+    {
+      "id": "synth_query_069",
+      "query": "whats the difference between like a pod and a deployment",
+      "original_query": "What is the difference between a pod and a deployment?",
+      "category": "informal",
+      "relevant_docs": [
+        {
+          "doc_id": "doc_008",
+          "relevance": 1
+        },
+        {
+          "doc_id": "doc_021",
+          "relevance": 2
+        },
+        {
+          "doc_id": "doc_022",
+          "relevance": 3
+        }
+      ],
+      "expected_improvement_with_preprocessing": true,
+      "preprocessing_helps_with": ["synonym_expansion", "query_normalization"]
+    },
+    {
+      "id": "synth_query_070",
+      "query": "get yaml for deployed kubernetes just services",
+      "original_query": "Get YAML for deployed Kubernetes services?",
+      "category": "informal",
+      "relevant_docs": [
+        {
+          "doc_id": "doc_020",
+          "relevance": 1
+        },
+        {
+          "doc_id": "doc_050",
+          "relevance": 2
+        }
+      ],
+      "expected_improvement_with_preprocessing": true,
+      "preprocessing_helps_with": ["synonym_expansion", "query_normalization"]
+    },
+    {
+      "id": "synth_query_071",
+      "query": "I want to command to delete all pods in all kubernetes namespaces",
+      "original_query": "Command to delete all pods in all kubernetes namespaces",
+      "category": "conversational",
+      "relevant_docs": [
+        {
+          "doc_id": "doc_009",
+          "relevance": 1
+        },
+        {
+          "doc_id": "doc_024",
+          "relevance": 3
+        }
+      ],
+      "expected_improvement_with_preprocessing": true,
+      "preprocessing_helps_with": ["synonym_expansion", "query_reformulation"]
+    },
+    {
+      "id": "synth_query_072",
+      "query": "How do I force Kubernetes to re-pull an image thanks",
+      "original_query": "How do I force Kubernetes to re-pull an image?",
+      "category": "conversational",
+      "relevant_docs": [
+        {
+          "doc_id": "doc_011",
+          "relevance": 1
+        },
+        {
+          "doc_id": "doc_028",
+          "relevance": 2
+        }
+      ],
+      "expected_improvement_with_preprocessing": true,
+      "preprocessing_helps_with": ["synonym_expansion", "query_reformulation"]
+    },
+    {
+      "id": "synth_query_073",
+      "query": "Need help with ingress vs load balancer",
+      "original_query": "Ingress vs Load Balancer",
+      "category": "conversational",
+      "relevant_docs": [
+        {
+          "doc_id": "doc_005",
+          "relevance": 1
+        },
+        {
+          "doc_id": "doc_013",
+          "relevance": 3
+        }
+      ],
+      "expected_improvement_with_preprocessing": true,
+      "preprocessing_helps_with": ["synonym_expansion", "query_reformulation"]
+    },
+    {
+      "id": "synth_query_074",
+      "query": "How to switch namespace in kubernetes in kubernetes",
+      "original_query": "How to switch namespace in kubernetes",
+      "category": "conversational",
+      "relevant_docs": [
+        {
+          "doc_id": "doc_015",
+          "relevance": 1
+        },
+        {
+          "doc_id": "doc_037",
+          "relevance": 2
+        }
+      ],
+      "expected_improvement_with_preprocessing": true,
+      "preprocessing_helps_with": ["synonym_expansion", "query_reformulation"]
+    },
+    {
+      "id": "synth_query_075",
+      "query": "How can I use local Docker images with Minikube",
+      "original_query": "How can I use local Docker images with Minikube?",
+      "category": "conversational",
+      "relevant_docs": [
+        {
+          "doc_id": "doc_001",
+          "relevance": 1
+        },
+        {
+          "doc_id": "doc_002",
+          "relevance": 3
+        },
+        {
+          "doc_id": "doc_003",
+          "relevance": 2
+        },
+        {
+          "doc_id": "doc_004",
+          "relevance": 2
+        }
+      ],
+      "expected_improvement_with_preprocessing": true,
+      "preprocessing_helps_with": ["synonym_expansion", "query_reformulation"]
+    },
+    {
+      "id": "synth_query_076",
+      "query": "I need to kubernetes pod gets recreated when deleted on my cluster",
+      "original_query": "Kubernetes pod gets recreated when deleted",
+      "category": "conversational",
+      "relevant_docs": [
+        {
+          "doc_id": "doc_019",
+          "relevance": 1
+        },
+        {
+          "doc_id": "doc_048",
+          "relevance": 3
+        }
+      ],
+      "expected_improvement_with_preprocessing": true,
+      "preprocessing_helps_with": ["synonym_expansion", "query_reformulation"]
+    },
+    {
+      "id": "synth_query_077",
+      "query": "I'm trying to kubernetes service external ip pending please",
+      "original_query": "Kubernetes service external ip pending",
+      "category": "conversational",
+      "relevant_docs": [
+        {
+          "doc_id": "doc_017",
+          "relevance": 1
+        },
+        {
+          "doc_id": "doc_042",
+          "relevance": 2
+        },
+        {
+          "doc_id": "doc_043",
+          "relevance": 3
+        }
+      ],
+      "expected_improvement_with_preprocessing": true,
+      "preprocessing_helps_with": ["synonym_expansion", "query_reformulation"]
+    },
+    {
+      "id": "synth_query_078",
+      "query": "I want to difference between clusterip, nodeport and loadbalancer service types in kubernetes on my cluster",
+      "original_query": "Difference between ClusterIP, NodePort and LoadBalancer service types in Kubernetes?",
+      "category": "conversational",
+      "relevant_docs": [
+        {
+          "doc_id": "doc_003",
+          "relevance": 1
+        },
+        {
+          "doc_id": "doc_008",
+          "relevance": 3
+        },
+        {
+          "doc_id": "doc_009",
+          "relevance": 2
+        }
+      ],
+      "expected_improvement_with_preprocessing": true,
+      "preprocessing_helps_with": ["synonym_expansion", "query_reformulation"]
+    },
+    {
+      "id": "synth_query_079",
+      "query": "How to switch namespace in kubernetes",
+      "original_query": "How to switch namespace in kubernetes",
+      "category": "conversational",
+      "relevant_docs": [
+        {
+          "doc_id": "doc_015",
+          "relevance": 1
+        },
+        {
+          "doc_id": "doc_037",
+          "relevance": 2
+        }
+      ],
+      "expected_improvement_with_preprocessing": true,
+      "preprocessing_helps_with": ["synonym_expansion", "query_reformulation"]
+    },
+    {
+      "id": "synth_query_080",
+      "query": "Where does the convention of using /healthz for application health checks come from",
+      "original_query": "Where does the convention of using /healthz for application health checks come from?",
+      "category": "conversational",
+      "relevant_docs": [
+        {
+          "doc_id": "doc_010",
+          "relevance": 1
+        },
+        {
+          "doc_id": "doc_026",
+          "relevance": 3
+        }
+      ],
+      "expected_improvement_with_preprocessing": true,
+      "preprocessing_helps_with": ["synonym_expansion", "query_reformulation"]
+    },
+    {
+      "id": "synth_query_081",
+      "query": "I need to kubernetes service external ip pending",
+      "original_query": "Kubernetes service external ip pending",
+      "category": "conversational",
+      "relevant_docs": [
+        {
+          "doc_id": "doc_017",
+          "relevance": 1
+        },
+        {
+          "doc_id": "doc_042",
+          "relevance": 2
+        },
+        {
+          "doc_id": "doc_043",
+          "relevance": 3
+        }
+      ],
+      "expected_improvement_with_preprocessing": true,
+      "preprocessing_helps_with": ["synonym_expansion", "query_reformulation"]
+    },
+    {
+      "id": "synth_query_082",
+      "query": "How can I keep a container running on Kubernetes in kubernetes",
+      "original_query": "How can I keep a container running on Kubernetes?",
+      "category": "conversational",
+      "relevant_docs": [
+        {
+          "doc_id": "doc_018",
+          "relevance": 1
+        },
+        {
+          "doc_id": "doc_045",
+          "relevance": 2
+        },
+        {
+          "doc_id": "doc_046",
+          "relevance": 2
+        }
+      ],
+      "expected_improvement_with_preprocessing": true,
+      "preprocessing_helps_with": ["synonym_expansion", "query_reformulation"]
+    },
+    {
+      "id": "synth_query_083",
+      "query": "I'm trying to ingress vs load balancer in kubernetes",
+      "original_query": "Ingress vs Load Balancer",
+      "category": "conversational",
+      "relevant_docs": [
+        {
+          "doc_id": "doc_005",
+          "relevance": 1
+        },
+        {
+          "doc_id": "doc_013",
+          "relevance": 3
+        }
+      ],
+      "expected_improvement_with_preprocessing": true,
+      "preprocessing_helps_with": ["synonym_expansion", "query_reformulation"]
+    },
+    {
+      "id": "synth_query_084",
+      "query": "How can I keep a container running on Kubernetes please",
+      "original_query": "How can I keep a container running on Kubernetes?",
+      "category": "conversational",
+      "relevant_docs": [
+        {
+          "doc_id": "doc_018",
+          "relevance": 1
+        },
+        {
+          "doc_id": "doc_045",
+          "relevance": 2
+        },
+        {
+          "doc_id": "doc_046",
+          "relevance": 2
+        }
+      ],
+      "expected_improvement_with_preprocessing": true,
+      "preprocessing_helps_with": ["synonym_expansion", "query_reformulation"]
+    },
+    {
+      "id": "synth_query_085",
+      "query": "I want to get yaml for deployed kubernetes services",
+      "original_query": "Get YAML for deployed Kubernetes services?",
+      "category": "conversational",
+      "relevant_docs": [
+        {
+          "doc_id": "doc_020",
+          "relevance": 1
+        },
+        {
+          "doc_id": "doc_050",
+          "relevance": 2
+        }
+      ],
+      "expected_improvement_with_preprocessing": true,
+      "preprocessing_helps_with": ["synonym_expansion", "query_reformulation"]
+    },
+    {
+      "id": "synth_query_086",
+      "query": "What&#39;s the difference between Apache&#39;s Mesos and Google&#39;s Kubernetes",
+      "original_query": "What&#39;s the difference between Apache&#39;s Mesos and Google&#39;s Kubernetes",
+      "category": "conversational",
+      "relevant_docs": [
+        {
+          "doc_id": "doc_007",
+          "relevance": 1
+        },
+        {
+          "doc_id": "doc_019",
+          "relevance": 3
+        }
+      ],
+      "expected_improvement_with_preprocessing": true,
+      "preprocessing_helps_with": ["synonym_expansion", "query_reformulation"]
+    },
+    {
+      "id": "synth_query_087",
+      "query": "Can someone help me command to delete all pods in all kubernetes namespaces",
+      "original_query": "Command to delete all pods in all kubernetes namespaces",
+      "category": "conversational",
+      "relevant_docs": [
+        {
+          "doc_id": "doc_009",
+          "relevance": 1
+        },
+        {
+          "doc_id": "doc_024",
+          "relevance": 3
+        }
+      ],
+      "expected_improvement_with_preprocessing": true,
+      "preprocessing_helps_with": ["synonym_expansion", "query_reformulation"]
+    },
+    {
+      "id": "synth_query_088",
+      "query": "I need to pods stuck in terminating status",
+      "original_query": "Pods stuck in Terminating status",
+      "category": "conversational",
+      "relevant_docs": [
+        {
+          "doc_id": "doc_002",
+          "relevance": 1
+        },
+        {
+          "doc_id": "doc_006",
+          "relevance": 3
+        }
+      ],
+      "expected_improvement_with_preprocessing": true,
+      "preprocessing_helps_with": ["synonym_expansion", "query_reformulation"]
+    },
+    {
+      "id": "synth_query_089",
+      "query": "I need to command to delete all pods in all kubernetes namespaces on my cluster",
+      "original_query": "Command to delete all pods in all kubernetes namespaces",
+      "category": "conversational",
+      "relevant_docs": [
+        {
+          "doc_id": "doc_009",
+          "relevance": 1
+        },
+        {
+          "doc_id": "doc_024",
+          "relevance": 3
+        }
+      ],
+      "expected_improvement_with_preprocessing": true,
+      "preprocessing_helps_with": ["synonym_expansion", "query_reformulation"]
+    },
+    {
+      "id": "synth_query_090",
+      "query": "I want to command to delete all pods in all kubernetes namespaces",
+      "original_query": "Command to delete all pods in all kubernetes namespaces",
+      "category": "conversational",
+      "relevant_docs": [
+        {
+          "doc_id": "doc_009",
+          "relevance": 1
+        },
+        {
+          "doc_id": "doc_024",
+          "relevance": 3
+        }
+      ],
+      "expected_improvement_with_preprocessing": true,
+      "preprocessing_helps_with": ["synonym_expansion", "query_reformulation"]
+    },
+    {
+      "id": "synth_query_091",
+      "query": "How can I keep a container running on Kuvernetse?",
+      "original_query": "How can I keep a container running on Kubernetes?",
+      "category": "edge_case",
+      "relevant_docs": [
+        {
+          "doc_id": "doc_018",
+          "relevance": 1
+        },
+        {
+          "doc_id": "doc_045",
+          "relevance": 2
+        },
+        {
+          "doc_id": "doc_046",
+          "relevance": 2
+        }
+      ],
+      "expected_improvement_with_preprocessing": true,
+      "preprocessing_helps_with": ["spell_correction", "fuzzy_matching"]
+    },
+    {
+      "id": "synth_query_092",
+      "query": "Pods stjck in Terminating stauts",
+      "original_query": "Pods stuck in Terminating status",
+      "category": "edge_case",
+      "relevant_docs": [
+        {
+          "doc_id": "doc_002",
+          "relevance": 1
+        },
+        {
+          "doc_id": "doc_006",
+          "relevance": 3
+        }
+      ],
+      "expected_improvement_with_preprocessing": true,
+      "preprocessing_helps_with": ["spell_correction", "fuzzy_matching"]
+    },
+    {
+      "id": "synth_query_093",
+      "query": "Pods tsuck in Terminatinng status",
+      "original_query": "Pods stuck in Terminating status",
+      "category": "edge_case",
+      "relevant_docs": [
+        {
+          "doc_id": "doc_002",
+          "relevance": 1
+        },
+        {
+          "doc_id": "doc_006",
+          "relevance": 3
+        }
+      ],
+      "expected_improvement_with_preprocessing": true,
+      "preprocessing_helps_with": ["spell_correction", "fuzzy_matching"]
+    },
+    {
+      "id": "synth_query_094",
+      "query": "Ignress vs Load Bapancer",
+      "original_query": "Ingress vs Load Balancer",
+      "category": "edge_case",
+      "relevant_docs": [
+        {
+          "doc_id": "doc_005",
+          "relevance": 1
+        },
+        {
+          "doc_id": "doc_013",
+          "relevance": 3
+        }
+      ],
+      "expected_improvement_with_preprocessing": true,
+      "preprocessing_helps_with": ["spell_correction", "fuzzy_matching"]
+    },
+    {
+      "id": "synth_query_095",
+      "query": "How do I force Kuberneres to re-pull an imgae?",
+      "original_query": "How do I force Kubernetes to re-pull an image?",
+      "category": "edge_case",
+      "relevant_docs": [
+        {
+          "doc_id": "doc_011",
+          "relevance": 1
+        },
+        {
+          "doc_id": "doc_028",
+          "relevance": 2
+        }
+      ],
+      "expected_improvement_with_preprocessing": true,
+      "preprocessing_helps_with": ["spell_correction", "fuzzy_matching"]
+    },
+    {
+      "id": "synth_query_096",
+      "query": "Difference between targetPort and port in Kubernetes Service definition",
+      "original_query": "Difference between targetPort and port in Kubernetes Service definition",
+      "category": "edge_case",
+      "relevant_docs": [
+        {
+          "doc_id": "doc_016",
+          "relevance": 1
+        },
+        {
+          "doc_id": "doc_039",
+          "relevance": 3
+        },
+        {
+          "doc_id": "doc_040",
+          "relevance": 2
+        }
+      ],
+      "expected_improvement_with_preprocessing": true,
+      "preprocessing_helps_with": ["language_detection", "translation"]
+    },
+    {
+      "id": "synth_query_097",
+      "query": "c\u00f3mo can I trigger a Kubernetes Scheduled Job manually?",
+      "original_query": "How can I trigger a Kubernetes Scheduled Job manually?",
+      "category": "edge_case",
+      "relevant_docs": [
+        {
+          "doc_id": "doc_012",
+          "relevance": 1
+        },
+        {
+          "doc_id": "doc_030",
+          "relevance": 3
+        }
+      ],
+      "expected_improvement_with_preprocessing": true,
+      "preprocessing_helps_with": ["language_detection", "translation"]
+    },
+    {
+      "id": "synth_query_098",
+      "query": "What is the difference between a pod and a despliegue?",
+      "original_query": "What is the difference between a pod and a deployment?",
+      "category": "edge_case",
+      "relevant_docs": [
+        {
+          "doc_id": "doc_008",
+          "relevance": 1
+        },
+        {
+          "doc_id": "doc_021",
+          "relevance": 2
+        },
+        {
+          "doc_id": "doc_022",
+          "relevance": 3
+        }
+      ],
+      "expected_improvement_with_preprocessing": true,
+      "preprocessing_helps_with": ["language_detection", "translation"]
+    },
+    {
+      "id": "synth_query_099",
+      "query": "Namespace &quot;stuck&quot; as Terminating. c\u00f3mo do I remove it?",
+      "original_query": "Namespace &quot;stuck&quot; as Terminating. How do I remove it?",
+      "category": "edge_case",
+      "relevant_docs": [
+        {
+          "doc_id": "doc_013",
+          "relevance": 1
+        },
+        {
+          "doc_id": "doc_032",
+          "relevance": 2
+        },
+        {
+          "doc_id": "doc_033",
+          "relevance": 2
+        }
+      ],
+      "expected_improvement_with_preprocessing": true,
+      "preprocessing_helps_with": ["language_detection", "translation"]
+    },
+    {
+      "id": "synth_query_100",
+      "query": "Command to delete all pods in all kubernetes namespaces",
+      "original_query": "Command to delete all pods in all kubernetes namespaces",
+      "category": "edge_case",
+      "relevant_docs": [
+        {
+          "doc_id": "doc_009",
+          "relevance": 1
+        },
+        {
+          "doc_id": "doc_024",
+          "relevance": 3
+        }
+      ],
+      "expected_improvement_with_preprocessing": true,
+      "preprocessing_helps_with": ["language_detection", "translation"]
+    }
+  ]
+}

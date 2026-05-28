@@ -1,0 +1,11 @@
+# Repair and Warranty Tools
+# These tools are defined inline in the agent DSL files.
+# This file serves as a tool registry reference for the v2 export format.
+
+# Tools:
+#   check_warranty — Check warranty coverage by serial number
+#   estimate_repair_cost — Estimate repair cost based on device, issue, and warranty status
+#   schedule_in_store_service — Schedule an in-store service appointment at an Apple Store
+#   find_nearby_stores — Find nearby Apple Stores with availability
+#   get_repair_status — Check the status of an ongoing repair
+#   submit_mail_in_repair — Submit a mail-in repair request and get a shipping label

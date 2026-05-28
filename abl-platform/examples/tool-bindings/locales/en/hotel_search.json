@@ -1,0 +1,9 @@
+{
+  "agent_name": "HotelSearch",
+  "strings": {
+    "gather_destination": "Where would you like to stay?",
+    "gather_checkin": "When is your check-in date?",
+    "gather_checkout": "When is your check-out date?",
+    "complete_success": "I found some great options for you!"
+  }
+}

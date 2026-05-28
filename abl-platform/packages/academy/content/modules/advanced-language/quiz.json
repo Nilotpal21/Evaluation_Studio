@@ -1,0 +1,98 @@
+{
+  "moduleId": "advanced-language",
+  "passThreshold": 0.8,
+  "questions": [
+    {
+      "id": "al-q1",
+      "type": "mcq",
+      "stem": "A compliance officer needs to ensure that a sanctions screening tool call succeeds before every agent response. If the tool fails or times out, the turn must be aborted. Which HOOKS configuration achieves this?",
+      "options": [
+        {
+          "id": "a",
+          "text": "Use an after_turn hook with CALL: sanctions_screening() to validate after each response"
+        },
+        {
+          "id": "b",
+          "text": "Use a before_turn hook with critical: true and CALL: sanctions_screening()",
+          "correct": true
+        },
+        {
+          "id": "c",
+          "text": "Use the ON_ERROR handler with tool_timeout type and THEN: ESCALATE"
+        }
+      ],
+      "explanation": "Marking a before_turn hook as critical: true ensures the turn is aborted if the hook's tool call fails or times out. By default, hooks fail-open (log a warning and continue), so the critical flag is essential for regulatory workflows where processing must not continue without a successful check."
+    },
+    {
+      "id": "al-q2",
+      "type": "fill-blank",
+      "stem": "ABL supports six entity extraction types: enum, pattern, location, date, number, and ___.",
+      "answer": "free_text",
+      "acceptAlternatives": ["free text", "free-text", "freetext", "Free Text"],
+      "explanation": "The six NLU entity types are enum (fixed value sets with synonyms), pattern (regex matching), location (geographic extraction), date (temporal references), number (numeric values), and free_text (arbitrary text spans for notes, descriptions, or comments)."
+    },
+    {
+      "id": "al-q3",
+      "type": "mcq",
+      "stem": "An agent uses NLU synonyms where USD maps to [dollars, usd, bucks]. A user says 'I want to send 100 bucks to Germany.' What value does the runtime store for the currency_code entity?",
+      "options": [
+        {
+          "id": "a",
+          "text": "bucks"
+        },
+        {
+          "id": "b",
+          "text": "USD",
+          "correct": true
+        },
+        {
+          "id": "c",
+          "text": "dollars"
+        }
+      ],
+      "explanation": "When a synonym is detected, the runtime normalizes it to the canonical form before storing. Since 'bucks' is mapped as a synonym for USD, the entity extraction yields currency_code: 'USD' regardless of which synonym variant the user used."
+    },
+    {
+      "id": "al-q4",
+      "type": "mcq",
+      "stem": "An agent has both an agent-level ON_ERROR handler for tool_error and a step-level ON_ERROR handler for the same error type on the execute_payment step. A tool error occurs during execute_payment. Which handler is used?",
+      "options": [
+        {
+          "id": "a",
+          "text": "The agent-level handler, because it has broader scope"
+        },
+        {
+          "id": "b",
+          "text": "The step-level handler, because it takes precedence over agent-level handlers for the same error type",
+          "correct": true
+        },
+        {
+          "id": "c",
+          "text": "Both handlers execute in sequence, step-level first then agent-level"
+        }
+      ],
+      "explanation": "The runtime resolves error handlers using a priority chain: step-level handlers are checked first, then agent-level handlers, then the DEFAULT handler. Step-level handlers take precedence over agent-level handlers for the same error type, allowing specific steps to override the global error handling strategy."
+    },
+    {
+      "id": "al-q5",
+      "type": "mcq",
+      "stem": "An ABL agent has a LOOKUP_TABLES block with source: api and fuzzy_match: true. The API call times out during user input validation. What does the runtime do?",
+      "options": [
+        {
+          "id": "a",
+          "text": "Rejects the user input and asks them to try again"
+        },
+        {
+          "id": "b",
+          "text": "Logs a warning, accepts the input without validation, and emits a trace event",
+          "correct": true
+        },
+        {
+          "id": "c",
+          "text": "Retries the API call up to 3 times with exponential backoff"
+        }
+      ],
+      "explanation": "When an API-sourced lookup table call times out or returns an error, the runtime logs a warning, falls back to accepting the user's input without validation, and emits a trace event indicating the lookup failure. This fail-open behavior prevents external service issues from blocking the conversation."
+    }
+  ]
+}

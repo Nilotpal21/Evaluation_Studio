@@ -1,0 +1,93 @@
+{
+  "format_version": "2.0",
+  "name": "Healthcare Payer",
+  "slug": "healthcare-payer",
+  "description": "AI-powered provider portal for healthcare payer operations. Providers (doctors, clinics, facilities) authenticate and then query member plan information, coverage/eligibility details, and claim status on behalf of their patients.",
+  "abl_version": "1.0",
+  "exported_at": "2026-03-11T05:34:34.801Z",
+  "exported_by": "user-dev-001",
+  "entry_agent": "welcome_agent",
+  "dsl_format": "abl",
+  "layers_included": [
+    "core",
+    "connections",
+    "guardrails",
+    "workflows",
+    "evals",
+    "search",
+    "channels",
+    "vocabulary"
+  ],
+  "agents": {
+    "welcome_agent": {
+      "path": "agents/welcome_agent.agent.abl",
+      "owner": null,
+      "ownerTeam": null,
+      "type": "supervisor",
+      "description": "Front-desk welcome agent for providers. Handles greetings, help, and routes service requests to domain agents or authentication.",
+      "version": "1.0"
+    },
+    "authentication_agent": {
+      "path": "agents/authentication_agent.agent.abl",
+      "owner": null,
+      "ownerTeam": null,
+      "description": "Authenticates providers by validating their Provider ID (9 digits) or NPI ID (10 digits) against the provider database.",
+      "version": "1.0"
+    },
+    "plan_information_agent": {
+      "path": "agents/plan_information_agent.agent.abl",
+      "owner": null,
+      "ownerTeam": null,
+      "description": "Provides member plan information to authenticated providers — deductibles, out-of-pocket maximums, plan dates, status, and benefits.",
+      "version": "1.0"
+    },
+    "coverage_information_agent": {
+      "path": "agents/coverage_information_agent.agent.abl",
+      "owner": null,
+      "ownerTeam": null,
+      "description": "Answers coverage and eligibility questions for authenticated providers — copay, coinsurance, prior authorization, limits, and covered services.",
+      "version": "1.0"
+    },
+    "claim_information_agent": {
+      "path": "agents/claim_information_agent.agent.abl",
+      "owner": null,
+      "ownerTeam": null,
+      "description": "Retrieves and presents member claim information to authenticated providers — claim status, payment details, amounts, and dates with optional filtering.",
+      "version": "1.0"
+    },
+    "human_agent": {
+      "path": "agents/human_agent.agent.abl",
+      "owner": null,
+      "ownerTeam": null,
+      "description": "Placeholder for human escalation. Acknowledges the provider's request for human assistance.",
+      "version": "1.0"
+    }
+  },
+  "tools": {
+    "perform_provider_authentication": {
+      "path": "tools/authentication.tools.abl",
+      "owner": null
+    },
+    "get_plan_information": {
+      "path": "tools/plans.tools.abl",
+      "owner": null
+    },
+    "get_claim_information": {
+      "path": "tools/claims.tools.abl",
+      "owner": null
+    },
+    "search_coverage_kb": {
+      "path": "tools/coverage.tools.abl",
+      "owner": null
+    }
+  },
+  "metadata": {
+    "entity_counts": {
+      "agents": 6,
+      "tools": 4
+    },
+    "required_env_vars": [],
+    "required_connectors": [],
+    "required_mcp_servers": []
+  }
+}

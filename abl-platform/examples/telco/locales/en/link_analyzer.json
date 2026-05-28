@@ -1,0 +1,10 @@
+{
+  "agent": "Link_Analyzer",
+  "locale": "en",
+  "strings": {
+    "need_link_id": "I need a link ID to run diagnostics. Please provide the transport link identifier.",
+    "link_down": "Link health data unavailable. The link may be completely down - recommending immediate field dispatch.",
+    "tool_timeout": "Diagnostic equipment is not responding. This may indicate a complete link failure.",
+    "tool_error": "Error running diagnostics. Recommending manual OTDR test by field team."
+  }
+}

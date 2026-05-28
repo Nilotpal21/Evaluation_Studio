@@ -1,0 +1,98 @@
+{
+  "moduleId": "observability-tracing",
+  "passThreshold": 0.8,
+  "questions": [
+    {
+      "id": "ot-q1",
+      "type": "mcq",
+      "stem": "Every execution path in Agent Platform emits TraceEvents via a shared TraceStore. What is the primary purpose of this tracing architecture?",
+      "options": [
+        {
+          "id": "a",
+          "text": "To replace application logging with a structured event system"
+        },
+        {
+          "id": "b",
+          "text": "To provide end-to-end visibility into agent execution, including LLM calls, tool invocations, state changes, and decision points",
+          "correct": true
+        },
+        {
+          "id": "c",
+          "text": "To record billing events for token usage calculation"
+        }
+      ],
+      "explanation": "The tracing architecture provides end-to-end visibility into every agent execution path. TraceEvents capture LLM calls (with prompts and completions), tool invocations (with inputs and outputs), state changes (variable mutations), decision points (flow transitions, handoffs), and timing information. This is a core platform invariant: no ad-hoc logging substitutes for structured tracing."
+    },
+    {
+      "id": "ot-q2",
+      "type": "fill-blank",
+      "stem": "In Studio, the ________ tab within a session view shows the execution trace timeline with expandable payloads for each operation the agent performed.",
+      "answer": "Trace",
+      "acceptAlternatives": ["trace", "TRACE", "Traces"],
+      "explanation": "The Trace tab in Studio's session viewer displays the execution trace timeline. Each trace event is expandable to show full payloads including LLM prompts, tool inputs/outputs, and state mutations. The Conversation tab shows the user-facing transcript, while the Trace tab reveals the internal execution details."
+    },
+    {
+      "id": "ot-q3",
+      "type": "mcq",
+      "stem": "An agent returns an empty response to the user. Using the trace viewer, which symptom should you investigate first?",
+      "options": [
+        {
+          "id": "a",
+          "text": "Check the Trace tab for a missing model configuration or credential error in the LLM call event",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "Check the agent's ABL source code for syntax errors"
+        },
+        {
+          "id": "c",
+          "text": "Check the channel adapter logs for message delivery failures"
+        }
+      ],
+      "explanation": "Empty responses are most commonly caused by model configuration issues: the model is not configured, credentials are missing or expired, or all reasoning steps are disabled. The trace viewer shows the exact point of failure -- look for LLM call events with error payloads, missing model resolution events, or execution paths that skip the LLM entirely."
+    },
+    {
+      "id": "ot-q4",
+      "type": "mcq",
+      "stem": "You want to be notified when your production agent's error rate exceeds 5% in any 15-minute window. Where do you configure this in Studio?",
+      "options": [
+        {
+          "id": "a",
+          "text": "Insights > Dashboard > Alert Settings"
+        },
+        {
+          "id": "b",
+          "text": "Operate > Alerts > Alert Rules",
+          "correct": true
+        },
+        {
+          "id": "c",
+          "text": "Settings > Runtime Config > Error Thresholds"
+        }
+      ],
+      "explanation": "Alert rules are configured under Operate > Alerts > Alert Rules (not under Insights or Settings). You can set up automated notifications for error rate spikes, session volume changes, evaluation score drops, and deployment events. Each rule has a trigger condition and a notification target (email, webhook, or in-app notification)."
+    },
+    {
+      "id": "ot-q5",
+      "type": "mcq",
+      "stem": "A developer adds custom trace dimensions to track business-specific events in their agent. Where are custom trace dimensions configured?",
+      "options": [
+        {
+          "id": "a",
+          "text": "In the agent's ABL definition under a TRACING section"
+        },
+        {
+          "id": "b",
+          "text": "In Project Settings > Trace Dimensions, which defines custom metadata fields that flow steps can emit",
+          "correct": true
+        },
+        {
+          "id": "c",
+          "text": "In the ClickHouse configuration file on the server"
+        }
+      ],
+      "explanation": "Custom trace dimensions are configured in Project Settings > Trace Dimensions. You define custom metadata fields (key-value pairs) that agent flow steps can emit as part of trace events. These dimensions appear in the Insights dashboard for filtering and analysis, and can be used to correlate agent behavior with business outcomes."
+    }
+  ]
+}

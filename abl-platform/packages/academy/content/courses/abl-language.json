@@ -1,0 +1,14 @@
+{
+  "id": "abl-language",
+  "title": "ABL Language & Agent Development",
+  "description": "Learn ABL syntax, build your first agent, master agent declarations, and create conversation flows.",
+  "level": "beginner-intermediate",
+  "estimatedMinutes": 95,
+  "prerequisites": ["platform-foundations"],
+  "modules": ["abl-basics", "agent-configuration", "conversation-flows"],
+  "certification": {
+    "required": true,
+    "passCriteria": "all-modules-passed",
+    "badge": "course-abl-language"
+  }
+}

@@ -1,0 +1,46 @@
+extract_rollover_source(text: string) -> {sourceFound: boolean, sourceAccountType?: string}
+  description: "Extract a likely rollover source account type from the user's message"
+  type: sandbox
+  confirm: never
+  runtime: "javascript"
+  timeout: 5000
+  memory_mb: 128
+  params:
+    text:
+      description: "Original user request that may include the rollover source plan"
+  code: |
+    const normalized = String(typeof $text !== 'undefined' ? $text : '')
+      .toLowerCase()
+      .replace(/\s+/g, ' ')
+      .trim();
+
+    let sourceAccountType = '';
+
+    if (
+      normalized.includes('401k') ||
+      normalized.includes('401(k)') ||
+      normalized.includes('401 k') ||
+      normalized.includes('old 401') ||
+      normalized.includes('former 401') ||
+      normalized.includes('old employer')
+    ) {
+      sourceAccountType = 'former 401(k)';
+    } else if (
+      normalized.includes('403b') ||
+      normalized.includes('403(b)') ||
+      normalized.includes('403 b') ||
+      normalized.includes('old 403')
+    ) {
+      sourceAccountType = '403(b)';
+    } else if (
+      normalized.includes('another ira') ||
+      normalized.includes('roll an ira') ||
+      normalized.includes('from an ira')
+    ) {
+      sourceAccountType = 'another IRA';
+    }
+
+    return JSON.stringify({
+      sourceFound: Boolean(sourceAccountType),
+      sourceAccountType: sourceAccountType || undefined
+    });

@@ -1,0 +1,18 @@
+{
+  "id": "channel-architecture",
+  "title": "Channel Architecture",
+  "lessons": [
+    {
+      "id": "01-channels",
+      "title": "Channel Architecture & Multi-Channel Deployment",
+      "sourceFile": "guides/11-channels.md",
+      "minutes": 35
+    },
+    {
+      "id": "02-channels-api",
+      "title": "Channels API Reference",
+      "sourceFile": "api/05-channels.md",
+      "minutes": 20
+    }
+  ]
+}

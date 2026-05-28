@@ -1,0 +1,43 @@
+# HELIX per-repo configuration.
+#
+# Framework lives in packages/helix. Repo-specific behavior (cross-cutting
+# concerns, tracker wiring, pipeline tuning) lives in this directory.
+#
+# Phase 2 scope (2026-04): concerns registry + loader only. Daemon, poll loop,
+# and auto-ticket-creation are deferred until the audit surface is proven.
+
+version: 1
+
+concerns:
+  # Root for concern definitions. Loader discovers *.yaml under each tier.
+  root: .helix/concerns
+  tiers:
+    enforced:
+      # Deterministic detectors dominate. Findings here can block commits or
+      # pipeline stages depending on severity. `model-review` detectors are
+      # only permitted when they emit the canonical structured finding shape.
+      dir: enforced
+      can_block: true
+    advisory:
+      # Advisory concerns produce triage cards only. They never block commits.
+      # The user's A/B/C decision is the only canonical signal; advisory
+      # oracle prose is not converted into findings without explicit decision.
+      dir: advisory
+      can_block: false
+
+# Reserved for phase 3+. Left here so the surface is discoverable but empty.
+tracker:
+  # When we wire the JIRA adapter in step 4 of the plan, populate this.
+  # provider: jira
+  # project: ABLP
+  # jql_eligible: 'project = ABLP AND status = "To Do" AND labels = helix-ready'
+  provider: null
+
+audit:
+  # helix audit --concerns uses this to scope default scans.
+  default_package_order:
+    - packages/helix
+    - packages/compiler
+  # Findings output path (JSONL). One line per finding for easy streaming.
+  findings_path: docs/sdlc-logs/concerns-audit/findings.jsonl
+  decisions_path: docs/sdlc-logs/concerns-audit/decisions.jsonl

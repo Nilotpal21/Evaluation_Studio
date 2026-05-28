@@ -1,0 +1,154 @@
+// =============================================================================
+// Customer Support Agent - Demonstrates agent transfer with pre-checks
+// =============================================================================
+
+AGENT: Customer_Support
+GOAL: "Help customers with support issues and transfer to human agents when needed"
+
+EXECUTION:
+  model: gpt-4.1
+  temperature: 0.7
+  max_tokens: 2000
+  max_iterations: 10
+  inline_gather: true
+
+IDENTITY:
+  role: "Customer Support Assistant"
+  persona: "Helpful and empathetic support agent that knows when to escalate"
+
+TOOLS:
+  check_hours:
+    description: "Check if the contact center is within business hours"
+    params:
+      agentId: string
+      hoursId: string
+    returns: object
+
+  check_availability:
+    description: "Check if human agents are available for transfer"
+    params:
+      agentId: string
+      contactId: string
+      tenantId: string
+      projectId: string
+      skills: string[]
+      queue: string
+    returns: object
+
+  transfer_to_agent:
+    description: "Transfer conversation to a human agent"
+    params:
+      provider: string
+      skills: string[]
+      queueId: string
+      priority: number
+      postAgentAction: string
+      metadata: object
+    returns: object
+
+CONSTRAINTS:
+  - rule: "Always check business hours before attempting transfer"
+    action: warn
+  - rule: "Always inform the customer about estimated wait times"
+    action: warn
+
+FLOW:
+  entry_point: greeting
+  steps:
+    - greeting
+    - collect_issue
+    - check_business_hours
+    - check_agent_availability
+    - do_transfer
+    - transfer_complete
+    - outside_hours
+
+greeting:
+  REASONING: false
+  RESPOND: "Hello! I'm here to help. If your issue requires a human agent, I can connect you."
+  THEN: collect_issue
+
+collect_issue:
+  REASONING: false
+  GATHER:
+    - issue_description: required
+      prompt: "Please describe your issue so I can route you to the right team."
+      type: string
+  THEN: check_business_hours
+
+check_business_hours:
+  REASONING: false
+  CALL: check_hours
+  ON_SUCCESS:
+    - IF: check_hours.data == true
+      THEN: check_agent_availability
+    - ELSE:
+      THEN: outside_hours
+  ON_FAIL:
+    RESPOND: "I couldn't verify business hours. Let me try transferring anyway."
+    THEN: check_agent_availability
+
+check_agent_availability:
+  REASONING: false
+  CALL: check_availability
+  ON_SUCCESS:
+    - IF: check_availability.data == true
+      RESPOND: "An agent is available! Transferring you now."
+      THEN: do_transfer
+    - ELSE:
+      RESPOND: "No agents are currently available. Please try again during business hours."
+      THEN: complete
+  ON_FAIL:
+    RESPOND: "I couldn't check availability. Let me try the transfer directly."
+    THEN: do_transfer
+
+do_transfer:
+  REASONING: false
+  CALL: transfer_to_agent
+    call_with:
+      provider: "kore"
+      skills: ["customer_support", "billing"]
+      priority: 5
+      postAgentAction: "return"
+      metadata:
+        issue: "{{issue_description}}"
+  ON_SUCCESS:
+    THEN: transfer_complete
+  ON_FAIL:
+    RESPOND: "I'm sorry, the transfer failed. Let me take your details and have someone call you back."
+    THEN: complete
+
+transfer_complete:
+  REASONING: false
+  RESPOND: "You're now connected with a human agent. They have the context of our conversation."
+  THEN: complete
+
+outside_hours:
+  REASONING: false
+  RESPOND: |
+    Our support team is currently offline.
+    Please try again during business hours, or leave your contact details and we'll get back to you.
+  THEN: complete
+
+HANDOFF:
+  - TO: Fallback_Handler
+    WHEN: transfer_failed == true
+    CONTEXT:
+      pass: [issue_description]
+      summary: "Transfer to human agent failed"
+    RETURN: true
+
+COMPLETE:
+  - WHEN: transfer_to_agent.success == true
+    RESPOND: "Thank you for contacting support. Is there anything else I can help with?"
+
+ON_ERROR:
+  tool_timeout:
+    RESPOND: "The system is taking longer than expected. Please hold on..."
+    RETRY: 2
+    THEN: CONTINUE
+
+  tool_error:
+    RESPOND: "Something went wrong. Let me try a different approach."
+    RETRY: 0
+    THEN: outside_hours

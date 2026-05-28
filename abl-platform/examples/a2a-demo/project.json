@@ -1,0 +1,34 @@
+{
+  "format_version": "2.0",
+  "name": "A2A Demo",
+  "slug": "a2a-demo",
+  "description": "Demonstrates all three A2A agent communication patterns: synchronous, SSE streaming, and asynchronous with push notifications",
+  "abl_version": "1.0",
+  "exported_at": "2026-03-12T00:00:00.000Z",
+  "entry_agent": "Contract_Supervisor",
+  "dsl_format": "legacy",
+  "layers_included": ["core"],
+  "agents": {
+    "Contract_Supervisor": {
+      "path": "agents/supervisor.agent.abl",
+      "type": "supervisor",
+      "description": "Routes contract analysis requests to the appropriate specialist"
+    },
+    "Compliance_Checker": {
+      "path": "agents/compliance_checker.agent.abl",
+      "type": "agent",
+      "description": "Performs quick compliance checks on contracts"
+    }
+  },
+  "tools": {},
+  "metadata": {
+    "entity_counts": {
+      "agents": 2,
+      "tools_files": 0
+    },
+    "required_env_vars": ["RISK_AGENT_PORT", "RISK_ANALYSIS_DELAY_MS"],
+    "supporting_infrastructure": {
+      "remote-risk-agent": "Standalone A2A protocol server for risk analysis (see remote-risk-agent/)"
+    }
+  }
+}

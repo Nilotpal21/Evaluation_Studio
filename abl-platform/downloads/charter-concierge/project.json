@@ -1,0 +1,65 @@
+{
+  "format_version": "2.0",
+  "name": "Charter Concierge",
+  "slug": "charter-concierge",
+  "description": "A self-contained ABL example for Charter Communications style telecom support and sales orchestration across internet, WiFi, mobile, billing, policy, troubleshooting, authentication, and human transfer.",
+  "abl_version": "1.0",
+  "exported_at": "2026-04-18T00:00:00.000Z",
+  "exported_by": "codex",
+  "entry_agent": "Charter_Concierge_Supervisor",
+  "dsl_format": "legacy",
+  "layers_included": ["core"],
+  "agents": {
+    "Charter_Concierge_Supervisor": {
+      "path": "agents/charter_concierge_supervisor.agent.abl",
+      "description": "Top-level router for service recommendations, setup readiness, troubleshooting, policy questions, and live support transfer."
+    },
+    "Charter_Intake_Agent": {
+      "path": "agents/charter_intake.agent.abl",
+      "description": "Reasoning-based intake specialist for internet, WiFi, mobile, and bundle recommendation requests."
+    },
+    "Offer_Analyst": {
+      "path": "agents/quote_analyst.agent.abl",
+      "description": "Hybrid deterministic-plus-reasoning specialist that turns a selected offer into a structured recommendation."
+    },
+    "Setup_Readiness_Collector": {
+      "path": "agents/manifest_collector.agent.abl",
+      "description": "Deterministic setup and activation readiness flow using entity-backed field normalization."
+    },
+    "Policy_Advisor": {
+      "path": "agents/policy_advisor.agent.abl",
+      "description": "Reasoning specialist for service policies, eligibility rules, and pricing boundary explanations."
+    },
+    "Human_Support_Transfer": {
+      "path": "agents/human_ops_transfer.agent.abl",
+      "description": "Deterministic callback and live support transfer flow."
+    },
+    "Connectivity_Advisor": {
+      "path": "agents/itinerary_advisor.agent.abl",
+      "description": "Reasoning specialist for current plan summaries, troubleshooting context, and material service changes."
+    },
+    "Authentication_Agent": {
+      "path": "agents/authentication.agent.abl",
+      "description": "Deterministic authentication flow for account-specific billing and support actions."
+    },
+    "Billing_Care_Agent": {
+      "path": "agents/billing_care.agent.abl",
+      "description": "Hybrid billing specialist for bill explanations, low-risk credits, and supervisor review routing."
+    }
+  },
+  "tools": {
+    "charter_mocks": {
+      "path": "tools/charter_mocks.tools.abl"
+    }
+  },
+  "metadata": {
+    "entity_counts": {
+      "agents": 9,
+      "tools": 1,
+      "transcripts": 9
+    },
+    "required_env_vars": [],
+    "required_connectors": [],
+    "required_mcp_servers": []
+  }
+}

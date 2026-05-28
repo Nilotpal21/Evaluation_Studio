@@ -1,0 +1,6 @@
+{
+  "otp_prompt": "Hemos enviado un codigo OTP a su numero registrado. Por favor, ingrese el codigo.",
+  "otp_retry": "El codigo OTP no es valido. Por favor, intente nuevamente.",
+  "closing_question": "\u00bfLe puedo servir en algo mas?",
+  "api_error": "Lo sentimos, tenemos dificultades tecnicas. Por favor intente mas tarde."
+}

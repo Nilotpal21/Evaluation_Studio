@@ -1,0 +1,10 @@
+{
+  "agent": "Subscription_Support",
+  "locale": "en",
+  "strings": {
+    "verification_needed": "For security, your identity needs to be verified before making subscription changes.",
+    "cancel_confirmation": "Your subscription will remain active until the renewal date. After that, you'll lose access. Are you sure you want to cancel?",
+    "refund_over_limit": "Refund requests over $50 need to be reviewed by a billing specialist. Let me connect you.",
+    "browsing_complete": "Glad I could help with your subscriptions! Let me know if you need anything else."
+  }
+}

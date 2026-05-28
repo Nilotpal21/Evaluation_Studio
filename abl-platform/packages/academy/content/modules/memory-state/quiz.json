@@ -1,0 +1,85 @@
+{
+  "moduleId": "memory-state",
+  "passThreshold": 0.8,
+  "questions": [
+    {
+      "id": "memory-q1",
+      "type": "mcq",
+      "stem": "An agent needs to remember a user's preferred language across multiple conversations over the next 90 days. Which MEMORY construct achieves this?",
+      "options": [
+        {
+          "id": "a",
+          "text": "A session variable with RESET: never"
+        },
+        {
+          "id": "b",
+          "text": "A persistent variable with SCOPE: user and a remember trigger with TTL: '90d'",
+          "correct": true
+        },
+        {
+          "id": "c",
+          "text": "A session variable with INITIAL set to the detected language"
+        }
+      ],
+      "explanation": "Persistent variables (declared under MEMORY: persistent:) survive across sessions and are stored in the platform's fact store. A remember trigger with 'WHEN: preferred_language IS SET' and 'TTL: \"90d\"' automatically stores the value when detected, with a 90-day expiration. Session variables — even with RESET: never — only persist for the runtime process lifetime and are not guaranteed across sessions. The INITIAL value only sets a default, it doesn't remember learned values."
+    },
+    {
+      "id": "memory-q2",
+      "type": "fill-blank",
+      "stem": "Session variables with 'RESET: per_______' are reset to their initial value at the start of each flow step, making them useful for step-scoped accumulators.",
+      "answer": "step",
+      "acceptAlternatives": ["_step", "Step"],
+      "explanation": "The three RESET behaviors for session variables are: 'per_session' (initialized at session start, cleared at session end — the default), 'per_step' (reset to initial value at each flow step transition, useful for counters or accumulators scoped to a single step), and 'never' (persists for the runtime process lifetime). Using 'per_step' ensures clean state for each step execution."
+    },
+    {
+      "id": "memory-q3",
+      "type": "mcq",
+      "stem": "What does BEHAVIOR_PROFILES allow an agent to do that static configuration cannot?",
+      "options": [
+        {
+          "id": "a",
+          "text": "Define multiple GOAL statements that the LLM randomly selects each turn"
+        },
+        {
+          "id": "b",
+          "text": "Dynamically modify the agent's tools, instructions, voice config, and constraints based on runtime context evaluated per-turn",
+          "correct": true
+        },
+        {
+          "id": "c",
+          "text": "Store behavior preferences in persistent memory so different users see different agent personalities"
+        }
+      ],
+      "explanation": "BEHAVIOR_PROFILES are composable overlays that dynamically modify an agent's behavior based on runtime context. Each profile has a WHEN expression (CEL syntax) that the runtime re-evaluates on every turn. When profiles activate or deactivate, the system prompt, tool list, voice configuration, and constraints are rebuilt. For example, a voice channel profile can hide chart-rendering tools and add call-transfer tools, while a turn-count profile can unlock advanced tools after the 3rd turn."
+    },
+    {
+      "id": "memory-q4",
+      "type": "mcq",
+      "stem": "In the CONSTRAINTS block, what is the difference between the REQUIRE and RESTRICT keywords?",
+      "options": [
+        {
+          "id": "a",
+          "text": "REQUIRE asserts a condition must be true (fails when false); RESTRICT describes what is forbidden (fails when true)",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "REQUIRE blocks execution on failure; RESTRICT only logs a warning without blocking"
+        },
+        {
+          "id": "c",
+          "text": "REQUIRE applies to session variables; RESTRICT applies to tool call parameters"
+        }
+      ],
+      "explanation": "REQUIRE, LIMIT, and RESTRICT are three keywords for constraint rules. REQUIRE asserts a condition must be true — the constraint fails when the condition is false. RESTRICT expresses a prohibition — it describes what is forbidden, and the constraint fails when the condition is true. LIMIT expresses a numeric boundary (semantically equivalent to REQUIRE with a comparison). All three can have error or warning severity — the keyword choice communicates intent, not severity level."
+    },
+    {
+      "id": "memory-q5",
+      "type": "fill-blank",
+      "stem": "Persistent variables can be scoped to either a specific ______ (unique per authenticated user) or to the entire project (shared across all users).",
+      "answer": "user",
+      "acceptAlternatives": ["User", "USER"],
+      "explanation": "Persistent variables support two scopes via the SCOPE property: 'user' (the default) means values are unique per authenticated user — two users in the same project see different values for the same path. 'project' means values are shared across all users within the project, useful for reference data, feature flags, or global configuration like exchange rates. User-scoped variables require user authentication to resolve correctly."
+    }
+  ]
+}

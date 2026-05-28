@@ -1,0 +1,1063 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SDK Rich Content Showcase</title>
+    <style>
+      :root {
+        color-scheme: light;
+        font-family:
+          'SF Pro Display',
+          'Segoe UI',
+          system-ui,
+          -apple-system,
+          BlinkMacSystemFont,
+          sans-serif;
+        background:
+          radial-gradient(circle at top left, rgba(14, 165, 233, 0.18), transparent 32%),
+          radial-gradient(circle at top right, rgba(16, 185, 129, 0.16), transparent 28%),
+          linear-gradient(180deg, #f8fbff 0%, #eef4ff 100%);
+        color: #0f172a;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        background: inherit;
+      }
+
+      .page-shell {
+        max-width: 1500px;
+        margin: 0 auto;
+        padding: 40px 28px 64px;
+      }
+
+      .hero {
+        display: grid;
+        gap: 16px;
+        margin-bottom: 28px;
+      }
+
+      .hero h1 {
+        margin: 0;
+        font-size: clamp(2rem, 2.8vw, 3.2rem);
+        line-height: 1;
+        letter-spacing: -0.05em;
+      }
+
+      .hero p {
+        margin: 0;
+        max-width: 920px;
+        font-size: 1rem;
+        line-height: 1.6;
+        color: #475569;
+      }
+
+      .hero-stats {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+
+      .hero-stat {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 14px;
+        border: 1px solid rgba(15, 23, 42, 0.08);
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.82);
+        box-shadow: 0 12px 30px rgba(15, 23, 42, 0.06);
+        color: #334155;
+        font-size: 0.88rem;
+        font-weight: 600;
+      }
+
+      .showcase-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 22px;
+      }
+
+      .template-card {
+        display: grid;
+        gap: 18px;
+        padding: 20px;
+        border: 1px solid rgba(148, 163, 184, 0.18);
+        border-radius: 24px;
+        background: rgba(255, 255, 255, 0.88);
+        box-shadow: 0 18px 48px rgba(15, 23, 42, 0.08);
+        backdrop-filter: blur(16px);
+      }
+
+      .template-card.span-two {
+        grid-column: span 2;
+      }
+
+      .template-meta {
+        display: grid;
+        gap: 10px;
+      }
+
+      .template-badge {
+        width: fit-content;
+        padding: 6px 10px;
+        border-radius: 999px;
+        background: rgba(37, 99, 235, 0.08);
+        color: #1d4ed8;
+        font-size: 0.75rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .template-title-row {
+        display: flex;
+        justify-content: space-between;
+        gap: 14px;
+        align-items: baseline;
+      }
+
+      .template-title-row h2 {
+        margin: 0;
+        font-size: 1.1rem;
+        line-height: 1.2;
+      }
+
+      .template-caption {
+        margin: 0;
+        font-size: 0.92rem;
+        line-height: 1.55;
+        color: #475569;
+      }
+
+      .template-id {
+        color: #64748b;
+        font-family: 'SF Mono', 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 0.75rem;
+      }
+
+      .showcase-shell {
+        --primary: #4f46e5;
+        --primary-hover: #4338ca;
+        --text: #0f172a;
+        --text-secondary: #475569;
+        --bg: #ffffff;
+        --bg-secondary: #eef2ff;
+        --border: #dbe4f5;
+        --shadow: rgba(37, 99, 235, 0.12);
+        --radius: 18px;
+        --font:
+          'SF Pro Display', 'Segoe UI', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+        position: relative;
+        overflow: hidden;
+        padding: 18px;
+        border-radius: 20px;
+        background:
+          radial-gradient(circle at top right, rgba(59, 130, 246, 0.12), transparent 30%),
+          linear-gradient(180deg, #f8fafc 0%, #eef2ff 100%);
+        border: 1px solid rgba(148, 163, 184, 0.16);
+      }
+
+      .showcase-shell::after {
+        content: '';
+        position: absolute;
+        inset: auto 18px 12px 18px;
+        height: 16px;
+        border-radius: 999px;
+        background: rgba(15, 23, 42, 0.04);
+        filter: blur(10px);
+        pointer-events: none;
+      }
+
+      .showcase-shell .message {
+        max-width: 100%;
+        border-radius: 24px;
+        border-bottom-left-radius: 24px;
+        box-shadow: 0 20px 45px rgba(37, 99, 235, 0.08);
+      }
+
+      .showcase-shell .message.rich {
+        max-width: 100%;
+      }
+
+      .template-footer {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        color: #64748b;
+        font-size: 0.8rem;
+      }
+
+      .template-footer span {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .status {
+        margin-top: 28px;
+        font-size: 0.9rem;
+        color: #334155;
+      }
+
+      @media (max-width: 1080px) {
+        .showcase-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .template-card.span-two {
+          grid-column: span 1;
+        }
+      }
+
+      @media (max-width: 640px) {
+        .page-shell {
+          padding: 24px 16px 48px;
+        }
+
+        .template-card {
+          padding: 16px;
+        }
+
+        .template-title-row {
+          flex-direction: column;
+          align-items: flex-start;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="page-shell">
+      <section class="hero">
+        <h1>SDK Rich Content Showcase</h1>
+        <p>
+          This page renders every SDK rich-content template with realistic, high-detail payloads
+          using the SDK's own `renderRichMessage()` pipeline. It is intended for screenshot capture
+          and visual smoke validation of charts, tables, markdown, forms, actions, and related
+          widgets.
+        </p>
+        <div class="hero-stats" id="hero-stats">
+          <span class="hero-stat">Rendering template inventory...</span>
+        </div>
+      </section>
+
+      <section class="showcase-grid" id="showcase-grid"></section>
+      <div class="status" id="status">Preparing showcase...</div>
+    </main>
+
+    <script type="module">
+      import { ChatWidget, renderRichMessage } from '../../dist/agent-sdk.esm.js';
+
+      const showcaseGrid = document.getElementById('showcase-grid');
+      const heroStats = document.getElementById('hero-stats');
+      const status = document.getElementById('status');
+
+      function svgDataUri(svg) {
+        return `data:image/svg+xml;base64,${btoa(svg)}`;
+      }
+
+      function dashboardImage(title, accent, detail) {
+        return svgDataUri(`
+          <svg xmlns="http://www.w3.org/2000/svg" width="900" height="520" viewBox="0 0 900 520">
+            <rect width="900" height="520" rx="32" fill="#e2e8f0"/>
+            <rect x="36" y="36" width="828" height="448" rx="28" fill="#0f172a"/>
+            <rect x="72" y="82" width="192" height="18" rx="9" fill="#334155"/>
+            <rect x="72" y="118" width="286" height="12" rx="6" fill="#1e293b"/>
+            <rect x="72" y="168" width="180" height="210" rx="18" fill="#111827"/>
+            <rect x="278" y="168" width="250" height="210" rx="18" fill="#111827"/>
+            <rect x="554" y="168" width="274" height="210" rx="18" fill="#111827"/>
+            <rect x="72" y="404" width="756" height="40" rx="20" fill="#111827"/>
+            <path d="M110 328 L150 260 L198 292 L244 214" fill="none" stroke="${accent}" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+            <rect x="318" y="296" width="34" height="52" rx="12" fill="${accent}"/>
+            <rect x="366" y="248" width="34" height="100" rx="12" fill="#38bdf8"/>
+            <rect x="414" y="216" width="34" height="132" rx="12" fill="#22c55e"/>
+            <circle cx="668" cy="274" r="78" fill="none" stroke="#1e293b" stroke-width="34"/>
+            <circle cx="668" cy="274" r="78" fill="none" stroke="${accent}" stroke-width="34" stroke-dasharray="360 490" stroke-linecap="round" transform="rotate(-90 668 274)"/>
+            <text x="92" y="470" fill="#cbd5e1" font-family="Arial, sans-serif" font-size="28" font-weight="700">${title}</text>
+            <text x="92" y="500" fill="#94a3b8" font-family="Arial, sans-serif" font-size="18">${detail}</text>
+          </svg>
+        `);
+      }
+
+      function avatarIcon(label, background, foreground = '#ffffff') {
+        return svgDataUri(`
+          <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
+            <rect width="64" height="64" rx="18" fill="${background}"/>
+            <text
+              x="50%"
+              y="54%"
+              text-anchor="middle"
+              dominant-baseline="middle"
+              fill="${foreground}"
+              font-family="Arial, sans-serif"
+              font-size="24"
+              font-weight="700"
+            >
+              ${label}
+            </text>
+          </svg>
+        `);
+      }
+
+      function makeMessage(id, payload) {
+        return {
+          id,
+          role: 'assistant',
+          timestamp: new Date(),
+          content: payload.content ?? '',
+          richContent: payload.richContent,
+          actions: payload.actions,
+        };
+      }
+
+      function setFieldValue(container, selector, value) {
+        const control = container.querySelector(selector);
+        if (!(control instanceof HTMLInputElement || control instanceof HTMLSelectElement)) {
+          return;
+        }
+
+        control.value = value;
+        control.dispatchEvent(new Event('input', { bubbles: true }));
+        control.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+
+      function renderShowcaseCard(definition, onAction) {
+        const section = document.createElement('section');
+        section.className = `template-card${definition.layout === 'wide' ? ' span-two' : ''}`;
+        section.dataset.screenshotId = definition.id;
+        section.dataset.assertSelector = definition.assertSelector;
+
+        section.innerHTML = `
+          <div class="template-meta">
+            <span class="template-badge">${definition.type}</span>
+            <div class="template-title-row">
+              <h2>${definition.title}</h2>
+              <span class="template-id">${definition.id}</span>
+            </div>
+            <p class="template-caption">${definition.description}</p>
+          </div>
+          <div class="showcase-shell">
+            <div class="message assistant rich" data-message-id="${definition.id}"></div>
+          </div>
+          <div class="template-footer">
+            <span>Complex dataset</span>
+            <span>SDK DOM renderer</span>
+          </div>
+        `;
+
+        const messageEl = section.querySelector(`[data-message-id="${definition.id}"]`);
+        renderRichMessage(messageEl, definition.message, {
+          onAction: (actionId, value) => {
+            onAction(definition.id, actionId, value);
+          },
+        });
+
+        definition.afterRender?.(section);
+        return section;
+      }
+
+      async function injectSdkStyles() {
+        await customElements.whenDefined('agent-chat');
+        const tempWidget = new ChatWidget();
+        tempWidget.setAttribute('show-branding', 'false');
+        tempWidget.connectedCallback();
+
+        const styleText = tempWidget.shadowRoot?.querySelector('style')?.textContent ?? '';
+        const styleEl = document.createElement('style');
+        styleEl.id = 'sdk-widget-rich-styles';
+        styleEl.textContent = styleText;
+        document.head.appendChild(styleEl);
+      }
+
+      async function bootstrap() {
+        await injectSdkStyles();
+
+        const auditImage = dashboardImage(
+          'Migration Coverage',
+          '#3b82f6',
+          'Hourly replay status and regression guardrail rollup',
+        );
+        const northImage = dashboardImage(
+          'North America Expansion',
+          '#10b981',
+          'Renewal pressure and playbook trigger timing',
+        );
+        const opsImage = dashboardImage(
+          'Support Escalations',
+          '#f97316',
+          'Critical path incidents and response distribution',
+        );
+
+        const actionLog = [];
+        const onAction = (widgetId, actionId, value) => {
+          actionLog.push({ widgetId, actionId, value });
+          status.textContent = `Last interaction: ${widgetId} -> ${actionId}${
+            value ? ` (${value})` : ''
+          }`;
+        };
+
+        const sections = [
+          {
+            id: 'markdown',
+            type: 'Markdown',
+            title: 'Executive markdown summary',
+            description:
+              'Headers, emphasis, code, quote blocks, inline links, and markdown tables are all rendered together.',
+            layout: 'wide',
+            assertSelector: '.rich-text table',
+            message: makeMessage('markdown', {
+              richContent: {
+                markdown: `# Weekly Revenue Watch
+
+**Owner:** Growth Operations  
+**Window:** 2026-04-21 through 2026-04-28
+
+> Expansion ARR remains healthy, but EMEA approvals are now the pacing item for the close plan.
+
+## Regional snapshot
+
+| Region | Expansion ARR | Forecast delta | Priority |
+| --- | ---: | ---: | --- |
+| North America | $2.14M | +18% | Green |
+| EMEA | $1.08M | -4% | Amber |
+| APAC | $640K | +11% | Green |
+
+## Operator checklist
+
+- Reconcile billing export against the latest ledger
+- Confirm the **enterprise support** renewal cohort
+- Escalate any account above \`p95 > 450ms\`
+
+## Query used
+
+\`\`\`sql
+select region, sum(expansion_arr) as expansion_arr
+from revenue_forecast
+where snapshot_date = '2026-04-21'
+group by region
+order by expansion_arr desc;
+\`\`\`
+
+[Open the rollout notebook](https://example.com/runbooks/revenue-watch)`,
+              },
+            }),
+          },
+          {
+            id: 'channel-fallback',
+            type: 'Fallback',
+            title: 'Channel-native fallback preview',
+            description:
+              'Structured channel payloads should surface readable previews instead of blank assistant turns.',
+            assertSelector: '.rich-channel-fallback-title',
+            message: makeMessage('channel-fallback', {
+              richContent: {
+                slack: JSON.stringify(
+                  {
+                    blocks: [
+                      {
+                        type: 'header',
+                        text: {
+                          type: 'plain_text',
+                          text: 'Approval required',
+                        },
+                      },
+                      {
+                        type: 'section',
+                        text: {
+                          type: 'mrkdwn',
+                          text: '*INV-4821* exceeded the approved discount threshold for EMEA enterprise.',
+                        },
+                      },
+                    ],
+                  },
+                  null,
+                  2,
+                ),
+              },
+            }),
+          },
+          {
+            id: 'carousel',
+            type: 'Carousel',
+            title: 'Multi-card opportunity showcase',
+            description:
+              'Carousel cards render images, subtitles, and button groups with enough room for dense contextual detail.',
+            layout: 'wide',
+            assertSelector: '.rich-carousel-card',
+            message: makeMessage('carousel', {
+              richContent: {
+                carousel: {
+                  cards: [
+                    {
+                      title: 'North America expansion',
+                      subtitle: 'Renewal package at 92% commit with legal redlines cleared.',
+                      image_url: northImage,
+                      buttons: [
+                        { id: 'view-north', type: 'button', label: 'Open account brief' },
+                        { id: 'email-north', type: 'button', label: 'Draft exec note' },
+                      ],
+                    },
+                    {
+                      title: 'Platform operations',
+                      subtitle: 'Two high-severity incidents need on-call signoff before rollout.',
+                      image_url: opsImage,
+                      buttons: [{ id: 'open-ops', type: 'button', label: 'Inspect incidents' }],
+                    },
+                    {
+                      title: 'Migration audit',
+                      subtitle: 'Backfill integrity passed in 11 of 12 production regions.',
+                      image_url: auditImage,
+                      buttons: [{ id: 'review-audit', type: 'button', label: 'Review exceptions' }],
+                    },
+                  ],
+                },
+              },
+            }),
+          },
+          {
+            id: 'quick-replies',
+            type: 'Quick Replies',
+            title: 'Decision shortcuts',
+            description:
+              'Quick replies should stay compact but still support icons and longer action labels.',
+            assertSelector: '.rich-quick-reply',
+            message: makeMessage('quick-replies', {
+              richContent: {
+                quick_replies: [
+                  {
+                    id: 'approve-rollout',
+                    label: 'Approve rollout',
+                    icon_url: avatarIcon('A', '#2563eb'),
+                  },
+                  {
+                    id: 'schedule-review',
+                    label: 'Schedule review',
+                    icon_url: avatarIcon('R', '#0f766e'),
+                  },
+                  {
+                    id: 'hold-emea',
+                    label: 'Hold EMEA region',
+                    icon_url: avatarIcon('E', '#dc2626'),
+                  },
+                  {
+                    id: 'notify-finance',
+                    label: 'Notify finance',
+                    icon_url: avatarIcon('F', '#7c3aed'),
+                  },
+                ],
+              },
+            }),
+          },
+          {
+            id: 'list',
+            type: 'List',
+            title: 'Escalated tenant summary',
+            description:
+              'List widgets should preserve preview imagery, subtitles, and dense operational summaries.',
+            assertSelector: '.rich-list-item',
+            message: makeMessage('list', {
+              richContent: {
+                list: {
+                  title: 'Tenants above the latency guardrail',
+                  items: [
+                    {
+                      title: 'Acme Enterprise',
+                      subtitle:
+                        'p95 latency 482ms, queue depth 31, manual replay still in progress.',
+                      image_url: avatarIcon('AE', '#0f172a'),
+                    },
+                    {
+                      title: 'Northwind Health',
+                      subtitle: 'Auth fallback triggered for 7% of session starts after rotation.',
+                      image_url: avatarIcon('NH', '#0369a1'),
+                    },
+                    {
+                      title: 'Globex Retail',
+                      subtitle:
+                        'Billing reconciliation drift detected in the hourly summary export.',
+                      image_url: avatarIcon('GR', '#15803d'),
+                    },
+                  ],
+                },
+              },
+            }),
+          },
+          {
+            id: 'image',
+            type: 'Image',
+            title: 'Annotated image card',
+            description:
+              'Image content should preserve alt text, captions, and large preview rendering for dashboard snapshots.',
+            assertSelector: '.rich-image-content',
+            message: makeMessage('image', {
+              richContent: {
+                image: {
+                  url: auditImage,
+                  alt: 'Migration coverage dashboard summary',
+                  caption:
+                    'Hourly migration coverage after the replay window closed with one APAC region still under observation.',
+                },
+              },
+            }),
+          },
+          {
+            id: 'video',
+            type: 'Video',
+            title: 'Embedded video player',
+            description:
+              'The video template should render native controls and supporting caption text inside the message surface.',
+            assertSelector: '.rich-video-player',
+            message: makeMessage('video', {
+              richContent: {
+                video: {
+                  url: 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4',
+                  alt: 'Customer onboarding demo walkthrough',
+                  caption:
+                    'Ninety-second walkthrough of the approval handoff used in the pilot environment.',
+                },
+              },
+            }),
+          },
+          {
+            id: 'audio',
+            type: 'Audio',
+            title: 'Audio playback card',
+            description:
+              'Audio widgets should preserve native controls plus captioning for call-review or QA workflows.',
+            assertSelector: '.rich-audio-player',
+            message: makeMessage('audio', {
+              richContent: {
+                audio: {
+                  url: 'https://interactive-examples.mdn.mozilla.net/media/cc0-audio/t-rex-roar.mp3',
+                  alt: 'Support call snippet for QA scoring',
+                  caption:
+                    'Sanitized support-call excerpt used to validate transcript sentiment scoring against the new rubric.',
+                },
+              },
+            }),
+          },
+          {
+            id: 'file',
+            type: 'File',
+            title: 'Document handoff card',
+            description:
+              'File widgets should show filename, size, and a clear download affordance without collapsing layout.',
+            assertSelector: '.rich-file-download',
+            message: makeMessage('file', {
+              richContent: {
+                file: {
+                  url: 'https://example.com/reports/q1-enterprise-expansion-report.pdf',
+                  filename: 'q1-enterprise-expansion-report.pdf',
+                  size_bytes: 5242880,
+                  mime_type: 'application/pdf',
+                },
+              },
+            }),
+          },
+          {
+            id: 'kpi',
+            type: 'KPI',
+            title: 'Single KPI callout',
+            description:
+              'The KPI widget should support an icon, large numeric emphasis, units, and trend styling together.',
+            assertSelector: '.rich-kpi-value',
+            message: makeMessage('kpi', {
+              richContent: {
+                kpi: {
+                  label: 'Gross retention',
+                  value: 97.4,
+                  unit: '%',
+                  trend: 'up',
+                  icon_url: avatarIcon('GR', '#2563eb'),
+                },
+              },
+            }),
+          },
+          {
+            id: 'table',
+            type: 'Table',
+            title: 'Expanded operational table',
+            description:
+              'Tables should expand cleanly beyond the visibility threshold and keep alignment for mixed numeric columns.',
+            layout: 'wide',
+            assertSelector: '.rich-table-row',
+            message: makeMessage('table', {
+              content:
+                'The following 12 tenants crossed the response-time or replay-depth threshold.',
+              richContent: {
+                table: {
+                  max_visible_rows: 6,
+                  columns: [
+                    { key: 'tenant', header: 'Tenant' },
+                    { key: 'region', header: 'Region' },
+                    { key: 'p95', header: 'p95 (ms)', align: 'right' },
+                    { key: 'replays', header: 'Replay jobs', align: 'right' },
+                    { key: 'owner', header: 'Owner' },
+                  ],
+                  rows: [
+                    {
+                      tenant: 'Acme Enterprise',
+                      region: 'NA',
+                      p95: 482,
+                      replays: 31,
+                      owner: 'Maya',
+                    },
+                    {
+                      tenant: 'Northwind Health',
+                      region: 'NA',
+                      p95: 465,
+                      replays: 18,
+                      owner: 'Jordan',
+                    },
+                    {
+                      tenant: 'Globex Retail',
+                      region: 'EMEA',
+                      p95: 441,
+                      replays: 14,
+                      owner: 'Priya',
+                    },
+                    {
+                      tenant: 'Aperture Labs',
+                      region: 'APAC',
+                      p95: 436,
+                      replays: 16,
+                      owner: 'Chris',
+                    },
+                    { tenant: 'Initech', region: 'NA', p95: 431, replays: 11, owner: 'Devin' },
+                    {
+                      tenant: 'Stark Logistics',
+                      region: 'EMEA',
+                      p95: 427,
+                      replays: 8,
+                      owner: 'Riley',
+                    },
+                    {
+                      tenant: 'Umbrella Bio',
+                      region: 'APAC',
+                      p95: 423,
+                      replays: 9,
+                      owner: 'Sofia',
+                    },
+                    {
+                      tenant: 'Wayne Systems',
+                      region: 'NA',
+                      p95: 418,
+                      replays: 7,
+                      owner: 'Nikhil',
+                    },
+                    { tenant: 'Wonka Foods', region: 'EMEA', p95: 415, replays: 6, owner: 'Lina' },
+                    {
+                      tenant: 'Tyrell Devices',
+                      region: 'APAC',
+                      p95: 413,
+                      replays: 5,
+                      owner: 'Alex',
+                    },
+                    {
+                      tenant: 'Massive Dynamic',
+                      region: 'NA',
+                      p95: 409,
+                      replays: 4,
+                      owner: 'Harper',
+                    },
+                    {
+                      tenant: 'Vehement Capital',
+                      region: 'EMEA',
+                      p95: 405,
+                      replays: 4,
+                      owner: 'Sam',
+                    },
+                  ],
+                },
+              },
+            }),
+            afterRender(section) {
+              section.querySelector('.rich-table-toggle')?.click();
+            },
+          },
+          {
+            id: 'chart-bar',
+            type: 'Chart',
+            title: 'Bar chart distribution',
+            description:
+              'Bar charts should maintain readable bars, labels, and titles with multiple colored data points.',
+            assertSelector: '.rich-chart svg rect',
+            message: makeMessage('chart-bar', {
+              richContent: {
+                chart: {
+                  type: 'bar',
+                  title: 'Expansion ARR by region',
+                  data: [
+                    { label: 'NA', value: 2140000, color: '#2563eb' },
+                    { label: 'EMEA', value: 1080000, color: '#14b8a6' },
+                    { label: 'APAC', value: 640000, color: '#f97316' },
+                    { label: 'LATAM', value: 380000, color: '#8b5cf6' },
+                  ],
+                },
+              },
+            }),
+          },
+          {
+            id: 'chart-line',
+            type: 'Chart',
+            title: 'Line chart trend',
+            description:
+              'Line charts should preserve point markers and compressed label text without clipping the trace.',
+            assertSelector: '.rich-chart svg polyline',
+            message: makeMessage('chart-line', {
+              richContent: {
+                chart: {
+                  type: 'line',
+                  title: 'Daily active copilots',
+                  data: [
+                    { label: 'Mon', value: 1820, color: '#2563eb' },
+                    { label: 'Tue', value: 1888, color: '#2563eb' },
+                    { label: 'Wed', value: 1954, color: '#2563eb' },
+                    { label: 'Thu', value: 2031, color: '#2563eb' },
+                    { label: 'Fri', value: 2114, color: '#2563eb' },
+                    { label: 'Sat', value: 1988, color: '#2563eb' },
+                    { label: 'Sun', value: 2055, color: '#2563eb' },
+                  ],
+                },
+              },
+            }),
+          },
+          {
+            id: 'chart-pie',
+            type: 'Chart',
+            title: 'Pie chart allocation',
+            description:
+              'Pie charts should render distinct slices cleanly for categorical workload or routing mixes.',
+            assertSelector: '.rich-chart svg path',
+            message: makeMessage('chart-pie', {
+              richContent: {
+                chart: {
+                  type: 'pie',
+                  title: 'Support resolution mix',
+                  data: [
+                    { label: 'Self-serve', value: 42, color: '#2563eb' },
+                    { label: 'Agent assist', value: 27, color: '#0ea5e9' },
+                    { label: 'Escalation', value: 19, color: '#f97316' },
+                    { label: 'Follow-up', value: 12, color: '#8b5cf6' },
+                  ],
+                },
+              },
+            }),
+          },
+          {
+            id: 'form',
+            type: 'Form',
+            title: 'Complex approval form',
+            description:
+              'Forms should render mixed field types, preserve labels, and display realistic prefilled values.',
+            layout: 'wide',
+            assertSelector: '.rich-form-submit',
+            message: makeMessage('form', {
+              richContent: {
+                form: {
+                  title: 'Approve release candidate',
+                  submit_label: 'Submit approval',
+                  fields: [
+                    {
+                      id: 'release_owner',
+                      type: 'input',
+                      label: 'Release owner',
+                      placeholder: 'Primary operator',
+                      required: true,
+                    },
+                    {
+                      id: 'captain_email',
+                      type: 'input',
+                      label: 'Captain email',
+                      input_type: 'email',
+                      placeholder: 'captain@example.com',
+                      required: true,
+                    },
+                    {
+                      id: 'risk_level',
+                      type: 'select',
+                      label: 'Risk level',
+                      placeholder: 'Select a risk level',
+                      required: true,
+                      options: [
+                        { id: 'low', label: 'Low' },
+                        { id: 'medium', label: 'Medium' },
+                        { id: 'high', label: 'High' },
+                      ],
+                    },
+                    {
+                      id: 'window_date',
+                      type: 'input',
+                      label: 'Change window',
+                      input_type: 'date',
+                      required: true,
+                    },
+                    {
+                      id: 'open-runbook',
+                      type: 'button',
+                      label: 'Open runbook',
+                      value: 'runbook',
+                    },
+                  ],
+                },
+              },
+            }),
+            afterRender(section) {
+              setFieldValue(section, '[data-field-id="release_owner"]', 'Maya Patel');
+              setFieldValue(section, '[data-field-id="captain_email"]', 'maya.patel@example.com');
+              setFieldValue(section, '[data-field-id="risk_level"]', 'medium');
+              setFieldValue(section, '[data-field-id="window_date"]', '2026-04-24');
+            },
+          },
+          {
+            id: 'progress-bar',
+            type: 'Progress',
+            title: 'Linear progress state',
+            description:
+              'Progress bars should keep labels, percentages, and fill styling readable in compact message layouts.',
+            assertSelector: '.rich-progress-track',
+            message: makeMessage('progress-bar', {
+              richContent: {
+                progress: {
+                  label: 'Migration completion',
+                  value: 78,
+                  max: 100,
+                  variant: 'bar',
+                },
+              },
+            }),
+          },
+          {
+            id: 'progress-circle',
+            type: 'Progress',
+            title: 'Circular progress state',
+            description:
+              'Circular progress widgets should render SVG stroke progress and centered numeric text correctly.',
+            assertSelector: '.rich-progress-circle-fill',
+            message: makeMessage('progress-circle', {
+              richContent: {
+                progress: {
+                  label: 'SLA attainment',
+                  value: 92,
+                  max: 100,
+                  variant: 'circle',
+                },
+              },
+            }),
+          },
+          {
+            id: 'feedback-stars',
+            type: 'Feedback',
+            title: 'Star-rating feedback',
+            description:
+              'Star feedback should render selectable controls and highlight the chosen rating state.',
+            assertSelector: '.rich-feedback-selected',
+            message: makeMessage('feedback-stars', {
+              richContent: {
+                feedback: {
+                  prompt: 'How confident are you in this rollout summary?',
+                  type: 'stars',
+                  max: 5,
+                },
+              },
+            }),
+            afterRender(section) {
+              section.querySelectorAll('.rich-feedback-option')[3]?.click();
+            },
+          },
+          {
+            id: 'feedback-scale',
+            type: 'Feedback',
+            title: 'Numeric-scale feedback',
+            description:
+              'Scale feedback should preserve compact numeric buttons while still showing the selected state clearly.',
+            assertSelector: '.rich-feedback-selected',
+            message: makeMessage('feedback-scale', {
+              richContent: {
+                feedback: {
+                  prompt: 'How actionable was this incident brief?',
+                  type: 'scale',
+                  max: 10,
+                },
+              },
+            }),
+            afterRender(section) {
+              section.querySelectorAll('.rich-feedback-option')[7]?.click();
+            },
+          },
+          {
+            id: 'actions',
+            type: 'Actions',
+            title: 'Composite action set',
+            description:
+              'Action handlers should support buttons, selects, typed inputs, and deferred submit payload assembly.',
+            layout: 'wide',
+            assertSelector: '.rich-actions .rich-btn-primary',
+            message: makeMessage('actions', {
+              content: 'Review the generated handoff and choose the next operational route.',
+              actions: {
+                submit_id: 'route-ticket',
+                submit_label: 'Submit routing',
+                elements: [
+                  { id: 'approve', type: 'button', label: 'Approve handoff' },
+                  { id: 'revise', type: 'button', label: 'Request revision' },
+                  {
+                    id: 'team',
+                    type: 'select',
+                    label: 'Owning team',
+                    placeholder: 'Choose a team',
+                    required: true,
+                    options: [
+                      { id: 'enterprise-ops', label: 'Enterprise Ops' },
+                      { id: 'support-eng', label: 'Support Engineering' },
+                      { id: 'finops', label: 'FinOps' },
+                    ],
+                  },
+                  {
+                    id: 'note',
+                    type: 'input',
+                    label: 'Routing note',
+                    placeholder: 'Why does this need escalation?',
+                    required: true,
+                  },
+                ],
+              },
+            }),
+            afterRender(section) {
+              setFieldValue(section, '[data-action-id="team"]', 'enterprise-ops');
+              setFieldValue(section, '[data-action-id="note"]', 'Escalate after APAC sign-off.');
+            },
+          },
+        ];
+
+        for (const section of sections) {
+          showcaseGrid.appendChild(renderShowcaseCard(section, onAction));
+        }
+
+        heroStats.innerHTML = `
+          <span class="hero-stat">${sections.length} template surfaces</span>
+          <span class="hero-stat">Complex payload coverage</span>
+          <span class="hero-stat">Ready for screenshot capture</span>
+        `;
+
+        await new Promise((resolve) => requestAnimationFrame(resolve));
+
+        status.textContent = `Showcase ready. Rendered ${sections.length} SDK template surfaces.`;
+        window.__showcaseReady = true;
+        window.__showcaseIds = sections.map((section) => section.id);
+        window.__showcaseActionLog = actionLog;
+      }
+
+      bootstrap().catch((error) => {
+        status.textContent = `Showcase failed: ${error instanceof Error ? error.message : String(error)}`;
+        console.error(error);
+      });
+    </script>
+  </body>
+</html>

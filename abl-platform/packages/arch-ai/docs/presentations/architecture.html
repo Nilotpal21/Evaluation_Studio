@@ -1,0 +1,1175 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Arch AI — Architecture</title>
+    <style>
+      :root {
+        --bg: #0b0e14;
+        --bg-elev: #11151c;
+        --bg-card: #161b25;
+        --line: #232a37;
+        --line-strong: #344053;
+        --text: #e6e9ef;
+        --text-dim: #8a93a6;
+        --text-mute: #5a6478;
+        --accent: #7aa2f7;
+        --accent-2: #9ece6a;
+        --accent-3: #e0af68;
+        --accent-4: #bb9af7;
+        --accent-5: #f7768e;
+        --accent-6: #7dcfff;
+        --accent-7: #c0caf5;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+        font:
+          14px/1.5 -apple-system,
+          BlinkMacSystemFont,
+          'SF Pro Text',
+          'Segoe UI',
+          system-ui,
+          sans-serif;
+      }
+      header {
+        padding: 20px 32px 12px;
+        border-bottom: 1px solid var(--line);
+      }
+      header h1 {
+        margin: 0;
+        font-size: 18px;
+        font-weight: 600;
+        letter-spacing: 0.2px;
+      }
+      header .sub {
+        color: var(--text-dim);
+        font-size: 12px;
+        margin-top: 2px;
+      }
+      header code {
+        color: var(--accent-6);
+        background: var(--bg-elev);
+        padding: 1px 6px;
+        border-radius: 3px;
+        font-size: 11px;
+      }
+      main {
+        display: grid;
+        grid-template-columns: 1fr 360px;
+        height: calc(100vh - 64px);
+      }
+      .canvas {
+        position: relative;
+        overflow: auto;
+        padding: 24px 24px 80px;
+        background: radial-gradient(circle at 1px 1px, rgba(122, 162, 247, 0.05) 1px, transparent 0)
+          calc(50%) calc(50%) / 24px 24px;
+      }
+      .panel {
+        border-left: 1px solid var(--line);
+        background: var(--bg-elev);
+        overflow: auto;
+        padding: 22px 22px 40px;
+      }
+      .panel h2 {
+        margin: 0 0 4px;
+        font-size: 14px;
+        font-weight: 600;
+        letter-spacing: 0.2px;
+      }
+      .panel .panel-id {
+        font-size: 11px;
+        color: var(--text-mute);
+        font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+        margin-bottom: 14px;
+      }
+      .panel p {
+        color: var(--text-dim);
+        margin: 0 0 12px;
+      }
+      .panel h3 {
+        margin: 18px 0 6px;
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.6px;
+        color: var(--text-mute);
+        font-weight: 600;
+      }
+      .panel ul {
+        margin: 0;
+        padding-left: 18px;
+      }
+      .panel li {
+        color: var(--text);
+        margin-bottom: 4px;
+      }
+      .panel li code,
+      .panel p code {
+        color: var(--accent-6);
+        background: var(--bg-card);
+        padding: 1px 5px;
+        border-radius: 3px;
+        font-size: 11.5px;
+      }
+      .legend {
+        position: sticky;
+        top: 0;
+        z-index: 5;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px 16px;
+        padding: 8px 0 16px;
+        background: linear-gradient(to bottom, var(--bg) 70%, transparent);
+        font-size: 12px;
+        color: var(--text-dim);
+      }
+      .legend .swatch {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .legend .dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 2px;
+        background: var(--line-strong);
+      }
+      svg {
+        display: block;
+        max-width: 100%;
+      }
+      .layer {
+        fill: var(--bg-elev);
+        stroke: var(--line);
+        stroke-dasharray: 4 4;
+      }
+      .layer-label {
+        fill: var(--text-mute);
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.8px;
+        font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+      }
+      .node {
+        cursor: pointer;
+        transition: opacity 120ms ease;
+      }
+      .node rect {
+        fill: var(--bg-card);
+        stroke: var(--line-strong);
+        stroke-width: 1;
+        rx: 6;
+      }
+      .node text.title {
+        fill: var(--text);
+        font-weight: 600;
+        font-size: 12.5px;
+      }
+      .node text.sub {
+        fill: var(--text-dim);
+        font-size: 10.5px;
+        font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+      }
+      .node.coord rect {
+        stroke: var(--accent);
+      }
+      .node.exec rect {
+        stroke: var(--accent-2);
+      }
+      .node.pers rect {
+        stroke: var(--accent-3);
+      }
+      .node.know rect {
+        stroke: var(--accent-4);
+      }
+      .node.gen rect {
+        stroke: var(--accent-5);
+      }
+      .node.stream rect {
+        stroke: var(--accent-6);
+      }
+      .node.surface rect {
+        stroke: var(--accent-7);
+        fill: var(--bg-elev);
+      }
+      .node.ext rect {
+        stroke: var(--text-mute);
+        stroke-dasharray: 3 3;
+        fill: transparent;
+      }
+      .node.ext text.title {
+        fill: var(--text-dim);
+      }
+      .node:hover rect,
+      .node.active rect {
+        fill: #1c2230;
+        stroke-width: 2;
+      }
+      .node.dim {
+        opacity: 0.25;
+      }
+      .edge {
+        fill: none;
+        stroke: var(--line-strong);
+        stroke-width: 1.2;
+        marker-end: url(#arrow);
+      }
+      .edge.dashed {
+        stroke-dasharray: 4 3;
+      }
+      .edge.thick {
+        stroke-width: 1.8;
+      }
+      .edge.dim {
+        opacity: 0.12;
+      }
+      .edge.glow {
+        stroke: var(--accent);
+        stroke-width: 2;
+        opacity: 1;
+      }
+      .legend .dot.coord {
+        background: var(--accent);
+      }
+      .legend .dot.exec {
+        background: var(--accent-2);
+      }
+      .legend .dot.pers {
+        background: var(--accent-3);
+      }
+      .legend .dot.know {
+        background: var(--accent-4);
+      }
+      .legend .dot.gen {
+        background: var(--accent-5);
+      }
+      .legend .dot.stream {
+        background: var(--accent-6);
+      }
+      .legend .dot.surface {
+        background: var(--accent-7);
+      }
+      .legend .dot.ext {
+        background: transparent;
+        border: 1px dashed var(--text-mute);
+      }
+      footer {
+        padding: 14px 32px 28px;
+        color: var(--text-mute);
+        font-size: 12px;
+      }
+      .lifecycle {
+        margin-top: 28px;
+      }
+      .lifecycle h2 {
+        margin: 0 0 8px;
+        font-size: 13px;
+        text-transform: uppercase;
+        letter-spacing: 0.6px;
+        color: var(--text-mute);
+        font-weight: 600;
+      }
+      .clear-btn {
+        font-size: 11px;
+        color: var(--text-dim);
+        cursor: pointer;
+        background: transparent;
+        border: 1px solid var(--line-strong);
+        padding: 4px 10px;
+        border-radius: 4px;
+        margin-left: 10px;
+      }
+      .clear-btn:hover {
+        color: var(--text);
+        border-color: var(--text-dim);
+      }
+      a {
+        color: var(--accent);
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>
+        Arch AI — Architecture
+        <button class="clear-btn" id="clear">Reset selection</button>
+      </h1>
+      <div class="sub">
+        <code>@agent-platform/arch-ai</code> · surface-agnostic engine for AI-assisted agent design
+        · companion to <code>DESIGN.md</code>
+      </div>
+    </header>
+
+    <main>
+      <section class="canvas">
+        <div class="legend">
+          <span class="swatch"><span class="dot surface"></span>Surface (consumer)</span>
+          <span class="swatch"><span class="dot coord"></span>Coordinator</span>
+          <span class="swatch"><span class="dot exec"></span>Executor</span>
+          <span class="swatch"><span class="dot stream"></span>Streaming / I/O</span>
+          <span class="swatch"><span class="dot pers"></span>Persistence</span>
+          <span class="swatch"><span class="dot know"></span>Knowledge / Diagnostics</span>
+          <span class="swatch"><span class="dot gen"></span>Generation</span>
+          <span class="swatch"><span class="dot ext"></span>External / injected</span>
+        </div>
+
+        <svg
+          id="diagram"
+          viewBox="0 0 1180 880"
+          xmlns="http://www.w3.org/2000/svg"
+          aria-labelledby="title"
+          role="img"
+        >
+          <title id="title">Arch AI subsystem architecture</title>
+          <defs>
+            <marker
+              id="arrow"
+              viewBox="0 0 10 10"
+              refX="9"
+              refY="5"
+              markerWidth="6"
+              markerHeight="6"
+              orient="auto-start-reverse"
+            >
+              <path d="M0,0 L10,5 L0,10 z" fill="var(--line-strong)" />
+            </marker>
+          </defs>
+
+          <rect class="layer" x="20" y="30" width="1140" height="80" rx="8" />
+          <text class="layer-label" x="40" y="56">Surface — apps/studio · apps/runtime</text>
+
+          <rect class="layer" x="20" y="130" width="1140" height="540" rx="8" />
+          <text class="layer-label" x="40" y="156">@agent-platform/arch-ai</text>
+
+          <rect class="layer" x="20" y="690" width="1140" height="170" rx="8" />
+          <text class="layer-label" x="40" y="716">Persistence · External</text>
+
+          <g class="node surface" data-id="studio">
+            <rect x="60" y="55" width="220" height="46" />
+            <text class="title" x="80" y="78">Studio (Next.js)</text>
+            <text class="sub" x="80" y="94">useArchChat · arch-v3 widgets</text>
+          </g>
+          <g class="node surface" data-id="runtime">
+            <rect x="320" y="55" width="240" height="46" />
+            <text class="title" x="340" y="78">Runtime (Express)</text>
+            <text class="sub" x="340" y="94">SSE route · toolExecutors · LLM client</text>
+          </g>
+          <g class="node ext" data-id="llm">
+            <rect x="600" y="55" width="200" height="46" />
+            <text class="title" x="620" y="78">LLMStreamClient</text>
+            <text class="sub" x="620" y="94">provider-agnostic interface</text>
+          </g>
+          <g class="node ext" data-id="abl">
+            <rect x="840" y="55" width="200" height="46" />
+            <text class="title" x="860" y="78">@abl/compiler</text>
+            <text class="sub" x="860" y="94">ABL → executable agent</text>
+          </g>
+
+          <g class="node coord" data-id="phase-machine">
+            <rect x="60" y="180" width="200" height="58" />
+            <text class="title" x="80" y="206">phase-machine</text>
+            <text class="sub" x="80" y="222">INTERVIEW→BLUEPRINT→</text>
+            <text class="sub" x="80" y="234">BUILD→CREATE</text>
+          </g>
+          <g class="node coord" data-id="state-machine">
+            <rect x="280" y="180" width="200" height="58" />
+            <text class="title" x="300" y="206">session-state-machine</text>
+            <text class="sub" x="300" y="222">IDLE ⇄ ACTIVE → COMPLETE</text>
+            <text class="sub" x="300" y="234">→ ARCHIVED</text>
+          </g>
+          <g class="node coord" data-id="scope">
+            <rect x="500" y="180" width="200" height="58" />
+            <text class="title" x="520" y="206">scope-classifier</text>
+            <text class="sub" x="520" y="222">SMALL vs LARGE</text>
+            <text class="sub" x="520" y="234">drives BUILD→BLUEPRINT</text>
+          </g>
+          <g class="node coord" data-id="topology">
+            <rect x="720" y="180" width="200" height="58" />
+            <text class="title" x="740" y="206">topology-synthesis</text>
+            <text class="sub" x="740" y="222">patterns · decision tree</text>
+            <text class="sub" x="740" y="234">computeBuildOrder</text>
+          </g>
+          <g class="node coord" data-id="build-gate">
+            <rect x="940" y="180" width="200" height="58" />
+            <text class="title" x="960" y="206">build-gate-queue</text>
+            <text class="sub" x="960" y="222">pickNextGate(top, files,</text>
+            <text class="sub" x="960" y="234">approved) — pure</text>
+          </g>
+
+          <g class="node coord" data-id="loop">
+            <rect x="60" y="258" width="200" height="46" />
+            <text class="title" x="80" y="282">loop-detection</text>
+            <text class="sub" x="80" y="298">SHA-256 turn fingerprint</text>
+          </g>
+          <g class="node coord" data-id="router">
+            <rect x="280" y="258" width="200" height="46" />
+            <text class="title" x="300" y="282">content-router</text>
+            <text class="sub" x="300" y="298">IN_PROJECT specialist pick</text>
+          </g>
+
+          <g class="node exec" data-id="specialist-exec">
+            <rect x="60" y="330" width="220" height="58" />
+            <text class="title" x="80" y="356">specialist-executor</text>
+            <text class="sub" x="80" y="372">one LLM turn · stream</text>
+            <text class="sub" x="80" y="384">client/server tool dispatch</text>
+          </g>
+          <g class="node exec" data-id="multi-turn">
+            <rect x="300" y="330" width="220" height="58" />
+            <text class="title" x="320" y="356">multi-turn-executor</text>
+            <text class="sub" x="320" y="372">tool-loop · retries</text>
+            <text class="sub" x="320" y="384">guards · backoff</text>
+          </g>
+          <g class="node exec" data-id="content-blocks">
+            <rect x="540" y="330" width="220" height="58" />
+            <text class="title" x="560" y="356">content-block-resolver</text>
+            <text class="sub" x="560" y="372">Arch ↔ provider blocks</text>
+            <text class="sub" x="560" y="384">multimodal preamble</text>
+          </g>
+          <g class="node exec" data-id="tool-validator">
+            <rect x="780" y="330" width="160" height="58" />
+            <text class="title" x="800" y="356">tool-validator</text>
+            <text class="sub" x="800" y="372">JSON Schema</text>
+            <text class="sub" x="800" y="384">pre-execution</text>
+          </g>
+          <g class="node exec" data-id="guards">
+            <rect x="960" y="330" width="180" height="58" />
+            <text class="title" x="980" y="356">executor-guards</text>
+            <text class="sub" x="980" y="372">turns · stalls · timeout</text>
+            <text class="sub" x="980" y="384">fail typed</text>
+          </g>
+
+          <g class="node know" data-id="prompts">
+            <rect x="60" y="412" width="220" height="58" />
+            <text class="title" x="80" y="438">prompts</text>
+            <text class="sub" x="80" y="454">composeSystemPrompt</text>
+            <text class="sub" x="80" y="466">specialists · phases</text>
+          </g>
+          <g class="node know" data-id="tools">
+            <rect x="300" y="412" width="220" height="58" />
+            <text class="title" x="320" y="438">tools</text>
+            <text class="sub" x="320" y="454">JSON Schema defs</text>
+            <text class="sub" x="320" y="466">PHASE_TOOL_MAP</text>
+          </g>
+          <g class="node know" data-id="knowledge">
+            <rect x="540" y="412" width="220" height="58" />
+            <text class="title" x="560" y="438">knowledge</text>
+            <text class="sub" x="560" y="454">35+ cards · selector</text>
+            <text class="sub" x="560" y="466">PLATFORM_LIMITS_CARD</text>
+          </g>
+          <g class="node know" data-id="diagnostics">
+            <rect x="780" y="412" width="160" height="58" />
+            <text class="title" x="800" y="438">diagnostics</text>
+            <text class="sub" x="800" y="454">rules engine</text>
+            <text class="sub" x="800" y="466">findings + fixes</text>
+          </g>
+          <g class="node gen" data-id="generation">
+            <rect x="960" y="412" width="180" height="58" />
+            <text class="title" x="980" y="438">generation</text>
+            <text class="sub" x="980" y="454">skeleton → validate</text>
+            <text class="sub" x="980" y="466">→ auto-fix ABL</text>
+          </g>
+
+          <g class="node stream" data-id="streaming">
+            <rect x="60" y="494" width="280" height="58" />
+            <text class="title" x="80" y="520">streaming</text>
+            <text class="sub" x="80" y="536">12 SSE events · serializer · parser</text>
+            <text class="sub" x="80" y="548">ActivityEmitter</text>
+          </g>
+          <g class="node stream" data-id="types">
+            <rect x="360" y="494" width="220" height="58" />
+            <text class="title" x="380" y="520">types · schemas</text>
+            <text class="sub" x="380" y="536">Zod · errors · constants</text>
+            <text class="sub" x="380" y="548">content blocks · auth ctx</text>
+          </g>
+          <g class="node gen" data-id="mock-server">
+            <rect x="600" y="494" width="220" height="58" />
+            <text class="title" x="620" y="520">mock-server</text>
+            <text class="sub" x="620" y="536">extractAllTools</text>
+            <text class="sub" x="620" y="548">generateMockServerArtifacts</text>
+          </g>
+          <g class="node stream" data-id="audit">
+            <rect x="840" y="494" width="300" height="58" />
+            <text class="title" x="860" y="520">audit</text>
+            <text class="sub" x="860" y="536">AuditLogEmitter — operational/security</text>
+            <text class="sub" x="860" y="548">categories · severities</text>
+          </g>
+
+          <g class="node pers" data-id="session-svc">
+            <rect x="60" y="576" width="240" height="58" />
+            <text class="title" x="80" y="602">session-service</text>
+            <text class="sub" x="80" y="618">getOrCreate · transition</text>
+            <text class="sub" x="80" y="630">atomic findOneAndUpdate</text>
+          </g>
+          <g class="node pers" data-id="checkpoints">
+            <rect x="320" y="576" width="200" height="58" />
+            <text class="title" x="340" y="602">checkpoints</text>
+            <text class="sub" x="340" y="618">snapshot + rollback</text>
+            <text class="sub" x="340" y="630">resume snapshot</text>
+          </g>
+          <g class="node pers" data-id="memory">
+            <rect x="540" y="576" width="200" height="58" />
+            <text class="title" x="560" y="602">project memory</text>
+            <text class="sub" x="560" y="618">cross-session facts</text>
+            <text class="sub" x="560" y="630">learning memory</text>
+          </g>
+          <g class="node pers" data-id="spec-doc">
+            <rect x="760" y="576" width="180" height="58" />
+            <text class="title" x="780" y="602">spec-document</text>
+            <text class="sub" x="780" y="618">SSOT markdown</text>
+            <text class="sub" x="780" y="630">editable paths</text>
+          </g>
+          <g class="node pers" data-id="journal">
+            <rect x="960" y="576" width="180" height="58" />
+            <text class="title" x="980" y="602">journal</text>
+            <text class="sub" x="980" y="618">append-only · 5 types</text>
+            <text class="sub" x="980" y="630">decision/mutation/...</text>
+          </g>
+
+          <g class="node ext" data-id="mongo">
+            <rect x="60" y="730" width="240" height="46" />
+            <text class="title" x="80" y="753">MongoDB</text>
+            <text class="sub" x="80" y="769">arch_sessions · arch_journal · spec</text>
+          </g>
+          <g class="node ext" data-id="gridfs">
+            <rect x="320" y="730" width="200" height="46" />
+            <text class="title" x="340" y="753">GridFS</text>
+            <text class="sub" x="340" y="769">file-store-service</text>
+          </g>
+          <g class="node ext" data-id="db-pkg">
+            <rect x="540" y="730" width="240" height="46" />
+            <text class="title" x="560" y="753">@agent-platform/database</text>
+            <text class="sub" x="560" y="769">tenant-isolation plugin · models</text>
+          </g>
+          <g class="node ext" data-id="obs">
+            <rect x="800" y="730" width="200" height="46" />
+            <text class="title" x="820" y="753">shared-observability</text>
+            <text class="sub" x="820" y="769">createLogger</text>
+          </g>
+          <g class="node ext" data-id="audit-sink">
+            <rect x="1020" y="730" width="120" height="46" />
+            <text class="title" x="1040" y="753">audit sink</text>
+            <text class="sub" x="1040" y="769">runtime</text>
+          </g>
+
+          <path class="edge" data-from="studio" data-to="runtime" d="M280,78 L320,78" />
+          <path
+            class="edge thick"
+            data-from="runtime"
+            data-to="streaming"
+            d="M440,101 L440,300 Q440,494 200,494"
+          />
+          <path
+            class="edge"
+            data-from="runtime"
+            data-to="multi-turn"
+            d="M440,101 L440,260 Q440,310 410,330"
+          />
+          <path class="edge dashed" data-from="runtime" data-to="llm" d="M560,78 L600,78" />
+          <path class="edge dashed" data-from="runtime" data-to="abl" d="M560,78 Q700,30 840,78" />
+
+          <path
+            class="edge"
+            data-from="multi-turn"
+            data-to="specialist-exec"
+            d="M300,360 L280,360"
+          />
+          <path
+            class="edge"
+            data-from="specialist-exec"
+            data-to="tool-validator"
+            d="M280,388 Q500,388 780,360"
+          />
+          <path
+            class="edge"
+            data-from="specialist-exec"
+            data-to="content-blocks"
+            d="M280,360 L540,360"
+          />
+          <path class="edge" data-from="multi-turn" data-to="guards" d="M520,360 L960,360" />
+          <path
+            class="edge"
+            data-from="specialist-exec"
+            data-to="streaming"
+            d="M170,388 L170,494"
+          />
+
+          <path
+            class="edge"
+            data-from="phase-machine"
+            data-to="multi-turn"
+            d="M160,238 L160,300 Q160,330 300,340"
+          />
+          <path
+            class="edge"
+            data-from="state-machine"
+            data-to="session-svc"
+            d="M380,238 Q380,420 180,576"
+          />
+          <path class="edge" data-from="scope" data-to="phase-machine" d="M500,210 L260,210" />
+          <path class="edge" data-from="topology" data-to="build-gate" d="M920,210 L940,210" />
+          <path
+            class="edge"
+            data-from="build-gate"
+            data-to="phase-machine"
+            d="M1040,238 Q1040,260 700,260 Q300,260 160,238"
+          />
+          <path class="edge dashed" data-from="loop" data-to="multi-turn" d="M160,304 L380,330" />
+          <path
+            class="edge dashed"
+            data-from="router"
+            data-to="specialist-exec"
+            d="M380,304 L170,330"
+          />
+
+          <path class="edge" data-from="prompts" data-to="specialist-exec" d="M170,412 L170,388" />
+          <path class="edge" data-from="tools" data-to="specialist-exec" d="M410,412 L260,388" />
+          <path class="edge" data-from="knowledge" data-to="prompts" d="M540,440 L280,440" />
+          <path
+            class="edge"
+            data-from="diagnostics"
+            data-to="journal"
+            d="M860,470 Q860,520 1040,576"
+          />
+          <path class="edge" data-from="generation" data-to="abl" d="M1050,412 Q1050,300 940,101" />
+          <path class="edge" data-from="generation" data-to="mock-server" d="M1000,470 L820,520" />
+
+          <path class="edge" data-from="session-svc" data-to="mongo" d="M180,634 L180,730" />
+          <path class="edge" data-from="journal" data-to="mongo" d="M1000,634 Q700,690 220,730" />
+          <path class="edge" data-from="spec-doc" data-to="mongo" d="M820,634 Q500,690 220,730" />
+          <path class="edge" data-from="checkpoints" data-to="session-svc" d="M320,605 L300,605" />
+          <path class="edge" data-from="memory" data-to="mongo" d="M640,634 Q400,680 220,730" />
+          <path
+            class="edge dashed"
+            data-from="session-svc"
+            data-to="db-pkg"
+            d="M180,634 Q360,680 600,730"
+          />
+          <path
+            class="edge dashed"
+            data-from="audit"
+            data-to="audit-sink"
+            d="M1000,552 L1080,730"
+          />
+
+          <path
+            class="edge thick"
+            data-from="session-svc"
+            data-to="multi-turn"
+            d="M300,605 Q540,500 410,388"
+          />
+          <path
+            class="edge"
+            data-from="streaming"
+            data-to="studio"
+            d="M170,494 L170,200 Q170,150 170,101"
+          />
+        </svg>
+
+        <div class="lifecycle">
+          <h2>Onboarding lifecycle (deterministic forward edges)</h2>
+          <svg viewBox="0 0 1100 110" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <marker
+                id="arrow2"
+                viewBox="0 0 10 10"
+                refX="9"
+                refY="5"
+                markerWidth="6"
+                markerHeight="6"
+                orient="auto-start-reverse"
+              >
+                <path d="M0,0 L10,5 L0,10 z" fill="var(--accent)" />
+              </marker>
+            </defs>
+            <g>
+              <rect
+                x="20"
+                y="30"
+                width="200"
+                height="56"
+                rx="6"
+                fill="var(--bg-card)"
+                stroke="var(--accent)"
+              />
+              <text x="50" y="56" fill="var(--text)" font-size="13" font-weight="600">
+                INTERVIEW
+              </text>
+              <text x="50" y="74" fill="var(--text-dim)" font-size="11">
+                onboarding · canExitInterview
+              </text>
+            </g>
+            <path
+              d="M220,58 L260,58"
+              fill="none"
+              stroke="var(--accent)"
+              stroke-width="1.4"
+              marker-end="url(#arrow2)"
+            />
+            <g>
+              <rect
+                x="260"
+                y="30"
+                width="200"
+                height="56"
+                rx="6"
+                fill="var(--bg-card)"
+                stroke="var(--accent)"
+              />
+              <text x="290" y="56" fill="var(--text)" font-size="13" font-weight="600">
+                BLUEPRINT
+              </text>
+              <text x="290" y="74" fill="var(--text-dim)" font-size="11">
+                multi-agent-architect
+              </text>
+            </g>
+            <path
+              d="M460,58 L500,58"
+              fill="none"
+              stroke="var(--accent)"
+              stroke-width="1.4"
+              marker-end="url(#arrow2)"
+            />
+            <g>
+              <rect
+                x="500"
+                y="30"
+                width="200"
+                height="56"
+                rx="6"
+                fill="var(--bg-card)"
+                stroke="var(--accent)"
+              />
+              <text x="530" y="56" fill="var(--text)" font-size="13" font-weight="600">BUILD</text>
+              <text x="530" y="74" fill="var(--text-dim)" font-size="11">abl-construct-expert</text>
+            </g>
+            <path
+              d="M700,58 L740,58"
+              fill="none"
+              stroke="var(--accent)"
+              stroke-width="1.4"
+              marker-end="url(#arrow2)"
+            />
+            <g>
+              <rect
+                x="740"
+                y="30"
+                width="200"
+                height="56"
+                rx="6"
+                fill="var(--bg-card)"
+                stroke="var(--accent)"
+              />
+              <text x="770" y="56" fill="var(--text)" font-size="13" font-weight="600">CREATE</text>
+              <text x="770" y="74" fill="var(--text-dim)" font-size="11">
+                coordinator-driven · no LLM
+              </text>
+            </g>
+            <path
+              d="M600,30 Q500,0 360,30"
+              fill="none"
+              stroke="var(--accent-3)"
+              stroke-dasharray="4 3"
+              marker-end="url(#arrow2)"
+              stroke-width="1.2"
+            />
+            <text
+              x="430"
+              y="14"
+              fill="var(--accent-3)"
+              font-size="10.5"
+              font-family="ui-monospace,monospace"
+            >
+              LARGE-scope mutation only
+            </text>
+          </svg>
+        </div>
+      </section>
+
+      <aside class="panel" id="panel">
+        <h2 id="panel-title">Pick a subsystem</h2>
+        <div class="panel-id" id="panel-id">click any node to inspect</div>
+        <div id="panel-default">
+          <p>
+            The diagram shows all subsystems inside <code>packages/arch-ai/src/</code>, plus their
+            surface consumers and persistence sinks. Edges show the dominant call direction. Click
+            any node to inspect.
+          </p>
+          <h3>Reading the diagram</h3>
+          <ul>
+            <li>Solid edges are direct calls; dashed edges are interface or sink boundaries.</li>
+            <li>
+              Backward edges are <em>not drawn</em> except the legal
+              <code>BUILD → BLUEPRINT</code> backtrack.
+            </li>
+            <li>The coordinator owns lifecycle decisions; the LLM never advances phases.</li>
+            <li>
+              Build-gate queue is purely derived from
+              <code>(topology, files, approvedAgents)</code>.
+            </li>
+          </ul>
+        </div>
+        <div id="panel-detail" style="display: none">
+          <p id="panel-body"></p>
+          <h3 id="panel-ins-h" style="display: none">Receives from</h3>
+          <ul id="panel-ins"></ul>
+          <h3 id="panel-outs-h" style="display: none">Emits to</h3>
+          <ul id="panel-outs"></ul>
+        </div>
+      </aside>
+    </main>
+
+    <footer>
+      Companion to <code>DESIGN.md</code> · keep in sync when adding subsystems or changing public
+      exports · last regenerated 2026-05-07.
+    </footer>
+
+    <script>
+      const NODES = {
+        studio: {
+          title: 'Studio (Next.js)',
+          id: 'apps/studio/src/components/arch-v3/',
+          body: 'Renders the chat surface, widget set, and progressive layout shell. Consumes the SSE stream via useArchChat and the parser exported from @agent-platform/arch-ai/streaming/client.',
+          ins: ['streaming SSE'],
+          outs: ['POST /api/arch-ai/chat', 'POST /api/arch-ai/resume'],
+        },
+        runtime: {
+          title: 'Runtime (Express)',
+          id: 'apps/runtime/src/arch-ai/*',
+          body: 'Mounts the SSE route on top of arch-ai. Wires the LLM provider, registers tool executors, persists messages, and emits audit log entries. The package itself stays HTTP-free.',
+          ins: ['HTTP from Studio'],
+          outs: ['SessionService', 'executeMultiTurn', 'JournalService'],
+        },
+        llm: {
+          title: 'LLMStreamClient (interface)',
+          id: 'executor/specialist-executor.ts',
+          body: 'Provider-agnostic streaming interface consumed by the executor. The runtime injects the implementation; arch-ai never depends on a specific provider SDK.',
+          ins: ['executor'],
+          outs: ['external LLM API'],
+        },
+        abl: {
+          title: '@abl/compiler',
+          id: 'packages/compiler',
+          body: 'Compiles ABL agent.yaml into runtime artifacts. The arch-ai generation pipeline produces inputs for the compiler; build-gate marks an agent compiled when the compiler succeeds.',
+          ins: ['generation'],
+          outs: ['runtime artifact'],
+        },
+        'phase-machine': {
+          title: 'phase-machine',
+          id: 'src/coordinator/phase-machine.ts',
+          body: "Pure functions that gate phase advancement. transitionPhase validates the edge against VALID_TRANSITIONS, evaluates the source phase's exit criteria, and returns the new phase or throws.",
+          ins: ['scope-classifier', 'build-gate-queue'],
+          outs: ['executor', 'session-service'],
+        },
+        'state-machine': {
+          title: 'session-state-machine',
+          id: 'src/coordinator/session-state-machine.ts',
+          body: 'Gate-free design. validateStateTransition guards IDLE ⇄ ACTIVE → COMPLETE → ARCHIVED. GATE_PENDING retained only as a legacy DB read state.',
+          ins: ['session-service'],
+          outs: ['session-service'],
+        },
+        scope: {
+          title: 'scope-classifier',
+          id: 'src/coordinator/scope-classifier.ts',
+          body: 'Classifies a user request as SMALL or LARGE. LARGE-scope changes during BUILD trigger the BUILD → BLUEPRINT backtrack so the architect can re-plan.',
+          ins: ['executor'],
+          outs: ['phase-machine'],
+        },
+        topology: {
+          title: 'topology-synthesis',
+          id: 'src/coordinator/topology-synthesis.ts',
+          body: 'Topology generation, pattern classification, deterministic decision tree, and computeBuildOrder (Kahn topological sort).',
+          ins: ['blueprint phase'],
+          outs: ['build-gate-queue'],
+        },
+        'build-gate': {
+          title: 'build-gate-queue',
+          id: 'src/coordinator/build-gate-queue.ts',
+          body: 'pickNextGate(topology, files, approvedAgents) — pure decision: next agent ready, needs more generation, or all done. diffTopologyAgainstBuildState preserves work across LARGE-scope edits.',
+          ins: ['topology-synthesis', 'session-service'],
+          outs: ['phase-machine', 'executor'],
+        },
+        loop: {
+          title: 'loop-detection',
+          id: 'src/coordinator/loop-detection.ts',
+          body: 'Per-turn SHA-256 fingerprint of LLM output. Trips a guard if the same response is emitted twice in a row.',
+          ins: ['executor'],
+          outs: ['multi-turn-executor'],
+        },
+        router: {
+          title: 'content-router',
+          id: 'src/coordinator/content-router.ts',
+          body: 'IN_PROJECT specialist routing. Picks diagnostician, analyst, observer, or generalist based on user message content cues.',
+          ins: ['executor'],
+          outs: ['specialist-executor'],
+        },
+        'specialist-exec': {
+          title: 'specialist-executor',
+          id: 'src/executor/specialist-executor.ts',
+          body: 'Runs a single LLM turn. Streams text_delta, dispatches tool_call_end. Client-side tools end the stream; server-side tools execute with a 30 s timeout and feed results back.',
+          ins: ['multi-turn-executor', 'prompts', 'tools'],
+          outs: ['streaming SSE', 'session metadata'],
+        },
+        'multi-turn': {
+          title: 'multi-turn-executor',
+          id: 'src/executor/multi-turn-executor.ts',
+          body: 'Wraps specialist-executor in the agentic tool loop. Re-invokes the LLM after each server-side tool result. Retries transient LLM errors with backoff. Returns completed / awaiting_tool_result / error / guard_tripped.',
+          ins: ['runtime', 'phase-machine', 'session-service'],
+          outs: ['specialist-executor', 'guards'],
+        },
+        'content-blocks': {
+          title: 'content-block-resolver',
+          id: 'src/executor/content-block-resolver.ts',
+          body: 'Resolves ArchContentBlock references (file IDs, image refs) into ProviderContentBlock[] for the LLM. Builds multimodal preambles with type validation.',
+          ins: ['specialist-executor'],
+          outs: ['LLMStreamClient'],
+        },
+        'tool-validator': {
+          title: 'tool-validator',
+          id: 'src/executor/tool-validator.ts',
+          body: 'Pre-execution JSON Schema validation of tool inputs. Catches missing required fields and primitive-type mismatches without taking on ajv. Returns an error tool result so the LLM can self-correct.',
+          ins: ['specialist-executor'],
+          outs: ['specialist-executor'],
+        },
+        guards: {
+          title: 'executor-guards',
+          id: 'src/executor/executor-guards.ts',
+          body: 'Per-turn guard counters: max reinvocations, stall windows, cumulative time. Checked before each LLM call, not after.',
+          ins: ['multi-turn-executor'],
+          outs: ['multi-turn-executor'],
+        },
+        prompts: {
+          title: 'prompts',
+          id: 'src/prompts/',
+          body: 'composeSystemPrompt assembles base + per-specialist + per-phase + context fragments. Includes ABL_CONSTRUCT_EXPERT_SYNTAX and BUILD_NARRATION_PROMPT. composeInProjectPrompt for the in-project surface.',
+          ins: ['knowledge', 'spec-document', 'page context'],
+          outs: ['specialist-executor'],
+        },
+        tools: {
+          title: 'tools',
+          id: 'src/tools/',
+          body: 'JSON Schema tool definitions for the LLM. INTERVIEW_TOOLS, PROCEED_TO_NEXT_PHASE_TOOL, PLATFORM_CONTEXT_TOOL. PHASE_TOOL_MAP gates visibility.',
+          ins: ['phase-machine'],
+          outs: ['specialist-executor'],
+        },
+        knowledge: {
+          title: 'knowledge',
+          id: 'src/knowledge/cards/',
+          body: '35+ ABL construct + workflow cards. selectKnowledgeCards picks the smallest relevant set within prompt budget. PLATFORM_LIMITS_CARD always included.',
+          ins: ['prompts'],
+          outs: ['prompts'],
+        },
+        diagnostics: {
+          title: 'diagnostics',
+          id: 'src/diagnostics/',
+          body: 'Pure rules engine. runDiagnostics returns a typed DiagnosticReport with sections, findings, severities, and one-click FixSuggestions via getFixTemplate.',
+          ins: ['diagnostician', 'BUILD post-compile'],
+          outs: ['journal', 'specialist'],
+        },
+        generation: {
+          title: 'generation',
+          id: 'src/generation/abl-pipeline.ts',
+          body: 'buildSkeleton → validatePreCompile → autoFixABL → processGeneratedABL. Pure functions over ABLAgentContext. Output feeds @abl/compiler.',
+          ins: ['BUILD phase'],
+          outs: ['@abl/compiler', 'mock-server'],
+        },
+        streaming: {
+          title: 'streaming',
+          id: 'src/streaming/',
+          body: '12 typed SSE events (Zod). Serializer + transform stream + parser. ActivityEmitter correlates begin/end activity IDs across a turn.',
+          ins: ['executor'],
+          outs: ['Studio (useArchChat)'],
+        },
+        types: {
+          title: 'types · schemas',
+          id: 'src/types/',
+          body: 'Canonical types and Zod schemas: ArchSession, MessageRequest, content blocks, sse-events, blueprint, page-context. Six dedicated error classes.',
+          ins: ['everywhere'],
+          outs: ['everywhere'],
+        },
+        'mock-server': {
+          title: 'mock-server',
+          id: 'src/mock-server/',
+          body: 'extractAllTools walks the topology to collect every external tool reference. generateMockServerArtifacts produces a runnable scaffold (handlers, schemas, OpenAPI).',
+          ins: ['generation'],
+          outs: ['runtime / dev environment'],
+        },
+        audit: {
+          title: 'audit',
+          id: 'src/audit/',
+          body: 'AuditLogEmitter — operational/security log surface separate from the journal. Structured entries with category + severity tokens, consumed by the runtime audit sink.',
+          ins: ['session-service', 'specialist-executor'],
+          outs: ['runtime audit sink'],
+        },
+        'session-svc': {
+          title: 'session-service',
+          id: 'src/session/session-service.ts',
+          body: 'Mongoose-backed session CRUD. Atomic findOneAndUpdate transitions. Sliding-window messages[] capped at 200. Constructor-injected model for testability.',
+          ins: ['runtime', 'state-machine'],
+          outs: ['MongoDB (arch_sessions)'],
+        },
+        checkpoints: {
+          title: 'checkpoint-service',
+          id: 'src/session/checkpoint-service.ts',
+          body: 'Snapshots session metadata at decision points. rollbackFromCheckpoint preserves user-facing artifacts across a topology edit. resume snapshot for the resume banner.',
+          ins: ['phase transitions'],
+          outs: ['session-service'],
+        },
+        memory: {
+          title: 'project / learning memory',
+          id: 'src/session/{project,learning}-memory-service.ts',
+          body: "Cross-session memory. Project memory holds project-scoped facts. Learning memory records what worked / what didn't for future onboarding sessions.",
+          ins: ['journal', 'specialist'],
+          outs: ['MongoDB'],
+        },
+        'spec-doc': {
+          title: 'spec-document',
+          id: 'src/spec-document/',
+          body: 'Single source of truth markdown specification. V1_EDITABLE_PATHS + SPEC_TO_SESSION_FIELD_MAP define the user-editable surface. validateEditablePath enforces the boundary.',
+          ins: ['journal', 'session metadata'],
+          outs: ['MongoDB (arch_spec_documents)', 'Studio'],
+        },
+        journal: {
+          title: 'journal',
+          id: 'src/journal/',
+          body: 'Append-only typed event log. Five record types: decision, consultation, mutation, validation, analysis. Status transitions only — content never mutates.',
+          ins: ['executor', 'diagnostics', 'mutations'],
+          outs: ['MongoDB (arch_journal)'],
+        },
+        mongo: {
+          title: 'MongoDB',
+          id: 'collections',
+          body: 'arch_sessions, arch_journal, arch_spec_documents. All scoped by tenant via the shared isolation plugin. Atomic transitions, sliding windows.',
+          ins: ['all persistence services'],
+          outs: ['indexes · queries'],
+        },
+        gridfs: {
+          title: 'GridFS',
+          id: 'file-store-service',
+          body: 'User-uploaded file persistence. Server-only (mongoose, async_hooks) — not re-exported from the main barrel to keep client bundles clean.',
+          ins: ['file-store-service'],
+          outs: ['executor (multimodal)'],
+        },
+        'db-pkg': {
+          title: '@agent-platform/database',
+          id: 'packages/database',
+          body: 'Mongoose models with the shared tenant-isolation plugin. arch-ai imports models from this package; service logic lives in arch-ai.',
+          ins: ['session / journal / spec services'],
+          outs: ['MongoDB'],
+        },
+        obs: {
+          title: 'shared-observability',
+          id: '@agent-platform/shared-observability',
+          body: 'createLogger and tracing helpers. Used by every subsystem; never replaced with console.log in server code.',
+          ins: ['everywhere'],
+          outs: ['log sink'],
+        },
+        'audit-sink': {
+          title: 'audit sink',
+          id: 'apps/runtime',
+          body: 'Where AuditLogEmitter entries land. Separate sink from operational logs and from the journal — security/operational concerns are isolated.',
+          ins: ['audit'],
+          outs: ['SIEM / storage'],
+        },
+      };
+
+      const svg = document.getElementById('diagram');
+      const titleEl = document.getElementById('panel-title');
+      const idEl = document.getElementById('panel-id');
+      const bodyEl = document.getElementById('panel-body');
+      const insEl = document.getElementById('panel-ins');
+      const outsEl = document.getElementById('panel-outs');
+      const insHeader = document.getElementById('panel-ins-h');
+      const outsHeader = document.getElementById('panel-outs-h');
+      const detailEl = document.getElementById('panel-detail');
+      const defaultEl = document.getElementById('panel-default');
+      const clearBtn = document.getElementById('clear');
+
+      let active = null;
+
+      function relatedEdges(id) {
+        return svg.querySelectorAll(
+          'path.edge[data-from="' + id + '"], path.edge[data-to="' + id + '"]',
+        );
+      }
+      function relatedNodes(id) {
+        const ids = new Set([id]);
+        for (const e of relatedEdges(id)) {
+          ids.add(e.dataset.from);
+          ids.add(e.dataset.to);
+        }
+        return ids;
+      }
+
+      function fillList(ul, header, items) {
+        while (ul.firstChild) ul.removeChild(ul.firstChild);
+        if (!items || items.length === 0) {
+          header.style.display = 'none';
+          ul.style.display = 'none';
+          return;
+        }
+        header.style.display = '';
+        ul.style.display = '';
+        for (const item of items) {
+          const li = document.createElement('li');
+          li.textContent = item;
+          ul.appendChild(li);
+        }
+      }
+
+      function setActive(id) {
+        active = id;
+        const meta = NODES[id];
+        if (!meta) return;
+        titleEl.textContent = meta.title;
+        idEl.textContent = meta.id;
+        bodyEl.textContent = meta.body;
+        fillList(insEl, insHeader, meta.ins);
+        fillList(outsEl, outsHeader, meta.outs);
+        defaultEl.style.display = 'none';
+        detailEl.style.display = '';
+
+        const nodeIds = relatedNodes(id);
+        for (const n of svg.querySelectorAll('.node')) {
+          n.classList.toggle('active', n.dataset.id === id);
+          n.classList.toggle('dim', !nodeIds.has(n.dataset.id));
+        }
+        for (const e of svg.querySelectorAll('.edge')) {
+          const isRelated = e.dataset.from === id || e.dataset.to === id;
+          e.classList.toggle('glow', isRelated);
+          e.classList.toggle('dim', !isRelated);
+        }
+      }
+
+      function clearActive() {
+        active = null;
+        titleEl.textContent = 'Pick a subsystem';
+        idEl.textContent = 'click any node to inspect';
+        defaultEl.style.display = '';
+        detailEl.style.display = 'none';
+        for (const n of svg.querySelectorAll('.node')) n.classList.remove('active', 'dim');
+        for (const e of svg.querySelectorAll('.edge')) e.classList.remove('glow', 'dim');
+      }
+
+      svg.addEventListener('click', (ev) => {
+        const node = ev.target.closest('.node');
+        if (!node) return;
+        const id = node.dataset.id;
+        if (!id) return;
+        if (active === id) clearActive();
+        else setActive(id);
+      });
+
+      clearBtn.addEventListener('click', clearActive);
+      window.addEventListener('keydown', (ev) => {
+        if (ev.key === 'Escape') clearActive();
+      });
+    </script>
+  </body>
+</html>

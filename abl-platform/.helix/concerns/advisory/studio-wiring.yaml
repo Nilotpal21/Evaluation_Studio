@@ -1,0 +1,76 @@
+id: studio-wiring
+title: Studio Component Wiring
+enforcement: advisory
+severity_default: medium
+rubric_concern: 12
+
+scope:
+  globs:
+    - apps/studio/src/components/**/*.tsx
+    - apps/studio/src/components/**/*.ts
+    - apps/studio/src/app/**/*.tsx
+
+references:
+  docs:
+    - CLAUDE.md#type-safety---read-before-you-write
+  related_concerns:
+    - design-system
+    - ux-design
+    - clean-contracts
+
+detectors:
+  - id: component-imported-somewhere
+    kind: model-review
+    severity: medium
+    guidance_ref: ../../prompts/component-wiring-lens.md
+    output_schema:
+      rule_id: component-imported-somewhere
+      severity: medium | low
+      location:
+        file: string
+        line: number
+      claim: string
+      reality: string
+      options:
+        A: wire into the intended caller (cite the parent route/page)
+        B: delete the component — it is unused
+        C: confirm it is exported as a library primitive for external use
+    message: |
+      A new component that is not imported anywhere is dead code — the most
+      common symptom of the "wrote components but forgot to wire" failure mode
+      (see MEMORY.md feedback_wiring_gap). Components must have at least one
+      caller or be declared as an intentional public export.
+    fix_hint: |
+      Run rg "from '.*<ComponentName>'" to verify it is imported. If not,
+      wire into the intended parent (a page, a section, a dialog trigger).
+
+  - id: props-match-source-signature
+    kind: model-review
+    severity: high
+    guidance_ref: ../../prompts/component-signature-lens.md
+    output_schema:
+      rule_id: props-match-source-signature
+      severity: high | medium
+      location:
+        file: string
+        line: number
+      claim: string
+      reality: string
+      options:
+        A: fix the caller to use the real props
+        B: update the component's props if the new shape is intended
+        C: confirm TypeScript accepts both shapes (structural subtype)
+    message: |
+      Component props at call sites must match the component's declared
+      signature. This catches the recurring class of errors where an agent
+      passes imagined props (label / icon) when the real signature is
+      different (title).
+    fix_hint: |
+      READ the component source before using it. Never guess prop names.
+      See CLAUDE.md "Type Safety — Read Before You Write".
+
+stage_hooks:
+  - stage: implementation
+    inject_checklist: true
+  - stage: ux-design-audit
+    as_review_lens: true

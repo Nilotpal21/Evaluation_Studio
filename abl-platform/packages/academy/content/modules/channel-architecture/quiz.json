@@ -1,0 +1,98 @@
+{
+  "moduleId": "channel-architecture",
+  "passThreshold": 0.8,
+  "questions": [
+    {
+      "id": "channel-q1",
+      "type": "mcq",
+      "stem": "A company deploys their agent on both WhatsApp and Microsoft Teams. According to the channel matrix, which capability is available on Teams but NOT on WhatsApp?",
+      "options": [
+        {
+          "id": "a",
+          "text": "Media attachments"
+        },
+        {
+          "id": "b",
+          "text": "Streaming responses and threading",
+          "correct": true
+        },
+        {
+          "id": "c",
+          "text": "Rich output with interactive elements"
+        }
+      ],
+      "explanation": "According to the channel matrix, Microsoft Teams supports both streaming and threading, while WhatsApp supports neither. Both channels support media attachments and rich output (Teams uses Adaptive Cards, WhatsApp uses Interactive messages). Both use webhook ingress and async queue delivery, but they differ in auth (Teams uses JWT, WhatsApp uses HMAC) and these two key capabilities."
+    },
+    {
+      "id": "channel-q2",
+      "type": "mcq",
+      "stem": "A user starts a web chat session, verifies their identity via OAuth, and later calls the support line. The platform recognizes the caller by their phone number (caller ID). What identity tier is assigned to the voice session?",
+      "options": [
+        {
+          "id": "a",
+          "text": "T2 (strong), because the user already verified via OAuth on web chat"
+        },
+        {
+          "id": "b",
+          "text": "T1 (weak), because caller ID is a channel artifact that could be spoofed",
+          "correct": true
+        },
+        {
+          "id": "c",
+          "text": "T0 (anonymous), because voice channels cannot inherit identity from other channels"
+        }
+      ],
+      "explanation": "The platform classifies identity verification into two tiers. T1 (weak) means the caller is recognized by a channel artifact (like caller ID or a cookie) but could be spoofed. T2 (strong) requires cryptographic verification (OAuth token, OTP, HMAC-signed session token). Even though the user previously verified via OAuth on web chat, the voice session uses caller ID which is only T1. The resulting tier depends on the channel connection's providerVerificationStrength setting, and caller ID defaults to 'weak' (T1)."
+    },
+    {
+      "id": "channel-q3",
+      "type": "fill-blank",
+      "stem": "Every channel adapter implements the ChannelAdapter interface, which includes five core methods: verifyRequest(), parseIncoming(), sendResponse(), transformOutput(), and __________.",
+      "answer": "sendTypingIndicator()",
+      "explanation": "The ChannelAdapter interface defines five core methods: verifyRequest() validates inbound request signatures (HMAC, JWT, token), parseIncoming() converts platform-specific payloads to NormalizedIncomingMessage, sendResponse() delivers the agent's response, transformOutput() converts to channel-native format (Block Kit, Adaptive Cards, etc.), and sendTypingIndicator() sends a 'typing' signal on channels that support it.",
+      "acceptAlternatives": ["sendTypingIndicator()", "sendTypingIndicator"]
+    },
+    {
+      "id": "channel-q4",
+      "type": "mcq",
+      "stem": "Your agent needs to display a booking confirmation with hotel name, dates, and total price across web, Slack, Teams, and WhatsApp. The Slack Block Kit message is rejected by the Slack API. What is the most likely cause according to the troubleshooting guidance?",
+      "options": [
+        {
+          "id": "a",
+          "text": "Slack has strict limits: max 50 blocks per message and max 3000 characters per text element",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "Slack does not support rich content blocks through the Agent Platform adapter"
+        },
+        {
+          "id": "c",
+          "text": "The agent must use the TEMPLATES block instead of RICH_CONTENT for Slack"
+        }
+      ],
+      "explanation": "Slack has strict structural limits on Block Kit messages: a maximum of 50 blocks per message and a maximum of 3000 characters per text element. If your rich content exceeds these limits, Slack's API rejects it. The troubleshooting guide recommends validating against Slack's Block Kit Builder. Both RICH_CONTENT and TEMPLATES blocks work with Slack -- the issue is structural limits, not feature support."
+    },
+    {
+      "id": "channel-q5",
+      "type": "mcq",
+      "stem": "In the channel adapter processing pipeline, what happens immediately after inbound message normalization?",
+      "options": [
+        {
+          "id": "a",
+          "text": "The agent runtime processes the message and generates a response"
+        },
+        {
+          "id": "b",
+          "text": "The message is added to the BullMQ inbound queue with idempotency keys",
+          "correct": true
+        },
+        {
+          "id": "c",
+          "text": "The message is routed to the correct channel adapter for delivery"
+        }
+      ],
+      "explanation": "The processing pipeline has 8 steps: (1) inbound webhook receives the raw payload, (2) verification validates the request signature, (3) filtering skips bot messages and duplicates, (4) connection resolution maps to tenant/project/agent, (5) normalization converts to standard format, (6) enqueue adds to BullMQ inbound queue with idempotency keys, (7) the inbound worker processes the job and runs the agent, (8) delivery transforms and sends the response. After normalization (step 5), the next step is enqueueing (step 6)."
+    }
+  ]
+}

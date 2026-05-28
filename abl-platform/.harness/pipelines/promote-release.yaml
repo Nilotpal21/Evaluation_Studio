@@ -1,0 +1,995 @@
+pipeline:
+  name: Promote Release
+  identifier: promote_release
+  projectIdentifier: ABLPlatform
+  orgIdentifier: default
+  description: |
+    Promotes an immutable release artifact from a source environment to one or
+    more target environments. Orchestrates prepare-release.sh and
+    promote-release.sh from the deploy repo, with approval gates and
+    selective service promotion.
+
+    Usage: trigger manually, select source env, target env(s), and services.
+  tags:
+    pipeline_type: promotion
+    trigger: manual
+  variables:
+    - name: source_env
+      type: String
+      description: 'Environment to snapshot the release from.'
+      required: false
+      default: 'dev'
+      value: <+input>.default(dev).allowedValues(dev,qa,staging)
+    - name: target_envs
+      type: String
+      description: 'Target environments to promote to. Select one or more.'
+      required: true
+      default: 'staging'
+      value: <+input>.default(staging).selectManyFrom(staging,sit,qa,prod)
+    - name: release_name
+      type: String
+      description: 'Release name. Leave empty to auto-generate as release-YYYY-MM-DD-<source_env>.'
+      required: false
+      default: ''
+      value: <+input>.default()
+    - name: dry_run
+      type: String
+      description: 'Set to true to preview what would change without actually promoting. Stops after prepare + ACR verification.'
+      required: false
+      default: 'false'
+      value: <+input>.default(false).allowedValues(true,false)
+    - name: promote_services
+      type: String
+      description: 'Services to promote. Default "all" promotes everything. Pick specific services for selective promotion.'
+      required: false
+      default: 'all'
+      value: <+input>.default(all).selectManyFrom(all,runtime,seed-migrate-ops,studio,admin,search-ai,search-ai-runtime,workflow-engine,multimodal-service,pipeline-engine,docling-service,bge-m3-service,preprocessing-service,nlu-sidecar,crawler-go-worker,crawler-mcp-server,codetool-sandbox)
+    - name: skip_acr_verify
+      type: String
+      description: 'Skip ACR image tag verification. Use when you are confident images exist but verification is failing (e.g. pagination, auth issues).'
+      required: false
+      default: 'false'
+      value: <+input>.default(false).allowedValues(true,false)
+    - name: approval_timeout
+      type: String
+      description: 'How long to wait for approval before auto-rejecting.'
+      required: false
+      default: '4h'
+      value: <+input>.default(4h).allowedValues(30m,1h,2h,4h,8h)
+  properties:
+    ci:
+      codebase:
+        connectorRef: ablplatformconnector
+        repoName: abl-platform
+        build: <+input>
+  stages:
+    # ── Stage 1: Prepare Release ───────────────────────────────────────────
+    - stage:
+        name: Prepare Release
+        identifier: prepare_release
+        type: CI
+        when:
+          pipelineStatus: Success
+        spec:
+          cloneCodebase: false
+          infrastructure:
+            type: KubernetesDirect
+            spec:
+              connectorRef: ABL_AKS_Dev
+              namespace: default
+              automountServiceAccountToken: true
+              nodeSelector:
+                workload: ci
+              tolerations:
+                - key: workload
+                  operator: Equal
+                  value: ci
+                  effect: NoSchedule
+              os: Linux
+          execution:
+            steps:
+              - step:
+                  type: GitClone
+                  name: Clone Deploy Repo
+                  identifier: clone_deploy_repo
+                  timeout: 5m
+                  spec:
+                    connectorRef: ablplatformconnector
+                    repoName: abl-platform-deploy
+                    build:
+                      type: branch
+                      spec:
+                        branch: main
+                    cloneDirectory: /harness/deploy
+              - step:
+                  type: Run
+                  name: Prepare Release Artifact
+                  identifier: prepare_release_artifact
+                  timeout: 10m
+                  spec:
+                    connectorRef: Docker
+                    image: python:3.12-slim-bookworm
+                    shell: Sh
+                    command: |
+                      set -eu
+                      (set -o pipefail) 2>/dev/null && set -o pipefail
+
+                      # ── Install dependencies ──
+                      apt-get update -qq && apt-get install -y -qq --no-install-recommends git openssh-client curl ca-certificates > /dev/null
+                      pip install --no-cache-dir ruamel.yaml jsonschema
+                      curl -fsSL https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64 -o /usr/local/bin/yq && chmod +x /usr/local/bin/yq
+                      curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+                      # kubeconform: schema gate inside `abl-opsctl env validate-helm`.
+                      # When absent, validate-helm silently skips the kubeconform sub-step;
+                      # installing it here makes CI enforce the schema check that local devs hit.
+                      curl -fsSL "https://github.com/yannh/kubeconform/releases/download/v0.6.7/kubeconform-linux-amd64.tar.gz" \
+                        | tar -xz -C /usr/local/bin kubeconform
+                      chmod +x /usr/local/bin/kubeconform
+
+                      SOURCE_ENV="${P_SOURCE_ENV:-dev}"
+                      TARGET_ENVS="${P_TARGET_ENVS:-staging}"
+                      RELEASE_NAME="${P_RELEASE_NAME:-}"
+
+                      cd /harness/deploy
+
+                      # ── Auto-generate release name if empty ──
+                      if [ -z "$RELEASE_NAME" ] || [ "$RELEASE_NAME" = "null" ]; then
+                        BASE="release-$(date -u +%Y-%m-%d)-${SOURCE_ENV}"
+                        RELEASE_NAME="$BASE"
+                        COUNTER=2
+                        while [ -f "releases/${RELEASE_NAME}.yaml" ]; do
+                          RELEASE_NAME="${BASE}-${COUNTER}"
+                          COUNTER=$((COUNTER + 1))
+                        done
+                        echo "Auto-generated release name: ${RELEASE_NAME}"
+                      fi
+
+                      # ── Validate release name format ──
+                      if ! echo "$RELEASE_NAME" | grep -qE '^[A-Za-z0-9][A-Za-z0-9._-]*$'; then
+                        echo "ERROR: Invalid release name: '${RELEASE_NAME}'"
+                        echo "Must match: ^[A-Za-z0-9][A-Za-z0-9._-]*$"
+                        exit 1
+                      fi
+
+                      # ── Capture previous release locks before any changes ──
+                      PREV_RELEASES=""
+                      for env in $(echo "$TARGET_ENVS" | tr ',' ' '); do
+                        LOCK_FILE="environments/${env}/release.lock.yaml"
+                        if [ -f "$LOCK_FILE" ]; then
+                          PREV=$(yq '.metadata.release' "$LOCK_FILE")
+                          if [ -n "$PREV" ] && [ "$PREV" != "null" ]; then
+                            echo "Previous release for ${env}: ${PREV}"
+                          else
+                            PREV="none"
+                            echo "No previous release lock for ${env}"
+                          fi
+                        else
+                          PREV="none"
+                          echo "No release.lock.yaml found for ${env}"
+                        fi
+                        if [ -n "$PREV_RELEASES" ]; then
+                          PREV_RELEASES="${PREV_RELEASES},${env}=${PREV}"
+                        else
+                          PREV_RELEASES="${env}=${PREV}"
+                        fi
+                      done
+
+                      # ── Run prepare-release.sh ──
+                      echo ""
+                      echo "=== Preparing release '${RELEASE_NAME}' from '${SOURCE_ENV}' ==="
+                      bash scripts/_internal/prepare-release.sh "$RELEASE_NAME" "$SOURCE_ENV"
+
+                      # ── Service selection filter ──
+                      SELECTED="${P_PROMOTE_SERVICES:-all}"
+                      echo "Selected services: ${SELECTED}"
+
+                      # Map promote_services selection to values-key names for filtering
+                      should_check_service() {
+                        local img_name="$1"
+                        if echo ",$SELECTED," | grep -q ",all,"; then
+                          return 0
+                        fi
+                        case "$img_name" in
+                          runtime)                echo ",$SELECTED," | grep -q ",runtime," ;;
+                          runtime.seedMigrateOps) echo ",$SELECTED," | grep -q ",seed-migrate-ops," ;;
+                          studio)                 echo ",$SELECTED," | grep -q ",studio," ;;
+                          admin)                  echo ",$SELECTED," | grep -q ",admin," ;;
+                          searchAi)               echo ",$SELECTED," | grep -q ",search-ai," ;;
+                          searchAiRuntime)        echo ",$SELECTED," | grep -q ",search-ai-runtime," ;;
+                          workflowEngine)         echo ",$SELECTED," | grep -q ",workflow-engine," ;;
+                          multimodal)             echo ",$SELECTED," | grep -q ",multimodal-service," ;;
+                          pipelineEngine)         echo ",$SELECTED," | grep -q ",pipeline-engine," ;;
+                          nluSidecar)             echo ",$SELECTED," | grep -q ",nlu-sidecar," ;;
+                          crawlerGoWorker)        echo ",$SELECTED," | grep -q ",crawler-go-worker," ;;
+                          crawlerMcpServer)       echo ",$SELECTED," | grep -q ",crawler-mcp-server," ;;
+                          docling)                echo ",$SELECTED," | grep -q ",docling-service," ;;
+                          bgeM3)                  echo ",$SELECTED," | grep -q ",bge-m3-service," ;;
+                          preprocessing)          echo ",$SELECTED," | grep -q ",preprocessing-service," ;;
+                          codetoolSandbox)        echo ",$SELECTED," | grep -q ",codetool-sandbox," ;;
+                          *)                      return 1 ;;
+                        esac
+                      }
+
+                      # ── Build tag diff summary (filtered by promote_services) ──
+                      echo ""
+                      echo "=== Tag diff summary ==="
+                      TAG_DIFF=""
+                      RELEASE_FILE="releases/${RELEASE_NAME}.yaml"
+                      IMAGE_COUNT=$(yq '.spec.images | length' "$RELEASE_FILE")
+                      for env in $(echo "$TARGET_ENVS" | tr ',' ' '); do
+                        TAG_DIFF="${TAG_DIFF}--- ${env} ---; "
+                        i=0
+                        while [ "$i" -lt "$IMAGE_COUNT" ]; do
+                          IMG_NAME=$(yq ".spec.images[${i}].name" "$RELEASE_FILE")
+                          IMG_TAG=$(yq ".spec.images[${i}].tag" "$RELEASE_FILE")
+                          if should_check_service "$IMG_NAME"; then
+                            VALUES_FILE="environments/${env}/values.yaml"
+                            PREFIX='"abl-platform-stack"."abl-platform"'
+                            YQ_PATH=$(echo "$IMG_NAME" | sed 's/\./"."/g')
+                            CUR_TAG=$(yq ".${PREFIX}.\"${YQ_PATH}\".image.tag // \"(unset)\"" "$VALUES_FILE" 2>/dev/null || echo "(unset)")
+                            if [ "$CUR_TAG" != "$IMG_TAG" ]; then
+                              TAG_DIFF="${TAG_DIFF}${IMG_NAME}: ${CUR_TAG} -> ${IMG_TAG}; "
+                            fi
+                          fi
+                          i=$((i + 1))
+                        done
+                      done
+                      echo "$TAG_DIFF"
+
+                      # ── Verify image tags exist in ACR ──
+                      # Uses ACR REST API with SP OAuth token — no az CLI install needed.
+                      SKIP_ACR="${P_SKIP_ACR_VERIFY:-false}"
+                      if [ "$SKIP_ACR" = "true" ]; then
+                        echo ""
+                        echo "=== ACR image tag verification: SKIPPED (skip_acr_verify=true) ==="
+                      else
+                      echo ""
+                      echo "=== ACR image tag verification ==="
+                      ACR_NAME="acrabldev"
+                      ACR_FAIL=0
+                      AZ_LOGIN_OK=0
+                      DRY_CHECK="${P_DRY_RUN:-false}"
+
+                      # Get OAuth token from Azure AD for ACR access (same SP as ci_build)
+                      ACR_TOKEN=$(curl -sf -X POST \
+                        "https://login.microsoftonline.com/b25845c6-88a0-412d-ab49-a0937433e53d/oauth2/v2.0/token" \
+                        -d "grant_type=client_credentials" \
+                        -d "client_id=e10892ed-a5a5-4f26-ab0b-fe4aac9ec77f" \
+                        -d "client_secret=${AZURE_SP_SECRET}" \
+                        -d "scope=https://management.azure.com/.default" \
+                        2>/dev/null | python3 -c "import sys,json; print(json.load(sys.stdin).get('access_token',''))" 2>/dev/null || echo "")
+
+                      # Exchange AAD token for ACR refresh token
+                      if [ -n "$ACR_TOKEN" ]; then
+                        ACR_REFRESH=$(curl -sf -X POST \
+                          "https://${ACR_NAME}.azurecr.io/oauth2/exchange" \
+                          -d "grant_type=access_token" \
+                          -d "service=${ACR_NAME}.azurecr.io" \
+                          -d "access_token=${ACR_TOKEN}" \
+                          2>/dev/null | python3 -c "import sys,json; print(json.load(sys.stdin).get('refresh_token',''))" 2>/dev/null || echo "")
+                      fi
+
+                      if [ -n "$ACR_REFRESH" ]; then
+                        echo "  ACR auth: OK"
+                        AZ_LOGIN_OK=1
+                      else
+                        echo "  ACR auth: FAILED"
+                        AZ_LOGIN_OK=0
+                      fi
+
+                      if [ "$AZ_LOGIN_OK" -eq 0 ]; then
+                        if [ "$DRY_CHECK" = "true" ]; then
+                          echo "  WARN: ACR auth failed — skipping verification (dry-run)"
+                        else
+                          echo "  ERROR: ACR auth failed — cannot verify image tags."
+                          echo "  Refusing to promote without ACR verification."
+                          exit 1
+                        fi
+                      else
+                        # Pre-fetch tag lists in parallel using ACR REST API
+                        TAG_CACHE_DIR=$(mktemp -d)
+                        REPOS_TO_CHECK=""
+
+                        # Helper: get ACR scope token for a repo
+                        acr_tags() {
+                          local repo="$1" outfile="$2"
+                          # Get scope-specific access token
+                          local scope_token
+                          scope_token=$(curl -sf -X POST \
+                            "https://${ACR_NAME}.azurecr.io/oauth2/token" \
+                            -d "grant_type=refresh_token" \
+                            -d "service=${ACR_NAME}.azurecr.io" \
+                            -d "scope=repository:${repo}:pull" \
+                            -d "refresh_token=${ACR_REFRESH}" \
+                            2>/dev/null | python3 -c "import sys,json; print(json.load(sys.stdin).get('access_token',''))" 2>/dev/null || echo "")
+                          if [ -n "$scope_token" ]; then
+                            curl -sf -H "Authorization: Bearer ${scope_token}" \
+                              "https://${ACR_NAME}.azurecr.io/v2/${repo}/tags/list?n=10000" \
+                              2>/dev/null | python3 -c "import sys,json; [print(t) for t in json.load(sys.stdin).get('tags',[])]" > "$outfile" 2>/dev/null
+                          fi
+                        }
+
+                        i=0
+                        while [ "$i" -lt "$IMAGE_COUNT" ]; do
+                          IMG_NAME=$(yq ".spec.images[${i}].name" "$RELEASE_FILE")
+                          case "$IMG_NAME" in
+                            global)                   REPO="" ;;
+                            runtime)                  REPO="abl-runtime" ;;
+                            runtime.seedMigrateOps)   REPO="abl-seed-migrate-ops" ;;
+                            studio)                   REPO="abl-studio" ;;
+                            admin)                    REPO="abl-admin" ;;
+                            searchAi)                 REPO="abl-search-ai" ;;
+                            searchAiRuntime)          REPO="abl-search-ai-runtime" ;;
+                            workflowEngine)           REPO="abl-workflow-engine" ;;
+                            multimodal)               REPO="abl-multimodal-service" ;;
+                            pipelineEngine)           REPO="abl-pipeline-engine" ;;
+                            nluSidecar)               REPO="abl-nlu-sidecar" ;;
+                            crawlerGoWorker)          REPO="abl-crawler-go-worker" ;;
+                            crawlerMcpServer)         REPO="abl-crawler-mcp-server" ;;
+                            docling)                  REPO="abl-docling-service" ;;
+                            bgeM3)                    REPO="abl-bge-m3-service" ;;
+                            preprocessing)            REPO="abl-preprocessing-service" ;;
+                            codetoolSandbox)          REPO="abl-codetool-sandbox" ;;
+                            *)                        REPO="" ;;
+                          esac
+                          if [ -n "$REPO" ] && should_check_service "$IMG_NAME"; then
+                            if ! echo "$REPOS_TO_CHECK" | grep -q "$REPO"; then
+                              REPOS_TO_CHECK="${REPOS_TO_CHECK} ${REPO}"
+                            fi
+                          fi
+                          i=$((i + 1))
+                        done
+
+                        # Fetch all tag lists in parallel
+                        echo "  Fetching tag lists for $(echo $REPOS_TO_CHECK | wc -w | tr -d ' ') repos..."
+                        for REPO in $REPOS_TO_CHECK; do
+                          acr_tags "$REPO" "${TAG_CACHE_DIR}/${REPO}.tags" &
+                        done
+                        wait
+                        echo "  Tag lists cached"
+
+                        # Verify each image against cached tag lists
+                        i=0
+                        while [ "$i" -lt "$IMAGE_COUNT" ]; do
+                          IMG_NAME=$(yq ".spec.images[${i}].name" "$RELEASE_FILE")
+                          IMG_TAG=$(yq ".spec.images[${i}].tag" "$RELEASE_FILE")
+                          case "$IMG_NAME" in
+                            global)                   REPO="" ;;
+                            runtime)                  REPO="abl-runtime" ;;
+                            runtime.seedMigrateOps)   REPO="abl-seed-migrate-ops" ;;
+                            studio)                   REPO="abl-studio" ;;
+                            admin)                    REPO="abl-admin" ;;
+                            searchAi)                 REPO="abl-search-ai" ;;
+                            searchAiRuntime)          REPO="abl-search-ai-runtime" ;;
+                            workflowEngine)           REPO="abl-workflow-engine" ;;
+                            multimodal)               REPO="abl-multimodal-service" ;;
+                            pipelineEngine)           REPO="abl-pipeline-engine" ;;
+                            nluSidecar)               REPO="abl-nlu-sidecar" ;;
+                            crawlerGoWorker)          REPO="abl-crawler-go-worker" ;;
+                            crawlerMcpServer)         REPO="abl-crawler-mcp-server" ;;
+                            docling)                  REPO="abl-docling-service" ;;
+                            bgeM3)                    REPO="abl-bge-m3-service" ;;
+                            preprocessing)            REPO="abl-preprocessing-service" ;;
+                            codetoolSandbox)          REPO="abl-codetool-sandbox" ;;
+                            *)                        REPO="" ;;
+                          esac
+                          if [ -n "$REPO" ] && should_check_service "$IMG_NAME"; then
+                            CACHE_FILE="${TAG_CACHE_DIR}/${REPO}.tags"
+                            if [ -f "$CACHE_FILE" ] && grep -qx "$IMG_TAG" "$CACHE_FILE"; then
+                              echo "  OK: ${REPO}:${IMG_TAG}"
+                            else
+                              echo "  MISSING: ${REPO}:${IMG_TAG} — tag not found in ACR"
+                              ACR_FAIL=1
+                            fi
+                          elif [ -n "$REPO" ]; then
+                            echo "  SKIP: ${REPO}:${IMG_TAG} — not in promote_services selection"
+                          fi
+                          i=$((i + 1))
+                        done
+                        rm -rf "$TAG_CACHE_DIR"
+
+                        if [ "$ACR_FAIL" -eq 1 ]; then
+                          if [ "$DRY_CHECK" = "true" ]; then
+                            echo "WARN: Image tags missing from ACR (dry-run — continuing anyway)"
+                          else
+                            echo "ERROR: One or more image tags are missing from ACR."
+                            echo "This will cause ImagePullBackOff after promotion."
+                            exit 1
+                          fi
+                        else
+                          echo "  All image tags verified in ACR"
+                        fi
+                      fi
+                      fi # end skip_acr_verify
+
+                      # ── Check if there are actual changes to promote ──
+                      # Strip the env header ("--- staging ---; ") and check if anything remains
+                      DIFF_CONTENT=$(echo "$TAG_DIFF" | sed 's/--- [a-zA-Z]* ---; //g; s/; *$//' | tr -d ' ')
+                      if [ -z "$DIFF_CONTENT" ]; then
+                        HAS_CHANGES="false"
+                        echo ""
+                        echo "=== No changes to promote ==="
+                        echo "Selected services (${SELECTED}) are already at the same tags in ${TARGET_ENVS} as ${SOURCE_ENV}."
+                        echo "Nothing to do."
+                      else
+                        HAS_CHANGES="true"
+                      fi
+
+                      # ── Dry-run mode: stop here ──
+                      DRY_RUN="${P_DRY_RUN:-false}"
+                      if [ "$DRY_RUN" = "true" ]; then
+                        echo ""
+                        echo "=== DRY RUN — preview only ==="
+                        echo "Release: ${RELEASE_NAME}"
+                        echo "Source: ${SOURCE_ENV}"
+                        echo "Targets: ${TARGET_ENVS}"
+                        echo "Previous: ${PREV_RELEASES}"
+                        echo "Services: ${SELECTED}"
+                        if [ "$HAS_CHANGES" = "true" ]; then
+                          echo "Tag diff: ${TAG_DIFF}"
+                          echo "ACR verification: PASSED"
+                        else
+                          echo "Result: No changes — target already in sync for selected services."
+                        fi
+                        echo ""
+                        echo "Dry run complete — no changes committed."
+                        # Clean up the uncommitted release file
+                        rm -f "releases/${RELEASE_NAME}.yaml"
+                        export RELEASE_NAME PREV_RELEASES TAG_DIFF HAS_CHANGES
+                        exit 0
+                      fi
+
+                      # ── No changes: skip commit and push ──
+                      if [ "$HAS_CHANGES" = "false" ]; then
+                        echo "Skipping release artifact commit — no changes to promote."
+                        rm -f "releases/${RELEASE_NAME}.yaml"
+                        export RELEASE_NAME PREV_RELEASES TAG_DIFF HAS_CHANGES
+                        exit 0
+                      fi
+
+                      # ── Commit the release artifact ──
+                      git config --global --add safe.directory /harness/deploy
+                      git config user.name "Harness CI"
+                      git config user.email "ci@kore.ai"
+
+                      # Setup SSH for push
+                      mkdir -p ~/.ssh && chmod 700 ~/.ssh
+                      trap 'rm -f ~/.ssh/id_rsa' EXIT
+                      echo '<+secrets.getValue("abl-platform-ssh-file-key")>' > ~/.ssh/id_rsa
+                      chmod 600 ~/.ssh/id_rsa
+                      ssh-keyscan -H bitbucket.org >> ~/.ssh/known_hosts 2>/dev/null
+
+                      git add "releases/${RELEASE_NAME}.yaml"
+                      git commit -m "release: prepare ${RELEASE_NAME} from ${SOURCE_ENV}
+
+                      Pipeline: <+pipeline.executionUrl>
+                      [skip ci]"
+
+                      # Push with retry
+                      MAX_RETRIES=3
+                      for attempt in $(seq 1 $MAX_RETRIES); do
+                        if git push origin main; then
+                          echo "Release artifact pushed"
+                          break
+                        fi
+                        if [ "$attempt" -eq "$MAX_RETRIES" ]; then
+                          echo "ERROR: Push failed after $MAX_RETRIES attempts"
+                          exit 1
+                        fi
+                        echo "Push failed — pulling and retrying ($attempt/$MAX_RETRIES)..."
+                        git pull --rebase origin main
+                      done
+
+                      # ── Export output variables (Harness captures from stdout) ──
+                      export RELEASE_NAME
+                      export PREV_RELEASES
+                      export TAG_DIFF
+                      export HAS_CHANGES
+                    envVariables:
+                      HOME: /root
+                      P_SOURCE_ENV: <+pipeline.variables.source_env>
+                      P_TARGET_ENVS: <+pipeline.variables.target_envs>
+                      P_RELEASE_NAME: <+pipeline.variables.release_name>
+                      P_PROMOTE_SERVICES: <+pipeline.variables.promote_services>
+                      P_DRY_RUN: <+pipeline.variables.dry_run>
+                      P_SKIP_ACR_VERIFY: <+pipeline.variables.skip_acr_verify>
+                      AZURE_SP_SECRET: <+secrets.getValue("account.sp-koreai-harness-landing-zone-tf-devops-01")>
+                    outputVariables:
+                      - name: RELEASE_NAME
+                      - name: PREV_RELEASES
+                      - name: TAG_DIFF
+                      - name: HAS_CHANGES
+                    resources:
+                      limits:
+                        memory: 2Gi
+                        cpu: '1'
+        failureStrategies:
+          - onFailure:
+              errors:
+                - AllErrors
+              action:
+                type: Abort
+
+    # ── Stage 2: Approval Gate ─────────────────────────────────────────────
+    - stage:
+        name: Approval Gate
+        identifier: approval_gate
+        type: Approval
+        when:
+          pipelineStatus: Success
+          condition: <+pipeline.variables.dry_run> != "true" && <+pipeline.stages.prepare_release.spec.execution.steps.prepare_release_artifact.output.outputVariables.HAS_CHANGES> == "true"
+        spec:
+          execution:
+            steps:
+              - step:
+                  type: HarnessApproval
+                  name: Approve Promotion
+                  identifier: approve_promotion
+                  timeout: <+pipeline.variables.approval_timeout>
+                  spec:
+                    approverInputs: []
+                    approvers:
+                      userGroups:
+                        - platform_team
+                      minimumCount: 1
+                      disallowPipelineExecutor: false
+                    approvalMessage: |-
+                      Release: <+pipeline.stages.prepare_release.spec.execution.steps.prepare_release_artifact.output.outputVariables.RELEASE_NAME>
+                      Route:   <+pipeline.variables.source_env> → <+pipeline.variables.target_envs>
+                      Services: <+pipeline.variables.promote_services>
+                      Previous: <+pipeline.stages.prepare_release.spec.execution.steps.prepare_release_artifact.output.outputVariables.PREV_RELEASES>
+
+                      Tag changes:
+                      <+pipeline.stages.prepare_release.spec.execution.steps.prepare_release_artifact.output.outputVariables.TAG_DIFF>
+
+                      Approve to promote.
+                    includePipelineExecutionHistory: true
+        failureStrategies:
+          - onFailure:
+              errors:
+                - AllErrors
+              action:
+                type: Abort
+
+    # ── Stage 3: Promote & Push ────────────────────────────────────────────
+    - stage:
+        name: Promote and Push
+        identifier: promote_and_push
+        type: CI
+        when:
+          pipelineStatus: Success
+          condition: <+pipeline.variables.dry_run> != "true" && <+pipeline.stages.prepare_release.spec.execution.steps.prepare_release_artifact.output.outputVariables.HAS_CHANGES> == "true"
+        spec:
+          cloneCodebase: false
+          infrastructure:
+            type: KubernetesDirect
+            spec:
+              connectorRef: ABL_AKS_Dev
+              namespace: default
+              automountServiceAccountToken: true
+              nodeSelector:
+                workload: ci
+              tolerations:
+                - key: workload
+                  operator: Equal
+                  value: ci
+                  effect: NoSchedule
+              os: Linux
+          execution:
+            steps:
+              - step:
+                  type: GitClone
+                  name: Clone Deploy Repo
+                  identifier: clone_deploy_repo_promote
+                  timeout: 5m
+                  spec:
+                    connectorRef: ablplatformconnector
+                    repoName: abl-platform-deploy
+                    build:
+                      type: branch
+                      spec:
+                        branch: main
+                    cloneDirectory: /harness/deploy
+              - step:
+                  type: Run
+                  name: Run Promote Release
+                  identifier: run_promote_release
+                  timeout: 15m
+                  spec:
+                    connectorRef: Docker
+                    image: python:3.12-slim-bookworm
+                    shell: Sh
+                    command: |
+                      set -eu
+                      (set -o pipefail) 2>/dev/null && set -o pipefail
+
+                      # ── Install dependencies ──
+                      apt-get update -qq && apt-get install -y -qq --no-install-recommends git openssh-client curl ca-certificates > /dev/null
+                      pip install --no-cache-dir ruamel.yaml jsonschema
+                      curl -fsSL https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64 -o /usr/local/bin/yq && chmod +x /usr/local/bin/yq
+                      curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+                      # kubeconform: required so promote-release.sh's per-env staged validation
+                      # gate (validate-env.sh) runs the schema check instead of silently skipping.
+                      curl -fsSL "https://github.com/yannh/kubeconform/releases/download/v0.6.7/kubeconform-linux-amd64.tar.gz" \
+                        | tar -xz -C /usr/local/bin kubeconform
+                      chmod +x /usr/local/bin/kubeconform
+
+                      RELEASE_NAME="${P3_RELEASE_NAME:-}"
+                      SOURCE_ENV="${P3_SOURCE_ENV:-dev}"
+                      TARGET_ENVS="${P3_TARGET_ENVS:-staging}"
+
+                      cd /harness/deploy
+
+                      # ── Validate inputs ──
+                      if [ -z "$RELEASE_NAME" ] || [ "$RELEASE_NAME" = "null" ]; then
+                        echo "ERROR: RELEASE_NAME is empty or null"
+                        exit 1
+                      fi
+                      if [ -z "$TARGET_ENVS" ] || [ "$TARGET_ENVS" = "null" ]; then
+                        echo "ERROR: TARGET_ENVS is empty or null"
+                        exit 1
+                      fi
+
+                      # Verify release file exists (was pushed in stage 1)
+                      if [ ! -f "releases/${RELEASE_NAME}.yaml" ]; then
+                        echo "ERROR: Release file not found: releases/${RELEASE_NAME}.yaml"
+                        echo "This should have been created and pushed in the Prepare Release stage."
+                        exit 1
+                      fi
+
+                      # ── Filter release file by promote_services ──
+                      SELECTED="${P3_PROMOTE_SERVICES:-all}"
+                      RELEASE_FILE="releases/${RELEASE_NAME}.yaml"
+                      TARGET_ARGS=$(echo "$TARGET_ENVS" | tr ',' ' ')
+
+                      if ! echo ",$SELECTED," | grep -q ",all,"; then
+                        echo "Filtering release to selected services: ${SELECTED}"
+
+                        # Build yq filter: keep images whose name matches selected services
+                        # Map service selection names to release file image names
+                        KEEP_NAMES=""
+                        for item in $(echo "$SELECTED" | tr ',' ' '); do
+                          case "$item" in
+                            runtime)               KEEP_NAMES="${KEEP_NAMES}|runtime" ;;
+                            seed-migrate-ops)      KEEP_NAMES="${KEEP_NAMES}|runtime.seedMigrateOps" ;;
+                            studio)                KEEP_NAMES="${KEEP_NAMES}|studio" ;;
+                            admin)                 KEEP_NAMES="${KEEP_NAMES}|admin" ;;
+                            search-ai)             KEEP_NAMES="${KEEP_NAMES}|searchAi" ;;
+                            search-ai-runtime)     KEEP_NAMES="${KEEP_NAMES}|searchAiRuntime" ;;
+                            docling-service)       KEEP_NAMES="${KEEP_NAMES}|docling" ;;
+                            bge-m3-service)        KEEP_NAMES="${KEEP_NAMES}|bgeM3" ;;
+                            preprocessing-service) KEEP_NAMES="${KEEP_NAMES}|preprocessing" ;;
+                            workflow-engine)       KEEP_NAMES="${KEEP_NAMES}|workflowEngine" ;;
+                            multimodal-service)    KEEP_NAMES="${KEEP_NAMES}|multimodal" ;;
+                            nlu-sidecar)           KEEP_NAMES="${KEEP_NAMES}|nluSidecar" ;;
+                            crawler-go-worker)     KEEP_NAMES="${KEEP_NAMES}|crawlerGoWorker" ;;
+                            crawler-mcp-server)    KEEP_NAMES="${KEEP_NAMES}|crawlerMcpServer" ;;
+                            pipeline-engine)       KEEP_NAMES="${KEEP_NAMES}|pipelineEngine" ;;
+                            codetool-sandbox)      KEEP_NAMES="${KEEP_NAMES}|codetoolSandbox" ;;
+                          esac
+                        done
+                        KEEP_NAMES="${KEEP_NAMES#|}"  # strip leading pipe
+                        if [ -z "$KEEP_NAMES" ]; then
+                          echo "ERROR: No valid services selected from promote_services='${SELECTED}'"
+                          exit 1
+                        fi
+
+                        ORIGINAL_RELEASE_FILE=$(mktemp)
+                        cp "$RELEASE_FILE" "$ORIGINAL_RELEASE_FILE"
+                        restore_release_file() {
+                          cp "$ORIGINAL_RELEASE_FILE" "$RELEASE_FILE"
+                          rm -f "$ORIGINAL_RELEASE_FILE"
+                        }
+                        trap restore_release_file EXIT
+
+                        for target_env in $TARGET_ARGS; do
+                          echo "Filtering release file for ${target_env} — only selected services will have tag changes"
+                          cp "$ORIGINAL_RELEASE_FILE" "$RELEASE_FILE"
+                          VALUES_FILE="environments/${target_env}/values.yaml"
+                          PREFIX='"abl-platform-stack"."abl-platform"'
+                          IMAGE_COUNT=$(yq '.spec.images | length' "$RELEASE_FILE")
+
+                          i=0
+                          while [ "$i" -lt "$IMAGE_COUNT" ]; do
+                            IMG_NAME=$(yq ".spec.images[${i}].name" "$RELEASE_FILE")
+                            if ! echo "$IMG_NAME" | grep -qE "^(${KEEP_NAMES})$"; then
+                              # Not selected — replace tag with this target env's current tag so there's no diff.
+                              YQ_PATH=$(echo "$IMG_NAME" | sed 's/\./"."/g')
+                              CUR_TAG=$(yq ".${PREFIX}.\"${YQ_PATH}\".image.tag // \"null\"" "$VALUES_FILE" 2>/dev/null || echo "null")
+                              if [ "$CUR_TAG" != "null" ]; then
+                                yq -i ".spec.images[${i}].tag = \"${CUR_TAG}\"" "$RELEASE_FILE"
+                              fi
+                            fi
+                            i=$((i + 1))
+                          done
+
+                          echo ""
+                          echo "=== Promoting ${RELEASE_NAME} to ${target_env} ==="
+                          bash scripts/_internal/promote-release.sh "$RELEASE_NAME" "$target_env"
+                        done
+
+                        restore_release_file
+                        trap - EXIT
+                      else
+                        # ── Run promote-release.sh ──
+                        echo ""
+                        echo "=== Promoting ${RELEASE_NAME} to ${TARGET_ENVS} ==="
+                        bash scripts/_internal/promote-release.sh "$RELEASE_NAME" $TARGET_ARGS
+                      fi
+
+                      # ── Commit and push ──
+                      git config --global --add safe.directory /harness/deploy
+                      git config user.name "Harness CI"
+                      git config user.email "ci@kore.ai"
+
+                      # Setup SSH
+                      mkdir -p ~/.ssh && chmod 700 ~/.ssh
+                      trap 'rm -f ~/.ssh/id_rsa' EXIT
+                      echo '<+secrets.getValue("abl-platform-ssh-file-key")>' > ~/.ssh/id_rsa
+                      chmod 600 ~/.ssh/id_rsa
+                      ssh-keyscan -H bitbucket.org >> ~/.ssh/known_hosts 2>/dev/null
+
+                      # Stage all modified env files
+                      for env in $TARGET_ARGS; do
+                        git add "environments/${env}/"
+                      done
+
+                      CHANGED=$(git diff --cached --name-only)
+                      if [ -z "$CHANGED" ]; then
+                        echo "No changes — environments already at this release (no-op)"
+                        exit 0
+                      fi
+
+                      echo "Files to commit:"
+                      echo "$CHANGED"
+
+                      git commit -m "deploy(${TARGET_ENVS}): promote ${RELEASE_NAME}
+
+                      Source: ${SOURCE_ENV}
+                      Pipeline: <+pipeline.executionUrl>
+                      [skip ci]"
+
+                      # Push with retry
+                      MAX_RETRIES=3
+                      for attempt in $(seq 1 $MAX_RETRIES); do
+                        if git push origin main; then
+                          echo "Push succeeded"
+                          break
+                        fi
+                        if [ "$attempt" -eq "$MAX_RETRIES" ]; then
+                          echo "ERROR: Push failed after $MAX_RETRIES attempts"
+                          exit 1
+                        fi
+                        echo "Push failed — pulling and retrying ($attempt/$MAX_RETRIES)..."
+                        git pull --rebase origin main
+                      done
+                    envVariables:
+                      HOME: /root
+                      P3_RELEASE_NAME: <+pipeline.stages.prepare_release.spec.execution.steps.prepare_release_artifact.output.outputVariables.RELEASE_NAME>
+                      P3_SOURCE_ENV: <+pipeline.variables.source_env>
+                      P3_TARGET_ENVS: <+pipeline.variables.target_envs>
+                      P3_PROMOTE_SERVICES: <+pipeline.variables.promote_services>
+                    resources:
+                      limits:
+                        memory: 2Gi
+                        cpu: '1'
+        failureStrategies:
+          - onFailure:
+              errors:
+                - AllErrors
+              action:
+                type: Abort
+
+    # ── Stage 4: Notify ────────────────────────────────────────────────────
+    # Runs on ALL outcomes. Sends adaptive Google Chat notification.
+    - stage:
+        name: Notify
+        identifier: notify
+        type: CI
+        when:
+          pipelineStatus: All
+        spec:
+          cloneCodebase: false
+          infrastructure:
+            type: KubernetesDirect
+            spec:
+              connectorRef: ABL_AKS_Dev
+              namespace: default
+              automountServiceAccountToken: true
+              nodeSelector:
+                workload: ci
+              tolerations:
+                - key: workload
+                  operator: Equal
+                  value: ci
+                  effect: NoSchedule
+              os: Linux
+          execution:
+            steps:
+              - step:
+                  type: Run
+                  name: Send Notification
+                  identifier: send_notification
+                  timeout: 2m
+                  spec:
+                    connectorRef: Docker
+                    image: python:3.12-slim-bookworm
+                    shell: Sh
+                    command: |
+                      cat > /tmp/notify.py << 'PYEOF'
+                      import json, os, time, re
+
+                      def san(key, default=''):
+                          v = os.environ.get(key, '')
+                          if not v or v == 'null' or chr(60) + '+' in v:
+                              return default
+                          return v
+
+                      def si(status):
+                          s = (status or '').strip()
+                          sl = s.lower()
+                          if sl in ('succeeded', 'success'):
+                              return '\u2705'
+                          elif sl == 'failed':
+                              return '\u274c'
+                          elif sl in ('skipped', 'notstarted', 'not_started'):
+                              return '\u2796'
+                          elif sl in ('aborted', 'expired', 'rejected'):
+                              return '\U0001f6ab'
+                          else:
+                              return '\u26aa'
+
+                      run = san('N_RUN', '?')
+                      release = san('N_RELEASE', '')
+                      source = san('N_SOURCE', '?')
+                      targets = san('N_TARGETS', '?')
+                      services = san('N_SERVICES', 'all')
+                      prev = san('N_PREV', '')
+                      tag_diff = san('N_TAG_DIFF', '')
+                      has_changes = san('N_HAS_CHANGES', 'unknown')
+                      dry_run = san('N_DRY_RUN', 'false')
+                      triggered_by = san('N_TRIGGERED_BY', 'unknown')
+                      url = san('N_URL', '')
+                      s_prepare = san('N_S_PREPARE', '')
+                      s_approval = san('N_S_APPROVAL', '')
+                      s_promote = san('N_S_PROMOTE', '')
+                      webhook_url = san('N_WEBHOOK_URL', '')
+
+                      # Duration
+                      start_ms = san('N_START_MS', '')
+                      if start_ms:
+                          secs = int(time.time()) - int(start_ms) // 1000
+                          duration = f'{secs // 60}m {secs % 60}s'
+                      else:
+                          duration = '-'
+
+                      # Title
+                      sl = lambda s: (s or '').lower()
+                      if has_changes == 'false':
+                          title = '\U0001f7f0 No Changes to Promote'
+                      elif dry_run == 'true':
+                          title = '\U0001f50d Dry Run Complete'
+                      elif sl(s_promote) in ('succeeded', 'success'):
+                          title = '\U0001f680 Release Promoted'
+                      elif sl(s_prepare) == 'failed':
+                          title = '\u274c Promotion Failed - Prepare'
+                      elif sl(s_approval) in ('failed', 'aborted', 'expired', 'rejected'):
+                          title = '\U0001f6ab Promotion Rejected'
+                      elif sl(s_promote) == 'failed':
+                          title = '\u274c Promotion Failed - Push'
+                      else:
+                          title = '\u26a0\ufe0f Promotion Aborted'
+
+                      subtitle = f'#{run} \u2022 {triggered_by}'
+
+                      # Previous release text
+                      if not prev or prev == 'none':
+                          prev_text = '<i>first promotion</i>'
+                      else:
+                          prev_text = prev
+
+                      # Services formatting
+                      services_fmt = ', '.join(s.strip() for s in services.split(','))
+
+                      # Tag changes
+                      if has_changes == 'false':
+                          changes_text = '<font color="#9e9e9e">Already in sync for selected services</font>'
+                          show_changes = True
+                      elif tag_diff:
+                          raw = re.sub(r'--- \w+ ---; ', '', tag_diff).rstrip('; ')
+                          if raw:
+                              changes_text = raw.replace('; ', '<br>')
+                              show_changes = True
+                          else:
+                              changes_text = ''
+                              show_changes = False
+                      else:
+                          changes_text = ''
+                          show_changes = False
+
+                      # Stages — only show non-skipped
+                      stage_items = []
+                      stage_items.append(f'{si(s_prepare)} Prepare')
+                      if sl(s_approval) not in ('skipped', 'notstarted', 'not_started', ''):
+                          stage_items.append(f'{si(s_approval)} Approval')
+                      stage_items.append(f'{si(s_promote)} Promote')
+                      stages_line = ' &nbsp;&nbsp;&nbsp; '.join(stage_items)
+
+                      # Build card
+                      col1 = {'widgets': [
+                          {'decoratedText': {'topLabel': 'Route', 'text': f'<b>{source} \u2192 {targets}</b>'}},
+                          {'decoratedText': {'topLabel': 'Services', 'text': f'<b>{services_fmt}</b>'}},
+                      ]}
+                      col2 = {'widgets': [
+                          {'decoratedText': {'topLabel': 'Release', 'text': f'<b>{release or "(preview)"}</b>'}},
+                          {'decoratedText': {'topLabel': 'Duration', 'text': f'<b>{duration}</b>'}},
+                      ]}
+
+                      sections = [
+                          {'widgets': [{'columns': {'columnItems': [col1, col2]}}]},
+                          {'widgets': [{'textParagraph': {'text': stages_line}}]},
+                      ]
+                      if show_changes:
+                          sections.append({'widgets': [
+                              {'textParagraph': {'text': changes_text}}
+                          ]})
+                      if prev_text:
+                          sections.append({'widgets': [
+                              {'textParagraph': {'text': f'<font color="#9e9e9e">Previous: {prev_text}</font>'}}
+                          ]})
+                      sections.append({'widgets': [
+                          {'buttonList': {'buttons': [
+                              {'text': 'View Pipeline', 'onClick': {'openLink': {'url': url}}},
+                              {'text': 'Harness Dashboard', 'onClick': {'openLink': {'url': 'https://app.harness.io/ng/account/mpHRLwiFS6aJ_4tBSlMv0w/module/ci/orgs/default/projects/ABLPlatform/pipelines/promote_release/executions'}}},
+                          ]}}
+                      ]})
+
+                      payload = {'cardsV2': [{'cardId': 'promote-notify', 'card': {
+                          'header': {'title': title, 'subtitle': subtitle},
+                          'sections': sections
+                      }}]}
+
+                      body = json.dumps(payload).encode('utf-8')
+                      if webhook_url:
+                          import urllib.request
+                          try:
+                              req = urllib.request.Request(webhook_url, data=body,
+                                  headers={'Content-Type': 'application/json'}, method='POST')
+                              urllib.request.urlopen(req, timeout=10)
+                              print('Notification sent')
+                          except Exception as e:
+                              print(f'WARN: notification failed: {e} (non-blocking)')
+                      else:
+                          print('WARN: no webhook URL configured')
+                      PYEOF
+                      python3 /tmp/notify.py
+                      rm -f /tmp/notify.py
+                    envVariables:
+                      N_WEBHOOK_URL: <+secrets.getValue("gchat-deploy-webhook")>
+                      N_RELEASE: <+pipeline.stages.prepare_release.spec.execution.steps.prepare_release_artifact.output.outputVariables.RELEASE_NAME>
+                      N_SOURCE: <+pipeline.variables.source_env>
+                      N_TARGETS: <+pipeline.variables.target_envs>
+                      N_SERVICES: <+pipeline.variables.promote_services>
+                      N_DRY_RUN: <+pipeline.variables.dry_run>
+                      N_PREV: <+pipeline.stages.prepare_release.spec.execution.steps.prepare_release_artifact.output.outputVariables.PREV_RELEASES>
+                      N_TAG_DIFF: <+pipeline.stages.prepare_release.spec.execution.steps.prepare_release_artifact.output.outputVariables.TAG_DIFF>
+                      N_HAS_CHANGES: <+pipeline.stages.prepare_release.spec.execution.steps.prepare_release_artifact.output.outputVariables.HAS_CHANGES>
+                      N_RUN: <+pipeline.sequenceId>
+                      N_TRIGGERED_BY: <+pipeline.triggeredBy.email>
+                      N_URL: <+pipeline.executionUrl>
+                      N_START_MS: <+pipeline.startTs>
+                      N_S_PREPARE: <+pipeline.stages.prepare_release.status>
+                      N_S_APPROVAL: <+pipeline.stages.approval_gate.status>
+                      N_S_PROMOTE: <+pipeline.stages.promote_and_push.status>
+                    resources:
+                      limits:
+                        memory: 128Mi
+                        cpu: '0.25'
+        failureStrategies:
+          - onFailure:
+              errors:
+                - AllErrors
+              action:
+                type: MarkAsFailure
+
+  allowStageExecutions: true

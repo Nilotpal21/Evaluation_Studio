@@ -1,0 +1,355 @@
+{
+  "id": "manufacturing",
+  "name": "Manufacturing",
+  "version": "1.0.0",
+  "categories": [
+    {
+      "id": "production",
+      "name": "Production",
+      "department": "Production Operations"
+    },
+    {
+      "id": "supply-chain",
+      "name": "Supply Chain",
+      "department": "Supply Chain Management"
+    },
+    {
+      "id": "quality-control",
+      "name": "Quality Control",
+      "department": "Quality Assurance"
+    },
+    {
+      "id": "maintenance",
+      "name": "Maintenance",
+      "department": "Facilities & Maintenance"
+    }
+  ],
+  "products": [
+    {
+      "id": "raw-material",
+      "name": "Raw Material",
+      "categoryId": "supply-chain",
+      "department": "Supply Chain Management",
+      "subDepartment": "Procurement",
+      "disambiguationKeywords": [
+        "raw material",
+        "feedstock",
+        "commodity",
+        "input material",
+        "bulk material",
+        "ingredient"
+      ]
+    },
+    {
+      "id": "finished-good",
+      "name": "Finished Good",
+      "categoryId": "production",
+      "department": "Production Operations",
+      "subDepartment": "Final Assembly",
+      "disambiguationKeywords": [
+        "finished good",
+        "end product",
+        "final product",
+        "assembled product",
+        "SKU",
+        "sellable unit"
+      ]
+    },
+    {
+      "id": "work-in-progress",
+      "name": "Work-in-Progress",
+      "categoryId": "production",
+      "department": "Production Operations",
+      "subDepartment": "Assembly Line",
+      "disambiguationKeywords": [
+        "WIP",
+        "work-in-progress",
+        "semi-finished",
+        "intermediate",
+        "subassembly",
+        "in-process"
+      ]
+    },
+    {
+      "id": "spare-part",
+      "name": "Spare Part",
+      "categoryId": "maintenance",
+      "department": "Facilities & Maintenance",
+      "subDepartment": "Parts Inventory",
+      "disambiguationKeywords": [
+        "spare part",
+        "replacement part",
+        "service part",
+        "MRO",
+        "maintenance supply",
+        "consumable"
+      ]
+    },
+    {
+      "id": "tooling-equipment",
+      "name": "Tooling & Equipment",
+      "categoryId": "production",
+      "department": "Production Operations",
+      "subDepartment": "Tool Management",
+      "disambiguationKeywords": [
+        "tooling",
+        "equipment",
+        "fixture",
+        "mold",
+        "die",
+        "jig",
+        "press",
+        "CNC"
+      ]
+    },
+    {
+      "id": "packaging-material",
+      "name": "Packaging Material",
+      "categoryId": "supply-chain",
+      "department": "Supply Chain Management",
+      "subDepartment": "Packaging",
+      "disambiguationKeywords": [
+        "packaging",
+        "carton",
+        "pallet",
+        "shrink wrap",
+        "label",
+        "box",
+        "container"
+      ]
+    },
+    {
+      "id": "quality-inspection",
+      "name": "Quality Inspection",
+      "categoryId": "quality-control",
+      "department": "Quality Assurance",
+      "subDepartment": "Inspection",
+      "disambiguationKeywords": [
+        "inspection",
+        "QC check",
+        "quality audit",
+        "sampling",
+        "defect detection",
+        "compliance check"
+      ]
+    },
+    {
+      "id": "calibration-service",
+      "name": "Calibration Service",
+      "categoryId": "quality-control",
+      "department": "Quality Assurance",
+      "subDepartment": "Metrology",
+      "disambiguationKeywords": [
+        "calibration",
+        "metrology",
+        "measurement",
+        "gauge",
+        "standard",
+        "tolerance",
+        "certification"
+      ]
+    },
+    {
+      "id": "preventive-maintenance",
+      "name": "Preventive Maintenance",
+      "categoryId": "maintenance",
+      "department": "Facilities & Maintenance",
+      "subDepartment": "Planned Maintenance",
+      "disambiguationKeywords": [
+        "preventive maintenance",
+        "PM",
+        "scheduled maintenance",
+        "routine service",
+        "maintenance plan"
+      ]
+    },
+    {
+      "id": "corrective-maintenance",
+      "name": "Corrective Maintenance",
+      "categoryId": "maintenance",
+      "department": "Facilities & Maintenance",
+      "subDepartment": "Breakdown Repair",
+      "disambiguationKeywords": [
+        "corrective maintenance",
+        "breakdown",
+        "repair",
+        "unplanned maintenance",
+        "fix",
+        "troubleshoot"
+      ]
+    }
+  ],
+  "attributes": [
+    {
+      "id": "unit_cost",
+      "name": "Unit Cost",
+      "dataType": "currency",
+      "applicableTo": ["raw-material", "finished-good", "spare-part", "packaging-material"],
+      "extraction": {
+        "method": "regex",
+        "patterns": [
+          "\\$[\\d,.]+\\s*/\\s*(unit|piece|kg|lb)",
+          "\\$[\\d,.]+\\s*per\\s*(unit|piece)"
+        ],
+        "keywords": ["unit cost", "cost per unit", "price per piece", "material cost", "unit price"]
+      }
+    },
+    {
+      "id": "lead_time_days",
+      "name": "Lead Time",
+      "dataType": "number",
+      "applicableTo": ["raw-material", "spare-part", "packaging-material"],
+      "extraction": {
+        "method": "regex",
+        "patterns": [
+          "\\d+\\s*days?\\s*lead\\s*time",
+          "lead\\s*time\\s*\\d+\\s*days?",
+          "\\d+\\s*weeks?\\s*lead"
+        ],
+        "keywords": ["lead time", "delivery time", "procurement time", "order-to-delivery"]
+      }
+    },
+    {
+      "id": "defect_rate",
+      "name": "Defect Rate",
+      "dataType": "percentage",
+      "applicableTo": ["finished-good", "work-in-progress", "quality-inspection"],
+      "extraction": {
+        "method": "regex",
+        "patterns": ["\\d+\\.?\\d*%\\s*defect", "defect\\s*rate\\s*\\d+", "\\d+\\s*ppm"],
+        "keywords": [
+          "defect rate",
+          "rejection rate",
+          "scrap rate",
+          "PPM",
+          "parts per million",
+          "yield"
+        ]
+      }
+    },
+    {
+      "id": "batch_number",
+      "name": "Batch Number",
+      "dataType": "identifier",
+      "applicableTo": ["raw-material", "finished-good", "work-in-progress"],
+      "extraction": {
+        "method": "regex",
+        "patterns": ["batch\\s*#?\\s*[A-Z0-9-]+", "lot\\s*#?\\s*[A-Z0-9-]+", "[A-Z]{2,3}-\\d{6,}"],
+        "keywords": ["batch number", "lot number", "batch ID", "lot ID", "production batch"]
+      }
+    },
+    {
+      "id": "cycle_time",
+      "name": "Cycle Time",
+      "dataType": "duration",
+      "applicableTo": ["finished-good", "work-in-progress", "tooling-equipment"],
+      "extraction": {
+        "method": "regex",
+        "patterns": [
+          "\\d+\\s*(seconds?|minutes?|hours?)\\s*cycle",
+          "cycle\\s*time\\s*\\d+",
+          "takt\\s*time\\s*\\d+"
+        ],
+        "keywords": [
+          "cycle time",
+          "takt time",
+          "processing time",
+          "production time",
+          "throughput time"
+        ]
+      }
+    },
+    {
+      "id": "safety_stock",
+      "name": "Safety Stock",
+      "dataType": "number",
+      "applicableTo": ["raw-material", "spare-part", "packaging-material", "finished-good"],
+      "extraction": {
+        "method": "regex",
+        "patterns": [
+          "safety\\s*stock\\s*\\d+",
+          "\\d+\\s*units?\\s*safety",
+          "minimum\\s*stock\\s*\\d+"
+        ],
+        "keywords": [
+          "safety stock",
+          "buffer stock",
+          "minimum inventory",
+          "reorder point",
+          "min stock"
+        ]
+      }
+    },
+    {
+      "id": "mtbf",
+      "name": "Mean Time Between Failures",
+      "dataType": "duration",
+      "applicableTo": ["tooling-equipment", "preventive-maintenance", "corrective-maintenance"],
+      "extraction": {
+        "method": "regex",
+        "patterns": [
+          "MTBF\\s*\\d+",
+          "\\d+\\s*hours?\\s*MTBF",
+          "mean\\s*time\\s*between\\s*failures?\\s*\\d+"
+        ],
+        "keywords": [
+          "MTBF",
+          "mean time between failures",
+          "reliability",
+          "failure rate",
+          "uptime hours"
+        ]
+      }
+    },
+    {
+      "id": "weight",
+      "name": "Weight",
+      "dataType": "string",
+      "applicableTo": ["raw-material", "finished-good", "packaging-material", "spare-part"],
+      "extraction": {
+        "method": "regex",
+        "patterns": ["\\d+\\.?\\d*\\s*(kg|lb|g|oz|tons?)", "weight\\s*\\d+"],
+        "keywords": ["weight", "mass", "kg", "lbs", "gross weight", "net weight"]
+      }
+    },
+    {
+      "id": "tolerance",
+      "name": "Tolerance",
+      "dataType": "string",
+      "applicableTo": [
+        "finished-good",
+        "work-in-progress",
+        "quality-inspection",
+        "calibration-service"
+      ],
+      "extraction": {
+        "method": "regex",
+        "patterns": ["\\u00b1\\s*\\d+\\.?\\d*\\s*(mm|in|%)", "tolerance\\s*\\d+"],
+        "keywords": [
+          "tolerance",
+          "specification limit",
+          "deviation",
+          "dimensional tolerance",
+          "precision"
+        ]
+      }
+    }
+  ],
+  "departmentBoundaries": [
+    {
+      "product1": "raw-material",
+      "product2": "work-in-progress",
+      "reasoning": "Raw materials are procured by Supply Chain Management and become work-in-progress once they enter Production Operations. The handoff point is the production floor receiving dock."
+    },
+    {
+      "product1": "quality-inspection",
+      "product2": "finished-good",
+      "reasoning": "Quality inspections (Quality Assurance) validate finished goods (Production Operations). A product cannot ship without QA sign-off but the departments operate independently."
+    },
+    {
+      "product1": "preventive-maintenance",
+      "product2": "tooling-equipment",
+      "reasoning": "Preventive maintenance (Facilities & Maintenance) services tooling and equipment (Production Operations). Maintenance schedules directly impact production capacity."
+    }
+  ]
+}

@@ -1,0 +1,25 @@
+system: |
+  Detect the language(s) of the following message.
+  If the message mixes languages (code-switching), identify each segment.
+
+  Respond ONLY with JSON:
+  {
+    "primary": "xx",
+    "secondary": "yy_or_null",
+    "isCodeSwitched": true/false,
+    "confidence": 0.0-1.0
+  }
+
+  Use ISO 639-1 two-letter language codes (en, es, fr, de, ar, zh, ja, ko, etc.).
+
+schema:
+  type: object
+  properties:
+    primary:
+      type: string
+    secondary:
+      type: string
+    isCodeSwitched:
+      type: boolean
+    confidence:
+      type: number

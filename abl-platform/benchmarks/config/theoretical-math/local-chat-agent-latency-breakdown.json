@@ -1,0 +1,4465 @@
+{
+  "environment": "local-dev",
+  "capturedAt": "2026-04-15T08:55:06.789Z",
+  "purpose": "Empirical local /api/v1/chat/agent latency breakdown captured from client timings plus timestamped session trace events.",
+  "sourceOfTruth": {
+    "studioUrl": "http://localhost:5173",
+    "runtimeUrl": "http://localhost:3112",
+    "endpoint": "POST /api/v1/chat/agent",
+    "projectName": "chat-agent-qps-baseline",
+    "projectId": "019d9005-af19-7f21-9bca-2df019e8ff97",
+    "agentName": "benchmark_agent",
+    "tenantId": "tenant-dev-001",
+    "modelId": "mock-model",
+    "credentialName": "bench-mock-cred",
+    "devLoginEmail": "bench@loadtest.internal"
+  },
+  "measurementMethod": {
+    "scenario": {
+      "sessionCreateRequests": 1,
+      "followUpTurns": 15,
+      "totalRequests": 16
+    },
+    "captureWindow": {
+      "postResponseDrainMs": 1500,
+      "interRequestPauseMs": 200
+    },
+    "timingSources": {
+      "client": "Node fetch Date.now() before request and after full response body read",
+      "traces": "GET /api/projects/:projectId/sessions/:id?includeTraces=true, diffing newly appended trace event ids after each turn",
+      "clockAssumption": "client and runtime clocks are on the same local host"
+    },
+    "phaseDefinitions": {
+      "traceStartDelayMs": "request start -> first captured trace event",
+      "preLlmPlatformMs": "request start -> estimated LLM start, where estimated start = llm_call.timestamp - llm_call.durationMs",
+      "llmDurationMs": "durationMs reported on llm_call",
+      "postLlmResponseTailMs": "llm_call.timestamp -> client response end",
+      "estimatedPlatformOverheadMs": "clientRequestMs - llmDurationMs",
+      "traceTailAfterResponseMs": "client response end -> last captured trace event in the drain window"
+    }
+  },
+  "summary": {
+    "firstTurn": {
+      "clientRequestMs": {
+        "averageMs": 1051,
+        "minMs": 1051,
+        "p50Ms": 1051,
+        "p95Ms": 1051,
+        "maxMs": 1051
+      },
+      "traceStartDelayMs": {
+        "averageMs": 36,
+        "minMs": 36,
+        "p50Ms": 36,
+        "p95Ms": 36,
+        "maxMs": 36
+      },
+      "userMessageDelayMs": {
+        "averageMs": 36,
+        "minMs": 36,
+        "p50Ms": 36,
+        "p95Ms": 36,
+        "maxMs": 36
+      },
+      "agentEnterDelayMs": {
+        "averageMs": 36,
+        "minMs": 36,
+        "p50Ms": 36,
+        "p95Ms": 36,
+        "maxMs": 36
+      },
+      "preLlmPlatformMs": {
+        "averageMs": 38,
+        "minMs": 38,
+        "p50Ms": 38,
+        "p95Ms": 38,
+        "maxMs": 38
+      },
+      "llmDurationMs": {
+        "averageMs": 1006,
+        "minMs": 1006,
+        "p50Ms": 1006,
+        "p95Ms": 1006,
+        "maxMs": 1006
+      },
+      "statusUpdateDelayMs": {
+        "averageMs": 1042,
+        "minMs": 1042,
+        "p50Ms": 1042,
+        "p95Ms": 1042,
+        "maxMs": 1042
+      },
+      "statusToLlmGapMs": {
+        "averageMs": 2,
+        "minMs": 2,
+        "p50Ms": 2,
+        "p95Ms": 2,
+        "maxMs": 2
+      },
+      "postLlmResponseTailMs": {
+        "averageMs": 7,
+        "minMs": 7,
+        "p50Ms": 7,
+        "p95Ms": 7,
+        "maxMs": 7
+      },
+      "agentObservedWindowMs": {
+        "averageMs": 1009,
+        "minMs": 1009,
+        "p50Ms": 1009,
+        "p95Ms": 1009,
+        "maxMs": 1009
+      },
+      "agentReportedDurationMs": {
+        "averageMs": 1009,
+        "minMs": 1009,
+        "p50Ms": 1009,
+        "p95Ms": 1009,
+        "maxMs": 1009
+      },
+      "responseTailAfterAgentExitMs": {
+        "averageMs": 6,
+        "minMs": 6,
+        "p50Ms": 6,
+        "p95Ms": 6,
+        "maxMs": 6
+      },
+      "estimatedPlatformOverheadMs": {
+        "averageMs": 45,
+        "minMs": 45,
+        "p50Ms": 45,
+        "p95Ms": 45,
+        "maxMs": 45
+      },
+      "preExecutionLeadInMs": {
+        "averageMs": null,
+        "minMs": null,
+        "p50Ms": null,
+        "p95Ms": null,
+        "maxMs": null
+      },
+      "queueWaitMs": {
+        "averageMs": null,
+        "minMs": null,
+        "p50Ms": null,
+        "p95Ms": null,
+        "maxMs": null
+      },
+      "executionRunMs": {
+        "averageMs": null,
+        "minMs": null,
+        "p50Ms": null,
+        "p95Ms": null,
+        "maxMs": null
+      },
+      "responseTailAfterExecutionMs": {
+        "averageMs": null,
+        "minMs": null,
+        "p50Ms": null,
+        "p95Ms": null,
+        "maxMs": null
+      },
+      "traceTailAfterResponseMs": {
+        "averageMs": -6,
+        "minMs": -6,
+        "p50Ms": -6,
+        "p95Ms": -6,
+        "maxMs": -6
+      },
+      "traceCoverageMs": {
+        "averageMs": 1009,
+        "minMs": 1009,
+        "p50Ms": 1009,
+        "p95Ms": 1009,
+        "maxMs": 1009
+      },
+      "eventCount": {
+        "averageMs": 6,
+        "minMs": 6,
+        "p50Ms": 6,
+        "p95Ms": 6,
+        "maxMs": 6
+      },
+      "llmLatencyMs": {
+        "averageMs": 1006,
+        "minMs": 1006,
+        "p50Ms": 1006,
+        "p95Ms": 1006,
+        "maxMs": 1006
+      }
+    },
+    "followUpAverage": {
+      "clientRequestMs": {
+        "averageMs": 1042.33,
+        "minMs": 1024,
+        "p50Ms": 1040,
+        "p95Ms": 1067,
+        "maxMs": 1067
+      },
+      "traceStartDelayMs": {
+        "averageMs": 20.27,
+        "minMs": 8,
+        "p50Ms": 19,
+        "p95Ms": 43,
+        "maxMs": 43
+      },
+      "userMessageDelayMs": {
+        "averageMs": 20.27,
+        "minMs": 8,
+        "p50Ms": 19,
+        "p95Ms": 43,
+        "maxMs": 43
+      },
+      "agentEnterDelayMs": {
+        "averageMs": 20.47,
+        "minMs": 8,
+        "p50Ms": 20,
+        "p95Ms": 43,
+        "maxMs": 43
+      },
+      "preLlmPlatformMs": {
+        "averageMs": 21.47,
+        "minMs": 9,
+        "p50Ms": 21,
+        "p95Ms": 44,
+        "maxMs": 44
+      },
+      "llmDurationMs": {
+        "averageMs": 1013,
+        "minMs": 1006,
+        "p50Ms": 1011,
+        "p95Ms": 1030,
+        "maxMs": 1030
+      },
+      "statusUpdateDelayMs": {
+        "averageMs": 1031.8,
+        "minMs": 1021,
+        "p50Ms": 1029,
+        "p95Ms": 1054,
+        "maxMs": 1054
+      },
+      "statusToLlmGapMs": {
+        "averageMs": 4.3,
+        "minMs": 1,
+        "p50Ms": 2,
+        "p95Ms": 16,
+        "maxMs": 16
+      },
+      "postLlmResponseTailMs": {
+        "averageMs": 7.87,
+        "minMs": 4,
+        "p50Ms": 6,
+        "p95Ms": 17,
+        "maxMs": 17
+      },
+      "agentObservedWindowMs": {
+        "averageMs": 1015.2,
+        "minMs": 1007,
+        "p50Ms": 1013,
+        "p95Ms": 1033,
+        "maxMs": 1033
+      },
+      "agentReportedDurationMs": {
+        "averageMs": 1015.4,
+        "minMs": 1007,
+        "p50Ms": 1013,
+        "p95Ms": 1033,
+        "maxMs": 1033
+      },
+      "responseTailAfterAgentExitMs": {
+        "averageMs": 6.67,
+        "minMs": 3,
+        "p50Ms": 5,
+        "p95Ms": 15,
+        "maxMs": 15
+      },
+      "estimatedPlatformOverheadMs": {
+        "averageMs": 29.33,
+        "minMs": 18,
+        "p50Ms": 27,
+        "p95Ms": 49,
+        "maxMs": 49
+      },
+      "preExecutionLeadInMs": {
+        "averageMs": null,
+        "minMs": null,
+        "p50Ms": null,
+        "p95Ms": null,
+        "maxMs": null
+      },
+      "queueWaitMs": {
+        "averageMs": null,
+        "minMs": null,
+        "p50Ms": null,
+        "p95Ms": null,
+        "maxMs": null
+      },
+      "executionRunMs": {
+        "averageMs": null,
+        "minMs": null,
+        "p50Ms": null,
+        "p95Ms": null,
+        "maxMs": null
+      },
+      "responseTailAfterExecutionMs": {
+        "averageMs": null,
+        "minMs": null,
+        "p50Ms": null,
+        "p95Ms": null,
+        "maxMs": null
+      },
+      "traceTailAfterResponseMs": {
+        "averageMs": -6.67,
+        "minMs": -15,
+        "p50Ms": -5,
+        "p95Ms": -3,
+        "maxMs": -3
+      },
+      "traceCoverageMs": {
+        "averageMs": 1015.4,
+        "minMs": 1007,
+        "p50Ms": 1013,
+        "p95Ms": 1033,
+        "maxMs": 1033
+      },
+      "eventCount": {
+        "averageMs": 4.67,
+        "minMs": 4,
+        "p50Ms": 5,
+        "p95Ms": 5,
+        "maxMs": 5
+      },
+      "llmLatencyMs": {
+        "averageMs": 1013,
+        "minMs": 1006,
+        "p50Ms": 1011,
+        "p95Ms": 1030,
+        "maxMs": 1030
+      }
+    },
+    "overallAverage": {
+      "clientRequestMs": {
+        "averageMs": 1042.88,
+        "minMs": 1024,
+        "p50Ms": 1040,
+        "p95Ms": 1067,
+        "maxMs": 1067
+      },
+      "traceStartDelayMs": {
+        "averageMs": 21.25,
+        "minMs": 8,
+        "p50Ms": 19,
+        "p95Ms": 43,
+        "maxMs": 43
+      },
+      "userMessageDelayMs": {
+        "averageMs": 21.25,
+        "minMs": 8,
+        "p50Ms": 19,
+        "p95Ms": 43,
+        "maxMs": 43
+      },
+      "agentEnterDelayMs": {
+        "averageMs": 21.44,
+        "minMs": 8,
+        "p50Ms": 20,
+        "p95Ms": 43,
+        "maxMs": 43
+      },
+      "preLlmPlatformMs": {
+        "averageMs": 22.5,
+        "minMs": 9,
+        "p50Ms": 21,
+        "p95Ms": 44,
+        "maxMs": 44
+      },
+      "llmDurationMs": {
+        "averageMs": 1012.56,
+        "minMs": 1006,
+        "p50Ms": 1010,
+        "p95Ms": 1030,
+        "maxMs": 1030
+      },
+      "statusUpdateDelayMs": {
+        "averageMs": 1032.73,
+        "minMs": 1021,
+        "p50Ms": 1033,
+        "p95Ms": 1054,
+        "maxMs": 1054
+      },
+      "statusToLlmGapMs": {
+        "averageMs": 4.09,
+        "minMs": 1,
+        "p50Ms": 2,
+        "p95Ms": 16,
+        "maxMs": 16
+      },
+      "postLlmResponseTailMs": {
+        "averageMs": 7.81,
+        "minMs": 4,
+        "p50Ms": 6,
+        "p95Ms": 17,
+        "maxMs": 17
+      },
+      "agentObservedWindowMs": {
+        "averageMs": 1014.81,
+        "minMs": 1007,
+        "p50Ms": 1012,
+        "p95Ms": 1033,
+        "maxMs": 1033
+      },
+      "agentReportedDurationMs": {
+        "averageMs": 1015,
+        "minMs": 1007,
+        "p50Ms": 1012,
+        "p95Ms": 1033,
+        "maxMs": 1033
+      },
+      "responseTailAfterAgentExitMs": {
+        "averageMs": 6.63,
+        "minMs": 3,
+        "p50Ms": 5,
+        "p95Ms": 15,
+        "maxMs": 15
+      },
+      "estimatedPlatformOverheadMs": {
+        "averageMs": 30.31,
+        "minMs": 18,
+        "p50Ms": 27,
+        "p95Ms": 49,
+        "maxMs": 49
+      },
+      "preExecutionLeadInMs": {
+        "averageMs": null,
+        "minMs": null,
+        "p50Ms": null,
+        "p95Ms": null,
+        "maxMs": null
+      },
+      "queueWaitMs": {
+        "averageMs": null,
+        "minMs": null,
+        "p50Ms": null,
+        "p95Ms": null,
+        "maxMs": null
+      },
+      "executionRunMs": {
+        "averageMs": null,
+        "minMs": null,
+        "p50Ms": null,
+        "p95Ms": null,
+        "maxMs": null
+      },
+      "responseTailAfterExecutionMs": {
+        "averageMs": null,
+        "minMs": null,
+        "p50Ms": null,
+        "p95Ms": null,
+        "maxMs": null
+      },
+      "traceTailAfterResponseMs": {
+        "averageMs": -6.63,
+        "minMs": -15,
+        "p50Ms": -6,
+        "p95Ms": -3,
+        "maxMs": -3
+      },
+      "traceCoverageMs": {
+        "averageMs": 1015,
+        "minMs": 1007,
+        "p50Ms": 1012,
+        "p95Ms": 1033,
+        "maxMs": 1033
+      },
+      "eventCount": {
+        "averageMs": 4.75,
+        "minMs": 4,
+        "p50Ms": 5,
+        "p95Ms": 6,
+        "maxMs": 6
+      },
+      "llmLatencyMs": {
+        "averageMs": 1012.56,
+        "minMs": 1006,
+        "p50Ms": 1010,
+        "p95Ms": 1030,
+        "maxMs": 1030
+      }
+    },
+    "slowestTurn": {
+      "turnNumber": 11
+    }
+  },
+  "turns": [
+    {
+      "turnNumber": 1,
+      "turnKind": "create",
+      "request": {
+        "startedAt": "2026-04-15T08:54:22.621Z",
+        "endedAt": "2026-04-15T08:54:23.672Z",
+        "durationMs": 1051,
+        "status": 200,
+        "sessionId": "eaa1f2c6-9fb8-4bfa-b67c-334b9681f45d",
+        "responseLength": 28,
+        "inlineTraceEventCount": 9,
+        "requestBody": {
+          "projectId": "019d9005-af19-7f21-9bca-2df019e8ff97",
+          "agentId": "benchmark_agent",
+          "message": "Start the session with a short hello."
+        }
+      },
+      "phaseBreakdown": {
+        "clientRequestMs": 1051,
+        "traceStartDelayMs": 36,
+        "userMessageDelayMs": 36,
+        "agentEnterDelayMs": 36,
+        "preLlmPlatformMs": 38,
+        "llmDurationMs": 1006,
+        "statusUpdateDelayMs": 1042,
+        "statusToLlmGapMs": 2,
+        "postLlmResponseTailMs": 7,
+        "agentObservedWindowMs": 1009,
+        "agentReportedDurationMs": 1009,
+        "responseTailAfterAgentExitMs": 6,
+        "estimatedPlatformOverheadMs": 45,
+        "preExecutionLeadInMs": null,
+        "queueWaitMs": null,
+        "executionRunMs": null,
+        "responseTailAfterExecutionMs": null,
+        "traceTailAfterResponseMs": -6,
+        "traceCoverageMs": 1009
+      },
+      "trace": {
+        "streamKey": "http://localhost:3112/api/projects/019d9005-af19-7f21-9bca-2df019e8ff97/sessions/eaa1f2c6-9fb8-4bfa-b67c-334b9681f45d?includeTraces=true",
+        "totalTraceCount": 6,
+        "previousStreamId": null,
+        "lastStreamId": "fa24c45a-ea52-4df7-9630-2a863bc11c33",
+        "eventCount": 6,
+        "firstTraceAt": "2026-04-15T08:54:22.657Z",
+        "lastTraceAt": "2026-04-15T08:54:23.666Z",
+        "eventTypeCounts": {
+          "memory_init": 1,
+          "user_message": 1,
+          "agent_enter": 1,
+          "status_update": 1,
+          "llm_call": 1,
+          "agent_exit": 1
+        },
+        "durationSummaryByType": {
+          "llm_call": {
+            "count": 1,
+            "totalMs": 1006,
+            "maxMs": 1006,
+            "averageMs": 1006
+          },
+          "agent_exit": {
+            "count": 1,
+            "totalMs": 1009,
+            "maxMs": 1009,
+            "averageMs": 1009
+          }
+        },
+        "llmCallSummary": {
+          "count": 1,
+          "totalLatencyMs": 1006,
+          "averageLatencyMs": 1006,
+          "models": ["mock-model"],
+          "providers": ["mock"]
+        },
+        "executionMarkers": {
+          "queued": null,
+          "started": null,
+          "terminal": null
+        },
+        "llmCalls": [
+          {
+            "timestamp": "2026-04-15T08:54:23.665Z",
+            "relativeToRequestStartMs": 1044,
+            "model": "mock-model",
+            "provider": "mock",
+            "durationMs": 1006,
+            "tokensIn": 10,
+            "tokensOut": 8,
+            "cost": null
+          }
+        ],
+        "eventTimeline": [
+          {
+            "streamId": "337154fe-5efb-496d-86ac-10b2afc29a71",
+            "traceEventId": "337154fe-5efb-496d-86ac-10b2afc29a71",
+            "type": "memory_init",
+            "timestamp": "2026-04-15T08:54:22.657Z",
+            "relativeToRequestStartMs": 36,
+            "durationMs": null,
+            "data": {
+              "sessionVarsLoaded": 0,
+              "persistentVarsLoaded": 0,
+              "tenantId": "tenant-dev-001"
+            }
+          },
+          {
+            "streamId": "7d59c1f0-5490-4fdf-b4a4-5b98853661bf",
+            "traceEventId": "7d59c1f0-5490-4fdf-b4a4-5b98853661bf",
+            "type": "user_message",
+            "timestamp": "2026-04-15T08:54:22.657Z",
+            "relativeToRequestStartMs": 36,
+            "durationMs": null,
+            "data": {
+              "message": "Start the session with a short hello.",
+              "sessionId": "eaa1f2c6-9fb8-4bfa-b67c-334b9681f45d",
+              "agent": "benchmark_agent",
+              "channel": "api",
+              "contentLength": 37,
+              "hasAttachments": false,
+              "attachmentCount": 0,
+              "tenantId": "tenant-dev-001"
+            }
+          },
+          {
+            "streamId": "7de1bd6a-a6d9-414f-98c2-ef9d49fa365c",
+            "traceEventId": "7de1bd6a-a6d9-414f-98c2-ef9d49fa365c",
+            "type": "agent_enter",
+            "timestamp": "2026-04-15T08:54:22.657Z",
+            "relativeToRequestStartMs": 36,
+            "durationMs": null,
+            "data": {
+              "agentName": "benchmark_agent",
+              "mode": "reasoning",
+              "trigger": "user_message",
+              "channel": "api",
+              "contentLength": 37,
+              "hasAttachments": false,
+              "attachmentCount": 0,
+              "tenantId": "tenant-dev-001"
+            }
+          },
+          {
+            "streamId": "e348c35e-804f-49c4-8d13-c347eb68c430",
+            "traceEventId": "e348c35e-804f-49c4-8d13-c347eb68c430",
+            "type": "status_update",
+            "timestamp": "2026-04-15T08:54:23.663Z",
+            "relativeToRequestStartMs": 1042,
+            "durationMs": null,
+            "data": {
+              "text": "This is a mock LLM response...",
+              "operation": "tool_call",
+              "index": 0,
+              "transient": true,
+              "tenantId": "tenant-dev-001"
+            }
+          },
+          {
+            "streamId": "16537df8-89f2-481d-9bca-1bc0b02c77f3",
+            "traceEventId": "16537df8-89f2-481d-9bca-1bc0b02c77f3",
+            "type": "llm_call",
+            "timestamp": "2026-04-15T08:54:23.665Z",
+            "relativeToRequestStartMs": 1044,
+            "durationMs": 1006,
+            "data": {
+              "llmCallId": "02079ca0-ae19-44de-9871-27069bd13936",
+              "model": "mock-model",
+              "provider": "mock",
+              "source": "agent_db",
+              "operationType": "response_gen",
+              "iteration": 1,
+              "agent": "benchmark_agent",
+              "hasToolCalls": false,
+              "toolCallCount": 0,
+              "stopReason": "other",
+              "durationMs": 1006,
+              "usage": {
+                "inputTokens": 10,
+                "outputTokens": 8
+              },
+              "tokensIn": 10,
+              "tokensOut": 8,
+              "totalTokens": 18,
+              "streaming": false,
+              "messages": [
+                {
+                  "role": "user",
+                  "content": "Start the session with a short hello."
+                }
+              ],
+              "response": "This is a mock LLM response.",
+              "toolCalls": [],
+              "systemPrompt": "You are benchmark_agent, an AI assistant.\n\nYour goal: Respond briefly to the user.\n\n\nPersona: Brief and direct.\n\n\n\nLimitations:\n- Keep each answer to one short sentence.\n\n\n\n\n\n\n\n\n\n\nBefore each tool call, emit a brief status message wrapped in <status>...</status> tags.\nThis message will be shown to the user while the tool executes. Keep it under 15 words,\nnatural, and specific to what you are about to do. Do NOT ask questions in status messages.\nExample: <status>Searching for red sneakers under 500 AED</status>",
+              "tools": [],
+              "tenantId": "tenant-dev-001"
+            }
+          },
+          {
+            "streamId": "fa24c45a-ea52-4df7-9630-2a863bc11c33",
+            "traceEventId": "fa24c45a-ea52-4df7-9630-2a863bc11c33",
+            "type": "agent_exit",
+            "timestamp": "2026-04-15T08:54:23.666Z",
+            "relativeToRequestStartMs": 1045,
+            "durationMs": 1009,
+            "data": {
+              "agentName": "benchmark_agent",
+              "result": "continue",
+              "durationMs": 1009,
+              "tenantId": "tenant-dev-001"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "turnNumber": 2,
+      "turnKind": "followup",
+      "request": {
+        "startedAt": "2026-04-15T08:54:25.398Z",
+        "endedAt": "2026-04-15T08:54:26.422Z",
+        "durationMs": 1024,
+        "status": 200,
+        "sessionId": "eaa1f2c6-9fb8-4bfa-b67c-334b9681f45d",
+        "responseLength": 28,
+        "inlineTraceEventCount": 7,
+        "requestBody": {
+          "projectId": "019d9005-af19-7f21-9bca-2df019e8ff97",
+          "agentId": "benchmark_agent",
+          "sessionId": "eaa1f2c6-9fb8-4bfa-b67c-334b9681f45d",
+          "message": "Turn 1: respond briefly."
+        }
+      },
+      "phaseBreakdown": {
+        "clientRequestMs": 1024,
+        "traceStartDelayMs": 13,
+        "userMessageDelayMs": 13,
+        "agentEnterDelayMs": 13,
+        "preLlmPlatformMs": 14,
+        "llmDurationMs": 1006,
+        "statusUpdateDelayMs": null,
+        "statusToLlmGapMs": null,
+        "postLlmResponseTailMs": 4,
+        "agentObservedWindowMs": 1007,
+        "agentReportedDurationMs": 1007,
+        "responseTailAfterAgentExitMs": 4,
+        "estimatedPlatformOverheadMs": 18,
+        "preExecutionLeadInMs": null,
+        "queueWaitMs": null,
+        "executionRunMs": null,
+        "responseTailAfterExecutionMs": null,
+        "traceTailAfterResponseMs": -4,
+        "traceCoverageMs": 1007
+      },
+      "trace": {
+        "streamKey": "http://localhost:3112/api/projects/019d9005-af19-7f21-9bca-2df019e8ff97/sessions/eaa1f2c6-9fb8-4bfa-b67c-334b9681f45d?includeTraces=true",
+        "totalTraceCount": 10,
+        "previousStreamId": "fa24c45a-ea52-4df7-9630-2a863bc11c33",
+        "lastStreamId": "7199a6f8-86b9-44e1-85d5-e39ac168c561",
+        "eventCount": 4,
+        "firstTraceAt": "2026-04-15T08:54:25.411Z",
+        "lastTraceAt": "2026-04-15T08:54:26.418Z",
+        "eventTypeCounts": {
+          "user_message": 1,
+          "agent_enter": 1,
+          "llm_call": 1,
+          "agent_exit": 1
+        },
+        "durationSummaryByType": {
+          "llm_call": {
+            "count": 1,
+            "totalMs": 1006,
+            "maxMs": 1006,
+            "averageMs": 1006
+          },
+          "agent_exit": {
+            "count": 1,
+            "totalMs": 1007,
+            "maxMs": 1007,
+            "averageMs": 1007
+          }
+        },
+        "llmCallSummary": {
+          "count": 1,
+          "totalLatencyMs": 1006,
+          "averageLatencyMs": 1006,
+          "models": ["mock-model"],
+          "providers": ["mock"]
+        },
+        "executionMarkers": {
+          "queued": null,
+          "started": null,
+          "terminal": null
+        },
+        "llmCalls": [
+          {
+            "timestamp": "2026-04-15T08:54:26.418Z",
+            "relativeToRequestStartMs": 1020,
+            "model": "mock-model",
+            "provider": "mock",
+            "durationMs": 1006,
+            "tokensIn": 10,
+            "tokensOut": 8,
+            "cost": null
+          }
+        ],
+        "eventTimeline": [
+          {
+            "streamId": "59912782-23f6-4f72-86b8-c1754b431fd8",
+            "traceEventId": "59912782-23f6-4f72-86b8-c1754b431fd8",
+            "type": "user_message",
+            "timestamp": "2026-04-15T08:54:25.411Z",
+            "relativeToRequestStartMs": 13,
+            "durationMs": null,
+            "data": {
+              "message": "Turn 1: respond briefly.",
+              "sessionId": "eaa1f2c6-9fb8-4bfa-b67c-334b9681f45d",
+              "agent": "benchmark_agent",
+              "channel": "api",
+              "contentLength": 24,
+              "hasAttachments": false,
+              "attachmentCount": 0,
+              "tenantId": "tenant-dev-001"
+            }
+          },
+          {
+            "streamId": "5c204b83-8d97-48aa-bc5b-79d5834241c6",
+            "traceEventId": "5c204b83-8d97-48aa-bc5b-79d5834241c6",
+            "type": "agent_enter",
+            "timestamp": "2026-04-15T08:54:25.411Z",
+            "relativeToRequestStartMs": 13,
+            "durationMs": null,
+            "data": {
+              "agentName": "benchmark_agent",
+              "mode": "reasoning",
+              "trigger": "user_message",
+              "channel": "api",
+              "contentLength": 24,
+              "hasAttachments": false,
+              "attachmentCount": 0,
+              "tenantId": "tenant-dev-001"
+            }
+          },
+          {
+            "streamId": "558ccfe3-ef18-477c-9af7-e047204571af",
+            "traceEventId": "558ccfe3-ef18-477c-9af7-e047204571af",
+            "type": "llm_call",
+            "timestamp": "2026-04-15T08:54:26.418Z",
+            "relativeToRequestStartMs": 1020,
+            "durationMs": 1006,
+            "data": {
+              "llmCallId": "a140a755-a5f2-458d-b510-a336d28e5d3e",
+              "model": "mock-model",
+              "provider": "mock",
+              "source": "agent_db",
+              "operationType": "response_gen",
+              "iteration": 1,
+              "agent": "benchmark_agent",
+              "hasToolCalls": false,
+              "toolCallCount": 0,
+              "stopReason": "other",
+              "durationMs": 1006,
+              "usage": {
+                "inputTokens": 10,
+                "outputTokens": 8
+              },
+              "tokensIn": 10,
+              "tokensOut": 8,
+              "totalTokens": 18,
+              "streaming": false,
+              "messages": [
+                {
+                  "role": "user",
+                  "content": "Start the session with a short hello."
+                },
+                {
+                  "role": "assistant",
+                  "content": "This is a mock LLM response."
+                },
+                {
+                  "role": "user",
+                  "content": "Turn 1: respond briefly."
+                }
+              ],
+              "response": "This is a mock LLM response.",
+              "toolCalls": [],
+              "systemPrompt": "You are benchmark_agent, an AI assistant.\n\nYour goal: Respond briefly to the user.\n\n\nPersona: Brief and direct.\n\n\n\nLimitations:\n- Keep each answer to one short sentence.\n\n\n\n\n\n\n\n\n\n\nBefore each tool call, emit a brief status message wrapped in <status>...</status> tags.\nThis message will be shown to the user while the tool executes. Keep it under 15 words,\nnatural, and specific to what you are about to do. Do NOT ask questions in status messages.\nExample: <status>Searching for red sneakers under 500 AED</status>",
+              "tools": [],
+              "tenantId": "tenant-dev-001"
+            }
+          },
+          {
+            "streamId": "7199a6f8-86b9-44e1-85d5-e39ac168c561",
+            "traceEventId": "7199a6f8-86b9-44e1-85d5-e39ac168c561",
+            "type": "agent_exit",
+            "timestamp": "2026-04-15T08:54:26.418Z",
+            "relativeToRequestStartMs": 1020,
+            "durationMs": 1007,
+            "data": {
+              "agentName": "benchmark_agent",
+              "result": "continue",
+              "durationMs": 1007,
+              "tenantId": "tenant-dev-001"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "turnNumber": 3,
+      "turnKind": "followup",
+      "request": {
+        "startedAt": "2026-04-15T08:54:28.148Z",
+        "endedAt": "2026-04-15T08:54:29.184Z",
+        "durationMs": 1036,
+        "status": 200,
+        "sessionId": "eaa1f2c6-9fb8-4bfa-b67c-334b9681f45d",
+        "responseLength": 28,
+        "inlineTraceEventCount": 8,
+        "requestBody": {
+          "projectId": "019d9005-af19-7f21-9bca-2df019e8ff97",
+          "agentId": "benchmark_agent",
+          "sessionId": "eaa1f2c6-9fb8-4bfa-b67c-334b9681f45d",
+          "message": "Turn 2: respond briefly."
+        }
+      },
+      "phaseBreakdown": {
+        "clientRequestMs": 1036,
+        "traceStartDelayMs": 19,
+        "userMessageDelayMs": 19,
+        "agentEnterDelayMs": 20,
+        "preLlmPlatformMs": 21,
+        "llmDurationMs": 1010,
+        "statusUpdateDelayMs": 1029,
+        "statusToLlmGapMs": 2,
+        "postLlmResponseTailMs": 5,
+        "agentObservedWindowMs": 1011,
+        "agentReportedDurationMs": 1012,
+        "responseTailAfterAgentExitMs": 5,
+        "estimatedPlatformOverheadMs": 26,
+        "preExecutionLeadInMs": null,
+        "queueWaitMs": null,
+        "executionRunMs": null,
+        "responseTailAfterExecutionMs": null,
+        "traceTailAfterResponseMs": -5,
+        "traceCoverageMs": 1012
+      },
+      "trace": {
+        "streamKey": "http://localhost:3112/api/projects/019d9005-af19-7f21-9bca-2df019e8ff97/sessions/eaa1f2c6-9fb8-4bfa-b67c-334b9681f45d?includeTraces=true",
+        "totalTraceCount": 15,
+        "previousStreamId": "7199a6f8-86b9-44e1-85d5-e39ac168c561",
+        "lastStreamId": "bbbba545-5799-4a57-9ed7-93b27d2bfbbd",
+        "eventCount": 5,
+        "firstTraceAt": "2026-04-15T08:54:28.167Z",
+        "lastTraceAt": "2026-04-15T08:54:29.179Z",
+        "eventTypeCounts": {
+          "user_message": 1,
+          "agent_enter": 1,
+          "status_update": 1,
+          "llm_call": 1,
+          "agent_exit": 1
+        },
+        "durationSummaryByType": {
+          "llm_call": {
+            "count": 1,
+            "totalMs": 1010,
+            "maxMs": 1010,
+            "averageMs": 1010
+          },
+          "agent_exit": {
+            "count": 1,
+            "totalMs": 1012,
+            "maxMs": 1012,
+            "averageMs": 1012
+          }
+        },
+        "llmCallSummary": {
+          "count": 1,
+          "totalLatencyMs": 1010,
+          "averageLatencyMs": 1010,
+          "models": ["mock-model"],
+          "providers": ["mock"]
+        },
+        "executionMarkers": {
+          "queued": null,
+          "started": null,
+          "terminal": null
+        },
+        "llmCalls": [
+          {
+            "timestamp": "2026-04-15T08:54:29.179Z",
+            "relativeToRequestStartMs": 1031,
+            "model": "mock-model",
+            "provider": "mock",
+            "durationMs": 1010,
+            "tokensIn": 10,
+            "tokensOut": 8,
+            "cost": null
+          }
+        ],
+        "eventTimeline": [
+          {
+            "streamId": "e11c2728-c84b-4601-a4d2-58e9e523eafd",
+            "traceEventId": "e11c2728-c84b-4601-a4d2-58e9e523eafd",
+            "type": "user_message",
+            "timestamp": "2026-04-15T08:54:28.167Z",
+            "relativeToRequestStartMs": 19,
+            "durationMs": null,
+            "data": {
+              "message": "Turn 2: respond briefly.",
+              "sessionId": "eaa1f2c6-9fb8-4bfa-b67c-334b9681f45d",
+              "agent": "benchmark_agent",
+              "channel": "api",
+              "contentLength": 24,
+              "hasAttachments": false,
+              "attachmentCount": 0,
+              "tenantId": "tenant-dev-001"
+            }
+          },
+          {
+            "streamId": "60239b44-c5ae-44d1-8722-e539358f2f73",
+            "traceEventId": "60239b44-c5ae-44d1-8722-e539358f2f73",
+            "type": "agent_enter",
+            "timestamp": "2026-04-15T08:54:28.168Z",
+            "relativeToRequestStartMs": 20,
+            "durationMs": null,
+            "data": {
+              "agentName": "benchmark_agent",
+              "mode": "reasoning",
+              "trigger": "user_message",
+              "channel": "api",
+              "contentLength": 24,
+              "hasAttachments": false,
+              "attachmentCount": 0,
+              "tenantId": "tenant-dev-001"
+            }
+          },
+          {
+            "streamId": "8f5dde4e-53db-4750-9bd3-5905877ed93e",
+            "traceEventId": "8f5dde4e-53db-4750-9bd3-5905877ed93e",
+            "type": "status_update",
+            "timestamp": "2026-04-15T08:54:29.177Z",
+            "relativeToRequestStartMs": 1029,
+            "durationMs": null,
+            "data": {
+              "text": "This is a mock LLM response...",
+              "operation": "tool_call",
+              "index": 0,
+              "transient": true,
+              "tenantId": "tenant-dev-001"
+            }
+          },
+          {
+            "streamId": "f43824c8-076c-4595-920e-2734a5cc5586",
+            "traceEventId": "f43824c8-076c-4595-920e-2734a5cc5586",
+            "type": "llm_call",
+            "timestamp": "2026-04-15T08:54:29.179Z",
+            "relativeToRequestStartMs": 1031,
+            "durationMs": 1010,
+            "data": {
+              "llmCallId": "42f918ab-7ee9-47b1-9858-ac76a4b96618",
+              "model": "mock-model",
+              "provider": "mock",
+              "source": "agent_db",
+              "operationType": "response_gen",
+              "iteration": 1,
+              "agent": "benchmark_agent",
+              "hasToolCalls": false,
+              "toolCallCount": 0,
+              "stopReason": "other",
+              "durationMs": 1010,
+              "usage": {
+                "inputTokens": 10,
+                "outputTokens": 8
+              },
+              "tokensIn": 10,
+              "tokensOut": 8,
+              "totalTokens": 18,
+              "streaming": false,
+              "messages": [
+                {
+                  "role": "user",
+                  "content": "Start the session with a short hello."
+                },
+                {
+                  "role": "assistant",
+                  "content": "This is a mock LLM response."
+                },
+                {
+                  "role": "user",
+                  "content": "Turn 1: respond briefly."
+                },
+                {
+                  "role": "assistant",
+                  "content": "This is a mock LLM response."
+                },
+                {
+                  "role": "user",
+                  "content": "Turn 2: respond briefly."
+                }
+              ],
+              "response": "This is a mock LLM response.",
+              "toolCalls": [],
+              "systemPrompt": "You are benchmark_agent, an AI assistant.\n\nYour goal: Respond briefly to the user.\n\n\nPersona: Brief and direct.\n\n\n\nLimitations:\n- Keep each answer to one short sentence.\n\n\n\n\n\n\n\n\n\n\nBefore each tool call, emit a brief status message wrapped in <status>...</status> tags.\nThis message will be shown to the user while the tool executes. Keep it under 15 words,\nnatural, and specific to what you are about to do. Do NOT ask questions in status messages.\nExample: <status>Searching for red sneakers under 500 AED</status>",
+              "tools": [],
+              "tenantId": "tenant-dev-001"
+            }
+          },
+          {
+            "streamId": "bbbba545-5799-4a57-9ed7-93b27d2bfbbd",
+            "traceEventId": "bbbba545-5799-4a57-9ed7-93b27d2bfbbd",
+            "type": "agent_exit",
+            "timestamp": "2026-04-15T08:54:29.179Z",
+            "relativeToRequestStartMs": 1031,
+            "durationMs": 1012,
+            "data": {
+              "agentName": "benchmark_agent",
+              "result": "continue",
+              "durationMs": 1012,
+              "tenantId": "tenant-dev-001"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "turnNumber": 4,
+      "turnKind": "followup",
+      "request": {
+        "startedAt": "2026-04-15T08:54:30.911Z",
+        "endedAt": "2026-04-15T08:54:31.944Z",
+        "durationMs": 1033,
+        "status": 200,
+        "sessionId": "eaa1f2c6-9fb8-4bfa-b67c-334b9681f45d",
+        "responseLength": 28,
+        "inlineTraceEventCount": 8,
+        "requestBody": {
+          "projectId": "019d9005-af19-7f21-9bca-2df019e8ff97",
+          "agentId": "benchmark_agent",
+          "sessionId": "eaa1f2c6-9fb8-4bfa-b67c-334b9681f45d",
+          "message": "Turn 3: respond briefly."
+        }
+      },
+      "phaseBreakdown": {
+        "clientRequestMs": 1033,
+        "traceStartDelayMs": 18,
+        "userMessageDelayMs": 18,
+        "agentEnterDelayMs": 18,
+        "preLlmPlatformMs": 19,
+        "llmDurationMs": 1009,
+        "statusUpdateDelayMs": 1026,
+        "statusToLlmGapMs": 2,
+        "postLlmResponseTailMs": 5,
+        "agentObservedWindowMs": 1011,
+        "agentReportedDurationMs": 1011,
+        "responseTailAfterAgentExitMs": 4,
+        "estimatedPlatformOverheadMs": 24,
+        "preExecutionLeadInMs": null,
+        "queueWaitMs": null,
+        "executionRunMs": null,
+        "responseTailAfterExecutionMs": null,
+        "traceTailAfterResponseMs": -4,
+        "traceCoverageMs": 1011
+      },
+      "trace": {
+        "streamKey": "http://localhost:3112/api/projects/019d9005-af19-7f21-9bca-2df019e8ff97/sessions/eaa1f2c6-9fb8-4bfa-b67c-334b9681f45d?includeTraces=true",
+        "totalTraceCount": 20,
+        "previousStreamId": "bbbba545-5799-4a57-9ed7-93b27d2bfbbd",
+        "lastStreamId": "bcb0da13-4728-4329-a3d0-a68bbb991a25",
+        "eventCount": 5,
+        "firstTraceAt": "2026-04-15T08:54:30.929Z",
+        "lastTraceAt": "2026-04-15T08:54:31.940Z",
+        "eventTypeCounts": {
+          "user_message": 1,
+          "agent_enter": 1,
+          "status_update": 1,
+          "llm_call": 1,
+          "agent_exit": 1
+        },
+        "durationSummaryByType": {
+          "llm_call": {
+            "count": 1,
+            "totalMs": 1009,
+            "maxMs": 1009,
+            "averageMs": 1009
+          },
+          "agent_exit": {
+            "count": 1,
+            "totalMs": 1011,
+            "maxMs": 1011,
+            "averageMs": 1011
+          }
+        },
+        "llmCallSummary": {
+          "count": 1,
+          "totalLatencyMs": 1009,
+          "averageLatencyMs": 1009,
+          "models": ["mock-model"],
+          "providers": ["mock"]
+        },
+        "executionMarkers": {
+          "queued": null,
+          "started": null,
+          "terminal": null
+        },
+        "llmCalls": [
+          {
+            "timestamp": "2026-04-15T08:54:31.939Z",
+            "relativeToRequestStartMs": 1028,
+            "model": "mock-model",
+            "provider": "mock",
+            "durationMs": 1009,
+            "tokensIn": 10,
+            "tokensOut": 8,
+            "cost": null
+          }
+        ],
+        "eventTimeline": [
+          {
+            "streamId": "9689bc10-c6c1-4f9e-b5df-789883eaec03",
+            "traceEventId": "9689bc10-c6c1-4f9e-b5df-789883eaec03",
+            "type": "user_message",
+            "timestamp": "2026-04-15T08:54:30.929Z",
+            "relativeToRequestStartMs": 18,
+            "durationMs": null,
+            "data": {
+              "message": "Turn 3: respond briefly.",
+              "sessionId": "eaa1f2c6-9fb8-4bfa-b67c-334b9681f45d",
+              "agent": "benchmark_agent",
+              "channel": "api",
+              "contentLength": 24,
+              "hasAttachments": false,
+              "attachmentCount": 0,
+              "tenantId": "tenant-dev-001"
+            }
+          },
+          {
+            "streamId": "98ac43f4-b0b4-4eae-870d-8dff60d31135",
+            "traceEventId": "98ac43f4-b0b4-4eae-870d-8dff60d31135",
+            "type": "agent_enter",
+            "timestamp": "2026-04-15T08:54:30.929Z",
+            "relativeToRequestStartMs": 18,
+            "durationMs": null,
+            "data": {
+              "agentName": "benchmark_agent",
+              "mode": "reasoning",
+              "trigger": "user_message",
+              "channel": "api",
+              "contentLength": 24,
+              "hasAttachments": false,
+              "attachmentCount": 0,
+              "tenantId": "tenant-dev-001"
+            }
+          },
+          {
+            "streamId": "477cace2-bf70-4059-abd5-cbc9b2c8ece5",
+            "traceEventId": "477cace2-bf70-4059-abd5-cbc9b2c8ece5",
+            "type": "status_update",
+            "timestamp": "2026-04-15T08:54:31.937Z",
+            "relativeToRequestStartMs": 1026,
+            "durationMs": null,
+            "data": {
+              "text": "This is a mock LLM response...",
+              "operation": "tool_call",
+              "index": 0,
+              "transient": true,
+              "tenantId": "tenant-dev-001"
+            }
+          },
+          {
+            "streamId": "4b989149-77d2-4644-908d-eb1685a93b6c",
+            "traceEventId": "4b989149-77d2-4644-908d-eb1685a93b6c",
+            "type": "llm_call",
+            "timestamp": "2026-04-15T08:54:31.939Z",
+            "relativeToRequestStartMs": 1028,
+            "durationMs": 1009,
+            "data": {
+              "llmCallId": "bc5828f4-a111-456b-a9e9-8383cea56bbe",
+              "model": "mock-model",
+              "provider": "mock",
+              "source": "agent_db",
+              "operationType": "response_gen",
+              "iteration": 1,
+              "agent": "benchmark_agent",
+              "hasToolCalls": false,
+              "toolCallCount": 0,
+              "stopReason": "other",
+              "durationMs": 1009,
+              "usage": {
+                "inputTokens": 10,
+                "outputTokens": 8
+              },
+              "tokensIn": 10,
+              "tokensOut": 8,
+              "totalTokens": 18,
+              "streaming": false,
+              "messages": [
+                {
+                  "role": "user",
+                  "content": "Start the session with a short hello."
+                },
+                {
+                  "role": "assistant",
+                  "content": "This is a mock LLM response."
+                },
+                {
+                  "role": "user",
+                  "content": "Turn 1: respond briefly."
+                },
+                {
+                  "role": "assistant",
+                  "content": "This is a mock LLM response."
+                },
+                {
+                  "role": "user",
+                  "content": "Turn 2: respond briefly."
+                },
+                {
+                  "role": "assistant",
+                  "content": "This is a mock LLM response."
+                },
+                {
+                  "role": "user",
+                  "content": "Turn 3: respond briefly."
+                }
+              ],
+              "response": "This is a mock LLM response.",
+              "toolCalls": [],
+              "systemPrompt": "You are benchmark_agent, an AI assistant.\n\nYour goal: Respond briefly to the user.\n\n\nPersona: Brief and direct.\n\n\n\nLimitations:\n- Keep each answer to one short sentence.\n\n\n\n\n\n\n\n\n\n\nBefore each tool call, emit a brief status message wrapped in <status>...</status> tags.\nThis message will be shown to the user while the tool executes. Keep it under 15 words,\nnatural, and specific to what you are about to do. Do NOT ask questions in status messages.\nExample: <status>Searching for red sneakers under 500 AED</status>",
+              "tools": [],
+              "tenantId": "tenant-dev-001"
+            }
+          },
+          {
+            "streamId": "bcb0da13-4728-4329-a3d0-a68bbb991a25",
+            "traceEventId": "bcb0da13-4728-4329-a3d0-a68bbb991a25",
+            "type": "agent_exit",
+            "timestamp": "2026-04-15T08:54:31.940Z",
+            "relativeToRequestStartMs": 1029,
+            "durationMs": 1011,
+            "data": {
+              "agentName": "benchmark_agent",
+              "result": "continue",
+              "durationMs": 1011,
+              "tenantId": "tenant-dev-001"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "turnNumber": 5,
+      "turnKind": "followup",
+      "request": {
+        "startedAt": "2026-04-15T08:54:33.667Z",
+        "endedAt": "2026-04-15T08:54:34.691Z",
+        "durationMs": 1024,
+        "status": 200,
+        "sessionId": "eaa1f2c6-9fb8-4bfa-b67c-334b9681f45d",
+        "responseLength": 28,
+        "inlineTraceEventCount": 7,
+        "requestBody": {
+          "projectId": "019d9005-af19-7f21-9bca-2df019e8ff97",
+          "agentId": "benchmark_agent",
+          "sessionId": "eaa1f2c6-9fb8-4bfa-b67c-334b9681f45d",
+          "message": "Turn 4: respond briefly."
+        }
+      },
+      "phaseBreakdown": {
+        "clientRequestMs": 1024,
+        "traceStartDelayMs": 8,
+        "userMessageDelayMs": 8,
+        "agentEnterDelayMs": 8,
+        "preLlmPlatformMs": 9,
+        "llmDurationMs": 1006,
+        "statusUpdateDelayMs": null,
+        "statusToLlmGapMs": null,
+        "postLlmResponseTailMs": 9,
+        "agentObservedWindowMs": 1008,
+        "agentReportedDurationMs": 1008,
+        "responseTailAfterAgentExitMs": 8,
+        "estimatedPlatformOverheadMs": 18,
+        "preExecutionLeadInMs": null,
+        "queueWaitMs": null,
+        "executionRunMs": null,
+        "responseTailAfterExecutionMs": null,
+        "traceTailAfterResponseMs": -8,
+        "traceCoverageMs": 1008
+      },
+      "trace": {
+        "streamKey": "http://localhost:3112/api/projects/019d9005-af19-7f21-9bca-2df019e8ff97/sessions/eaa1f2c6-9fb8-4bfa-b67c-334b9681f45d?includeTraces=true",
+        "totalTraceCount": 24,
+        "previousStreamId": "bcb0da13-4728-4329-a3d0-a68bbb991a25",
+        "lastStreamId": "1b703753-bfae-42cd-a56e-7ed9380b3fd5",
+        "eventCount": 4,
+        "firstTraceAt": "2026-04-15T08:54:33.675Z",
+        "lastTraceAt": "2026-04-15T08:54:34.683Z",
+        "eventTypeCounts": {
+          "user_message": 1,
+          "agent_enter": 1,
+          "llm_call": 1,
+          "agent_exit": 1
+        },
+        "durationSummaryByType": {
+          "llm_call": {
+            "count": 1,
+            "totalMs": 1006,
+            "maxMs": 1006,
+            "averageMs": 1006
+          },
+          "agent_exit": {
+            "count": 1,
+            "totalMs": 1008,
+            "maxMs": 1008,
+            "averageMs": 1008
+          }
+        },
+        "llmCallSummary": {
+          "count": 1,
+          "totalLatencyMs": 1006,
+          "averageLatencyMs": 1006,
+          "models": ["mock-model"],
+          "providers": ["mock"]
+        },
+        "executionMarkers": {
+          "queued": null,
+          "started": null,
+          "terminal": null
+        },
+        "llmCalls": [
+          {
+            "timestamp": "2026-04-15T08:54:34.682Z",
+            "relativeToRequestStartMs": 1015,
+            "model": "mock-model",
+            "provider": "mock",
+            "durationMs": 1006,
+            "tokensIn": 10,
+            "tokensOut": 8,
+            "cost": null
+          }
+        ],
+        "eventTimeline": [
+          {
+            "streamId": "c7659bfc-e270-4dc8-956f-599cd65c567e",
+            "traceEventId": "c7659bfc-e270-4dc8-956f-599cd65c567e",
+            "type": "user_message",
+            "timestamp": "2026-04-15T08:54:33.675Z",
+            "relativeToRequestStartMs": 8,
+            "durationMs": null,
+            "data": {
+              "message": "Turn 4: respond briefly.",
+              "sessionId": "eaa1f2c6-9fb8-4bfa-b67c-334b9681f45d",
+              "agent": "benchmark_agent",
+              "channel": "api",
+              "contentLength": 24,
+              "hasAttachments": false,
+              "attachmentCount": 0,
+              "tenantId": "tenant-dev-001"
+            }
+          },
+          {
+            "streamId": "25b9e811-6d39-47cd-9fcf-d6a3e1361266",
+            "traceEventId": "25b9e811-6d39-47cd-9fcf-d6a3e1361266",
+            "type": "agent_enter",
+            "timestamp": "2026-04-15T08:54:33.675Z",
+            "relativeToRequestStartMs": 8,
+            "durationMs": null,
+            "data": {
+              "agentName": "benchmark_agent",
+              "mode": "reasoning",
+              "trigger": "user_message",
+              "channel": "api",
+              "contentLength": 24,
+              "hasAttachments": false,
+              "attachmentCount": 0,
+              "tenantId": "tenant-dev-001"
+            }
+          },
+          {
+            "streamId": "a65eae0f-a6d0-402d-a4eb-5afb49e27353",
+            "traceEventId": "a65eae0f-a6d0-402d-a4eb-5afb49e27353",
+            "type": "llm_call",
+            "timestamp": "2026-04-15T08:54:34.682Z",
+            "relativeToRequestStartMs": 1015,
+            "durationMs": 1006,
+            "data": {
+              "llmCallId": "a4d968b2-1292-450f-b539-eb0c480aaaa6",
+              "model": "mock-model",
+              "provider": "mock",
+              "source": "agent_db",
+              "operationType": "response_gen",
+              "iteration": 1,
+              "agent": "benchmark_agent",
+              "hasToolCalls": false,
+              "toolCallCount": 0,
+              "stopReason": "other",
+              "durationMs": 1006,
+              "usage": {
+                "inputTokens": 10,
+                "outputTokens": 8
+              },
+              "tokensIn": 10,
+              "tokensOut": 8,
+              "totalTokens": 18,
+              "streaming": false,
+              "messages": [
+                {
+                  "role": "user",
+                  "content": "Start the session with a short hello."
+                },
+                {
+                  "role": "assistant",
+                  "content": "This is a mock LLM response."
+                },
+                {
+                  "role": "user",
+                  "content": "Turn 1: respond briefly."
+                },
+                {
+                  "role": "assistant",
+                  "content": "This is a mock LLM response."
+                },
+                {
+                  "role": "user",
+                  "content": "Turn 2: respond briefly."
+                },
+                {
+                  "role": "assistant",
+                  "content": "This is a mock LLM response."
+                },
+                {
+                  "role": "user",
+                  "content": "Turn 3: respond briefly."
+                },
+                {
+                  "role": "assistant",
+                  "content": "This is a mock LLM response."
+                },
+                {
+                  "role": "user",
+                  "content": "Turn 4: respond briefly."
+                }
+              ],
+              "response": "This is a mock LLM response.",
+              "toolCalls": [],
+              "systemPrompt": "You are benchmark_agent, an AI assistant.\n\nYour goal: Respond briefly to the user.\n\n\nPersona: Brief and direct.\n\n\n\nLimitations:\n- Keep each answer to one short sentence.\n\n\n\n\n\n\n\n\n\n\nBefore each tool call, emit a brief status message wrapped in <status>...</status> tags.\nThis message will be shown to the user while the tool executes. Keep it under 15 words,\nnatural, and specific to what you are about to do. Do NOT ask questions in status messages.\nExample: <status>Searching for red sneakers under 500 AED</status>",
+              "tools": [],
+              "tenantId": "tenant-dev-001"
+            }
+          },
+          {
+            "streamId": "1b703753-bfae-42cd-a56e-7ed9380b3fd5",
+            "traceEventId": "1b703753-bfae-42cd-a56e-7ed9380b3fd5",
+            "type": "agent_exit",
+            "timestamp": "2026-04-15T08:54:34.683Z",
+            "relativeToRequestStartMs": 1016,
+            "durationMs": 1008,
+            "data": {
+              "agentName": "benchmark_agent",
+              "result": "continue",
+              "durationMs": 1008,
+              "tenantId": "tenant-dev-001"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "turnNumber": 6,
+      "turnKind": "followup",
+      "request": {
+        "startedAt": "2026-04-15T08:54:36.408Z",
+        "endedAt": "2026-04-15T08:54:37.436Z",
+        "durationMs": 1028,
+        "status": 200,
+        "sessionId": "eaa1f2c6-9fb8-4bfa-b67c-334b9681f45d",
+        "responseLength": 28,
+        "inlineTraceEventCount": 8,
+        "requestBody": {
+          "projectId": "019d9005-af19-7f21-9bca-2df019e8ff97",
+          "agentId": "benchmark_agent",
+          "sessionId": "eaa1f2c6-9fb8-4bfa-b67c-334b9681f45d",
+          "message": "Turn 5: respond briefly."
+        }
+      },
+      "phaseBreakdown": {
+        "clientRequestMs": 1028,
+        "traceStartDelayMs": 15,
+        "userMessageDelayMs": 15,
+        "agentEnterDelayMs": 15,
+        "preLlmPlatformMs": 15,
+        "llmDurationMs": 1008,
+        "statusUpdateDelayMs": 1022,
+        "statusToLlmGapMs": 1,
+        "postLlmResponseTailMs": 5,
+        "agentObservedWindowMs": 1009,
+        "agentReportedDurationMs": 1009,
+        "responseTailAfterAgentExitMs": 4,
+        "estimatedPlatformOverheadMs": 20,
+        "preExecutionLeadInMs": null,
+        "queueWaitMs": null,
+        "executionRunMs": null,
+        "responseTailAfterExecutionMs": null,
+        "traceTailAfterResponseMs": -4,
+        "traceCoverageMs": 1009
+      },
+      "trace": {
+        "streamKey": "http://localhost:3112/api/projects/019d9005-af19-7f21-9bca-2df019e8ff97/sessions/eaa1f2c6-9fb8-4bfa-b67c-334b9681f45d?includeTraces=true",
+        "totalTraceCount": 29,
+        "previousStreamId": "1b703753-bfae-42cd-a56e-7ed9380b3fd5",
+        "lastStreamId": "d8e92f60-35bb-4c67-a7d5-ebd7124e2a3d",
+        "eventCount": 5,
+        "firstTraceAt": "2026-04-15T08:54:36.423Z",
+        "lastTraceAt": "2026-04-15T08:54:37.432Z",
+        "eventTypeCounts": {
+          "user_message": 1,
+          "agent_enter": 1,
+          "status_update": 1,
+          "llm_call": 1,
+          "agent_exit": 1
+        },
+        "durationSummaryByType": {
+          "llm_call": {
+            "count": 1,
+            "totalMs": 1008,
+            "maxMs": 1008,
+            "averageMs": 1008
+          },
+          "agent_exit": {
+            "count": 1,
+            "totalMs": 1009,
+            "maxMs": 1009,
+            "averageMs": 1009
+          }
+        },
+        "llmCallSummary": {
+          "count": 1,
+          "totalLatencyMs": 1008,
+          "averageLatencyMs": 1008,
+          "models": ["mock-model"],
+          "providers": ["mock"]
+        },
+        "executionMarkers": {
+          "queued": null,
+          "started": null,
+          "terminal": null
+        },
+        "llmCalls": [
+          {
+            "timestamp": "2026-04-15T08:54:37.431Z",
+            "relativeToRequestStartMs": 1023,
+            "model": "mock-model",
+            "provider": "mock",
+            "durationMs": 1008,
+            "tokensIn": 10,
+            "tokensOut": 8,
+            "cost": null
+          }
+        ],
+        "eventTimeline": [
+          {
+            "streamId": "9241e9b2-b5d6-4d7f-80d5-9562043bfec3",
+            "traceEventId": "9241e9b2-b5d6-4d7f-80d5-9562043bfec3",
+            "type": "user_message",
+            "timestamp": "2026-04-15T08:54:36.423Z",
+            "relativeToRequestStartMs": 15,
+            "durationMs": null,
+            "data": {
+              "message": "Turn 5: respond briefly.",
+              "sessionId": "eaa1f2c6-9fb8-4bfa-b67c-334b9681f45d",
+              "agent": "benchmark_agent",
+              "channel": "api",
+              "contentLength": 24,
+              "hasAttachments": false,
+              "attachmentCount": 0,
+              "tenantId": "tenant-dev-001"
+            }
+          },
+          {
+            "streamId": "cbbe7bec-8d89-443c-8013-ff909842c3c2",
+            "traceEventId": "cbbe7bec-8d89-443c-8013-ff909842c3c2",
+            "type": "agent_enter",
+            "timestamp": "2026-04-15T08:54:36.423Z",
+            "relativeToRequestStartMs": 15,
+            "durationMs": null,
+            "data": {
+              "agentName": "benchmark_agent",
+              "mode": "reasoning",
+              "trigger": "user_message",
+              "channel": "api",
+              "contentLength": 24,
+              "hasAttachments": false,
+              "attachmentCount": 0,
+              "tenantId": "tenant-dev-001"
+            }
+          },
+          {
+            "streamId": "3dafa575-a2a0-471e-af4b-b346001f6f55",
+            "traceEventId": "3dafa575-a2a0-471e-af4b-b346001f6f55",
+            "type": "status_update",
+            "timestamp": "2026-04-15T08:54:37.430Z",
+            "relativeToRequestStartMs": 1022,
+            "durationMs": null,
+            "data": {
+              "text": "This is a mock LLM response...",
+              "operation": "tool_call",
+              "index": 0,
+              "transient": true,
+              "tenantId": "tenant-dev-001"
+            }
+          },
+          {
+            "streamId": "d123c975-0cbf-4b99-9f54-a3455001e91b",
+            "traceEventId": "d123c975-0cbf-4b99-9f54-a3455001e91b",
+            "type": "llm_call",
+            "timestamp": "2026-04-15T08:54:37.431Z",
+            "relativeToRequestStartMs": 1023,
+            "durationMs": 1008,
+            "data": {
+              "llmCallId": "66fb2d86-9cb4-41d0-8c21-7eb4508fa88f",
+              "model": "mock-model",
+              "provider": "mock",
+              "source": "agent_db",
+              "operationType": "response_gen",
+              "iteration": 1,
+              "agent": "benchmark_agent",
+              "hasToolCalls": false,
+              "toolCallCount": 0,
+              "stopReason": "other",
+              "durationMs": 1008,
+              "usage": {
+                "inputTokens": 10,
+                "outputTokens": 8
+              },
+              "tokensIn": 10,
+              "tokensOut": 8,
+              "totalTokens": 18,
+              "streaming": false,
+              "messages": [
+                {
+                  "role": "user",
+                  "content": "Start the session with a short hello."
+                },
+                {
+                  "role": "assistant",
+                  "content": "This is a mock LLM response."
+                },
+                {
+                  "role": "user",
+                  "content": "Turn 1: respond briefly."
+                },
+                {
+                  "role": "assistant",
+                  "content": "This is a mock LLM response."
+                },
+                {
+                  "role": "user",
+                  "content": "Turn 2: respond briefly."
+                },
+                {
+                  "role": "assistant",
+                  "content": "This is a mock LLM response."
+                },
+                {
+                  "role": "user",
+                  "content": "Turn 3: respond briefly."
+                },
+                {
+                  "role": "assistant",
+                  "content": "This is a mock LLM response."
+                },
+                {
+                  "role": "user",
+                  "content": "Turn 4: respond briefly."
+                },
+                {
+                  "role": "assistant",
+                  "content": "This is a mock LLM response."
+                },
+                {
+                  "role": "user",
+                  "content": "Turn 5: respond briefly."
+                }
+              ],
+              "response": "This is a mock LLM response.",
+              "toolCalls": [],
+              "systemPrompt": "You are benchmark_agent, an AI assistant.\n\nYour goal: Respond briefly to the user.\n\n\nPersona: Brief and direct.\n\n\n\nLimitations:\n- Keep each answer to one short sentence.\n\n\n\n\n\n\n\n\n\n\nBefore each tool call, emit a brief status message wrapped in <status>...</status> tags.\nThis message will be shown to the user while the tool executes. Keep it under 15 words,\nnatural, and specific to what you are about to do. Do NOT ask questions in status messages.\nExample: <status>Searching for red sneakers under 500 AED</status>",
+              "tools": [],
+              "tenantId": "tenant-dev-001"
+            }
+          },
+          {
+            "streamId": "d8e92f60-35bb-4c67-a7d5-ebd7124e2a3d",
+            "traceEventId": "d8e92f60-35bb-4c67-a7d5-ebd7124e2a3d",
+            "type": "agent_exit",
+            "timestamp": "2026-04-15T08:54:37.432Z",
+            "relativeToRequestStartMs": 1024,
+            "durationMs": 1009,
+            "data": {
+              "agentName": "benchmark_agent",
+              "result": "continue",
+              "durationMs": 1009,
+              "tenantId": "tenant-dev-001"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "turnNumber": 7,
+      "turnKind": "followup",
+      "request": {
+        "startedAt": "2026-04-15T08:54:39.190Z",
+        "endedAt": "2026-04-15T08:54:40.243Z",
+        "durationMs": 1053,
+        "status": 200,
+        "sessionId": "eaa1f2c6-9fb8-4bfa-b67c-334b9681f45d",
+        "responseLength": 28,
+        "inlineTraceEventCount": 8,
+        "requestBody": {
+          "projectId": "019d9005-af19-7f21-9bca-2df019e8ff97",
+          "agentId": "benchmark_agent",
+          "sessionId": "eaa1f2c6-9fb8-4bfa-b67c-334b9681f45d",
+          "message": "Turn 6: respond briefly."
+        }
+      },
+      "phaseBreakdown": {
+        "clientRequestMs": 1053,
+        "traceStartDelayMs": 27,
+        "userMessageDelayMs": 27,
+        "agentEnterDelayMs": 27,
+        "preLlmPlatformMs": 28,
+        "llmDurationMs": 1013,
+        "statusUpdateDelayMs": 1036,
+        "statusToLlmGapMs": 5,
+        "postLlmResponseTailMs": 12,
+        "agentObservedWindowMs": 1016,
+        "agentReportedDurationMs": 1016,
+        "responseTailAfterAgentExitMs": 10,
+        "estimatedPlatformOverheadMs": 40,
+        "preExecutionLeadInMs": null,
+        "queueWaitMs": null,
+        "executionRunMs": null,
+        "responseTailAfterExecutionMs": null,
+        "traceTailAfterResponseMs": -10,
+        "traceCoverageMs": 1016
+      },
+      "trace": {
+        "streamKey": "http://localhost:3112/api/projects/019d9005-af19-7f21-9bca-2df019e8ff97/sessions/eaa1f2c6-9fb8-4bfa-b67c-334b9681f45d?includeTraces=true",
+        "totalTraceCount": 34,
+        "previousStreamId": "d8e92f60-35bb-4c67-a7d5-ebd7124e2a3d",
+        "lastStreamId": "e77e8332-82d0-4816-9ba1-bf5766311b31",
+        "eventCount": 5,
+        "firstTraceAt": "2026-04-15T08:54:39.217Z",
+        "lastTraceAt": "2026-04-15T08:54:40.233Z",
+        "eventTypeCounts": {
+          "user_message": 1,
+          "agent_enter": 1,
+          "status_update": 1,
+          "llm_call": 1,
+          "agent_exit": 1
+        },
+        "durationSummaryByType": {
+          "llm_call": {
+            "count": 1,
+            "totalMs": 1013,
+            "maxMs": 1013,
+            "averageMs": 1013
+          },
+          "agent_exit": {
+            "count": 1,
+            "totalMs": 1016,
+            "maxMs": 1016,
+            "averageMs": 1016
+          }
+        },
+        "llmCallSummary": {
+          "count": 1,
+          "totalLatencyMs": 1013,
+          "averageLatencyMs": 1013,
+          "models": ["mock-model"],
+          "providers": ["mock"]
+        },
+        "executionMarkers": {
+          "queued": null,
+          "started": null,
+          "terminal": null
+        },
+        "llmCalls": [
+          {
+            "timestamp": "2026-04-15T08:54:40.231Z",
+            "relativeToRequestStartMs": 1041,
+            "model": "mock-model",
+            "provider": "mock",
+            "durationMs": 1013,
+            "tokensIn": 10,
+            "tokensOut": 8,
+            "cost": null
+          }
+        ],
+        "eventTimeline": [
+          {
+            "streamId": "97b3eac4-bb5c-4d3d-8a37-5d78a4692b00",
+            "traceEventId": "97b3eac4-bb5c-4d3d-8a37-5d78a4692b00",
+            "type": "user_message",
+            "timestamp": "2026-04-15T08:54:39.217Z",
+            "relativeToRequestStartMs": 27,
+            "durationMs": null,
+            "data": {
+              "message": "Turn 6: respond briefly.",
+              "sessionId": "eaa1f2c6-9fb8-4bfa-b67c-334b9681f45d",
+              "agent": "benchmark_agent",
+              "channel": "api",
+              "contentLength": 24,
+              "hasAttachments": false,
+              "attachmentCount": 0,
+              "tenantId": "tenant-dev-001"
+            }
+          },
+          {
+            "streamId": "4d6a265a-0554-4314-b52a-67e80281274b",
+            "traceEventId": "4d6a265a-0554-4314-b52a-67e80281274b",
+            "type": "agent_enter",
+            "timestamp": "2026-04-15T08:54:39.217Z",
+            "relativeToRequestStartMs": 27,
+            "durationMs": null,
+            "data": {
+              "agentName": "benchmark_agent",
+              "mode": "reasoning",
+              "trigger": "user_message",
+              "channel": "api",
+              "contentLength": 24,
+              "hasAttachments": false,
+              "attachmentCount": 0,
+              "tenantId": "tenant-dev-001"
+            }
+          },
+          {
+            "streamId": "081698db-a54f-43f1-8f4d-e5d6b92d4464",
+            "traceEventId": "081698db-a54f-43f1-8f4d-e5d6b92d4464",
+            "type": "status_update",
+            "timestamp": "2026-04-15T08:54:40.226Z",
+            "relativeToRequestStartMs": 1036,
+            "durationMs": null,
+            "data": {
+              "text": "This is a mock LLM response...",
+              "operation": "tool_call",
+              "index": 0,
+              "transient": true,
+              "tenantId": "tenant-dev-001"
+            }
+          },
+          {
+            "streamId": "b08eb274-46a8-4c16-9aa1-b51b6a34b0eb",
+            "traceEventId": "b08eb274-46a8-4c16-9aa1-b51b6a34b0eb",
+            "type": "llm_call",
+            "timestamp": "2026-04-15T08:54:40.231Z",
+            "relativeToRequestStartMs": 1041,
+            "durationMs": 1013,
+            "data": {
+              "llmCallId": "42377e4f-6644-400e-ab72-eea7a0efdaf0",
+              "model": "mock-model",
+              "provider": "mock",
+              "source": "agent_db",
+              "operationType": "response_gen",
+              "iteration": 1,
+              "agent": "benchmark_agent",
+              "hasToolCalls": false,
+              "toolCallCount": 0,
+              "stopReason": "other",
+              "durationMs": 1013,
+              "usage": {
+                "inputTokens": 10,
+                "outputTokens": 8
+              },
+              "tokensIn": 10,
+              "tokensOut": 8,
+              "totalTokens": 18,
+              "streaming": false,
+              "messages": [
+                {
+                  "role": "user",
+                  "content": "Start the session with a short hello."
+                },
+                {
+                  "role": "assistant",
+                  "content": "This is a mock LLM response."
+                },
+                {
+                  "role": "user",
+                  "content": "Turn 1: respond briefly."
+                },
+                {
+                  "role": "assistant",
+                  "content": "This is a mock LLM response."
+                },
+                {
+                  "role": "user",
+                  "content": "Turn 2: respond briefly."
+                },
+                {
+                  "role": "assistant",
+                  "content": "This is a mock LLM response."
+                },
+                {
+                  "role": "user",
+                  "content": "Turn 3: respond briefly."
+                },
+                {
+                  "role": "assistant",
+                  "content": "This is a mock LLM response."
+                },
+                {
+                  "role": "user",
+                  "content": "Turn 4: respond briefly."
+                },
+                {
+                  "role": "assistant",
+                  "content": "This is a mock LLM response."
+                },
+                {
+                  "role": "user",
+                  "content": "Turn 5: respond briefly."
+                },
+                {
+                  "role": "assistant",
+                  "content": "This is a mock LLM response."
+                },
+                {
+                  "role": "user",
+                  "content": "Turn 6: respond briefly."
+                }
+              ],
+              "response": "This is a mock LLM response.",
+              "toolCalls": [],
+              "systemPrompt": "You are benchmark_agent, an AI assistant.\n\nYour goal: Respond briefly to the user.\n\n\nPersona: Brief and direct.\n\n\n\nLimitations:\n- Keep each answer to one short sentence.\n\n\n\n\n\n\n\n\n\n\nBefore each tool call, emit a brief status message wrapped in <status>...</status> tags.\nThis message will be shown to the user while the tool executes. Keep it under 15 words,\nnatural, and specific to what you are about to do. Do NOT ask questions in status messages.\nExample: <status>Searching for red sneakers under 500 AED</status>",
+              "tools": [],
+              "tenantId": "tenant-dev-001"
+            }
+          },
+          {
+            "streamId": "e77e8332-82d0-4816-9ba1-bf5766311b31",
+            "traceEventId": "e77e8332-82d0-4816-9ba1-bf5766311b31",
+            "type": "agent_exit",
+            "timestamp": "2026-04-15T08:54:40.233Z",
+            "relativeToRequestStartMs": 1043,
+            "durationMs": 1016,
+            "data": {
+              "agentName": "benchmark_agent",
+              "result": "continue",
+              "durationMs": 1016,
+              "tenantId": "tenant-dev-001"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "turnNumber": 8,
+      "turnKind": "followup",
+      "request": {
+        "startedAt": "2026-04-15T08:54:41.980Z",
+        "endedAt": "2026-04-15T08:54:43.042Z",
+        "durationMs": 1062,
+        "status": 200,
+        "sessionId": "eaa1f2c6-9fb8-4bfa-b67c-334b9681f45d",
+        "responseLength": 28,
+        "inlineTraceEventCount": 8,
+        "requestBody": {
+          "projectId": "019d9005-af19-7f21-9bca-2df019e8ff97",
+          "agentId": "benchmark_agent",
+          "sessionId": "eaa1f2c6-9fb8-4bfa-b67c-334b9681f45d",
+          "message": "Turn 7: respond briefly."
+        }
+      },
+      "phaseBreakdown": {
+        "clientRequestMs": 1062,
+        "traceStartDelayMs": 18,
+        "userMessageDelayMs": 18,
+        "agentEnterDelayMs": 18,
+        "preLlmPlatformMs": 19,
+        "llmDurationMs": 1030,
+        "statusUpdateDelayMs": 1033,
+        "statusToLlmGapMs": 16,
+        "postLlmResponseTailMs": 13,
+        "agentObservedWindowMs": 1033,
+        "agentReportedDurationMs": 1033,
+        "responseTailAfterAgentExitMs": 11,
+        "estimatedPlatformOverheadMs": 32,
+        "preExecutionLeadInMs": null,
+        "queueWaitMs": null,
+        "executionRunMs": null,
+        "responseTailAfterExecutionMs": null,
+        "traceTailAfterResponseMs": -11,
+        "traceCoverageMs": 1033
+      },
+      "trace": {
+        "streamKey": "http://localhost:3112/api/projects/019d9005-af19-7f21-9bca-2df019e8ff97/sessions/eaa1f2c6-9fb8-4bfa-b67c-334b9681f45d?includeTraces=true",
+        "totalTraceCount": 39,
+        "previousStreamId": "e77e8332-82d0-4816-9ba1-bf5766311b31",
+        "lastStreamId": "e284cb43-4dce-48e3-ab53-63e1540db299",
+        "eventCount": 5,
+        "firstTraceAt": "2026-04-15T08:54:41.998Z",
+        "lastTraceAt": "2026-04-15T08:54:43.031Z",
+        "eventTypeCounts": {
+          "user_message": 1,
+          "agent_enter": 1,
+          "status_update": 1,
+          "llm_call": 1,
+          "agent_exit": 1
+        },
+        "durationSummaryByType": {
+          "llm_call": {
+            "count": 1,
+            "totalMs": 1030,
+            "maxMs": 1030,
+            "averageMs": 1030
+          },
+          "agent_exit": {
+            "count": 1,
+            "totalMs": 1033,
+            "maxMs": 1033,
+            "averageMs": 1033
+          }
+        },
+        "llmCallSummary": {
+          "count": 1,
+          "totalLatencyMs": 1030,
+          "averageLatencyMs": 1030,
+          "models": ["mock-model"],
+          "providers": ["mock"]
+        },
+        "executionMarkers": {
+          "queued": null,
+          "started": null,
+          "terminal": null
+        },
+        "llmCalls": [
+          {
+            "timestamp": "2026-04-15T08:54:43.029Z",
+            "relativeToRequestStartMs": 1049,
+            "model": "mock-model",
+            "provider": "mock",
+            "durationMs": 1030,
+            "tokensIn": 10,
+            "tokensOut": 8,
+            "cost": null
+          }
+        ],
+        "eventTimeline": [
+          {
+            "streamId": "89b4714c-73bd-4b77-92a4-d77e6a6a48cd",
+            "traceEventId": "89b4714c-73bd-4b77-92a4-d77e6a6a48cd",
+            "type": "user_message",
+            "timestamp": "2026-04-15T08:54:41.998Z",
+            "relativeToRequestStartMs": 18,
+            "durationMs": null,
+            "data": {
+              "message": "Turn 7: respond briefly.",
+              "sessionId": "eaa1f2c6-9fb8-4bfa-b67c-334b9681f45d",
+              "agent": "benchmark_agent",
+              "channel": "api",
+              "contentLength": 24,
+              "hasAttachments": false,
+              "attachmentCount": 0,
+              "tenantId": "tenant-dev-001"
+            }
+          },
+          {
+            "streamId": "f957f224-057b-405b-a750-a6bbec55ccf4",
+            "traceEventId": "f957f224-057b-405b-a750-a6bbec55ccf4",
+            "type": "agent_enter",
+            "timestamp": "2026-04-15T08:54:41.998Z",
+            "relativeToRequestStartMs": 18,
+            "durationMs": null,
+            "data": {
+              "agentName": "benchmark_agent",
+              "mode": "reasoning",
+              "trigger": "user_message",
+              "channel": "api",
+              "contentLength": 24,
+              "hasAttachments": false,
+              "attachmentCount": 0,
+              "tenantId": "tenant-dev-001"
+            }
+          },
+          {
+            "streamId": "05b9c534-92f9-44d8-9110-db22924251ee",
+            "traceEventId": "05b9c534-92f9-44d8-9110-db22924251ee",
+            "type": "status_update",
+            "timestamp": "2026-04-15T08:54:43.013Z",
+            "relativeToRequestStartMs": 1033,
+            "durationMs": null,
+            "data": {
+              "text": "This is a mock LLM response...",
+              "operation": "tool_call",
+              "index": 0,
+              "transient": true,
+              "tenantId": "tenant-dev-001"
+            }
+          },
+          {
+            "streamId": "20f26f70-f93f-4fa4-9ec1-82e0a6c8a142",
+            "traceEventId": "20f26f70-f93f-4fa4-9ec1-82e0a6c8a142",
+            "type": "llm_call",
+            "timestamp": "2026-04-15T08:54:43.029Z",
+            "relativeToRequestStartMs": 1049,
+            "durationMs": 1030,
+            "data": {
+              "llmCallId": "3077adca-2b66-455a-971d-75956224a356",
+              "model": "mock-model",
+              "provider": "mock",
+              "source": "agent_db",
+              "operationType": "response_gen",
+              "iteration": 1,
+              "agent": "benchmark_agent",
+              "hasToolCalls": false,
+              "toolCallCount": 0,
+              "stopReason": "other",
+              "durationMs": 1030,
+              "usage": {
+                "inputTokens": 10,
+                "outputTokens": 8
+              },
+              "tokensIn": 10,
+              "tokensOut": 8,
+              "totalTokens": 18,
+              "streaming": false,
+              "messages": [
+                {
+                  "role": "user",
+                  "content": "Start the session with a short hello."
+                },
+                {
+                  "role": "assistant",
+                  "content": "This is a mock LLM response."
+                },
+                {
+                  "role": "user",
+                  "content": "Turn 1: respond briefly."
+                },
+                {
+                  "role": "assistant",
+                  "content": "This is a mock LLM response."
+                },
+                {
+                  "role": "user",
+                  "content": "Turn 2: respond briefly."
+                },
+                {
+                  "role": "assistant",
+                  "content": "This is a mock LLM response."
+                },
+                {
+                  "role": "user",
+                  "content": "Turn 3: respond briefly."
+                },
+                {
+                  "role": "assistant",
+                  "content": "This is a mock LLM response."
+                },
+                {
+                  "role": "user",
+                  "content": "Turn 4: respond briefly."
+                },
+                {
+                  "role": "assistant",
+                  "content": "This is a mock LLM response."
+                },
+                {
+                  "role": "user",
+                  "content": "Turn 5: respond briefly."
+                },
+                {
+                  "role": "assistant",
+                  "content": "This is a mock LLM response."
+                },
+                {
+                  "role": "user",
+                  "content": "Turn 6: respond briefly."
+                },
+                {
+                  "role": "assistant",
+                  "content": "This is a mock LLM response."
+                },
+                {
+                  "role": "user",
+                  "content": "Turn 7: respond briefly."
+                }
+              ],
+              "response": "This is a mock LLM response.",
+              "toolCalls": [],
+              "systemPrompt": "You are benchmark_agent, an AI assistant.\n\nYour goal: Respond briefly to the user.\n\n\nPersona: Brief and direct.\n\n\n\nLimitations:\n- Keep each answer to one short sentence.\n\n\n\n\n\n\n\n\n\n\nBefore each tool call, emit a brief status message wrapped in <status>...</status> tags.\nThis message will be shown to the user while the tool executes. Keep it under 15 words,\nnatural, and specific to what you are about to do. Do NOT ask questions in status messages.\nExample: <status>Searching for red sneakers under 500 AED</status>",
+              "tools": [],
+              "tenantId": "tenant-dev-001"
+            }
+          },
+          {
+            "streamId": "e284cb43-4dce-48e3-ab53-63e1540db299",
+            "traceEventId": "e284cb43-4dce-48e3-ab53-63e1540db299",
+            "type": "agent_exit",
+            "timestamp": "2026-04-15T08:54:43.031Z",
+            "relativeToRequestStartMs": 1051,
+            "durationMs": 1033,
+            "data": {
+              "agentName": "benchmark_agent",
+              "result": "continue",
+              "durationMs": 1033,
+              "tenantId": "tenant-dev-001"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "turnNumber": 9,
+      "turnKind": "followup",
+      "request": {
+        "startedAt": "2026-04-15T08:54:44.785Z",
+        "endedAt": "2026-04-15T08:54:45.827Z",
+        "durationMs": 1042,
+        "status": 200,
+        "sessionId": "eaa1f2c6-9fb8-4bfa-b67c-334b9681f45d",
+        "responseLength": 28,
+        "inlineTraceEventCount": 8,
+        "requestBody": {
+          "projectId": "019d9005-af19-7f21-9bca-2df019e8ff97",
+          "agentId": "benchmark_agent",
+          "sessionId": "eaa1f2c6-9fb8-4bfa-b67c-334b9681f45d",
+          "message": "Turn 8: respond briefly."
+        }
+      },
+      "phaseBreakdown": {
+        "clientRequestMs": 1042,
+        "traceStartDelayMs": 27,
+        "userMessageDelayMs": 27,
+        "agentEnterDelayMs": 27,
+        "preLlmPlatformMs": 28,
+        "llmDurationMs": 1010,
+        "statusUpdateDelayMs": 1035,
+        "statusToLlmGapMs": 3,
+        "postLlmResponseTailMs": 4,
+        "agentObservedWindowMs": 1012,
+        "agentReportedDurationMs": 1012,
+        "responseTailAfterAgentExitMs": 3,
+        "estimatedPlatformOverheadMs": 32,
+        "preExecutionLeadInMs": null,
+        "queueWaitMs": null,
+        "executionRunMs": null,
+        "responseTailAfterExecutionMs": null,
+        "traceTailAfterResponseMs": -3,
+        "traceCoverageMs": 1012
+      },
+      "trace": {
+        "streamKey": "http://localhost:3112/api/projects/019d9005-af19-7f21-9bca-2df019e8ff97/sessions/eaa1f2c6-9fb8-4bfa-b67c-334b9681f45d?includeTraces=true",
+        "totalTraceCount": 44,
+        "previousStreamId": "e284cb43-4dce-48e3-ab53-63e1540db299",
+        "lastStreamId": "d7c1b736-7541-48d4-b694-bd0d758909d1",
+        "eventCount": 5,
+        "firstTraceAt": "2026-04-15T08:54:44.812Z",
+        "lastTraceAt": "2026-04-15T08:54:45.824Z",
+        "eventTypeCounts": {
+          "user_message": 1,
+          "agent_enter": 1,
+          "status_update": 1,
+          "llm_call": 1,
+          "agent_exit": 1
+        },
+        "durationSummaryByType": {
+          "llm_call": {
+            "count": 1,
+            "totalMs": 1010,
+            "maxMs": 1010,
+            "averageMs": 1010
+          },
+          "agent_exit": {
+            "count": 1,
+            "totalMs": 1012,
+            "maxMs": 1012,
+            "averageMs": 1012
+          }
+        },
+        "llmCallSummary": {
+          "count": 1,
+          "totalLatencyMs": 1010,
+          "averageLatencyMs": 1010,
+          "models": ["mock-model"],
+          "providers": ["mock"]
+        },
+        "executionMarkers": {
+          "queued": null,
+          "started": null,
+          "terminal": null
+        },
+        "llmCalls": [
+          {
+            "timestamp": "2026-04-15T08:54:45.823Z",
+            "relativeToRequestStartMs": 1038,
+            "model": "mock-model",
+            "provider": "mock",
+            "durationMs": 1010,
+            "tokensIn": 10,
+            "tokensOut": 8,
+            "cost": null
+          }
+        ],
+        "eventTimeline": [
+          {
+            "streamId": "b69c7189-4057-429c-883f-801a2c4f92ee",
+            "traceEventId": "b69c7189-4057-429c-883f-801a2c4f92ee",
+            "type": "user_message",
+            "timestamp": "2026-04-15T08:54:44.812Z",
+            "relativeToRequestStartMs": 27,
+            "durationMs": null,
+            "data": {
+              "message": "Turn 8: respond briefly.",
+              "sessionId": "eaa1f2c6-9fb8-4bfa-b67c-334b9681f45d",
+              "agent": "benchmark_agent",
+              "channel": "api",
+              "contentLength": 24,
+              "hasAttachments": false,
+              "attachmentCount": 0,
+              "tenantId": "tenant-dev-001"
+            }
+          },
+          {
+            "streamId": "89d6809f-ead3-4baf-9b5f-a83f61e4a2bd",
+            "traceEventId": "89d6809f-ead3-4baf-9b5f-a83f61e4a2bd",
+            "type": "agent_enter",
+            "timestamp": "2026-04-15T08:54:44.812Z",
+            "relativeToRequestStartMs": 27,
+            "durationMs": null,
+            "data": {
+              "agentName": "benchmark_agent",
+              "mode": "reasoning",
+              "trigger": "user_message",
+              "channel": "api",
+              "contentLength": 24,
+              "hasAttachments": false,
+              "attachmentCount": 0,
+              "tenantId": "tenant-dev-001"
+            }
+          },
+          {
+            "streamId": "2381ab97-557b-4776-a47d-dd8e8f4b9ada",
+            "traceEventId": "2381ab97-557b-4776-a47d-dd8e8f4b9ada",
+            "type": "status_update",
+            "timestamp": "2026-04-15T08:54:45.820Z",
+            "relativeToRequestStartMs": 1035,
+            "durationMs": null,
+            "data": {
+              "text": "This is a mock LLM response...",
+              "operation": "tool_call",
+              "index": 0,
+              "transient": true,
+              "tenantId": "tenant-dev-001"
+            }
+          },
+          {
+            "streamId": "29344c75-30d5-45c5-8762-d1755ed2da2d",
+            "traceEventId": "29344c75-30d5-45c5-8762-d1755ed2da2d",
+            "type": "llm_call",
+            "timestamp": "2026-04-15T08:54:45.823Z",
+            "relativeToRequestStartMs": 1038,
+            "durationMs": 1010,
+            "data": {
+              "llmCallId": "49727556-d041-46ad-aa1a-805153cbeab4",
+              "model": "mock-model",
+              "provider": "mock",
+              "source": "agent_db",
+              "operationType": "response_gen",
+              "iteration": 1,
+              "agent": "benchmark_agent",
+              "hasToolCalls": false,
+              "toolCallCount": 0,
+              "stopReason": "other",
+              "durationMs": 1010,
+              "usage": {
+                "inputTokens": 10,
+                "outputTokens": 8
+              },
+              "tokensIn": 10,
+              "tokensOut": 8,
+              "totalTokens": 18,
+              "streaming": false,
+              "messages": [
+                {
+                  "role": "user",
+                  "content": "Start the session with a short hello."
+                },
+                {
+                  "role": "assistant",
+                  "content": "This is a mock LLM response."
+                },
+                {
+                  "role": "user",
+                  "content": "Turn 1: respond briefly."
+                },
+                {
+                  "role": "assistant",
+                  "content": "This is a mock LLM response."
+                },
+                {
+                  "role": "user",
+                  "content": "Turn 2: respond briefly."
+                },
+                {
+                  "role": "assistant",
+                  "content": "This is a mock LLM response."
+                },
+                {
+                  "role": "user",
+                  "content": "Turn 3: respond briefly."
+                },
+                {
+                  "role": "assistant",
+                  "content": "This is a mock LLM response."
+                },
+                {
+                  "role": "user",
+                  "content": "Turn 4: respond briefly."
+                },
+                {
+                  "role": "assistant",
+                  "content": "This is a mock LLM response."
+                },
+                {
+                  "role": "user",
+                  "content": "Turn 5: respond briefly."
+                },
+                {
+                  "role": "assistant",
+                  "content": "This is a mock LLM response."
+                },
+                {
+                  "role": "user",
+                  "content": "Turn 6: respond briefly."
+                },
+                {
+                  "role": "assistant",
+                  "content": "This is a mock LLM response."
+                },
+                {
+                  "role": "user",
+                  "content": "Turn 7: respond briefly."
+                },
+                {
+                  "role": "assistant",
+                  "content": "This is a mock LLM response."
+                },
+                {
+                  "role": "user",
+                  "content": "Turn 8: respond briefly."
+                }
+              ],
+              "response": "This is a mock LLM response.",
+              "toolCalls": [],
+              "systemPrompt": "You are benchmark_agent, an AI assistant.\n\nYour goal: Respond briefly to the user.\n\n\nPersona: Brief and direct.\n\n\n\nLimitations:\n- Keep each answer to one short sentence.\n\n\n\n\n\n\n\n\n\n\nBefore each tool call, emit a brief status message wrapped in <status>...</status> tags.\nThis message will be shown to the user while the tool executes. Keep it under 15 words,\nnatural, and specific to what you are about to do. Do NOT ask questions in status messages.\nExample: <status>Searching for red sneakers under 500 AED</status>",
+              "tools": [],
+              "tenantId": "tenant-dev-001"
+            }
+          },
+          {
+            "streamId": "d7c1b736-7541-48d4-b694-bd0d758909d1",
+            "traceEventId": "d7c1b736-7541-48d4-b694-bd0d758909d1",
+            "type": "agent_exit",
+            "timestamp": "2026-04-15T08:54:45.824Z",
+            "relativeToRequestStartMs": 1039,
+            "durationMs": 1012,
+            "data": {
+              "agentName": "benchmark_agent",
+              "result": "continue",
+              "durationMs": 1012,
+              "tenantId": "tenant-dev-001"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "turnNumber": 10,
+      "turnKind": "followup",
+      "request": {
+        "startedAt": "2026-04-15T08:54:47.553Z",
+        "endedAt": "2026-04-15T08:54:48.609Z",
+        "durationMs": 1056,
+        "status": 200,
+        "sessionId": "eaa1f2c6-9fb8-4bfa-b67c-334b9681f45d",
+        "responseLength": 28,
+        "inlineTraceEventCount": 8,
+        "requestBody": {
+          "projectId": "019d9005-af19-7f21-9bca-2df019e8ff97",
+          "agentId": "benchmark_agent",
+          "sessionId": "eaa1f2c6-9fb8-4bfa-b67c-334b9681f45d",
+          "message": "Turn 9: respond briefly."
+        }
+      },
+      "phaseBreakdown": {
+        "clientRequestMs": 1056,
+        "traceStartDelayMs": 23,
+        "userMessageDelayMs": 23,
+        "agentEnterDelayMs": 23,
+        "preLlmPlatformMs": 25,
+        "llmDurationMs": 1018,
+        "statusUpdateDelayMs": 1039,
+        "statusToLlmGapMs": 4,
+        "postLlmResponseTailMs": 13,
+        "agentObservedWindowMs": 1023,
+        "agentReportedDurationMs": 1023,
+        "responseTailAfterAgentExitMs": 10,
+        "estimatedPlatformOverheadMs": 38,
+        "preExecutionLeadInMs": null,
+        "queueWaitMs": null,
+        "executionRunMs": null,
+        "responseTailAfterExecutionMs": null,
+        "traceTailAfterResponseMs": -10,
+        "traceCoverageMs": 1023
+      },
+      "trace": {
+        "streamKey": "http://localhost:3112/api/projects/019d9005-af19-7f21-9bca-2df019e8ff97/sessions/eaa1f2c6-9fb8-4bfa-b67c-334b9681f45d?includeTraces=true",
+        "totalTraceCount": 49,
+        "previousStreamId": "d7c1b736-7541-48d4-b694-bd0d758909d1",
+        "lastStreamId": "3e08f077-b786-4274-8412-f04f8f390bd8",
+        "eventCount": 5,
+        "firstTraceAt": "2026-04-15T08:54:47.576Z",
+        "lastTraceAt": "2026-04-15T08:54:48.599Z",
+        "eventTypeCounts": {
+          "user_message": 1,
+          "agent_enter": 1,
+          "status_update": 1,
+          "llm_call": 1,
+          "agent_exit": 1
+        },
+        "durationSummaryByType": {
+          "llm_call": {
+            "count": 1,
+            "totalMs": 1018,
+            "maxMs": 1018,
+            "averageMs": 1018
+          },
+          "agent_exit": {
+            "count": 1,
+            "totalMs": 1023,
+            "maxMs": 1023,
+            "averageMs": 1023
+          }
+        },
+        "llmCallSummary": {
+          "count": 1,
+          "totalLatencyMs": 1018,
+          "averageLatencyMs": 1018,
+          "models": ["mock-model"],
+          "providers": ["mock"]
+        },
+        "executionMarkers": {
+          "queued": null,
+          "started": null,
+          "terminal": null
+        },
+        "llmCalls": [
+          {
+            "timestamp": "2026-04-15T08:54:48.596Z",
+            "relativeToRequestStartMs": 1043,
+            "model": "mock-model",
+            "provider": "mock",
+            "durationMs": 1018,
+            "tokensIn": 10,
+            "tokensOut": 8,
+            "cost": null
+          }
+        ],
+        "eventTimeline": [
+          {
+            "streamId": "01c39ca3-3f6d-4360-b59b-4b2234119126",
+            "traceEventId": "01c39ca3-3f6d-4360-b59b-4b2234119126",
+            "type": "user_message",
+            "timestamp": "2026-04-15T08:54:47.576Z",
+            "relativeToRequestStartMs": 23,
+            "durationMs": null,
+            "data": {
+              "message": "Turn 9: respond briefly.",
+              "sessionId": "eaa1f2c6-9fb8-4bfa-b67c-334b9681f45d",
+              "agent": "benchmark_agent",
+              "channel": "api",
+              "contentLength": 24,
+              "hasAttachments": false,
+              "attachmentCount": 0,
+              "tenantId": "tenant-dev-001"
+            }
+          },
+          {
+            "streamId": "9dd8a528-d7d8-4433-bc09-13cdbb87620b",
+            "traceEventId": "9dd8a528-d7d8-4433-bc09-13cdbb87620b",
+            "type": "agent_enter",
+            "timestamp": "2026-04-15T08:54:47.576Z",
+            "relativeToRequestStartMs": 23,
+            "durationMs": null,
+            "data": {
+              "agentName": "benchmark_agent",
+              "mode": "reasoning",
+              "trigger": "user_message",
+              "channel": "api",
+              "contentLength": 24,
+              "hasAttachments": false,
+              "attachmentCount": 0,
+              "tenantId": "tenant-dev-001"
+            }
+          },
+          {
+            "streamId": "a5713b90-ec0b-4a64-a5d0-731f2f459c74",
+            "traceEventId": "a5713b90-ec0b-4a64-a5d0-731f2f459c74",
+            "type": "status_update",
+            "timestamp": "2026-04-15T08:54:48.592Z",
+            "relativeToRequestStartMs": 1039,
+            "durationMs": null,
+            "data": {
+              "text": "This is a mock LLM response...",
+              "operation": "tool_call",
+              "index": 0,
+              "transient": true,
+              "tenantId": "tenant-dev-001"
+            }
+          },
+          {
+            "streamId": "41d1d22f-a0e8-47cc-815a-24091aceef30",
+            "traceEventId": "41d1d22f-a0e8-47cc-815a-24091aceef30",
+            "type": "llm_call",
+            "timestamp": "2026-04-15T08:54:48.596Z",
+            "relativeToRequestStartMs": 1043,
+            "durationMs": 1018,
+            "data": {
+              "llmCallId": "5d4ef0d7-4c79-4a97-9a84-df46dc04fd05",
+              "model": "mock-model",
+              "provider": "mock",
+              "source": "agent_db",
+              "operationType": "response_gen",
+              "iteration": 1,
+              "agent": "benchmark_agent",
+              "hasToolCalls": false,
+              "toolCallCount": 0,
+              "stopReason": "other",
+              "durationMs": 1018,
+              "usage": {
+                "inputTokens": 10,
+                "outputTokens": 8
+              },
+              "tokensIn": 10,
+              "tokensOut": 8,
+              "totalTokens": 18,
+              "streaming": false,
+              "messages": [
+                {
+                  "role": "user",
+                  "content": "Start the session with a short hello."
+                },
+                {
+                  "role": "assistant",
+                  "content": "This is a mock LLM response."
+                },
+                {
+                  "role": "user",
+                  "content": "Turn 1: respond briefly."
+                },
+                {
+                  "role": "assistant",
+                  "content": "This is a mock LLM response."
+                },
+                {
+                  "role": "user",
+                  "content": "Turn 2: respond briefly."
+                },
+                {
+                  "role": "assistant",
+                  "content": "This is a mock LLM response."
+                },
+                {
+                  "role": "user",
+                  "content": "Turn 3: respond briefly."
+                },
+                {
+                  "role": "assistant",
+                  "content": "This is a mock LLM response."
+                },
+                {
+                  "role": "user",
+                  "content": "Turn 4: respond briefly."
+                },
+                {
+                  "role": "assistant",
+                  "content": "This is a mock LLM response."
+                },
+                {
+                  "role": "user",
+                  "content": "Turn 5: respond briefly."
+                },
+                {
+                  "role": "assistant",
+                  "content": "This is a mock LLM response."
+                },
+                {
+                  "role": "user",
+                  "content": "Turn 6: respond briefly."
+                },
+                {
+                  "role": "assistant",
+                  "content": "This is a mock LLM response."
+                },
+                {
+                  "role": "user",
+                  "content": "Turn 7: respond briefly."
+                },
+                {
+                  "role": "assistant",
+                  "content": "This is a mock LLM response."
+                },
+                {
+                  "role": "user",
+                  "content": "Turn 8: respond briefly."
+                },
+                {
+                  "role": "assistant",
+                  "content": "This is a mock LLM response."
+                },
+                {
+                  "role": "user",
+                  "content": "Turn 9: respond briefly."
+                }
+              ],
+              "response": "This is a mock LLM response.",
+              "toolCalls": [],
+              "systemPrompt": "You are benchmark_agent, an AI assistant.\n\nYour goal: Respond briefly to the user.\n\n\nPersona: Brief and direct.\n\n\n\nLimitations:\n- Keep each answer to one short sentence.\n\n\n\n\n\n\n\n\n\n\nBefore each tool call, emit a brief status message wrapped in <status>...</status> tags.\nThis message will be shown to the user while the tool executes. Keep it under 15 words,\nnatural, and specific to what you are about to do. Do NOT ask questions in status messages.\nExample: <status>Searching for red sneakers under 500 AED</status>",
+              "tools": [],
+              "tenantId": "tenant-dev-001"
+            }
+          },
+          {
+            "streamId": "3e08f077-b786-4274-8412-f04f8f390bd8",
+            "traceEventId": "3e08f077-b786-4274-8412-f04f8f390bd8",
+            "type": "agent_exit",
+            "timestamp": "2026-04-15T08:54:48.599Z",
+            "relativeToRequestStartMs": 1046,
+            "durationMs": 1023,
+            "data": {
+              "agentName": "benchmark_agent",
+              "result": "continue",
+              "durationMs": 1023,
+              "tenantId": "tenant-dev-001"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "turnNumber": 11,
+      "turnKind": "followup",
+      "request": {
+        "startedAt": "2026-04-15T08:54:50.341Z",
+        "endedAt": "2026-04-15T08:54:51.408Z",
+        "durationMs": 1067,
+        "status": 200,
+        "sessionId": "eaa1f2c6-9fb8-4bfa-b67c-334b9681f45d",
+        "responseLength": 28,
+        "inlineTraceEventCount": 7,
+        "requestBody": {
+          "projectId": "019d9005-af19-7f21-9bca-2df019e8ff97",
+          "agentId": "benchmark_agent",
+          "sessionId": "eaa1f2c6-9fb8-4bfa-b67c-334b9681f45d",
+          "message": "Turn 10: respond briefly."
+        }
+      },
+      "phaseBreakdown": {
+        "clientRequestMs": 1067,
+        "traceStartDelayMs": 24,
+        "userMessageDelayMs": 24,
+        "agentEnterDelayMs": 24,
+        "preLlmPlatformMs": 26,
+        "llmDurationMs": 1024,
+        "statusUpdateDelayMs": null,
+        "statusToLlmGapMs": null,
+        "postLlmResponseTailMs": 17,
+        "agentObservedWindowMs": 1028,
+        "agentReportedDurationMs": 1028,
+        "responseTailAfterAgentExitMs": 15,
+        "estimatedPlatformOverheadMs": 43,
+        "preExecutionLeadInMs": null,
+        "queueWaitMs": null,
+        "executionRunMs": null,
+        "responseTailAfterExecutionMs": null,
+        "traceTailAfterResponseMs": -15,
+        "traceCoverageMs": 1028
+      },
+      "trace": {
+        "streamKey": "http://localhost:3112/api/projects/019d9005-af19-7f21-9bca-2df019e8ff97/sessions/eaa1f2c6-9fb8-4bfa-b67c-334b9681f45d?includeTraces=true",
+        "totalTraceCount": 53,
+        "previousStreamId": "3e08f077-b786-4274-8412-f04f8f390bd8",
+        "lastStreamId": "d4f40991-a11c-45d5-9c8d-bbd2b95ffcb5",
+        "eventCount": 4,
+        "firstTraceAt": "2026-04-15T08:54:50.365Z",
+        "lastTraceAt": "2026-04-15T08:54:51.393Z",
+        "eventTypeCounts": {
+          "user_message": 1,
+          "agent_enter": 1,
+          "llm_call": 1,
+          "agent_exit": 1
+        },
+        "durationSummaryByType": {
+          "llm_call": {
+            "count": 1,
+            "totalMs": 1024,
+            "maxMs": 1024,
+            "averageMs": 1024
+          },
+          "agent_exit": {
+            "count": 1,
+            "totalMs": 1028,
+            "maxMs": 1028,
+            "averageMs": 1028
+          }
+        },
+        "llmCallSummary": {
+          "count": 1,
+          "totalLatencyMs": 1024,
+          "averageLatencyMs": 1024,
+          "models": ["mock-model"],
+          "providers": ["mock"]
+        },
+        "executionMarkers": {
+          "queued": null,
+          "started": null,
+          "terminal": null
+        },
+        "llmCalls": [
+          {
+            "timestamp": "2026-04-15T08:54:51.391Z",
+            "relativeToRequestStartMs": 1050,
+            "model": "mock-model",
+            "provider": "mock",
+            "durationMs": 1024,
+            "tokensIn": 10,
+            "tokensOut": 8,
+            "cost": null
+          }
+        ],
+        "eventTimeline": [
+          {
+            "streamId": "f5895d76-3367-40c1-849d-1b86c1f61f92",
+            "traceEventId": "f5895d76-3367-40c1-849d-1b86c1f61f92",
+            "type": "user_message",
+            "timestamp": "2026-04-15T08:54:50.365Z",
+            "relativeToRequestStartMs": 24,
+            "durationMs": null,
+            "data": {
+              "message": "Turn 10: respond briefly.",
+              "sessionId": "eaa1f2c6-9fb8-4bfa-b67c-334b9681f45d",
+              "agent": "benchmark_agent",
+              "channel": "api",
+              "contentLength": 25,
+              "hasAttachments": false,
+              "attachmentCount": 0,
+              "tenantId": "tenant-dev-001"
+            }
+          },
+          {
+            "streamId": "0271f66f-787d-4bec-b60f-f6c6110261aa",
+            "traceEventId": "0271f66f-787d-4bec-b60f-f6c6110261aa",
+            "type": "agent_enter",
+            "timestamp": "2026-04-15T08:54:50.365Z",
+            "relativeToRequestStartMs": 24,
+            "durationMs": null,
+            "data": {
+              "agentName": "benchmark_agent",
+              "mode": "reasoning",
+              "trigger": "user_message",
+              "channel": "api",
+              "contentLength": 25,
+              "hasAttachments": false,
+              "attachmentCount": 0,
+              "tenantId": "tenant-dev-001"
+            }
+          },
+          {
+            "streamId": "6e205f91-3384-410b-bc89-51fd46f06639",
+            "traceEventId": "6e205f91-3384-410b-bc89-51fd46f06639",
+            "type": "llm_call",
+            "timestamp": "2026-04-15T08:54:51.391Z",
+            "relativeToRequestStartMs": 1050,
+            "durationMs": 1024,
+            "data": {
+              "llmCallId": "353ccfa4-66bb-465f-89bf-7c4212e9a03e",
+              "model": "mock-model",
+              "provider": "mock",
+              "source": "agent_db",
+              "operationType": "response_gen",
+              "iteration": 1,
+              "agent": "benchmark_agent",
+              "hasToolCalls": false,
+              "toolCallCount": 0,
+              "stopReason": "other",
+              "durationMs": 1024,
+              "usage": {
+                "inputTokens": 10,
+                "outputTokens": 8
+              },
+              "tokensIn": 10,
+              "tokensOut": 8,
+              "totalTokens": 18,
+              "streaming": false,
+              "messages": [
+                {
+                  "role": "assistant",
+                  "content": "This is a mock LLM response."
+                },
+                {
+                  "role": "user",
+                  "content": "Turn 1: respond briefly."
+                },
+                {
+                  "role": "assistant",
+                  "content": "This is a mock LLM response."
+                },
+                {
+                  "role": "user",
+                  "content": "Turn 2: respond briefly."
+                },
+                {
+                  "role": "assistant",
+                  "content": "This is a mock LLM response."
+                },
+                {
+                  "role": "user",
+                  "content": "Turn 3: respond briefly."
+                },
+                {
+                  "role": "assistant",
+                  "content": "This is a mock LLM response."
+                },
+                {
+                  "role": "user",
+                  "content": "Turn 4: respond briefly."
+                },
+                {
+                  "role": "assistant",
+                  "content": "This is a mock LLM response."
+                },
+                {
+                  "role": "user",
+                  "content": "Turn 5: respond briefly."
+                },
+                {
+                  "role": "assistant",
+                  "content": "This is a mock LLM response."
+                },
+                {
+                  "role": "user",
+                  "content": "Turn 6: respond briefly."
+                },
+                {
+                  "role": "assistant",
+                  "content": "This is a mock LLM response."
+                },
+                {
+                  "role": "user",
+                  "content": "Turn 7: respond briefly."
+                },
+                {
+                  "role": "assistant",
+                  "content": "This is a mock LLM response."
+                },
+                {
+                  "role": "user",
+                  "content": "Turn 8: respond briefly."
+                },
+                {
+                  "role": "assistant",
+                  "content": "This is a mock LLM response."
+                },
+                {
+                  "role": "user",
+                  "content": "Turn 9: respond briefly."
+                },
+                {
+                  "role": "assistant",
+                  "content": "This is a mock LLM response."
+                },
+                {
+                  "role": "user",
+                  "content": "Turn 10: respond briefly."
+                }
+              ],
+              "response": "This is a mock LLM response.",
+              "toolCalls": [],
+              "systemPrompt": "You are benchmark_agent, an AI assistant.\n\nYour goal: Respond briefly to the user.\n\n\nPersona: Brief and direct.\n\n\n\nLimitations:\n- Keep each answer to one short sentence.\n\n\n\n\n\n\n\n\n\n\nBefore each tool call, emit a brief status message wrapped in <status>...</status> tags.\nThis message will be shown to the user while the tool executes. Keep it under 15 words,\nnatural, and specific to what you are about to do. Do NOT ask questions in status messages.\nExample: <status>Searching for red sneakers under 500 AED</status>",
+              "tools": [],
+              "tenantId": "tenant-dev-001"
+            }
+          },
+          {
+            "streamId": "d4f40991-a11c-45d5-9c8d-bbd2b95ffcb5",
+            "traceEventId": "d4f40991-a11c-45d5-9c8d-bbd2b95ffcb5",
+            "type": "agent_exit",
+            "timestamp": "2026-04-15T08:54:51.393Z",
+            "relativeToRequestStartMs": 1052,
+            "durationMs": 1028,
+            "data": {
+              "agentName": "benchmark_agent",
+              "result": "continue",
+              "durationMs": 1028,
+              "tenantId": "tenant-dev-001"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "turnNumber": 12,
+      "turnKind": "followup",
+      "request": {
+        "startedAt": "2026-04-15T08:54:53.149Z",
+        "endedAt": "2026-04-15T08:54:54.191Z",
+        "durationMs": 1042,
+        "status": 200,
+        "sessionId": "eaa1f2c6-9fb8-4bfa-b67c-334b9681f45d",
+        "responseLength": 28,
+        "inlineTraceEventCount": 7,
+        "requestBody": {
+          "projectId": "019d9005-af19-7f21-9bca-2df019e8ff97",
+          "agentId": "benchmark_agent",
+          "sessionId": "eaa1f2c6-9fb8-4bfa-b67c-334b9681f45d",
+          "message": "Turn 11: respond briefly."
+        }
+      },
+      "phaseBreakdown": {
+        "clientRequestMs": 1042,
+        "traceStartDelayMs": 25,
+        "userMessageDelayMs": 25,
+        "agentEnterDelayMs": 25,
+        "preLlmPlatformMs": 26,
+        "llmDurationMs": 1011,
+        "statusUpdateDelayMs": null,
+        "statusToLlmGapMs": null,
+        "postLlmResponseTailMs": 5,
+        "agentObservedWindowMs": 1013,
+        "agentReportedDurationMs": 1013,
+        "responseTailAfterAgentExitMs": 4,
+        "estimatedPlatformOverheadMs": 31,
+        "preExecutionLeadInMs": null,
+        "queueWaitMs": null,
+        "executionRunMs": null,
+        "responseTailAfterExecutionMs": null,
+        "traceTailAfterResponseMs": -4,
+        "traceCoverageMs": 1013
+      },
+      "trace": {
+        "streamKey": "http://localhost:3112/api/projects/019d9005-af19-7f21-9bca-2df019e8ff97/sessions/eaa1f2c6-9fb8-4bfa-b67c-334b9681f45d?includeTraces=true",
+        "totalTraceCount": 57,
+        "previousStreamId": "d4f40991-a11c-45d5-9c8d-bbd2b95ffcb5",
+        "lastStreamId": "21c2e126-b6ca-4499-9c18-54ae3a5f59fa",
+        "eventCount": 4,
+        "firstTraceAt": "2026-04-15T08:54:53.174Z",
+        "lastTraceAt": "2026-04-15T08:54:54.187Z",
+        "eventTypeCounts": {
+          "user_message": 1,
+          "agent_enter": 1,
+          "llm_call": 1,
+          "agent_exit": 1
+        },
+        "durationSummaryByType": {
+          "llm_call": {
+            "count": 1,
+            "totalMs": 1011,
+            "maxMs": 1011,
+            "averageMs": 1011
+          },
+          "agent_exit": {
+            "count": 1,
+            "totalMs": 1013,
+            "maxMs": 1013,
+            "averageMs": 1013
+          }
+        },
+        "llmCallSummary": {
+          "count": 1,
+          "totalLatencyMs": 1011,
+          "averageLatencyMs": 1011,
+          "models": ["mock-model"],
+          "providers": ["mock"]
+        },
+        "executionMarkers": {
+          "queued": null,
+          "started": null,
+          "terminal": null
+        },
+        "llmCalls": [
+          {
+            "timestamp": "2026-04-15T08:54:54.186Z",
+            "relativeToRequestStartMs": 1037,
+            "model": "mock-model",
+            "provider": "mock",
+            "durationMs": 1011,
+            "tokensIn": 10,
+            "tokensOut": 8,
+            "cost": null
+          }
+        ],
+        "eventTimeline": [
+          {
+            "streamId": "7f541ee4-7be2-4b48-bb7d-f6a92c401019",
+            "traceEventId": "7f541ee4-7be2-4b48-bb7d-f6a92c401019",
+            "type": "user_message",
+            "timestamp": "2026-04-15T08:54:53.174Z",
+            "relativeToRequestStartMs": 25,
+            "durationMs": null,
+            "data": {
+              "message": "Turn 11: respond briefly.",
+              "sessionId": "eaa1f2c6-9fb8-4bfa-b67c-334b9681f45d",
+              "agent": "benchmark_agent",
+              "channel": "api",
+              "contentLength": 25,
+              "hasAttachments": false,
+              "attachmentCount": 0,
+              "tenantId": "tenant-dev-001"
+            }
+          },
+          {
+            "streamId": "41905ff7-9c0f-4731-9b22-81b47e0636ef",
+            "traceEventId": "41905ff7-9c0f-4731-9b22-81b47e0636ef",
+            "type": "agent_enter",
+            "timestamp": "2026-04-15T08:54:53.174Z",
+            "relativeToRequestStartMs": 25,
+            "durationMs": null,
+            "data": {
+              "agentName": "benchmark_agent",
+              "mode": "reasoning",
+              "trigger": "user_message",
+              "channel": "api",
+              "contentLength": 25,
+              "hasAttachments": false,
+              "attachmentCount": 0,
+              "tenantId": "tenant-dev-001"
+            }
+          },
+          {
+            "streamId": "7b73dfc6-f5c6-4beb-873c-cdbbd695badd",
+            "traceEventId": "7b73dfc6-f5c6-4beb-873c-cdbbd695badd",
+            "type": "llm_call",
+            "timestamp": "2026-04-15T08:54:54.186Z",
+            "relativeToRequestStartMs": 1037,
+            "durationMs": 1011,
+            "data": {
+              "llmCallId": "28213d04-1fb8-41ce-8f76-b0e5f08baedc",
+              "model": "mock-model",
+              "provider": "mock",
+              "source": "agent_db",
+              "operationType": "response_gen",
+              "iteration": 1,
+              "agent": "benchmark_agent",
+              "hasToolCalls": false,
+              "toolCallCount": 0,
+              "stopReason": "other",
+              "durationMs": 1011,
+              "usage": {
+                "inputTokens": 10,
+                "outputTokens": 8
+              },
+              "tokensIn": 10,
+              "tokensOut": 8,
+              "totalTokens": 18,
+              "streaming": false,
+              "messages": [
+                {
+                  "role": "assistant",
+                  "content": "This is a mock LLM response."
+                },
+                {
+                  "role": "user",
+                  "content": "Turn 2: respond briefly."
+                },
+                {
+                  "role": "assistant",
+                  "content": "This is a mock LLM response."
+                },
+                {
+                  "role": "user",
+                  "content": "Turn 3: respond briefly."
+                },
+                {
+                  "role": "assistant",
+                  "content": "This is a mock LLM response."
+                },
+                {
+                  "role": "user",
+                  "content": "Turn 4: respond briefly."
+                },
+                {
+                  "role": "assistant",
+                  "content": "This is a mock LLM response."
+                },
+                {
+                  "role": "user",
+                  "content": "Turn 5: respond briefly."
+                },
+                {
+                  "role": "assistant",
+                  "content": "This is a mock LLM response."
+                },
+                {
+                  "role": "user",
+                  "content": "Turn 6: respond briefly."
+                },
+                {
+                  "role": "assistant",
+                  "content": "This is a mock LLM response."
+                },
+                {
+                  "role": "user",
+                  "content": "Turn 7: respond briefly."
+                },
+                {
+                  "role": "assistant",
+                  "content": "This is a mock LLM response."
+                },
+                {
+                  "role": "user",
+                  "content": "Turn 8: respond briefly."
+                },
+                {
+                  "role": "assistant",
+                  "content": "This is a mock LLM response."
+                },
+                {
+                  "role": "user",
+                  "content": "Turn 9: respond briefly."
+                },
+                {
+                  "role": "assistant",
+                  "content": "This is a mock LLM response."
+                },
+                {
+                  "role": "user",
+                  "content": "Turn 10: respond briefly."
+                },
+                {
+                  "role": "assistant",
+                  "content": "This is a mock LLM response."
+                },
+                {
+                  "role": "user",
+                  "content": "Turn 11: respond briefly."
+                }
+              ],
+              "response": "This is a mock LLM response.",
+              "toolCalls": [],
+              "systemPrompt": "You are benchmark_agent, an AI assistant.\n\nYour goal: Respond briefly to the user.\n\n\nPersona: Brief and direct.\n\n\n\nLimitations:\n- Keep each answer to one short sentence.\n\n\n\n\n\n\n\n\n\n\nBefore each tool call, emit a brief status message wrapped in <status>...</status> tags.\nThis message will be shown to the user while the tool executes. Keep it under 15 words,\nnatural, and specific to what you are about to do. Do NOT ask questions in status messages.\nExample: <status>Searching for red sneakers under 500 AED</status>",
+              "tools": [],
+              "tenantId": "tenant-dev-001"
+            }
+          },
+          {
+            "streamId": "21c2e126-b6ca-4499-9c18-54ae3a5f59fa",
+            "traceEventId": "21c2e126-b6ca-4499-9c18-54ae3a5f59fa",
+            "type": "agent_exit",
+            "timestamp": "2026-04-15T08:54:54.187Z",
+            "relativeToRequestStartMs": 1038,
+            "durationMs": 1013,
+            "data": {
+              "agentName": "benchmark_agent",
+              "result": "continue",
+              "durationMs": 1013,
+              "tenantId": "tenant-dev-001"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "turnNumber": 13,
+      "turnKind": "followup",
+      "request": {
+        "startedAt": "2026-04-15T08:54:55.921Z",
+        "endedAt": "2026-04-15T08:54:56.958Z",
+        "durationMs": 1037,
+        "status": 200,
+        "sessionId": "eaa1f2c6-9fb8-4bfa-b67c-334b9681f45d",
+        "responseLength": 28,
+        "inlineTraceEventCount": 8,
+        "requestBody": {
+          "projectId": "019d9005-af19-7f21-9bca-2df019e8ff97",
+          "agentId": "benchmark_agent",
+          "sessionId": "eaa1f2c6-9fb8-4bfa-b67c-334b9681f45d",
+          "message": "Turn 12: respond briefly."
+        }
+      },
+      "phaseBreakdown": {
+        "clientRequestMs": 1037,
+        "traceStartDelayMs": 13,
+        "userMessageDelayMs": 13,
+        "agentEnterDelayMs": 13,
+        "preLlmPlatformMs": 14,
+        "llmDurationMs": 1015,
+        "statusUpdateDelayMs": 1023,
+        "statusToLlmGapMs": 6,
+        "postLlmResponseTailMs": 8,
+        "agentObservedWindowMs": 1017,
+        "agentReportedDurationMs": 1017,
+        "responseTailAfterAgentExitMs": 7,
+        "estimatedPlatformOverheadMs": 22,
+        "preExecutionLeadInMs": null,
+        "queueWaitMs": null,
+        "executionRunMs": null,
+        "responseTailAfterExecutionMs": null,
+        "traceTailAfterResponseMs": -7,
+        "traceCoverageMs": 1017
+      },
+      "trace": {
+        "streamKey": "http://localhost:3112/api/projects/019d9005-af19-7f21-9bca-2df019e8ff97/sessions/eaa1f2c6-9fb8-4bfa-b67c-334b9681f45d?includeTraces=true",
+        "totalTraceCount": 62,
+        "previousStreamId": "21c2e126-b6ca-4499-9c18-54ae3a5f59fa",
+        "lastStreamId": "b5e5198e-a783-465e-b27f-daf7aaa9ae03",
+        "eventCount": 5,
+        "firstTraceAt": "2026-04-15T08:54:55.934Z",
+        "lastTraceAt": "2026-04-15T08:54:56.951Z",
+        "eventTypeCounts": {
+          "user_message": 1,
+          "agent_enter": 1,
+          "status_update": 1,
+          "llm_call": 1,
+          "agent_exit": 1
+        },
+        "durationSummaryByType": {
+          "llm_call": {
+            "count": 1,
+            "totalMs": 1015,
+            "maxMs": 1015,
+            "averageMs": 1015
+          },
+          "agent_exit": {
+            "count": 1,
+            "totalMs": 1017,
+            "maxMs": 1017,
+            "averageMs": 1017
+          }
+        },
+        "llmCallSummary": {
+          "count": 1,
+          "totalLatencyMs": 1015,
+          "averageLatencyMs": 1015,
+          "models": ["mock-model"],
+          "providers": ["mock"]
+        },
+        "executionMarkers": {
+          "queued": null,
+          "started": null,
+          "terminal": null
+        },
+        "llmCalls": [
+          {
+            "timestamp": "2026-04-15T08:54:56.950Z",
+            "relativeToRequestStartMs": 1029,
+            "model": "mock-model",
+            "provider": "mock",
+            "durationMs": 1015,
+            "tokensIn": 10,
+            "tokensOut": 8,
+            "cost": null
+          }
+        ],
+        "eventTimeline": [
+          {
+            "streamId": "95dcc417-ee10-428d-8f6b-856873dbeae2",
+            "traceEventId": "95dcc417-ee10-428d-8f6b-856873dbeae2",
+            "type": "user_message",
+            "timestamp": "2026-04-15T08:54:55.934Z",
+            "relativeToRequestStartMs": 13,
+            "durationMs": null,
+            "data": {
+              "message": "Turn 12: respond briefly.",
+              "sessionId": "eaa1f2c6-9fb8-4bfa-b67c-334b9681f45d",
+              "agent": "benchmark_agent",
+              "channel": "api",
+              "contentLength": 25,
+              "hasAttachments": false,
+              "attachmentCount": 0,
+              "tenantId": "tenant-dev-001"
+            }
+          },
+          {
+            "streamId": "6307e3f3-faa2-4750-964a-c37061692157",
+            "traceEventId": "6307e3f3-faa2-4750-964a-c37061692157",
+            "type": "agent_enter",
+            "timestamp": "2026-04-15T08:54:55.934Z",
+            "relativeToRequestStartMs": 13,
+            "durationMs": null,
+            "data": {
+              "agentName": "benchmark_agent",
+              "mode": "reasoning",
+              "trigger": "user_message",
+              "channel": "api",
+              "contentLength": 25,
+              "hasAttachments": false,
+              "attachmentCount": 0,
+              "tenantId": "tenant-dev-001"
+            }
+          },
+          {
+            "streamId": "8279897b-d752-40ab-a650-a472a34385e9",
+            "traceEventId": "8279897b-d752-40ab-a650-a472a34385e9",
+            "type": "status_update",
+            "timestamp": "2026-04-15T08:54:56.944Z",
+            "relativeToRequestStartMs": 1023,
+            "durationMs": null,
+            "data": {
+              "text": "This is a mock LLM response...",
+              "operation": "tool_call",
+              "index": 0,
+              "transient": true,
+              "tenantId": "tenant-dev-001"
+            }
+          },
+          {
+            "streamId": "18ab0232-fc01-474f-9333-6ed17f094e6d",
+            "traceEventId": "18ab0232-fc01-474f-9333-6ed17f094e6d",
+            "type": "llm_call",
+            "timestamp": "2026-04-15T08:54:56.950Z",
+            "relativeToRequestStartMs": 1029,
+            "durationMs": 1015,
+            "data": {
+              "llmCallId": "0caa6403-bc76-4106-8693-73ccec8b4d80",
+              "model": "mock-model",
+              "provider": "mock",
+              "source": "agent_db",
+              "operationType": "response_gen",
+              "iteration": 1,
+              "agent": "benchmark_agent",
+              "hasToolCalls": false,
+              "toolCallCount": 0,
+              "stopReason": "other",
+              "durationMs": 1015,
+              "usage": {
+                "inputTokens": 10,
+                "outputTokens": 8
+              },
+              "tokensIn": 10,
+              "tokensOut": 8,
+              "totalTokens": 18,
+              "streaming": false,
+              "messages": [
+                {
+                  "role": "assistant",
+                  "content": "This is a mock LLM response."
+                },
+                {
+                  "role": "user",
+                  "content": "Turn 3: respond briefly."
+                },
+                {
+                  "role": "assistant",
+                  "content": "This is a mock LLM response."
+                },
+                {
+                  "role": "user",
+                  "content": "Turn 4: respond briefly."
+                },
+                {
+                  "role": "assistant",
+                  "content": "This is a mock LLM response."
+                },
+                {
+                  "role": "user",
+                  "content": "Turn 5: respond briefly."
+                },
+                {
+                  "role": "assistant",
+                  "content": "This is a mock LLM response."
+                },
+                {
+                  "role": "user",
+                  "content": "Turn 6: respond briefly."
+                },
+                {
+                  "role": "assistant",
+                  "content": "This is a mock LLM response."
+                },
+                {
+                  "role": "user",
+                  "content": "Turn 7: respond briefly."
+                },
+                {
+                  "role": "assistant",
+                  "content": "This is a mock LLM response."
+                },
+                {
+                  "role": "user",
+                  "content": "Turn 8: respond briefly."
+                },
+                {
+                  "role": "assistant",
+                  "content": "This is a mock LLM response."
+                },
+                {
+                  "role": "user",
+                  "content": "Turn 9: respond briefly."
+                },
+                {
+                  "role": "assistant",
+                  "content": "This is a mock LLM response."
+                },
+                {
+                  "role": "user",
+                  "content": "Turn 10: respond briefly."
+                },
+                {
+                  "role": "assistant",
+                  "content": "This is a mock LLM response."
+                },
+                {
+                  "role": "user",
+                  "content": "Turn 11: respond briefly."
+                },
+                {
+                  "role": "assistant",
+                  "content": "This is a mock LLM response."
+                },
+                {
+                  "role": "user",
+                  "content": "Turn 12: respond briefly."
+                }
+              ],
+              "response": "This is a mock LLM response.",
+              "toolCalls": [],
+              "systemPrompt": "You are benchmark_agent, an AI assistant.\n\nYour goal: Respond briefly to the user.\n\n\nPersona: Brief and direct.\n\n\n\nLimitations:\n- Keep each answer to one short sentence.\n\n\n\n\n\n\n\n\n\n\nBefore each tool call, emit a brief status message wrapped in <status>...</status> tags.\nThis message will be shown to the user while the tool executes. Keep it under 15 words,\nnatural, and specific to what you are about to do. Do NOT ask questions in status messages.\nExample: <status>Searching for red sneakers under 500 AED</status>",
+              "tools": [],
+              "tenantId": "tenant-dev-001"
+            }
+          },
+          {
+            "streamId": "b5e5198e-a783-465e-b27f-daf7aaa9ae03",
+            "traceEventId": "b5e5198e-a783-465e-b27f-daf7aaa9ae03",
+            "type": "agent_exit",
+            "timestamp": "2026-04-15T08:54:56.951Z",
+            "relativeToRequestStartMs": 1030,
+            "durationMs": 1017,
+            "data": {
+              "agentName": "benchmark_agent",
+              "result": "continue",
+              "durationMs": 1017,
+              "tenantId": "tenant-dev-001"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "turnNumber": 14,
+      "turnKind": "followup",
+      "request": {
+        "startedAt": "2026-04-15T08:54:58.679Z",
+        "endedAt": "2026-04-15T08:54:59.740Z",
+        "durationMs": 1061,
+        "status": 200,
+        "sessionId": "eaa1f2c6-9fb8-4bfa-b67c-334b9681f45d",
+        "responseLength": 28,
+        "inlineTraceEventCount": 8,
+        "requestBody": {
+          "projectId": "019d9005-af19-7f21-9bca-2df019e8ff97",
+          "agentId": "benchmark_agent",
+          "sessionId": "eaa1f2c6-9fb8-4bfa-b67c-334b9681f45d",
+          "message": "Turn 13: respond briefly."
+        }
+      },
+      "phaseBreakdown": {
+        "clientRequestMs": 1061,
+        "traceStartDelayMs": 43,
+        "userMessageDelayMs": 43,
+        "agentEnterDelayMs": 43,
+        "preLlmPlatformMs": 44,
+        "llmDurationMs": 1012,
+        "statusUpdateDelayMs": 1054,
+        "statusToLlmGapMs": 2,
+        "postLlmResponseTailMs": 5,
+        "agentObservedWindowMs": 1014,
+        "agentReportedDurationMs": 1014,
+        "responseTailAfterAgentExitMs": 4,
+        "estimatedPlatformOverheadMs": 49,
+        "preExecutionLeadInMs": null,
+        "queueWaitMs": null,
+        "executionRunMs": null,
+        "responseTailAfterExecutionMs": null,
+        "traceTailAfterResponseMs": -4,
+        "traceCoverageMs": 1014
+      },
+      "trace": {
+        "streamKey": "http://localhost:3112/api/projects/019d9005-af19-7f21-9bca-2df019e8ff97/sessions/eaa1f2c6-9fb8-4bfa-b67c-334b9681f45d?includeTraces=true",
+        "totalTraceCount": 67,
+        "previousStreamId": "b5e5198e-a783-465e-b27f-daf7aaa9ae03",
+        "lastStreamId": "16602945-b88c-4bb9-9813-2c0b1c645809",
+        "eventCount": 5,
+        "firstTraceAt": "2026-04-15T08:54:58.722Z",
+        "lastTraceAt": "2026-04-15T08:54:59.736Z",
+        "eventTypeCounts": {
+          "user_message": 1,
+          "agent_enter": 1,
+          "status_update": 1,
+          "llm_call": 1,
+          "agent_exit": 1
+        },
+        "durationSummaryByType": {
+          "llm_call": {
+            "count": 1,
+            "totalMs": 1012,
+            "maxMs": 1012,
+            "averageMs": 1012
+          },
+          "agent_exit": {
+            "count": 1,
+            "totalMs": 1014,
+            "maxMs": 1014,
+            "averageMs": 1014
+          }
+        },
+        "llmCallSummary": {
+          "count": 1,
+          "totalLatencyMs": 1012,
+          "averageLatencyMs": 1012,
+          "models": ["mock-model"],
+          "providers": ["mock"]
+        },
+        "executionMarkers": {
+          "queued": null,
+          "started": null,
+          "terminal": null
+        },
+        "llmCalls": [
+          {
+            "timestamp": "2026-04-15T08:54:59.735Z",
+            "relativeToRequestStartMs": 1056,
+            "model": "mock-model",
+            "provider": "mock",
+            "durationMs": 1012,
+            "tokensIn": 10,
+            "tokensOut": 8,
+            "cost": null
+          }
+        ],
+        "eventTimeline": [
+          {
+            "streamId": "c8993f8d-a45f-4e18-a27f-375d90cff808",
+            "traceEventId": "c8993f8d-a45f-4e18-a27f-375d90cff808",
+            "type": "user_message",
+            "timestamp": "2026-04-15T08:54:58.722Z",
+            "relativeToRequestStartMs": 43,
+            "durationMs": null,
+            "data": {
+              "message": "Turn 13: respond briefly.",
+              "sessionId": "eaa1f2c6-9fb8-4bfa-b67c-334b9681f45d",
+              "agent": "benchmark_agent",
+              "channel": "api",
+              "contentLength": 25,
+              "hasAttachments": false,
+              "attachmentCount": 0,
+              "tenantId": "tenant-dev-001"
+            }
+          },
+          {
+            "streamId": "0522c82c-578e-4627-9268-2228e0c3c525",
+            "traceEventId": "0522c82c-578e-4627-9268-2228e0c3c525",
+            "type": "agent_enter",
+            "timestamp": "2026-04-15T08:54:58.722Z",
+            "relativeToRequestStartMs": 43,
+            "durationMs": null,
+            "data": {
+              "agentName": "benchmark_agent",
+              "mode": "reasoning",
+              "trigger": "user_message",
+              "channel": "api",
+              "contentLength": 25,
+              "hasAttachments": false,
+              "attachmentCount": 0,
+              "tenantId": "tenant-dev-001"
+            }
+          },
+          {
+            "streamId": "e4e0ca9b-8267-4cb4-a856-3843e5ffbd84",
+            "traceEventId": "e4e0ca9b-8267-4cb4-a856-3843e5ffbd84",
+            "type": "status_update",
+            "timestamp": "2026-04-15T08:54:59.733Z",
+            "relativeToRequestStartMs": 1054,
+            "durationMs": null,
+            "data": {
+              "text": "This is a mock LLM response...",
+              "operation": "tool_call",
+              "index": 0,
+              "transient": true,
+              "tenantId": "tenant-dev-001"
+            }
+          },
+          {
+            "streamId": "e56eab97-fac5-4c21-a6fa-af861a8d5aed",
+            "traceEventId": "e56eab97-fac5-4c21-a6fa-af861a8d5aed",
+            "type": "llm_call",
+            "timestamp": "2026-04-15T08:54:59.735Z",
+            "relativeToRequestStartMs": 1056,
+            "durationMs": 1012,
+            "data": {
+              "llmCallId": "90f23195-33bd-4dde-adab-878c1e0afd3e",
+              "model": "mock-model",
+              "provider": "mock",
+              "source": "agent_db",
+              "operationType": "response_gen",
+              "iteration": 1,
+              "agent": "benchmark_agent",
+              "hasToolCalls": false,
+              "toolCallCount": 0,
+              "stopReason": "other",
+              "durationMs": 1012,
+              "usage": {
+                "inputTokens": 10,
+                "outputTokens": 8
+              },
+              "tokensIn": 10,
+              "tokensOut": 8,
+              "totalTokens": 18,
+              "streaming": false,
+              "messages": [
+                {
+                  "role": "assistant",
+                  "content": "This is a mock LLM response."
+                },
+                {
+                  "role": "user",
+                  "content": "Turn 4: respond briefly."
+                },
+                {
+                  "role": "assistant",
+                  "content": "This is a mock LLM response."
+                },
+                {
+                  "role": "user",
+                  "content": "Turn 5: respond briefly."
+                },
+                {
+                  "role": "assistant",
+                  "content": "This is a mock LLM response."
+                },
+                {
+                  "role": "user",
+                  "content": "Turn 6: respond briefly."
+                },
+                {
+                  "role": "assistant",
+                  "content": "This is a mock LLM response."
+                },
+                {
+                  "role": "user",
+                  "content": "Turn 7: respond briefly."
+                },
+                {
+                  "role": "assistant",
+                  "content": "This is a mock LLM response."
+                },
+                {
+                  "role": "user",
+                  "content": "Turn 8: respond briefly."
+                },
+                {
+                  "role": "assistant",
+                  "content": "This is a mock LLM response."
+                },
+                {
+                  "role": "user",
+                  "content": "Turn 9: respond briefly."
+                },
+                {
+                  "role": "assistant",
+                  "content": "This is a mock LLM response."
+                },
+                {
+                  "role": "user",
+                  "content": "Turn 10: respond briefly."
+                },
+                {
+                  "role": "assistant",
+                  "content": "This is a mock LLM response."
+                },
+                {
+                  "role": "user",
+                  "content": "Turn 11: respond briefly."
+                },
+                {
+                  "role": "assistant",
+                  "content": "This is a mock LLM response."
+                },
+                {
+                  "role": "user",
+                  "content": "Turn 12: respond briefly."
+                },
+                {
+                  "role": "assistant",
+                  "content": "This is a mock LLM response."
+                },
+                {
+                  "role": "user",
+                  "content": "Turn 13: respond briefly."
+                }
+              ],
+              "response": "This is a mock LLM response.",
+              "toolCalls": [],
+              "systemPrompt": "You are benchmark_agent, an AI assistant.\n\nYour goal: Respond briefly to the user.\n\n\nPersona: Brief and direct.\n\n\n\nLimitations:\n- Keep each answer to one short sentence.\n\n\n\n\n\n\n\n\n\n\nBefore each tool call, emit a brief status message wrapped in <status>...</status> tags.\nThis message will be shown to the user while the tool executes. Keep it under 15 words,\nnatural, and specific to what you are about to do. Do NOT ask questions in status messages.\nExample: <status>Searching for red sneakers under 500 AED</status>",
+              "tools": [],
+              "tenantId": "tenant-dev-001"
+            }
+          },
+          {
+            "streamId": "16602945-b88c-4bb9-9813-2c0b1c645809",
+            "traceEventId": "16602945-b88c-4bb9-9813-2c0b1c645809",
+            "type": "agent_exit",
+            "timestamp": "2026-04-15T08:54:59.736Z",
+            "relativeToRequestStartMs": 1057,
+            "durationMs": 1014,
+            "data": {
+              "agentName": "benchmark_agent",
+              "result": "continue",
+              "durationMs": 1014,
+              "tenantId": "tenant-dev-001"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "turnNumber": 15,
+      "turnKind": "followup",
+      "request": {
+        "startedAt": "2026-04-15T08:55:01.466Z",
+        "endedAt": "2026-04-15T08:55:02.506Z",
+        "durationMs": 1040,
+        "status": 200,
+        "sessionId": "eaa1f2c6-9fb8-4bfa-b67c-334b9681f45d",
+        "responseLength": 28,
+        "inlineTraceEventCount": 7,
+        "requestBody": {
+          "projectId": "019d9005-af19-7f21-9bca-2df019e8ff97",
+          "agentId": "benchmark_agent",
+          "sessionId": "eaa1f2c6-9fb8-4bfa-b67c-334b9681f45d",
+          "message": "Turn 14: respond briefly."
+        }
+      },
+      "phaseBreakdown": {
+        "clientRequestMs": 1040,
+        "traceStartDelayMs": 19,
+        "userMessageDelayMs": 19,
+        "agentEnterDelayMs": 20,
+        "preLlmPlatformMs": 21,
+        "llmDurationMs": 1013,
+        "statusUpdateDelayMs": null,
+        "statusToLlmGapMs": null,
+        "postLlmResponseTailMs": 6,
+        "agentObservedWindowMs": 1015,
+        "agentReportedDurationMs": 1016,
+        "responseTailAfterAgentExitMs": 5,
+        "estimatedPlatformOverheadMs": 27,
+        "preExecutionLeadInMs": null,
+        "queueWaitMs": null,
+        "executionRunMs": null,
+        "responseTailAfterExecutionMs": null,
+        "traceTailAfterResponseMs": -5,
+        "traceCoverageMs": 1016
+      },
+      "trace": {
+        "streamKey": "http://localhost:3112/api/projects/019d9005-af19-7f21-9bca-2df019e8ff97/sessions/eaa1f2c6-9fb8-4bfa-b67c-334b9681f45d?includeTraces=true",
+        "totalTraceCount": 71,
+        "previousStreamId": "16602945-b88c-4bb9-9813-2c0b1c645809",
+        "lastStreamId": "94ae5084-b279-4266-b778-6b2b09364934",
+        "eventCount": 4,
+        "firstTraceAt": "2026-04-15T08:55:01.485Z",
+        "lastTraceAt": "2026-04-15T08:55:02.501Z",
+        "eventTypeCounts": {
+          "user_message": 1,
+          "agent_enter": 1,
+          "llm_call": 1,
+          "agent_exit": 1
+        },
+        "durationSummaryByType": {
+          "llm_call": {
+            "count": 1,
+            "totalMs": 1013,
+            "maxMs": 1013,
+            "averageMs": 1013
+          },
+          "agent_exit": {
+            "count": 1,
+            "totalMs": 1016,
+            "maxMs": 1016,
+            "averageMs": 1016
+          }
+        },
+        "llmCallSummary": {
+          "count": 1,
+          "totalLatencyMs": 1013,
+          "averageLatencyMs": 1013,
+          "models": ["mock-model"],
+          "providers": ["mock"]
+        },
+        "executionMarkers": {
+          "queued": null,
+          "started": null,
+          "terminal": null
+        },
+        "llmCalls": [
+          {
+            "timestamp": "2026-04-15T08:55:02.500Z",
+            "relativeToRequestStartMs": 1034,
+            "model": "mock-model",
+            "provider": "mock",
+            "durationMs": 1013,
+            "tokensIn": 10,
+            "tokensOut": 8,
+            "cost": null
+          }
+        ],
+        "eventTimeline": [
+          {
+            "streamId": "56d1082c-4c0b-41b3-a39d-ff50133707cc",
+            "traceEventId": "56d1082c-4c0b-41b3-a39d-ff50133707cc",
+            "type": "user_message",
+            "timestamp": "2026-04-15T08:55:01.485Z",
+            "relativeToRequestStartMs": 19,
+            "durationMs": null,
+            "data": {
+              "message": "Turn 14: respond briefly.",
+              "sessionId": "eaa1f2c6-9fb8-4bfa-b67c-334b9681f45d",
+              "agent": "benchmark_agent",
+              "channel": "api",
+              "contentLength": 25,
+              "hasAttachments": false,
+              "attachmentCount": 0,
+              "tenantId": "tenant-dev-001"
+            }
+          },
+          {
+            "streamId": "fd34d307-6cf0-4d79-86c0-752f6d984c1c",
+            "traceEventId": "fd34d307-6cf0-4d79-86c0-752f6d984c1c",
+            "type": "agent_enter",
+            "timestamp": "2026-04-15T08:55:01.486Z",
+            "relativeToRequestStartMs": 20,
+            "durationMs": null,
+            "data": {
+              "agentName": "benchmark_agent",
+              "mode": "reasoning",
+              "trigger": "user_message",
+              "channel": "api",
+              "contentLength": 25,
+              "hasAttachments": false,
+              "attachmentCount": 0,
+              "tenantId": "tenant-dev-001"
+            }
+          },
+          {
+            "streamId": "e5cd9f1d-14a6-4588-8006-d60a2544d7c1",
+            "traceEventId": "e5cd9f1d-14a6-4588-8006-d60a2544d7c1",
+            "type": "llm_call",
+            "timestamp": "2026-04-15T08:55:02.500Z",
+            "relativeToRequestStartMs": 1034,
+            "durationMs": 1013,
+            "data": {
+              "llmCallId": "325bf40f-27d7-4e79-8963-029eeb6281d8",
+              "model": "mock-model",
+              "provider": "mock",
+              "source": "agent_db",
+              "operationType": "response_gen",
+              "iteration": 1,
+              "agent": "benchmark_agent",
+              "hasToolCalls": false,
+              "toolCallCount": 0,
+              "stopReason": "other",
+              "durationMs": 1013,
+              "usage": {
+                "inputTokens": 10,
+                "outputTokens": 8
+              },
+              "tokensIn": 10,
+              "tokensOut": 8,
+              "totalTokens": 18,
+              "streaming": false,
+              "messages": [
+                {
+                  "role": "assistant",
+                  "content": "This is a mock LLM response."
+                },
+                {
+                  "role": "user",
+                  "content": "Turn 5: respond briefly."
+                },
+                {
+                  "role": "assistant",
+                  "content": "This is a mock LLM response."
+                },
+                {
+                  "role": "user",
+                  "content": "Turn 6: respond briefly."
+                },
+                {
+                  "role": "assistant",
+                  "content": "This is a mock LLM response."
+                },
+                {
+                  "role": "user",
+                  "content": "Turn 7: respond briefly."
+                },
+                {
+                  "role": "assistant",
+                  "content": "This is a mock LLM response."
+                },
+                {
+                  "role": "user",
+                  "content": "Turn 8: respond briefly."
+                },
+                {
+                  "role": "assistant",
+                  "content": "This is a mock LLM response."
+                },
+                {
+                  "role": "user",
+                  "content": "Turn 9: respond briefly."
+                },
+                {
+                  "role": "assistant",
+                  "content": "This is a mock LLM response."
+                },
+                {
+                  "role": "user",
+                  "content": "Turn 10: respond briefly."
+                },
+                {
+                  "role": "assistant",
+                  "content": "This is a mock LLM response."
+                },
+                {
+                  "role": "user",
+                  "content": "Turn 11: respond briefly."
+                },
+                {
+                  "role": "assistant",
+                  "content": "This is a mock LLM response."
+                },
+                {
+                  "role": "user",
+                  "content": "Turn 12: respond briefly."
+                },
+                {
+                  "role": "assistant",
+                  "content": "This is a mock LLM response."
+                },
+                {
+                  "role": "user",
+                  "content": "Turn 13: respond briefly."
+                },
+                {
+                  "role": "assistant",
+                  "content": "This is a mock LLM response."
+                },
+                {
+                  "role": "user",
+                  "content": "Turn 14: respond briefly."
+                }
+              ],
+              "response": "This is a mock LLM response.",
+              "toolCalls": [],
+              "systemPrompt": "You are benchmark_agent, an AI assistant.\n\nYour goal: Respond briefly to the user.\n\n\nPersona: Brief and direct.\n\n\n\nLimitations:\n- Keep each answer to one short sentence.\n\n\n\n\n\n\n\n\n\n\nBefore each tool call, emit a brief status message wrapped in <status>...</status> tags.\nThis message will be shown to the user while the tool executes. Keep it under 15 words,\nnatural, and specific to what you are about to do. Do NOT ask questions in status messages.\nExample: <status>Searching for red sneakers under 500 AED</status>",
+              "tools": [],
+              "tenantId": "tenant-dev-001"
+            }
+          },
+          {
+            "streamId": "94ae5084-b279-4266-b778-6b2b09364934",
+            "traceEventId": "94ae5084-b279-4266-b778-6b2b09364934",
+            "type": "agent_exit",
+            "timestamp": "2026-04-15T08:55:02.501Z",
+            "relativeToRequestStartMs": 1035,
+            "durationMs": 1016,
+            "data": {
+              "agentName": "benchmark_agent",
+              "result": "continue",
+              "durationMs": 1016,
+              "tenantId": "tenant-dev-001"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "turnNumber": 16,
+      "turnKind": "followup",
+      "request": {
+        "startedAt": "2026-04-15T08:55:04.226Z",
+        "endedAt": "2026-04-15T08:55:05.256Z",
+        "durationMs": 1030,
+        "status": 200,
+        "sessionId": "eaa1f2c6-9fb8-4bfa-b67c-334b9681f45d",
+        "responseLength": 28,
+        "inlineTraceEventCount": 8,
+        "requestBody": {
+          "projectId": "019d9005-af19-7f21-9bca-2df019e8ff97",
+          "agentId": "benchmark_agent",
+          "sessionId": "eaa1f2c6-9fb8-4bfa-b67c-334b9681f45d",
+          "message": "Turn 15: respond briefly."
+        }
+      },
+      "phaseBreakdown": {
+        "clientRequestMs": 1030,
+        "traceStartDelayMs": 12,
+        "userMessageDelayMs": 12,
+        "agentEnterDelayMs": 13,
+        "preLlmPlatformMs": 13,
+        "llmDurationMs": 1010,
+        "statusUpdateDelayMs": 1021,
+        "statusToLlmGapMs": 2,
+        "postLlmResponseTailMs": 7,
+        "agentObservedWindowMs": 1011,
+        "agentReportedDurationMs": 1012,
+        "responseTailAfterAgentExitMs": 6,
+        "estimatedPlatformOverheadMs": 20,
+        "preExecutionLeadInMs": null,
+        "queueWaitMs": null,
+        "executionRunMs": null,
+        "responseTailAfterExecutionMs": null,
+        "traceTailAfterResponseMs": -6,
+        "traceCoverageMs": 1012
+      },
+      "trace": {
+        "streamKey": "http://localhost:3112/api/projects/019d9005-af19-7f21-9bca-2df019e8ff97/sessions/eaa1f2c6-9fb8-4bfa-b67c-334b9681f45d?includeTraces=true",
+        "totalTraceCount": 76,
+        "previousStreamId": "94ae5084-b279-4266-b778-6b2b09364934",
+        "lastStreamId": "bbcd377e-2612-4df2-88fa-51a36468b72b",
+        "eventCount": 5,
+        "firstTraceAt": "2026-04-15T08:55:04.238Z",
+        "lastTraceAt": "2026-04-15T08:55:05.250Z",
+        "eventTypeCounts": {
+          "user_message": 1,
+          "agent_enter": 1,
+          "status_update": 1,
+          "llm_call": 1,
+          "agent_exit": 1
+        },
+        "durationSummaryByType": {
+          "llm_call": {
+            "count": 1,
+            "totalMs": 1010,
+            "maxMs": 1010,
+            "averageMs": 1010
+          },
+          "agent_exit": {
+            "count": 1,
+            "totalMs": 1012,
+            "maxMs": 1012,
+            "averageMs": 1012
+          }
+        },
+        "llmCallSummary": {
+          "count": 1,
+          "totalLatencyMs": 1010,
+          "averageLatencyMs": 1010,
+          "models": ["mock-model"],
+          "providers": ["mock"]
+        },
+        "executionMarkers": {
+          "queued": null,
+          "started": null,
+          "terminal": null
+        },
+        "llmCalls": [
+          {
+            "timestamp": "2026-04-15T08:55:05.249Z",
+            "relativeToRequestStartMs": 1023,
+            "model": "mock-model",
+            "provider": "mock",
+            "durationMs": 1010,
+            "tokensIn": 10,
+            "tokensOut": 8,
+            "cost": null
+          }
+        ],
+        "eventTimeline": [
+          {
+            "streamId": "44226085-9884-4aaa-a65b-142be623e721",
+            "traceEventId": "44226085-9884-4aaa-a65b-142be623e721",
+            "type": "user_message",
+            "timestamp": "2026-04-15T08:55:04.238Z",
+            "relativeToRequestStartMs": 12,
+            "durationMs": null,
+            "data": {
+              "message": "Turn 15: respond briefly.",
+              "sessionId": "eaa1f2c6-9fb8-4bfa-b67c-334b9681f45d",
+              "agent": "benchmark_agent",
+              "channel": "api",
+              "contentLength": 25,
+              "hasAttachments": false,
+              "attachmentCount": 0,
+              "tenantId": "tenant-dev-001"
+            }
+          },
+          {
+            "streamId": "77c91961-9daa-49c3-978b-6173218dca1b",
+            "traceEventId": "77c91961-9daa-49c3-978b-6173218dca1b",
+            "type": "agent_enter",
+            "timestamp": "2026-04-15T08:55:04.239Z",
+            "relativeToRequestStartMs": 13,
+            "durationMs": null,
+            "data": {
+              "agentName": "benchmark_agent",
+              "mode": "reasoning",
+              "trigger": "user_message",
+              "channel": "api",
+              "contentLength": 25,
+              "hasAttachments": false,
+              "attachmentCount": 0,
+              "tenantId": "tenant-dev-001"
+            }
+          },
+          {
+            "streamId": "24f5a267-4823-4d70-9b5c-e8f7036bf1aa",
+            "traceEventId": "24f5a267-4823-4d70-9b5c-e8f7036bf1aa",
+            "type": "status_update",
+            "timestamp": "2026-04-15T08:55:05.247Z",
+            "relativeToRequestStartMs": 1021,
+            "durationMs": null,
+            "data": {
+              "text": "This is a mock LLM response...",
+              "operation": "tool_call",
+              "index": 0,
+              "transient": true,
+              "tenantId": "tenant-dev-001"
+            }
+          },
+          {
+            "streamId": "c34d3229-962e-496e-9b45-ebf7d8f49a83",
+            "traceEventId": "c34d3229-962e-496e-9b45-ebf7d8f49a83",
+            "type": "llm_call",
+            "timestamp": "2026-04-15T08:55:05.249Z",
+            "relativeToRequestStartMs": 1023,
+            "durationMs": 1010,
+            "data": {
+              "llmCallId": "35257428-068e-4d0c-906b-8359dedf6e56",
+              "model": "mock-model",
+              "provider": "mock",
+              "source": "agent_db",
+              "operationType": "response_gen",
+              "iteration": 1,
+              "agent": "benchmark_agent",
+              "hasToolCalls": false,
+              "toolCallCount": 0,
+              "stopReason": "other",
+              "durationMs": 1010,
+              "usage": {
+                "inputTokens": 10,
+                "outputTokens": 8
+              },
+              "tokensIn": 10,
+              "tokensOut": 8,
+              "totalTokens": 18,
+              "streaming": false,
+              "messages": [
+                {
+                  "role": "assistant",
+                  "content": "This is a mock LLM response."
+                },
+                {
+                  "role": "user",
+                  "content": "Turn 6: respond briefly."
+                },
+                {
+                  "role": "assistant",
+                  "content": "This is a mock LLM response."
+                },
+                {
+                  "role": "user",
+                  "content": "Turn 7: respond briefly."
+                },
+                {
+                  "role": "assistant",
+                  "content": "This is a mock LLM response."
+                },
+                {
+                  "role": "user",
+                  "content": "Turn 8: respond briefly."
+                },
+                {
+                  "role": "assistant",
+                  "content": "This is a mock LLM response."
+                },
+                {
+                  "role": "user",
+                  "content": "Turn 9: respond briefly."
+                },
+                {
+                  "role": "assistant",
+                  "content": "This is a mock LLM response."
+                },
+                {
+                  "role": "user",
+                  "content": "Turn 10: respond briefly."
+                },
+                {
+                  "role": "assistant",
+                  "content": "This is a mock LLM response."
+                },
+                {
+                  "role": "user",
+                  "content": "Turn 11: respond briefly."
+                },
+                {
+                  "role": "assistant",
+                  "content": "This is a mock LLM response."
+                },
+                {
+                  "role": "user",
+                  "content": "Turn 12: respond briefly."
+                },
+                {
+                  "role": "assistant",
+                  "content": "This is a mock LLM response."
+                },
+                {
+                  "role": "user",
+                  "content": "Turn 13: respond briefly."
+                },
+                {
+                  "role": "assistant",
+                  "content": "This is a mock LLM response."
+                },
+                {
+                  "role": "user",
+                  "content": "Turn 14: respond briefly."
+                },
+                {
+                  "role": "assistant",
+                  "content": "This is a mock LLM response."
+                },
+                {
+                  "role": "user",
+                  "content": "Turn 15: respond briefly."
+                }
+              ],
+              "response": "This is a mock LLM response.",
+              "toolCalls": [],
+              "systemPrompt": "You are benchmark_agent, an AI assistant.\n\nYour goal: Respond briefly to the user.\n\n\nPersona: Brief and direct.\n\n\n\nLimitations:\n- Keep each answer to one short sentence.\n\n\n\n\n\n\n\n\n\n\nBefore each tool call, emit a brief status message wrapped in <status>...</status> tags.\nThis message will be shown to the user while the tool executes. Keep it under 15 words,\nnatural, and specific to what you are about to do. Do NOT ask questions in status messages.\nExample: <status>Searching for red sneakers under 500 AED</status>",
+              "tools": [],
+              "tenantId": "tenant-dev-001"
+            }
+          },
+          {
+            "streamId": "bbcd377e-2612-4df2-88fa-51a36468b72b",
+            "traceEventId": "bbcd377e-2612-4df2-88fa-51a36468b72b",
+            "type": "agent_exit",
+            "timestamp": "2026-04-15T08:55:05.250Z",
+            "relativeToRequestStartMs": 1024,
+            "durationMs": 1012,
+            "data": {
+              "agentName": "benchmark_agent",
+              "result": "continue",
+              "durationMs": 1012,
+              "tenantId": "tenant-dev-001"
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "limitations": [
+    "Trace-tail measurements only include events captured within the configured post-response drain window.",
+    "Async Mongo or Redis work that does not emit trace events will not appear in the event timeline.",
+    "Request-phase boundaries before execution.queued are inferred from the gap between client request start and the first queued marker."
+  ]
+}

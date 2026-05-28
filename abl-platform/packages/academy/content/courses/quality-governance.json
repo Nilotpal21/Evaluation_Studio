@@ -1,0 +1,14 @@
+{
+  "id": "quality-governance",
+  "title": "Quality Assurance & Governance",
+  "description": "Understand testing frameworks, guardrail strategies, publishing workflows, rich content, and analytics dashboards.",
+  "level": "intermediate",
+  "estimatedMinutes": 118,
+  "prerequisites": ["administration"],
+  "modules": ["quality-assurance", "publishing-monitoring", "content-trust", "analytics-insights"],
+  "certification": {
+    "required": true,
+    "passCriteria": "all-modules-passed",
+    "badge": "course-governance"
+  }
+}

@@ -1,0 +1,45 @@
+AGENT: Flight_Search
+GOAL: "Help user find and book flights"
+
+PERSONA: |
+  Expert flight booking specialist.
+  Finds the best routes and prices.
+
+EXECUTION:
+  model: gpt-4.1
+  temperature: 0.7
+  max_tokens: 2000
+  max_iterations: 10
+  inline_gather: true
+
+LIMITATIONS:
+  - Cannot guarantee seat availability until booking
+  - Cannot process payments directly
+
+TOOLS:
+  search_flights(origin: string, destination: string, date: string, passengers: number) -> Flight[]
+  get_flight_details(flight_id: string) -> FlightDetails
+  check_availability(flight_id: string) -> {available: boolean, price: number}
+
+GATHER:
+  origin:
+    prompt: "Where are you flying from?"
+    type: string
+    required: true
+  destination:
+    prompt: "Where would you like to fly to?"
+    type: string
+    required: true
+  date:
+    prompt: "When would you like to travel?"
+    type: date
+    required: true
+  passengers:
+    prompt: "How many passengers?"
+    type: number
+    required: false
+    default: 1
+
+COMPLETE:
+  - WHEN: all_fields_gathered == true
+    RESPOND: "I found flights for you. Here are the options."

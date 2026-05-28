@@ -1,0 +1,111 @@
+AGENT: Agent_Transfer
+GOAL: "Transfer customers to human agents when automated assistance isn't sufficient"
+
+PERSONA: |
+  Professional transfer coordinator.
+  Collects necessary context before transfer.
+  Sets appropriate expectations for wait times.
+
+EXECUTION:
+  model: gpt-4.1
+  temperature: 0.7
+  max_tokens: 2000
+  max_iterations: 10
+  inline_gather: true
+
+TOOLS:
+  check_agent_availability(department: string) -> {available: boolean, wait_time: number}
+    description: "Check if human agents are available in the requested department"
+
+  create_transfer_ticket(customer_name: string, account_number: string, reason: string, priority: string) -> {ticket_id: string}
+    description: "Create a transfer ticket with customer context"
+
+  initiate_transfer(ticket_id: string, department: string) -> {transfer_id: string, agent_name: string}
+    description: "Initiate the transfer to a human agent"
+
+MEMORY:
+  session:
+    - transfer_reason
+    - customer_name
+    - account_number
+    - priority_level
+    - ticket_id
+
+GATHER:
+  transfer_reason:
+    prompt: "I understand you'd like to speak with an agent. Can you briefly tell me what you need help with?"
+    type: string
+    required: true
+
+  customer_name:
+    prompt: "May I have your name?"
+    type: string
+    required: false
+
+  account_number:
+    prompt: "What's your account number?"
+    type: string
+    required: false
+
+  priority_level:
+    prompt: "Is this matter urgent?"
+    type: string
+    required: false
+
+FLOW:
+  start -> collect_context -> check_availability -> create_ticket -> transfer
+
+  start:
+    REASONING: false
+    RESPOND: "I'll connect you with one of our representatives."
+    THEN: collect_context
+
+  collect_context:
+    REASONING: false
+    PRESENT: "Let me gather some information to route you to the right specialist."
+    GATHER:
+      - transfer_reason: required
+      - customer_name
+      - account_number
+    STRATEGY: hybrid
+    CORRECTIONS: true
+    THEN: check_availability
+
+  check_availability:
+    REASONING: false
+    CALL: check_agent_availability("general")
+    ON_SUCCESS:
+      RESPOND: "Great! Agents are available. The estimated wait time is {{result.wait_time}} minutes."
+      THEN: create_ticket
+    ON_FAIL:
+      RESPOND: "Our agents are currently busy. I'll create a callback request and someone will reach out to you within 2 hours."
+      THEN: create_ticket
+
+  create_ticket:
+    REASONING: false
+    CALL: create_transfer_ticket(customer_name, account_number, transfer_reason, priority_level)
+    ON_SUCCESS:
+      SET: ticket_id = result.ticket_id
+      RESPOND: "I've created your request with ticket ID {{result.ticket_id}}."
+      THEN: transfer
+    ON_FAIL:
+      RESPOND: "I'm having trouble creating the transfer. Please call our support line directly at 1-800-XXX-XXXX."
+      THEN: complete
+
+  transfer:
+    REASONING: false
+    CALL: initiate_transfer(ticket_id, "general")
+    ON_SUCCESS:
+      RESPOND: "Connecting you with {{result.agent_name}}. They'll be with you shortly."
+      THEN: complete
+    ON_FAIL:
+      RESPOND: "I apologize, but I'm unable to complete the transfer. Please try calling 1-800-XXX-XXXX directly."
+      THEN: complete
+
+  complete:
+    REASONING: false
+    RESPOND: "Thank you for your patience."
+
+COMPLETE:
+  - WHEN: transfer_initiated == true
+    RESPOND: "Transfer in progress. Please hold for the next available agent."

@@ -1,0 +1,2089 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Arch Command Bar — Wireframes</title>
+    <style>
+      :root {
+        --bg: #0a0a0f;
+        --surface: #12121a;
+        --surface-elevated: #1a1a26;
+        --surface-hover: #22222e;
+        --border: #2a2a3a;
+        --border-subtle: #1e1e2e;
+        --text: #e8e8f0;
+        --text-secondary: #8888a0;
+        --text-tertiary: #5a5a72;
+        --accent: #7c5cfc;
+        --accent-dim: #7c5cfc22;
+        --accent-glow: #7c5cfc44;
+        --green: #34d399;
+        --green-dim: #34d39922;
+        --amber: #fbbf24;
+        --amber-dim: #fbbf2422;
+        --red: #f87171;
+        --red-dim: #f8717122;
+        --blue: #60a5fa;
+        --blue-dim: #60a5fa22;
+        --radius: 12px;
+        --radius-sm: 8px;
+        --radius-xs: 6px;
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        background: #060609;
+        color: var(--text);
+        font-family:
+          -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Inter', system-ui, sans-serif;
+        line-height: 1.5;
+        padding: 40px;
+        min-height: 100vh;
+      }
+
+      h1 {
+        font-size: 28px;
+        font-weight: 700;
+        margin-bottom: 8px;
+        letter-spacing: -0.5px;
+      }
+      h1 span {
+        color: var(--accent);
+      }
+
+      .subtitle {
+        color: var(--text-secondary);
+        font-size: 15px;
+        margin-bottom: 48px;
+      }
+
+      h2 {
+        font-size: 13px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 1.2px;
+        color: var(--text-tertiary);
+        margin-bottom: 20px;
+        margin-top: 56px;
+      }
+      h2:first-of-type {
+        margin-top: 0;
+      }
+
+      .annotation {
+        font-size: 12px;
+        color: var(--text-tertiary);
+        margin-bottom: 16px;
+        line-height: 1.6;
+        max-width: 700px;
+      }
+
+      /* ============ PAGE SIMULATION ============ */
+      .page-sim {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        overflow: hidden;
+        margin-bottom: 32px;
+        position: relative;
+        min-height: 420px;
+      }
+
+      .page-sim-header {
+        height: 44px;
+        background: var(--surface-elevated);
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        padding: 0 16px;
+        gap: 10px;
+      }
+
+      .page-sim-header .logo {
+        width: 22px;
+        height: 22px;
+        background: var(--accent);
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 11px;
+        color: white;
+      }
+
+      .page-sim-header .breadcrumb {
+        font-size: 13px;
+        color: var(--text-secondary);
+      }
+      .page-sim-header .breadcrumb span {
+        color: var(--text);
+      }
+
+      .page-sim-body {
+        display: flex;
+        min-height: 376px;
+      }
+
+      .page-sim-sidebar {
+        width: 200px;
+        background: var(--surface);
+        border-right: 1px solid var(--border-subtle);
+        padding: 12px 8px;
+        flex-shrink: 0;
+      }
+
+      .sidebar-item {
+        padding: 7px 12px;
+        font-size: 13px;
+        color: var(--text-secondary);
+        border-radius: var(--radius-xs);
+        cursor: default;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .sidebar-item.active {
+        background: var(--accent-dim);
+        color: var(--accent);
+      }
+      .sidebar-item .icon {
+        width: 16px;
+        font-size: 12px;
+        text-align: center;
+        opacity: 0.7;
+      }
+
+      .page-sim-content {
+        flex: 1;
+        padding: 20px 24px;
+        position: relative;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .page-placeholder {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--text-tertiary);
+        font-size: 14px;
+        border: 1px dashed var(--border);
+        border-radius: var(--radius);
+        margin-bottom: 60px;
+      }
+
+      /* ============ COLLAPSED BAR ============ */
+      .arch-bar-collapsed {
+        position: absolute;
+        bottom: 16px;
+        right: 16px;
+        left: 16px;
+        height: 44px;
+        background: var(--surface-elevated);
+        border: 1px solid var(--border);
+        border-radius: 22px;
+        display: flex;
+        align-items: center;
+        padding: 0 6px 0 14px;
+        gap: 10px;
+        cursor: pointer;
+        transition: all 0.15s;
+        box-shadow: 0 4px 24px rgba(0, 0, 0, 0.3);
+      }
+      .arch-bar-collapsed:hover {
+        border-color: var(--accent);
+        box-shadow:
+          0 4px 24px rgba(0, 0, 0, 0.3),
+          0 0 0 1px var(--accent-glow);
+      }
+
+      .arch-logo {
+        width: 26px;
+        height: 26px;
+        background: linear-gradient(135deg, var(--accent), #a78bfa);
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 800;
+        font-size: 12px;
+        color: white;
+        flex-shrink: 0;
+      }
+
+      /* ============ ROTATING PLACEHOLDER TEXT ============ */
+      .placeholder-text {
+        flex: 1;
+        font-size: 13.5px;
+        color: var(--text-tertiary);
+        height: 20px;
+        overflow: hidden;
+        position: relative;
+      }
+
+      .rotating-text {
+        display: flex;
+        flex-direction: column;
+        animation: rotateText 52.5s infinite;
+      }
+
+      .rotating-text span {
+        height: 20px;
+        line-height: 20px;
+        white-space: nowrap;
+      }
+
+      /* 15 items, ~3.5s each = 52.5s total cycle */
+      @keyframes rotateText {
+        0%,
+        5.5% {
+          transform: translateY(0);
+        }
+        6.67%,
+        12.17% {
+          transform: translateY(-20px);
+        }
+        13.33%,
+        18.83% {
+          transform: translateY(-40px);
+        }
+        20%,
+        25.5% {
+          transform: translateY(-60px);
+        }
+        26.67%,
+        32.17% {
+          transform: translateY(-80px);
+        }
+        33.33%,
+        38.83% {
+          transform: translateY(-100px);
+        }
+        40%,
+        45.5% {
+          transform: translateY(-120px);
+        }
+        46.67%,
+        52.17% {
+          transform: translateY(-140px);
+        }
+        53.33%,
+        58.83% {
+          transform: translateY(-160px);
+        }
+        60%,
+        65.5% {
+          transform: translateY(-180px);
+        }
+        66.67%,
+        72.17% {
+          transform: translateY(-200px);
+        }
+        73.33%,
+        78.83% {
+          transform: translateY(-220px);
+        }
+        80%,
+        85.5% {
+          transform: translateY(-240px);
+        }
+        86.67%,
+        92.17% {
+          transform: translateY(-260px);
+        }
+        93.33%,
+        99% {
+          transform: translateY(-280px);
+        }
+      }
+
+      .stagger .rotating-text {
+        animation-delay: -17.5s;
+      }
+
+      .kbd-badge {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        padding: 2px 8px;
+        font-size: 11px;
+        color: var(--text-tertiary);
+        font-family: inherit;
+        letter-spacing: 0.3px;
+      }
+
+      .context-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        font-size: 11px;
+        padding: 2px 8px;
+        border-radius: 10px;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        color: var(--text-tertiary);
+      }
+      .context-badge .ctx-dot {
+        width: 5px;
+        height: 5px;
+        border-radius: 50%;
+        background: var(--green);
+      }
+
+      /* ============ FOCUSED BAR ============ */
+      .arch-bar-focused {
+        position: absolute;
+        bottom: 16px;
+        right: 16px;
+        left: 16px;
+        background: var(--surface-elevated);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        box-shadow:
+          0 8px 40px rgba(0, 0, 0, 0.5),
+          0 0 0 1px var(--accent-glow);
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        max-height: 380px;
+      }
+
+      .bar-header {
+        display: flex;
+        align-items: center;
+        padding: 10px 14px;
+        gap: 10px;
+        border-bottom: 1px solid var(--border);
+        flex-shrink: 0;
+      }
+      .bar-header input {
+        flex: 1;
+        background: transparent;
+        border: none;
+        outline: none;
+        color: var(--text);
+        font-size: 14px;
+        font-family: inherit;
+      }
+      .bar-header input::placeholder {
+        color: var(--text-tertiary);
+      }
+
+      .bar-header-actions {
+        display: flex;
+        gap: 4px;
+      }
+      .bar-btn {
+        width: 28px;
+        height: 28px;
+        border-radius: 6px;
+        border: 1px solid var(--border);
+        background: transparent;
+        color: var(--text-tertiary);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 13px;
+        cursor: pointer;
+      }
+      .bar-btn:hover {
+        background: var(--surface-hover);
+        color: var(--text-secondary);
+      }
+
+      .bar-body {
+        overflow-y: auto;
+        flex: 1;
+        padding: 8px;
+      }
+
+      .bar-section-label {
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.8px;
+        color: var(--text-tertiary);
+        padding: 8px 8px 4px;
+      }
+
+      .bar-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 8px 10px;
+        border-radius: var(--radius-xs);
+        cursor: pointer;
+        font-size: 13px;
+        color: var(--text-secondary);
+      }
+      .bar-item:hover,
+      .bar-item.selected {
+        background: var(--surface-hover);
+        color: var(--text);
+      }
+
+      .bar-item .item-icon {
+        width: 28px;
+        height: 28px;
+        border-radius: var(--radius-xs);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 13px;
+        flex-shrink: 0;
+      }
+      .bar-item .item-icon.agent {
+        background: var(--accent-dim);
+        color: var(--accent);
+      }
+      .bar-item .item-icon.tool {
+        background: var(--green-dim);
+        color: var(--green);
+      }
+      .bar-item .item-icon.session {
+        background: var(--blue-dim);
+        color: var(--blue);
+      }
+      .bar-item .item-icon.page {
+        background: var(--amber-dim);
+        color: var(--amber);
+      }
+      .bar-item .item-icon.action {
+        background: var(--accent-dim);
+        color: var(--accent);
+      }
+      .bar-item .item-icon.kb {
+        background: var(--green-dim);
+        color: var(--green);
+      }
+      .bar-item .item-icon.section {
+        background: var(--blue-dim);
+        color: var(--blue);
+      }
+
+      .bar-item .item-label {
+        flex: 1;
+      }
+      .bar-item .item-label .primary {
+        color: var(--text);
+        font-weight: 500;
+      }
+      .bar-item .item-label .secondary {
+        font-size: 11.5px;
+        color: var(--text-tertiary);
+      }
+      .bar-item .item-meta {
+        font-size: 11px;
+        color: var(--text-tertiary);
+      }
+      .bar-item .item-kbd {
+        font-size: 10px;
+        color: var(--text-tertiary);
+        background: var(--surface);
+        border: 1px solid var(--border);
+        padding: 1px 5px;
+        border-radius: 4px;
+      }
+      .quick-action-item {
+        border-left: 2px solid var(--accent);
+        margin-left: 4px;
+      }
+      .bar-divider {
+        height: 1px;
+        background: var(--border-subtle);
+        margin: 6px 8px;
+      }
+
+      .bar-footer {
+        border-top: 1px solid var(--border);
+        padding: 6px 12px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-shrink: 0;
+      }
+      .bar-footer-hint {
+        font-size: 11px;
+        color: var(--text-tertiary);
+        display: flex;
+        gap: 12px;
+      }
+      .bar-footer-hint kbd {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        padding: 0px 4px;
+        border-radius: 3px;
+        font-size: 10px;
+        font-family: inherit;
+      }
+
+      /* ============ CHAT BAR ============ */
+      .arch-bar-chat {
+        position: absolute;
+        bottom: 16px;
+        right: 16px;
+        left: 16px;
+        background: var(--surface-elevated);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        box-shadow:
+          0 8px 40px rgba(0, 0, 0, 0.5),
+          0 0 0 1px var(--accent-glow);
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        max-height: 420px;
+      }
+      .chat-messages {
+        flex: 1;
+        overflow-y: auto;
+        padding: 12px 14px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+      .chat-msg {
+        display: flex;
+        gap: 10px;
+        font-size: 13.5px;
+        line-height: 1.55;
+      }
+      .chat-msg .msg-avatar {
+        width: 24px;
+        height: 24px;
+        border-radius: 7px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 10px;
+        font-weight: 700;
+        flex-shrink: 0;
+        margin-top: 2px;
+      }
+      .chat-msg.user .msg-avatar {
+        background: var(--surface-hover);
+        color: var(--text-secondary);
+        border: 1px solid var(--border);
+      }
+      .chat-msg.arch .msg-avatar {
+        background: linear-gradient(135deg, var(--accent), #a78bfa);
+        color: white;
+      }
+      .chat-msg .msg-body {
+        flex: 1;
+        min-width: 0;
+      }
+      .chat-msg .msg-sender {
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--text-secondary);
+        margin-bottom: 2px;
+      }
+      .chat-msg .msg-content {
+        color: var(--text);
+      }
+      .chat-msg .msg-content code {
+        background: var(--surface);
+        padding: 1px 5px;
+        border-radius: 4px;
+        font-size: 12px;
+        color: var(--accent);
+      }
+
+      .artifact-card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-sm);
+        padding: 10px 12px;
+        margin-top: 8px;
+      }
+      .artifact-card-header {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 8px;
+      }
+      .artifact-card-header .artifact-icon {
+        width: 20px;
+        height: 20px;
+        border-radius: 5px;
+        background: var(--accent-dim);
+        color: var(--accent);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 10px;
+      }
+      .artifact-card-header .artifact-title {
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--text);
+        flex: 1;
+      }
+      .artifact-card-body {
+        font-size: 12px;
+        color: var(--text-secondary);
+        line-height: 1.5;
+        padding: 8px;
+        background: var(--bg);
+        border-radius: var(--radius-xs);
+        font-family: 'SF Mono', 'Fira Code', monospace;
+        margin-bottom: 8px;
+      }
+      .artifact-card-body .diff-add {
+        color: var(--green);
+      }
+      .artifact-card-body .diff-context {
+        color: var(--text-tertiary);
+      }
+      .artifact-card-actions {
+        display: flex;
+        gap: 6px;
+        justify-content: flex-end;
+      }
+      .artifact-btn {
+        padding: 4px 12px;
+        border-radius: var(--radius-xs);
+        font-size: 11.5px;
+        font-weight: 500;
+        border: 1px solid var(--border);
+        background: transparent;
+        color: var(--text-secondary);
+        cursor: pointer;
+        font-family: inherit;
+      }
+      .artifact-btn:hover {
+        background: var(--surface-hover);
+        color: var(--text);
+      }
+      .artifact-btn.primary {
+        background: var(--accent);
+        border-color: var(--accent);
+        color: white;
+      }
+      .artifact-btn.primary:hover {
+        opacity: 0.9;
+      }
+      .artifact-btn.danger {
+        color: var(--red);
+        border-color: var(--red-dim);
+      }
+
+      .chat-input-area {
+        border-top: 1px solid var(--border);
+        padding: 10px 14px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-shrink: 0;
+      }
+      .chat-input-area input {
+        flex: 1;
+        background: transparent;
+        border: none;
+        outline: none;
+        color: var(--text);
+        font-size: 13.5px;
+        font-family: inherit;
+      }
+      .chat-input-area input::placeholder {
+        color: var(--text-tertiary);
+      }
+      .send-btn {
+        width: 30px;
+        height: 30px;
+        border-radius: 8px;
+        background: var(--accent);
+        border: none;
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        font-size: 14px;
+      }
+      .send-btn.disabled {
+        opacity: 0.3;
+      }
+
+      /* Streaming dots */
+      .streaming-dots {
+        display: inline-flex;
+        gap: 3px;
+        align-items: center;
+        margin-left: 4px;
+      }
+      .streaming-dots span {
+        width: 4px;
+        height: 4px;
+        background: var(--accent);
+        border-radius: 50%;
+        animation: bounce 1.2s infinite;
+      }
+      .streaming-dots span:nth-child(2) {
+        animation-delay: 0.15s;
+      }
+      .streaming-dots span:nth-child(3) {
+        animation-delay: 0.3s;
+      }
+      @keyframes bounce {
+        0%,
+        60%,
+        100% {
+          transform: translateY(0);
+          opacity: 0.4;
+        }
+        30% {
+          transform: translateY(-4px);
+          opacity: 1;
+        }
+      }
+
+      /* Redirect banner */
+      .redirect-banner {
+        background: var(--accent-dim);
+        border: 1px solid var(--accent-glow);
+        border-radius: var(--radius-sm);
+        padding: 10px 14px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-top: 8px;
+        font-size: 13px;
+      }
+      .redirect-banner .redirect-icon {
+        font-size: 16px;
+      }
+      .redirect-banner .redirect-text {
+        flex: 1;
+        color: var(--text-secondary);
+      }
+      .redirect-banner .redirect-text strong {
+        color: var(--text);
+      }
+      .redirect-btn {
+        padding: 5px 14px;
+        border-radius: var(--radius-xs);
+        background: var(--accent);
+        color: white;
+        border: none;
+        font-size: 12px;
+        font-weight: 500;
+        cursor: pointer;
+        font-family: inherit;
+      }
+
+      /* Layouts */
+      .wireframe-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 24px;
+        margin-bottom: 24px;
+      }
+      .wireframe-grid.single {
+        grid-template-columns: 1fr;
+        max-width: 720px;
+      }
+      @media (max-width: 1100px) {
+        .wireframe-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      .state-label {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--accent);
+        background: var(--accent-dim);
+        padding: 3px 10px;
+        border-radius: 20px;
+        margin-bottom: 10px;
+      }
+      .state-label .dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: var(--accent);
+      }
+
+      /* Home page sim */
+      .page-sim.home-page .page-sim-body {
+        flex-direction: column;
+      }
+      .page-sim.home-page .home-content {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 40px 24px;
+        position: relative;
+      }
+      .home-hero {
+        text-align: center;
+        margin-bottom: 32px;
+      }
+      .home-hero h3 {
+        font-size: 22px;
+        font-weight: 700;
+        color: var(--text);
+        margin-bottom: 6px;
+      }
+      .home-hero p {
+        font-size: 14px;
+        color: var(--text-secondary);
+      }
+
+      /* Mobile */
+      .page-sim.mobile {
+        max-width: 390px;
+      }
+      .page-sim.mobile .page-sim-sidebar {
+        display: none;
+      }
+
+      /* Section divider */
+      .section-divider {
+        border: none;
+        border-top: 1px solid var(--border);
+        margin: 48px 0 0;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Arch Command Bar <span>Wireframes</span></h1>
+    <p class="subtitle">
+      Persistent command bar with context-aware rotating hints — two distinct journeys
+    </p>
+
+    <!-- ================================================================ -->
+    <!--  PART A: HOME / PROJECT CREATION JOURNEY                        -->
+    <!-- ================================================================ -->
+    <hr class="section-divider" style="margin-top: 0" />
+    <h2>Part A — Home / Project Creation Journey</h2>
+    <p class="annotation">
+      The command bar on the home/projects dashboard. Rotating hints focus on
+      <strong>creating, designing, and starting</strong> new projects. No project context exists
+      yet, so phrases are about ideation and exploration.
+    </p>
+
+    <!-- A1: Home Collapsed -->
+    <div class="wireframe-grid">
+      <div>
+        <div class="state-label"><span class="dot"></span> Home — Collapsed</div>
+        <div class="page-sim home-page" style="min-height: 320px">
+          <div class="page-sim-header">
+            <div class="logo">A</div>
+            <div class="breadcrumb"><span>Projects</span></div>
+          </div>
+          <div class="page-sim-body">
+            <div class="home-content">
+              <div class="home-hero">
+                <h3>What would you like to build?</h3>
+                <p>Describe your idea and Arch will design your agents</p>
+              </div>
+              <div style="position: relative; width: 100%; height: 52px">
+                <div
+                  class="arch-bar-collapsed"
+                  style="position: relative; bottom: auto; left: auto; right: auto"
+                >
+                  <div class="arch-logo">A</div>
+                  <span class="placeholder-text">
+                    <span class="rotating-text">
+                      <span>Build a customer support bot</span>
+                      <span>Design a multi-agent workflow</span>
+                      <span>Create an AI sales assistant</span>
+                      <span>Automate your returns process</span>
+                      <span>Search your existing projects</span>
+                      <span>Start from a template</span>
+                      <span>Describe your use case</span>
+                      <span>Build an onboarding agent</span>
+                      <span>Create a knowledge base assistant</span>
+                      <span>Design an appointment scheduler</span>
+                      <span>Automate order tracking</span>
+                      <span>Build a feedback collection bot</span>
+                      <span>Create a lead qualification agent</span>
+                      <span>Design an internal helpdesk</span>
+                      <span>What problem are you solving?</span>
+                    </span>
+                  </span>
+                  <span class="kbd-badge">Cmd+K</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="state-label"><span class="dot"></span> Home — Focused</div>
+        <div class="page-sim home-page" style="min-height: 320px">
+          <div class="page-sim-header">
+            <div class="logo">A</div>
+            <div class="breadcrumb"><span>Projects</span></div>
+          </div>
+          <div class="page-sim-body">
+            <div class="home-content" style="justify-content: flex-end">
+              <div
+                class="arch-bar-focused"
+                style="position: relative; bottom: auto; left: auto; right: auto; max-height: none"
+              >
+                <div class="bar-header">
+                  <div class="arch-logo">A</div>
+                  <input type="text" placeholder="Describe what you want to build..." />
+                  <div class="bar-header-actions">
+                    <button class="bar-btn" title="Close">&times;</button>
+                  </div>
+                </div>
+                <div class="bar-body">
+                  <div class="bar-section-label">Quick Start</div>
+                  <div class="bar-item quick-action-item selected">
+                    <div class="item-icon action">&#9889;</div>
+                    <div class="item-label">
+                      <div class="primary">Build from scratch</div>
+                      <div class="secondary">Describe your idea, Arch designs the agents</div>
+                    </div>
+                  </div>
+                  <div class="bar-item quick-action-item">
+                    <div class="item-icon action">&#9889;</div>
+                    <div class="item-label">
+                      <div class="primary">Start from a template</div>
+                      <div class="secondary">Customer support, sales, helpdesk, and more</div>
+                    </div>
+                  </div>
+                  <div class="bar-item quick-action-item">
+                    <div class="item-icon action">&#9889;</div>
+                    <div class="item-label">
+                      <div class="primary">Import existing agents</div>
+                      <div class="secondary">Upload ABL files or paste agent DSL</div>
+                    </div>
+                  </div>
+                  <div class="bar-divider"></div>
+                  <div class="bar-section-label">Recent Projects</div>
+                  <div class="bar-item">
+                    <div class="item-icon agent">A</div>
+                    <div class="item-label">
+                      <div class="primary">acme-support</div>
+                      <div class="secondary">5 agents, 142 sessions</div>
+                    </div>
+                    <span class="item-meta">2h ago</span>
+                  </div>
+                  <div class="bar-item">
+                    <div class="item-icon agent">A</div>
+                    <div class="item-label">
+                      <div class="primary">sales-qualifier</div>
+                      <div class="secondary">3 agents, 58 sessions</div>
+                    </div>
+                    <span class="item-meta">1d ago</span>
+                  </div>
+                </div>
+                <div class="bar-footer">
+                  <div class="bar-footer-hint">
+                    <span><kbd>&#8593;&#8595;</kbd> Navigate</span>
+                    <span><kbd>&#9166;</kbd> Select</span>
+                    <span><kbd>Esc</kbd> Close</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- A2: Home rotating text reference -->
+    <div
+      style="
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 24px;
+        max-width: 720px;
+        margin-bottom: 32px;
+      "
+    >
+      <div
+        style="
+          font-size: 12px;
+          font-weight: 600;
+          text-transform: uppercase;
+          letter-spacing: 0.8px;
+          color: var(--accent);
+          margin-bottom: 12px;
+        "
+      >
+        Home Journey — 15 Rotating Phrases
+      </div>
+      <div style="display: grid; grid-template-columns: auto 1fr; gap: 4px 16px; font-size: 12.5px">
+        <span style="color: var(--text-tertiary); font-family: monospace">01</span>
+        <span>Build a customer support bot</span>
+        <span style="color: var(--text-tertiary); font-family: monospace">02</span>
+        <span>Design a multi-agent workflow</span>
+        <span style="color: var(--text-tertiary); font-family: monospace">03</span>
+        <span>Create an AI sales assistant</span>
+        <span style="color: var(--text-tertiary); font-family: monospace">04</span>
+        <span>Automate your returns process</span>
+        <span style="color: var(--text-tertiary); font-family: monospace">05</span>
+        <span>Search your existing projects</span>
+        <span style="color: var(--text-tertiary); font-family: monospace">06</span>
+        <span>Start from a template</span>
+        <span style="color: var(--text-tertiary); font-family: monospace">07</span>
+        <span>Describe your use case</span>
+        <span style="color: var(--text-tertiary); font-family: monospace">08</span>
+        <span>Build an onboarding agent</span>
+        <span style="color: var(--text-tertiary); font-family: monospace">09</span>
+        <span>Create a knowledge base assistant</span>
+        <span style="color: var(--text-tertiary); font-family: monospace">10</span>
+        <span>Design an appointment scheduler</span>
+        <span style="color: var(--text-tertiary); font-family: monospace">11</span>
+        <span>Automate order tracking</span>
+        <span style="color: var(--text-tertiary); font-family: monospace">12</span>
+        <span>Build a feedback collection bot</span>
+        <span style="color: var(--text-tertiary); font-family: monospace">13</span>
+        <span>Create a lead qualification agent</span>
+        <span style="color: var(--text-tertiary); font-family: monospace">14</span>
+        <span>Design an internal helpdesk</span>
+        <span style="color: var(--text-tertiary); font-family: monospace">15</span>
+        <span style="color: var(--accent)">What problem are you solving?</span>
+      </div>
+      <div style="margin-top: 12px; font-size: 11px; color: var(--text-tertiary)">
+        Theme: Inspirational use cases + action verbs (build, design, create, automate). Last phrase
+        is an open-ended question to prompt creativity.
+      </div>
+    </div>
+
+    <!-- ================================================================ -->
+    <!--  PART B: IN-PROJECT JOURNEY                                     -->
+    <!-- ================================================================ -->
+    <hr class="section-divider" />
+    <h2>Part B — In-Project Journey</h2>
+    <p class="annotation">
+      The command bar inside a project. Rotating hints focus on
+      <strong>operating, debugging, improving, and navigating</strong> the current project. Phrases
+      reference real capabilities of the Arch AI engine and adapt to page context.
+    </p>
+
+    <!-- B1: In-Project Collapsed -->
+    <div class="wireframe-grid">
+      <div>
+        <div class="state-label"><span class="dot"></span> In-Project — Default Page</div>
+        <div class="page-sim">
+          <div class="page-sim-header">
+            <div class="logo">A</div>
+            <div class="breadcrumb">acme-support / <span>Agents</span></div>
+          </div>
+          <div class="page-sim-body">
+            <div class="page-sim-sidebar">
+              <div class="sidebar-item"><span class="icon">~</span> Overview</div>
+              <div class="sidebar-item active"><span class="icon">&gt;</span> Agents</div>
+              <div class="sidebar-item"><span class="icon">#</span> Tools</div>
+              <div class="sidebar-item"><span class="icon">@</span> Sessions</div>
+              <div class="sidebar-item"><span class="icon">^</span> Workflows</div>
+              <div class="sidebar-item"><span class="icon">*</span> Deployments</div>
+              <div class="sidebar-item"><span class="icon">%</span> Search AI</div>
+              <div class="sidebar-item"><span class="icon">!</span> Analytics</div>
+              <div
+                class="sidebar-item"
+                style="
+                  margin-top: 12px;
+                  border-top: 1px solid var(--border-subtle);
+                  padding-top: 12px;
+                "
+              >
+                <span class="icon">A</span> Arch AI
+              </div>
+            </div>
+            <div class="page-sim-content">
+              <div class="page-placeholder">Agent list page content</div>
+              <div class="arch-bar-collapsed">
+                <div class="arch-logo">A</div>
+                <span class="placeholder-text">
+                  <span class="rotating-text">
+                    <span>Search agents, tools, sessions...</span>
+                    <span>Explain how this agent works</span>
+                    <span>Find recent failed sessions</span>
+                    <span>Jump to any page or setting</span>
+                    <span>Suggest improvements for an agent</span>
+                    <span>Run a quick test conversation</span>
+                    <span>Check deployment status</span>
+                    <span>Query traces from the last hour</span>
+                    <span>Which tools does this agent use?</span>
+                    <span>Compile and validate all agents</span>
+                    <span>Analyze session quality trends</span>
+                    <span>Add error handling to a flow</span>
+                    <span>Search the knowledge base</span>
+                    <span>Show keyboard shortcuts</span>
+                    <span>What changed since last deploy?</span>
+                  </span>
+                </span>
+                <span class="kbd-badge">Cmd+K</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="state-label"><span class="dot"></span> In-Project — Agent Detail</div>
+        <div class="page-sim">
+          <div class="page-sim-header">
+            <div class="logo">A</div>
+            <div class="breadcrumb">acme-support / Agents / <span>booking_agent</span></div>
+          </div>
+          <div class="page-sim-body">
+            <div class="page-sim-sidebar">
+              <div class="sidebar-item"><span class="icon">~</span> Overview</div>
+              <div class="sidebar-item active"><span class="icon">&gt;</span> Agents</div>
+              <div class="sidebar-item"><span class="icon">#</span> Tools</div>
+              <div class="sidebar-item"><span class="icon">@</span> Sessions</div>
+              <div class="sidebar-item"><span class="icon">^</span> Workflows</div>
+              <div class="sidebar-item"><span class="icon">*</span> Deployments</div>
+              <div class="sidebar-item"><span class="icon">%</span> Search AI</div>
+              <div class="sidebar-item"><span class="icon">!</span> Analytics</div>
+              <div
+                class="sidebar-item"
+                style="
+                  margin-top: 12px;
+                  border-top: 1px solid var(--border-subtle);
+                  padding-top: 12px;
+                "
+              >
+                <span class="icon">A</span> Arch AI
+              </div>
+            </div>
+            <div class="page-sim-content">
+              <div class="page-placeholder">Agent detail — booking_agent</div>
+              <div
+                class="arch-bar-collapsed"
+                style="
+                  border-color: var(--accent);
+                  box-shadow:
+                    0 4px 24px rgba(0, 0, 0, 0.3),
+                    0 0 0 1px var(--accent-glow);
+                "
+              >
+                <div class="arch-logo">A</div>
+                <span class="placeholder-text stagger">
+                  <span class="rotating-text">
+                    <span>Explain booking_agent's flow</span>
+                    <span>Suggest improvements for this agent</span>
+                    <span>Add error handling to lifecycle</span>
+                    <span>What tools does booking_agent use?</span>
+                    <span>Run a test conversation</span>
+                    <span>Compile and validate this agent</span>
+                    <span>Show recent sessions for this agent</span>
+                    <span>Modify the GATHER section</span>
+                    <span>Debug the last failed session</span>
+                    <span>Add a new constraint or guardrail</span>
+                    <span>Explain the coordination logic</span>
+                    <span>Check for missing edge cases</span>
+                    <span>How does handoff work here?</span>
+                    <span>Optimize this agent's prompts</span>
+                    <span>Compare with returns_agent</span>
+                  </span>
+                </span>
+                <span class="context-badge"><span class="ctx-dot"></span> booking_agent</span>
+                <span class="kbd-badge">Cmd+K</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- B2: In-Project rotating text reference -->
+    <div
+      style="
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 24px;
+        max-width: 720px;
+        margin-bottom: 32px;
+      "
+    >
+      <div
+        style="
+          font-size: 12px;
+          font-weight: 600;
+          text-transform: uppercase;
+          letter-spacing: 0.8px;
+          color: var(--accent);
+          margin-bottom: 12px;
+        "
+      >
+        In-Project Journey — 15 Rotating Phrases (Generic)
+      </div>
+      <div style="display: grid; grid-template-columns: auto 1fr; gap: 4px 16px; font-size: 12.5px">
+        <span style="color: var(--text-tertiary); font-family: monospace">01</span>
+        <span>Search agents, tools, sessions...</span>
+        <span style="color: var(--text-tertiary); font-family: monospace">02</span>
+        <span>Explain how this agent works</span>
+        <span style="color: var(--text-tertiary); font-family: monospace">03</span>
+        <span>Find recent failed sessions</span>
+        <span style="color: var(--text-tertiary); font-family: monospace">04</span>
+        <span>Jump to any page or setting</span>
+        <span style="color: var(--text-tertiary); font-family: monospace">05</span>
+        <span>Suggest improvements for an agent</span>
+        <span style="color: var(--text-tertiary); font-family: monospace">06</span>
+        <span>Run a quick test conversation</span>
+        <span style="color: var(--text-tertiary); font-family: monospace">07</span>
+        <span>Check deployment status</span>
+        <span style="color: var(--text-tertiary); font-family: monospace">08</span>
+        <span>Query traces from the last hour</span>
+        <span style="color: var(--text-tertiary); font-family: monospace">09</span>
+        <span>Which tools does this agent use?</span>
+        <span style="color: var(--text-tertiary); font-family: monospace">10</span>
+        <span>Compile and validate all agents</span>
+        <span style="color: var(--text-tertiary); font-family: monospace">11</span>
+        <span>Analyze session quality trends</span>
+        <span style="color: var(--text-tertiary); font-family: monospace">12</span>
+        <span>Add error handling to a flow</span>
+        <span style="color: var(--text-tertiary); font-family: monospace">13</span>
+        <span>Search the knowledge base</span>
+        <span style="color: var(--text-tertiary); font-family: monospace">14</span>
+        <span>Show keyboard shortcuts</span>
+        <span style="color: var(--text-tertiary); font-family: monospace">15</span>
+        <span style="color: var(--accent)">What changed since last deploy?</span>
+      </div>
+      <div
+        style="
+          margin-top: 16px;
+          font-size: 12px;
+          font-weight: 600;
+          text-transform: uppercase;
+          letter-spacing: 0.8px;
+          color: var(--green);
+          margin-bottom: 12px;
+        "
+      >
+        In-Project — Agent Detail Context (overrides generic)
+      </div>
+      <div style="display: grid; grid-template-columns: auto 1fr; gap: 4px 16px; font-size: 12.5px">
+        <span style="color: var(--text-tertiary); font-family: monospace">01</span>
+        <span>Explain <strong>booking_agent</strong>'s flow</span>
+        <span style="color: var(--text-tertiary); font-family: monospace">02</span>
+        <span>Suggest improvements for this agent</span>
+        <span style="color: var(--text-tertiary); font-family: monospace">03</span>
+        <span>Add error handling to lifecycle</span>
+        <span style="color: var(--text-tertiary); font-family: monospace">04</span>
+        <span>What tools does <strong>booking_agent</strong> use?</span>
+        <span style="color: var(--text-tertiary); font-family: monospace">05</span>
+        <span>Run a test conversation</span>
+        <span style="color: var(--text-tertiary); font-family: monospace">06</span>
+        <span>Compile and validate this agent</span>
+        <span style="color: var(--text-tertiary); font-family: monospace">07</span>
+        <span>Show recent sessions for this agent</span>
+        <span style="color: var(--text-tertiary); font-family: monospace">08</span>
+        <span>Modify the GATHER section</span>
+        <span style="color: var(--text-tertiary); font-family: monospace">09</span>
+        <span>Debug the last failed session</span>
+        <span style="color: var(--text-tertiary); font-family: monospace">10</span>
+        <span>Add a new constraint or guardrail</span>
+        <span style="color: var(--text-tertiary); font-family: monospace">11</span>
+        <span>Explain the coordination logic</span>
+        <span style="color: var(--text-tertiary); font-family: monospace">12</span>
+        <span>Check for missing edge cases</span>
+        <span style="color: var(--text-tertiary); font-family: monospace">13</span>
+        <span>How does handoff work here?</span>
+        <span style="color: var(--text-tertiary); font-family: monospace">14</span>
+        <span>Optimize this agent's prompts</span>
+        <span style="color: var(--text-tertiary); font-family: monospace">15</span>
+        <span style="color: var(--green)">Compare with <strong>returns_agent</strong></span>
+      </div>
+      <div style="margin-top: 12px; font-size: 11px; color: var(--text-tertiary)">
+        Theme: Operational verbs (explain, debug, compile, query, deploy). Agent detail phrases
+        inject the actual agent name and reference ABL sections. Generic phrases used when no
+        specific entity is focused.
+      </div>
+    </div>
+
+    <!-- B3: Focused search + quick actions (already shown in original) -->
+    <h2>In-Project — Focused States</h2>
+    <p class="annotation">
+      Quick actions and search results change based on which page the user is on.
+    </p>
+
+    <div class="wireframe-grid">
+      <!-- Agent Detail Context -->
+      <div>
+        <div class="state-label"><span class="dot"></span> Agent Detail Quick Actions</div>
+        <div class="page-sim">
+          <div class="page-sim-header">
+            <div class="logo">A</div>
+            <div class="breadcrumb">acme-support / Agents / <span>booking_agent</span></div>
+          </div>
+          <div class="page-sim-body">
+            <div class="page-sim-sidebar">
+              <div class="sidebar-item"><span class="icon">~</span> Overview</div>
+              <div class="sidebar-item active"><span class="icon">&gt;</span> Agents</div>
+              <div class="sidebar-item"><span class="icon">#</span> Tools</div>
+              <div class="sidebar-item"><span class="icon">@</span> Sessions</div>
+              <div class="sidebar-item"><span class="icon">^</span> Workflows</div>
+              <div class="sidebar-item"><span class="icon">*</span> Deployments</div>
+              <div class="sidebar-item"><span class="icon">%</span> Search AI</div>
+              <div class="sidebar-item"><span class="icon">!</span> Analytics</div>
+              <div
+                class="sidebar-item"
+                style="
+                  margin-top: 12px;
+                  border-top: 1px solid var(--border-subtle);
+                  padding-top: 12px;
+                "
+              >
+                <span class="icon">A</span> Arch AI
+              </div>
+            </div>
+            <div class="page-sim-content">
+              <div class="page-placeholder" style="opacity: 0.3; margin-bottom: 320px">
+                Agent detail
+              </div>
+              <div class="arch-bar-focused">
+                <div class="bar-header">
+                  <div class="arch-logo">A</div>
+                  <input type="text" placeholder="Search or ask Arch..." />
+                  <span class="context-badge"><span class="ctx-dot"></span> booking_agent</span>
+                  <div class="bar-header-actions">
+                    <button class="bar-btn">&#8599;</button>
+                    <button class="bar-btn">&times;</button>
+                  </div>
+                </div>
+                <div class="bar-body">
+                  <div class="bar-section-label">Quick Actions</div>
+                  <div class="bar-item quick-action-item selected">
+                    <div class="item-icon action">&#9889;</div>
+                    <div class="item-label">
+                      <div class="primary">Explain booking_agent</div>
+                      <div class="secondary">Analyze structure and behavior</div>
+                    </div>
+                  </div>
+                  <div class="bar-item quick-action-item">
+                    <div class="item-icon action">&#9889;</div>
+                    <div class="item-label">
+                      <div class="primary">Suggest improvements</div>
+                      <div class="secondary">Diagnostics and recommendations</div>
+                    </div>
+                  </div>
+                  <div class="bar-item quick-action-item">
+                    <div class="item-icon action">&#9889;</div>
+                    <div class="item-label">
+                      <div class="primary">Compile &amp; validate</div>
+                      <div class="secondary">Check for errors and warnings</div>
+                    </div>
+                  </div>
+                  <div class="bar-item quick-action-item">
+                    <div class="item-icon action">&#9889;</div>
+                    <div class="item-label">
+                      <div class="primary">Run test conversation</div>
+                      <div class="secondary">Send a test message to this agent</div>
+                    </div>
+                  </div>
+                  <div class="bar-divider"></div>
+                  <div class="bar-section-label">Recent</div>
+                  <div class="bar-item">
+                    <div class="item-icon session">S</div>
+                    <div class="item-label">
+                      <div class="primary">Session #a8f2 — booking_agent</div>
+                      <div class="secondary">8 messages, 2m ago</div>
+                    </div>
+                  </div>
+                </div>
+                <div class="bar-footer">
+                  <div class="bar-footer-hint">
+                    <span><kbd>&#8593;&#8595;</kbd> Navigate</span>
+                    <span><kbd>&#9166;</kbd> Select</span>
+                    <span><kbd>Esc</kbd> Close</span>
+                    <span><kbd>Tab</kbd> Ask Arch</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Search with results -->
+      <div>
+        <div class="state-label">
+          <span class="dot"></span> Search: "how do I add error handling"
+        </div>
+        <div class="page-sim">
+          <div class="page-sim-header">
+            <div class="logo">A</div>
+            <div class="breadcrumb">acme-support / Agents / <span>booking_agent</span></div>
+          </div>
+          <div class="page-sim-body">
+            <div class="page-sim-sidebar">
+              <div class="sidebar-item"><span class="icon">~</span> Overview</div>
+              <div class="sidebar-item active"><span class="icon">&gt;</span> Agents</div>
+              <div class="sidebar-item"><span class="icon">#</span> Tools</div>
+              <div class="sidebar-item"><span class="icon">@</span> Sessions</div>
+              <div class="sidebar-item"><span class="icon">^</span> Workflows</div>
+              <div class="sidebar-item"><span class="icon">*</span> Deployments</div>
+              <div class="sidebar-item"><span class="icon">%</span> Search AI</div>
+              <div class="sidebar-item"><span class="icon">!</span> Analytics</div>
+              <div
+                class="sidebar-item"
+                style="
+                  margin-top: 12px;
+                  border-top: 1px solid var(--border-subtle);
+                  padding-top: 12px;
+                "
+              >
+                <span class="icon">A</span> Arch AI
+              </div>
+            </div>
+            <div class="page-sim-content">
+              <div class="page-placeholder" style="opacity: 0.3; margin-bottom: 260px">
+                Agent detail
+              </div>
+              <div class="arch-bar-focused">
+                <div class="bar-header">
+                  <div class="arch-logo">A</div>
+                  <input
+                    type="text"
+                    value="how do I add error handling"
+                    style="color: var(--text)"
+                  />
+                  <span class="context-badge"><span class="ctx-dot"></span> booking_agent</span>
+                  <div class="bar-header-actions">
+                    <button class="bar-btn">&#8599;</button>
+                    <button class="bar-btn">&times;</button>
+                  </div>
+                </div>
+                <div class="bar-body">
+                  <div
+                    class="bar-item selected"
+                    style="
+                      background: var(--accent-dim);
+                      border-left: 2px solid var(--accent);
+                      margin: 4px;
+                    "
+                  >
+                    <div
+                      class="arch-logo"
+                      style="width: 24px; height: 24px; font-size: 10px; border-radius: 6px"
+                    >
+                      A
+                    </div>
+                    <div class="item-label">
+                      <div class="primary" style="color: var(--accent)">Ask Arch AI</div>
+                      <div class="secondary">
+                        "how do I add error handling" — with booking_agent context
+                      </div>
+                    </div>
+                    <span class="item-kbd">&#9166;</span>
+                  </div>
+                  <div class="bar-divider"></div>
+                  <div class="bar-section-label">Related</div>
+                  <div class="bar-item">
+                    <div class="item-icon section">&#167;</div>
+                    <div class="item-label">
+                      <div class="primary">booking_agent &rarr; LIFECYCLE section</div>
+                      <div class="secondary">ON_ERROR handlers, completion conditions</div>
+                    </div>
+                  </div>
+                  <div class="bar-item">
+                    <div class="item-icon section">&#167;</div>
+                    <div class="item-label">
+                      <div class="primary">booking_agent &rarr; RULES section</div>
+                      <div class="secondary">Constraints and guardrails</div>
+                    </div>
+                  </div>
+                  <div class="bar-item">
+                    <div class="item-icon page">P</div>
+                    <div class="item-label">
+                      <div class="primary">Guardrails Config</div>
+                      <div class="secondary">Project-level guardrail settings</div>
+                    </div>
+                  </div>
+                </div>
+                <div class="bar-footer">
+                  <div class="bar-footer-hint">
+                    <span><kbd>&#9166;</kbd> Ask Arch</span>
+                    <span><kbd>&#8593;&#8595;</kbd> Navigate</span>
+                    <span><kbd>Esc</kbd> Close</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- B4: Active Chat States -->
+    <h2>In-Project — Active Chat</h2>
+    <p class="annotation">
+      User sent a message. Simple responses render inline, heavy artifacts trigger smart redirect.
+    </p>
+
+    <div class="wireframe-grid">
+      <!-- Artifact card -->
+      <div>
+        <div class="state-label"><span class="dot"></span> Artifact Card (Dry-Run Diff)</div>
+        <div class="page-sim">
+          <div class="page-sim-header">
+            <div class="logo">A</div>
+            <div class="breadcrumb">acme-support / Agents / <span>booking_agent</span></div>
+          </div>
+          <div class="page-sim-body">
+            <div class="page-sim-sidebar">
+              <div class="sidebar-item"><span class="icon">~</span> Overview</div>
+              <div class="sidebar-item active"><span class="icon">&gt;</span> Agents</div>
+              <div class="sidebar-item"><span class="icon">#</span> Tools</div>
+              <div class="sidebar-item"><span class="icon">@</span> Sessions</div>
+              <div class="sidebar-item"><span class="icon">^</span> Workflows</div>
+              <div class="sidebar-item"><span class="icon">*</span> Deployments</div>
+              <div class="sidebar-item"><span class="icon">%</span> Search AI</div>
+              <div class="sidebar-item"><span class="icon">!</span> Analytics</div>
+              <div
+                class="sidebar-item"
+                style="
+                  margin-top: 12px;
+                  border-top: 1px solid var(--border-subtle);
+                  padding-top: 12px;
+                "
+              >
+                <span class="icon">A</span> Arch AI
+              </div>
+            </div>
+            <div class="page-sim-content">
+              <div class="page-placeholder" style="opacity: 0.3; margin-bottom: 400px">
+                Agent detail
+              </div>
+              <div class="arch-bar-chat">
+                <div class="bar-header">
+                  <div class="arch-logo">A</div>
+                  <span style="font-size: 13.5px; font-weight: 600; flex: 1">Arch AI</span>
+                  <span class="context-badge"><span class="ctx-dot"></span> booking_agent</span>
+                  <div class="bar-header-actions">
+                    <button class="bar-btn">&#8599;</button>
+                    <button class="bar-btn">&times;</button>
+                  </div>
+                </div>
+                <div class="chat-messages">
+                  <div class="chat-msg user">
+                    <div class="msg-avatar">U</div>
+                    <div class="msg-body">
+                      <div class="msg-sender">You</div>
+                      <div class="msg-content">Add error handling for payment timeouts</div>
+                    </div>
+                  </div>
+                  <div class="chat-msg arch">
+                    <div class="msg-avatar">A</div>
+                    <div class="msg-body">
+                      <div class="msg-sender">Arch</div>
+                      <div class="msg-content">
+                        I'll add an <code>ON_ERROR</code> handler with a retry strategy:
+                      </div>
+                      <div class="artifact-card">
+                        <div class="artifact-card-header">
+                          <div class="artifact-icon">&#916;</div>
+                          <span class="artifact-title">Modify LIFECYCLE section</span>
+                        </div>
+                        <div class="artifact-card-body">
+                          <span class="diff-context"> LIFECYCLE</span><br />
+                          <span class="diff-context"> ON_START respond "Welcome!"</span><br />
+                          <span class="diff-add">+ ON_ERROR payment_timeout</span><br />
+                          <span class="diff-add">+ retry 2</span><br />
+                          <span class="diff-add">+ backoff exponential</span><br />
+                          <span class="diff-add">+ fallback respond "Payment timed out"</span><br />
+                          <span class="diff-add">+ END</span>
+                        </div>
+                        <div class="artifact-card-actions">
+                          <button class="artifact-btn danger">Reject</button>
+                          <button class="artifact-btn">&#8599; Full View</button>
+                          <button class="artifact-btn primary">Apply</button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="chat-input-area">
+                  <input type="text" placeholder="Follow up..." />
+                  <button class="send-btn disabled">&#8593;</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Smart redirect -->
+      <div>
+        <div class="state-label"><span class="dot"></span> Smart Route Redirect</div>
+        <div class="page-sim">
+          <div class="page-sim-header">
+            <div class="logo">A</div>
+            <div class="breadcrumb">acme-support / <span>Overview</span></div>
+          </div>
+          <div class="page-sim-body">
+            <div class="page-sim-sidebar">
+              <div class="sidebar-item active"><span class="icon">~</span> Overview</div>
+              <div class="sidebar-item"><span class="icon">&gt;</span> Agents</div>
+              <div class="sidebar-item"><span class="icon">#</span> Tools</div>
+              <div class="sidebar-item"><span class="icon">@</span> Sessions</div>
+              <div class="sidebar-item"><span class="icon">^</span> Workflows</div>
+              <div class="sidebar-item"><span class="icon">*</span> Deployments</div>
+              <div class="sidebar-item"><span class="icon">%</span> Search AI</div>
+              <div class="sidebar-item"><span class="icon">!</span> Analytics</div>
+              <div
+                class="sidebar-item"
+                style="
+                  margin-top: 12px;
+                  border-top: 1px solid var(--border-subtle);
+                  padding-top: 12px;
+                "
+              >
+                <span class="icon">A</span> Arch AI
+              </div>
+            </div>
+            <div class="page-sim-content">
+              <div class="page-placeholder" style="opacity: 0.3; margin-bottom: 300px">
+                Project overview
+              </div>
+              <div class="arch-bar-chat">
+                <div class="bar-header">
+                  <div class="arch-logo">A</div>
+                  <span style="font-size: 13.5px; font-weight: 600; flex: 1">Arch AI</span>
+                  <div class="bar-header-actions">
+                    <button class="bar-btn">&#8599;</button>
+                    <button class="bar-btn">&times;</button>
+                  </div>
+                </div>
+                <div class="chat-messages">
+                  <div class="chat-msg user">
+                    <div class="msg-avatar">U</div>
+                    <div class="msg-body">
+                      <div class="msg-sender">You</div>
+                      <div class="msg-content">
+                        Generate a new refunds agent with topology changes
+                      </div>
+                    </div>
+                  </div>
+                  <div class="chat-msg arch">
+                    <div class="msg-avatar">A</div>
+                    <div class="msg-body">
+                      <div class="msg-sender">Arch</div>
+                      <div class="msg-content">
+                        This involves generating a new agent and updating the topology. I'll open
+                        the full view for this.
+                      </div>
+                      <div class="redirect-banner">
+                        <span class="redirect-icon">&#8599;</span>
+                        <div class="redirect-text">
+                          <strong>Opening in full view</strong><br />
+                          Topology + agent generation needs the artifact panel
+                        </div>
+                        <button class="redirect-btn">Open Arch AI</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="chat-input-area">
+                  <input type="text" placeholder="Type a message..." />
+                  <button class="send-btn disabled">&#8593;</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================================================================ -->
+    <!--  PART C: PHRASE COMPARISON TABLE                                 -->
+    <!-- ================================================================ -->
+    <hr class="section-divider" />
+    <h2>Phrase Strategy — Side by Side</h2>
+    <p class="annotation">
+      The two journeys use completely different phrase sets. Home phrases are
+      <strong>inspirational and use-case driven</strong> (what can you build?). In-project phrases
+      are <strong>operational and capability-driven</strong> (what can you do with what you have?).
+    </p>
+
+    <div
+      style="
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 24px;
+        margin-bottom: 32px;
+        max-width: 900px;
+      "
+    >
+      <!-- Home column -->
+      <div
+        style="
+          background: var(--surface);
+          border: 1px solid var(--border);
+          border-radius: var(--radius);
+          padding: 20px;
+        "
+      >
+        <div
+          style="
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            color: var(--amber);
+            margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+          "
+        >
+          <span
+            style="width: 8px; height: 8px; border-radius: 50%; background: var(--amber)"
+          ></span>
+          Home / Create Journey
+        </div>
+        <div style="font-size: 11px; color: var(--text-tertiary); margin-bottom: 12px">
+          Tone: Inspirational, use-case-driven, action verbs
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 6px; font-size: 12.5px">
+          <span>Build a customer support bot</span>
+          <span>Design a multi-agent workflow</span>
+          <span>Create an AI sales assistant</span>
+          <span>Automate your returns process</span>
+          <span>Search your existing projects</span>
+          <span>Start from a template</span>
+          <span>Describe your use case</span>
+          <span>Build an onboarding agent</span>
+          <span>Create a knowledge base assistant</span>
+          <span>Design an appointment scheduler</span>
+          <span>Automate order tracking</span>
+          <span>Build a feedback collection bot</span>
+          <span>Create a lead qualification agent</span>
+          <span>Design an internal helpdesk</span>
+          <span style="color: var(--amber)">What problem are you solving?</span>
+        </div>
+      </div>
+
+      <!-- In-Project column -->
+      <div
+        style="
+          background: var(--surface);
+          border: 1px solid var(--border);
+          border-radius: var(--radius);
+          padding: 20px;
+        "
+      >
+        <div
+          style="
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            color: var(--green);
+            margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+          "
+        >
+          <span
+            style="width: 8px; height: 8px; border-radius: 50%; background: var(--green)"
+          ></span>
+          In-Project Journey
+        </div>
+        <div style="font-size: 11px; color: var(--text-tertiary); margin-bottom: 12px">
+          Tone: Operational, capability-driven, debugging verbs
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 6px; font-size: 12.5px">
+          <span>Search agents, tools, sessions...</span>
+          <span>Explain how this agent works</span>
+          <span>Find recent failed sessions</span>
+          <span>Jump to any page or setting</span>
+          <span>Suggest improvements for an agent</span>
+          <span>Run a quick test conversation</span>
+          <span>Check deployment status</span>
+          <span>Query traces from the last hour</span>
+          <span>Which tools does this agent use?</span>
+          <span>Compile and validate all agents</span>
+          <span>Analyze session quality trends</span>
+          <span>Add error handling to a flow</span>
+          <span>Search the knowledge base</span>
+          <span>Show keyboard shortcuts</span>
+          <span style="color: var(--green)">What changed since last deploy?</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Additional context-specific overrides -->
+    <div
+      style="
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 20px;
+        max-width: 900px;
+        margin-bottom: 32px;
+      "
+    >
+      <div
+        style="
+          font-size: 12px;
+          font-weight: 600;
+          text-transform: uppercase;
+          letter-spacing: 0.8px;
+          color: var(--accent);
+          margin-bottom: 14px;
+        "
+      >
+        In-Project — Page-Specific Overrides
+      </div>
+      <div style="font-size: 11px; color: var(--text-tertiary); margin-bottom: 12px">
+        When the user is on a specific entity page, the first 5 phrases are swapped to be
+        contextual. The remaining 10 stay from the generic set.
+      </div>
+      <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; font-size: 12px">
+        <!-- Agent detail -->
+        <div>
+          <div style="font-weight: 600; color: var(--accent); margin-bottom: 8px">
+            On Agent Detail
+          </div>
+          <div
+            style="display: flex; flex-direction: column; gap: 3px; color: var(--text-secondary)"
+          >
+            <span>Explain <strong>{agent}</strong>'s flow</span>
+            <span>Suggest improvements</span>
+            <span>Add error handling to lifecycle</span>
+            <span>What tools does <strong>{agent}</strong> use?</span>
+            <span>Run a test conversation</span>
+          </div>
+        </div>
+        <!-- Session detail -->
+        <div>
+          <div style="font-weight: 600; color: var(--blue); margin-bottom: 8px">
+            On Session Detail
+          </div>
+          <div
+            style="display: flex; flex-direction: column; gap: 3px; color: var(--text-secondary)"
+          >
+            <span>Why did this session fail?</span>
+            <span>Show trace events</span>
+            <span>Explain the agent's decisions</span>
+            <span>What constraints were triggered?</span>
+            <span>Replay with different input</span>
+          </div>
+        </div>
+        <!-- Deployments -->
+        <div>
+          <div style="font-weight: 600; color: var(--green); margin-bottom: 8px">
+            On Deployments
+          </div>
+          <div
+            style="display: flex; flex-direction: column; gap: 3px; color: var(--text-secondary)"
+          >
+            <span>Deploy all agents to staging</span>
+            <span>Promote to production</span>
+            <span>Configure a Slack channel</span>
+            <span>Compare staging vs production</span>
+            <span>Rollback last deployment</span>
+          </div>
+        </div>
+        <!-- Tools page -->
+        <div style="margin-top: 12px">
+          <div style="font-weight: 600; color: var(--green); margin-bottom: 8px">On Tools</div>
+          <div
+            style="display: flex; flex-direction: column; gap: 3px; color: var(--text-secondary)"
+          >
+            <span>Test <strong>{tool}</strong> with sample input</span>
+            <span>Create a new HTTP tool</span>
+            <span>Which agents use this tool?</span>
+            <span>Check tool latency stats</span>
+            <span>Add authentication headers</span>
+          </div>
+        </div>
+        <!-- Analytics -->
+        <div style="margin-top: 12px">
+          <div style="font-weight: 600; color: var(--amber); margin-bottom: 8px">On Analytics</div>
+          <div
+            style="display: flex; flex-direction: column; gap: 3px; color: var(--text-secondary)"
+          >
+            <span>Show quality scores for today</span>
+            <span>Which agent has most errors?</span>
+            <span>Detect anomalies in last 7 days</span>
+            <span>Top user intents this week</span>
+            <span>Compare agent performance</span>
+          </div>
+        </div>
+        <!-- Search AI / KB -->
+        <div style="margin-top: 12px">
+          <div style="font-weight: 600; color: var(--green); margin-bottom: 8px">
+            On Knowledge Bases
+          </div>
+          <div
+            style="display: flex; flex-direction: column; gap: 3px; color: var(--text-secondary)"
+          >
+            <span>Search across all documents</span>
+            <span>Add a new document</span>
+            <span>Check ingestion status</span>
+            <span>How many chunks indexed?</span>
+            <span>Test a retrieval query</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================================================================ -->
+    <!--  INTERACTION FLOW                                                -->
+    <!-- ================================================================ -->
+    <hr class="section-divider" />
+    <h2>Interaction Flow</h2>
+    <p class="annotation">State transitions and keyboard shortcuts.</p>
+
+    <div
+      style="
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 32px;
+        max-width: 720px;
+        font-size: 13px;
+        line-height: 2;
+      "
+    >
+      <div style="color: var(--text-secondary); margin-bottom: 16px; font-weight: 600">
+        STATE MACHINE
+      </div>
+      <div
+        style="
+          display: flex;
+          flex-direction: column;
+          gap: 4px;
+          font-family: 'SF Mono', monospace;
+          font-size: 12px;
+        "
+      >
+        <div>
+          <span style="color: var(--accent)">COLLAPSED</span>
+          <span style="color: var(--text-tertiary)">---[click | Cmd+K]---></span>
+          <span style="color: var(--green)">FOCUSED</span>
+        </div>
+        <div>
+          <span style="color: var(--green)">FOCUSED</span>
+          <span style="color: var(--text-tertiary)">---[type query]---></span>
+          <span style="color: var(--green)">FOCUSED (filtered results)</span>
+        </div>
+        <div>
+          <span style="color: var(--green)">FOCUSED</span>
+          <span style="color: var(--text-tertiary)">---[Enter on search result]---></span>
+          <span style="color: var(--accent)">COLLAPSED</span> + navigate
+        </div>
+        <div>
+          <span style="color: var(--green)">FOCUSED</span>
+          <span style="color: var(--text-tertiary)">---[Enter on "Ask Arch" | Tab]---></span>
+          <span style="color: var(--amber)">CHAT</span>
+        </div>
+        <div>
+          <span style="color: var(--green)">FOCUSED</span>
+          <span style="color: var(--text-tertiary)">---[Enter on quick action]---></span>
+          <span style="color: var(--amber)">CHAT</span> (auto-send)
+        </div>
+        <div>
+          <span style="color: var(--green)">FOCUSED</span>
+          <span style="color: var(--text-tertiary)">---[Esc]---></span>
+          <span style="color: var(--accent)">COLLAPSED</span>
+        </div>
+        <div>
+          <span style="color: var(--amber)">CHAT</span>
+          <span style="color: var(--text-tertiary)">---[send message]---></span>
+          <span style="color: var(--amber)">CHAT (streaming)</span>
+        </div>
+        <div>
+          <span style="color: var(--amber)">CHAT</span>
+          <span style="color: var(--text-tertiary)">---[smart route trigger]---></span>
+          <span style="color: var(--red)">REDIRECT</span> banner
+        </div>
+        <div>
+          <span style="color: var(--red)">REDIRECT</span>
+          <span style="color: var(--text-tertiary)">---[click "Open Arch AI"]---></span>
+          <span style="color: var(--accent)">COLLAPSED</span> + navigate to full chat
+        </div>
+        <div>
+          <span style="color: var(--amber)">CHAT</span>
+          <span style="color: var(--text-tertiary)">---[click expand icon]---></span>
+          <span style="color: var(--accent)">COLLAPSED</span> + transfer buffer + navigate
+        </div>
+        <div>
+          <span style="color: var(--amber)">CHAT</span>
+          <span style="color: var(--text-tertiary)">---[Esc]---></span>
+          <span style="color: var(--accent)">COLLAPSED</span> (buffer preserved)
+        </div>
+        <div>
+          <span style="color: var(--amber)">CHAT</span>
+          <span style="color: var(--text-tertiary)">---[page navigation]---></span>
+          <span style="color: var(--amber)">CHAT</span> (context + phrases update, buffer preserved)
+        </div>
+      </div>
+
+      <div
+        style="
+          margin-top: 24px;
+          color: var(--text-secondary);
+          font-weight: 600;
+          margin-bottom: 12px;
+        "
+      >
+        KEYBOARD SHORTCUTS
+      </div>
+      <div style="display: grid; grid-template-columns: auto 1fr; gap: 4px 16px; font-size: 12px">
+        <span style="color: var(--text-tertiary)">Cmd+K</span> <span>Open / focus command bar</span>
+        <span style="color: var(--text-tertiary)">Esc</span>
+        <span>Close to collapsed (preserves chat buffer)</span>
+        <span style="color: var(--text-tertiary)">Up/Down</span>
+        <span>Navigate search results / quick actions</span>
+        <span style="color: var(--text-tertiary)">Enter</span>
+        <span>Select result / send message</span>
+        <span style="color: var(--text-tertiary)">Tab</span>
+        <span>Switch from search to "Ask Arch" mode</span>
+        <span style="color: var(--text-tertiary)">Cmd+Shift+K</span>
+        <span>Open full Arch AI view directly</span>
+      </div>
+
+      <div
+        style="
+          margin-top: 24px;
+          color: var(--text-secondary);
+          font-weight: 600;
+          margin-bottom: 12px;
+        "
+      >
+        ROTATING PHRASE LOGIC
+      </div>
+      <div style="font-size: 12px; color: var(--text-secondary); line-height: 1.8">
+        <div>
+          <strong>1.</strong> Detect journey: <code>projectId ? 'in-project' : 'home'</code>
+        </div>
+        <div><strong>2.</strong> Load base phrase set (15 phrases per journey)</div>
+        <div>
+          <strong>3.</strong> If in-project and on entity page, swap first 5 with page-specific
+          phrases
+        </div>
+        <div>
+          <strong>4.</strong> If agent context, inject <code>{agentName}</code> into phrase
+          templates
+        </div>
+        <div><strong>5.</strong> Cycle at 3.5s per phrase, smooth vertical slide transition</div>
+        <div>
+          <strong>6.</strong> Stagger offset when multiple bars visible (home has projects grid +
+          bar)
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

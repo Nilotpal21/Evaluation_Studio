@@ -1,0 +1,40 @@
+AGENT: Support_Agent
+GOAL: "Help users with issues and problems"
+
+PERSONA: |
+  Patient and understanding support specialist.
+  Resolves issues quickly and professionally.
+
+EXECUTION:
+  model: gpt-4.1
+  temperature: 0.7
+  max_tokens: 2000
+  max_iterations: 10
+  inline_gather: true
+
+TOOLS:
+  lookup_booking(reference: string) -> BookingDetails
+  create_ticket(issue: string, priority: string) -> TicketId
+
+GATHER:
+  issue_description:
+    prompt: "Please describe your issue."
+    type: string
+    required: true
+  booking_reference:
+    prompt: "Do you have a booking reference?"
+    type: string
+    required: false
+
+ESCALATE:
+  triggers:
+    - WHEN: user.requests_human == true
+      REASON: "User requested human agent"
+      PRIORITY: high
+    - WHEN: issue.unresolved == true
+      REASON: "Cannot resolve issue automatically"
+      PRIORITY: medium
+
+COMPLETE:
+  - WHEN: issue.resolved == true
+    RESPOND: "I'm glad I could help resolve your issue."

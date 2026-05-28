@@ -1,0 +1,11 @@
+{
+  "agent": "Network_Triage",
+  "locale": "en",
+  "strings": {
+    "triaging_alarm": "Triaging alarm... Retrieving alarm details and site information.",
+    "p1_critical": "PRIORITY: P1 - Critical service impact. Immediate specialist attention required.",
+    "p2_major": "PRIORITY: P2 - Significant degradation. Specialist attention within 30 minutes.",
+    "p3_minor": "PRIORITY: P3 - Minor issue. Scheduled specialist review.",
+    "routing_complete": "Triage complete. Classification and routing finished."
+  }
+}

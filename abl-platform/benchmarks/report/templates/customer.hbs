@@ -1,0 +1,271 @@
+# Platform Capacity Assessment Report > **Deployment Tier:**
+{{tier}}
+> **Assessment Date:**
+{{timestamp}}
+> **Environment:**
+{{environment}}
+
+--- ## Executive Summary A comprehensive capacity assessment was performed on your
+{{tier}}-tier deployment to validate performance characteristics and establish production readiness
+benchmarks.
+
+{{#if slaCompliance}}
+  {{#if slaCompliance.allPassed}}
+    All services met or exceeded the defined Service Level Agreement targets.
+  {{else}}
+    Some services require attention to meet SLA targets — see the SLA Compliance section below.
+  {{/if}}
+{{/if}}
+
+--- ## Benchmark Methodology The assessment uses progressive load testing to determine sustainable
+throughput for each platform component. Tests measure: - **Throughput capacity** — maximum
+sustainable requests per second - **Response latency** — median, 95th, and 99th percentile response
+times - **Resource utilization** — CPU and memory consumption under load - **Stability** — error
+rates, connection reliability, and recovery behavior All tests were conducted against the live
+deployment with representative workloads. --- ## Agent Conversation Performance | Service |
+Throughput (req/s) | Median Latency | 95th Percentile | 99th Percentile | Status | | ------- |
+-----------------: | -------------: | --------------: | --------------: | ------ |
+{{#each services}}
+  {{#if (eq this.saturation.trigger 'latency')}}
+    |
+    {{@key}}
+    |
+    {{this.saturation.maxRpsPerPod}}
+    |
+    {{formatMs this.latency.p50Ms}}
+    |
+    {{formatMs this.latency.p95Ms}}
+    |
+    {{formatMs this.latency.p99Ms}}
+    |
+    {{#if (gt this.measured.oomKills 0)}}{{statusIcon 'fail'}} Needs attention{{else}}{{statusIcon
+        'pass'
+      }}
+      Healthy{{/if}}
+    |
+  {{/if}}
+  {{#if (eq this.saturation.trigger 'error-rate')}}
+    |
+    {{@key}}
+    |
+    {{this.saturation.maxRpsPerPod}}
+    |
+    {{formatMs this.latency.p50Ms}}
+    |
+    {{formatMs this.latency.p95Ms}}
+    |
+    {{formatMs this.latency.p99Ms}}
+    |
+    {{#if (gt this.measured.oomKills 0)}}{{statusIcon 'fail'}} Needs attention{{else}}{{statusIcon
+        'pass'
+      }}
+      Healthy{{/if}}
+    |
+  {{/if}}
+  {{#if (eq this.saturation.trigger 'cpu')}}
+    |
+    {{@key}}
+    |
+    {{this.saturation.maxRpsPerPod}}
+    |
+    {{formatMs this.latency.p50Ms}}
+    |
+    {{formatMs this.latency.p95Ms}}
+    |
+    {{formatMs this.latency.p99Ms}}
+    |
+    {{#if (gt this.measured.oomKills 0)}}{{statusIcon 'fail'}} Needs attention{{else}}{{statusIcon
+        'pass'
+      }}
+      Healthy{{/if}}
+    |
+  {{/if}}
+  {{#if (eq this.saturation.trigger 'connections')}}
+    |
+    {{@key}}
+    |
+    {{this.saturation.maxRpsPerPod}}
+    |
+    {{formatMs this.latency.p50Ms}}
+    |
+    {{formatMs this.latency.p95Ms}}
+    |
+    {{formatMs this.latency.p99Ms}}
+    |
+    {{#if (gt this.measured.oomKills 0)}}{{statusIcon 'fail'}} Needs attention{{else}}{{statusIcon
+        'pass'
+      }}
+      Healthy{{/if}}
+    |
+  {{/if}}
+{{/each}}
+
+{{#each services}}
+  {{#if this.websocket}}
+
+    ### Real-Time Communication ({{@key}}) | Metric | Value | | ------ | ----- | | Max concurrent
+    connections |
+    {{this.websocket.maxTotalConnectionsPerPod}}
+    | | Connection reliability |
+    {{#if (gt this.websocket.connectionErrors 0)}}{{statusIcon 'warn'}}
+      {{this.websocket.connectionErrors}}
+      errors observed{{else}}{{statusIcon 'pass'}} No errors{{/if}}
+    | | Heartbeat reliability |
+    {{#if (gt this.websocket.heartbeatFailures 0)}}{{statusIcon 'warn'}}
+      {{this.websocket.heartbeatFailures}}
+      failures{{else}}{{statusIcon 'pass'}} Stable{{/if}}
+    |
+
+  {{/if}}
+{{/each}}
+
+{{#if hasLLMMetrics}}
+
+---
+
+## LLM Performance
+
+| Metric | Value |
+| ------ | ----: |
+| Provider | {{defaultVal llmProvider 'N/A'}} |
+| Model | {{defaultVal llmModel 'N/A'}} |
+| Avg Response Time | {{formatMs llmLatency.avgMs}} ms |
+| Median Response Time | {{formatMs llmLatency.medianMs}} ms |
+| p95 Response Time | {{formatMs llmLatency.p95Ms}} ms |
+| Max Response Time | {{formatMs llmLatency.maxMs}} ms |
+
+> LLM response time represents the model inference latency, excluding network overhead and middleware processing.
+
+{{/if}}
+
+--- ## Knowledge Base Performance | Data Store | Query Response (p95) | Write Response (p95) |
+Connection Utilization | Status | | ---------- | -------------------: | -------------------: |
+---------------------: | ------ |
+{{#each dataStores}}
+  |
+  {{@key}}
+  |
+  {{formatMs this.latency.queryP95Ms}}
+  |
+  {{formatMs this.latency.writeP95Ms}}
+  |
+  {{formatPercent (divide this.connections.utilizationPercent 100)}}
+  |
+  {{#if (gt this.connections.utilizationPercent 85)}}{{statusIcon 'warn'}}
+    High utilization{{else}}{{statusIcon 'pass'}} Healthy{{/if}}
+  |
+{{/each}}
+
+--- ## Data Store Health | Store | Storage Used | Daily Growth | Estimated Capacity | | ----- |
+-----------: | -----------: | -----------------: |
+{{#each dataStores}}
+  |
+  {{@key}}
+  |
+  {{this.resources.diskUsageGB}}
+  GB |
+  {{this.resources.diskGrowthRateGBPerDay}}
+  GB/day |
+  {{#if (gt this.resources.diskGrowthRateGBPerDay 0)}}~{{daysRemaining this}}
+    days{{else}}Stable{{/if}}
+  |
+{{/each}}
+
+--- ## SLA Compliance Summary
+
+{{#if slaTargets}}
+
+  | Metric | Target | Measured | Status | | ------ | -----: | -------: | ------ |
+  {{#each slaTargets}}
+    |
+    {{this.name}}
+    |
+    {{this.target}}
+    |
+    {{this.measured}}
+    |
+    {{#if this.passed}}{{statusIcon 'pass'}} Met{{else}}{{statusIcon 'fail'}} Not met{{/if}}
+    |
+  {{/each}}
+
+{{else}}
+
+  > No SLA targets were defined for this assessment. Contact your platform team to establish
+  performance baselines.
+
+{{/if}}
+
+{{#if integrationFlows}}
+
+  --- ## End-to-End Flow Performance | Flow | Max Throughput (req/s) | Max Concurrent Users |
+  Response Time (p95) | Status | | ---- | ---------------------: | -------------------: |
+  ------------------: | ------ |
+  {{#each integrationFlows}}
+    |
+    {{this.name}}
+    |
+    {{this.systemCeiling.maxRps}}
+    |
+    {{this.systemCeiling.maxConcurrentUsers}}
+    |
+    {{formatMs this.latency.p95Ms}}
+    |
+    {{statusIcon 'pass'}}
+    |
+  {{/each}}
+
+{{/if}}
+
+{{#if topology}}
+
+  --- ## Recommended Production Topology Based on the capacity assessment, the following topology is
+  recommended for production: | Component | Replicas | CPU (per pod) | Memory (per pod) | |
+  --------- | -------: | ------------- | ---------------- |
+  {{#each topology.services}}
+    |
+    {{this.name}}
+    |
+    {{this.replicas.min}}–{{this.replicas.max}}
+    |
+    {{this.resources.requests.cpu}}
+    |
+    {{this.resources.requests.memory}}
+    |
+  {{/each}}
+
+  {{#if topology.nodePools}}
+
+    ### Node Pool Summary | Pool | Instance Type | Min Nodes | Max Nodes | | ---- | ------------- |
+    --------: | --------: |
+    {{#each topology.nodePools}}
+      |
+      {{this.name}}
+      |
+      {{this.instanceType}}
+      |
+      {{this.minNodes}}
+      |
+      {{this.maxNodes}}
+      |
+    {{/each}}
+
+  {{/if}}
+
+{{/if}}
+
+--- ## Appendix ### Assessment Parameters | Parameter | Value | | --------- | ----- | | Deployment
+tier |
+{{tier}}
+| | Assessment date |
+{{timestamp}}
+| | Environment |
+{{environment}}
+| | Services assessed |
+{{serviceCount services}}
+| | Data stores assessed |
+{{serviceCount dataStores}}
+| ### Methodology Notes - Load tests use progressive ramp-up to identify sustainable throughput
+ceilings - Latency percentiles are computed from the full test duration after warm-up - Connection
+utilization reflects peak usage during sustained load - All measurements include standard
+operational overhead (health checks, monitoring) --- *Report generated
+{{generatedAt}}*

@@ -1,0 +1,81 @@
+{
+  "environment": "agents-dev",
+  "namespace": "abl-platform-dev",
+  "capturedAt": "2026-04-15",
+  "sourceOfTruth": {
+    "cluster": "aks-abl-dev-centralus",
+    "storageClass": "default",
+    "masterStatefulSet": "abl-platform-dev-redis-master",
+    "replicaStatefulSet": "abl-platform-dev-redis-replicas",
+    "configMap": "abl-platform-dev-redis-configuration"
+  },
+  "redis": {
+    "version": "7.4.1",
+    "topology": {
+      "masterReplicas": 1,
+      "readReplicas": 3,
+      "totalPods": 4
+    },
+    "nodePool": {
+      "name": "user",
+      "vmSku": "Standard_D8s_v5"
+    },
+    "persistence": {
+      "appendOnlyFileEnabled": true,
+      "rdbSnapshotsEnabled": false,
+      "flushCommandsDisabled": true
+    },
+    "masterResources": {
+      "requests": {
+        "cpu": "4",
+        "memory": "8Gi"
+      },
+      "limits": {
+        "cpu": "8",
+        "memory": "16Gi"
+      }
+    },
+    "replicaResources": {
+      "requests": {
+        "cpu": "2",
+        "memory": "8Gi"
+      },
+      "limits": {
+        "cpu": "4",
+        "memory": "16Gi"
+      }
+    },
+    "dataDisk": {
+      "storageClassSku": "StandardSSD_LRS",
+      "requestedCapacityGiB": 8,
+      "effectiveAzureTier": "E2",
+      "effectiveTierCapacityGiB": 8,
+      "limits": {
+        "baseIops": 500,
+        "baseThroughputMBps": 100,
+        "burstIops": 600,
+        "burstThroughputMBps": 150,
+        "burstDurationMinutes": 30
+      }
+    },
+    "clusterCapacity": {
+      "dataDisksTotalGiB": 32
+    },
+    "currentObservedUsage": {
+      "status": "critical",
+      "reason": "Latency error budget burn rate 41.0x within 1 hour.",
+      "cpuPeakMilliCores": 22,
+      "memoryPeakMiB": 265,
+      "connectionsPeak": 44,
+      "storageMetricsAvailable": false
+    }
+  },
+  "mathNotes": {
+    "diskTiering": "Azure Standard SSD pricing and performance follow fixed E-series tiers. An 8 GiB disk maps directly to the E2 tier.",
+    "unitConventions": {
+      "capacity": "GiB",
+      "throughput": "MB/s",
+      "iops": "operations/s"
+    }
+  }
+}

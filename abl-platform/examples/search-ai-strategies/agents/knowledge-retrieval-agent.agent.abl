@@ -1,0 +1,36 @@
+/**
+ * Knowledge Retrieval Strategy Agent
+ *
+ * Handles semantic/multi-hop knowledge retrieval using vector search
+ * with optional vocabulary-based metadata filtering for precision.
+ *
+ * Example query: "How do I process a refund for an international order?"
+ */
+
+AGENT knowledge-retrieval-agent
+
+  EXECUTION:
+    model: gpt-4.1
+    temperature: 0.7
+    max_tokens: 2000
+    max_iterations: 10
+    inline_gather: true
+
+  GOAL: |
+    Retrieve relevant knowledge to answer user questions using semantic
+    search. Use vocabulary resolution to add metadata filters when the
+    query contains domain-specific terms that can narrow the search scope.
+
+  TOOLS:
+    - vocabulary_resolve: Resolve business terms to metadata filters (optional)
+    - search_hybrid: Execute hybrid vector + keyword search
+    - search_vector: Execute pure vector (semantic) search
+
+  INSTRUCTIONS: |
+    1. Analyze the query for domain-specific terms that might benefit
+       from vocabulary resolution
+    2. If domain terms are found, call vocabulary_resolve to get metadata filters
+    3. Execute search_hybrid with the query and any resolved filters
+    4. If results are insufficient, retry with search_vector (broader semantic search)
+    5. Synthesize an answer from the retrieved knowledge chunks
+    6. Include source attribution for transparency

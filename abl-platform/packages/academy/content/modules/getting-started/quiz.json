@@ -1,0 +1,98 @@
+{
+  "moduleId": "getting-started",
+  "passThreshold": 0.8,
+  "questions": [
+    {
+      "id": "gs-q1",
+      "type": "mcq",
+      "stem": "A startup wants to build AI agents quickly without installing any local development tools. Which Agent Platform component should they use to define, test, and deploy agents entirely from a web browser?",
+      "options": [
+        {
+          "id": "a",
+          "text": "Runtime -- the agent execution engine"
+        },
+        {
+          "id": "b",
+          "text": "Studio -- the browser-based development environment",
+          "correct": true
+        },
+        {
+          "id": "c",
+          "text": "SearchAI -- the knowledge base and RAG pipeline"
+        }
+      ],
+      "explanation": "Studio is the browser-based IDE where you build, test, and manage agents -- no local installation required. Runtime is the execution engine that runs agents behind the scenes, and SearchAI handles knowledge base ingestion and retrieval."
+    },
+    {
+      "id": "gs-q2",
+      "type": "fill-blank",
+      "stem": "Agent Platform compiles agent definitions written in the ABL DSL into an ________ (two words, abbreviated IR) that the Runtime executes.",
+      "answer": "Intermediate Representation",
+      "acceptAlternatives": ["intermediate representation", "Intermediate representation"],
+      "explanation": "The ABL compiler transforms your .abl source files into an Intermediate Representation (IR) -- a framework-agnostic JSON structure that the Runtime loads and executes. You never need to work with the IR directly."
+    },
+    {
+      "id": "gs-q3",
+      "type": "mcq",
+      "stem": "In the Quickstart tutorial, what is the purpose of the SUPERVISOR definition that includes HANDOFF rules?",
+      "options": [
+        {
+          "id": "a",
+          "text": "It compiles agent definitions into executable artifacts for deployment"
+        },
+        {
+          "id": "b",
+          "text": "It analyzes each incoming message and routes it to the appropriate specialist agent",
+          "correct": true
+        },
+        {
+          "id": "c",
+          "text": "It manages the knowledge base and performs semantic search over documents"
+        }
+      ],
+      "explanation": "A Supervisor analyzes each incoming message against its HANDOFF rules and routes the conversation to the appropriate specialist agent. It acts as a router -- it does not handle domain tasks directly, compile code, or manage knowledge bases."
+    },
+    {
+      "id": "gs-q4",
+      "type": "mcq",
+      "stem": "When an end user sends a message through WhatsApp to an Agent Platform agent, which component receives the message, loads the agent definition, and manages the conversation session?",
+      "options": [
+        {
+          "id": "a",
+          "text": "Studio"
+        },
+        {
+          "id": "b",
+          "text": "SearchAI"
+        },
+        {
+          "id": "c",
+          "text": "Runtime",
+          "correct": true
+        }
+      ],
+      "explanation": "Runtime is the agent execution engine. It receives messages from end users via any channel (chat, voice, SDK, WhatsApp, etc.), loads the compiled agent definition (IR), executes reasoning or step-based flows, manages sessions, and delivers responses. Studio is for development, and SearchAI handles knowledge retrieval."
+    },
+    {
+      "id": "gs-q5",
+      "type": "mcq",
+      "stem": "Agent Platform describes itself as 'DSL-driven agent development.' What is the primary advantage of using a declarative DSL rather than writing imperative code to define agents?",
+      "options": [
+        {
+          "id": "a",
+          "text": "It requires learning a general-purpose programming language like Python before you can build agents"
+        },
+        {
+          "id": "b",
+          "text": "You describe what your agents should do in a structured, human-readable format, and the platform handles execution, routing, and observability",
+          "correct": true
+        },
+        {
+          "id": "c",
+          "text": "It eliminates the need for testing agents before deploying them to production"
+        }
+      ],
+      "explanation": "ABL's declarative approach means you describe the agent's goal, tools, and behavior -- the platform handles how to execute it. This replaces hundreds of lines of framework boilerplate with concise, version-controlled, diffable definitions readable by non-engineers. Testing is still essential before production deployment."
+    }
+  ]
+}

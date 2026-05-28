@@ -1,0 +1,62 @@
+/**
+ * Saludsa Identity Verification Tools
+ * MCP tools for user validation, broker validation, and security questions.
+ * All tools connect to the Saludsa MCP backend.
+ */
+
+TOOLS:
+  auth: api_key
+  timeout: 45000
+  auth_config:
+    header_name: "Authorization"
+    api_key: "{{env.SALUDSA_MCP_AUTH}}"
+
+  user_validation(telePhoneNum: string, inboundNumber: string, channel: string = "voice", botUserId: string = "", botSessionId: string = "", sessionId: string) -> {userType: string, timeSlot: string, title: string, surName: string, apiIdCard: string, ticketId: string}
+    type: http
+    endpoint: "{{env.SALUDSA_MCP_ENDPOINT}}/userValidation"
+    method: POST
+    description: "Validate user type by phone number. Returns userType (Cliente, Broker, Director, Business Representative, non client), timeSlot, title, surName."
+
+  validate_user() -> {success: boolean, role: string, contractId: string, ticketId: string, customerName: string, needs_consent: boolean, apiError: boolean, priorityTransfer: string, isXPRExist: boolean, isPCAExist: boolean, isDRSExist: boolean, isTRKExist: boolean, customerDetails: object}
+    type: http
+    endpoint: "{{env.SALUDSA_MCP_ENDPOINT}}/validateUser"
+    method: POST
+    description: "Validate user by cedula/ID card number. All fields read from session — no parameters needed."
+    body_template: |
+      {
+        "idCard": "{{session.idCard}}",
+        "channel": "{{session.channel}}",
+        "botUserId": "",
+        "botSessionId": "",
+        "sessionId": "{{session.sessionId}}"
+      }
+
+  validate_broker(idCard: string, channelType: string, sessionId: string) -> {success: boolean, apiError: boolean, message: string}
+    type: http
+    endpoint: "{{env.SALUDSA_MCP_ENDPOINT}}/validate-broker"
+    method: POST
+    description: "Validate broker by ID card."
+
+  validar_agente_venta(brokerCode: number, sessionId: string) -> {success: boolean, apiError: boolean, message: string}
+    type: http
+    endpoint: "{{env.SALUDSA_MCP_ENDPOINT}}/validarAgenteVenta"
+    method: POST
+    description: "Validate sales agent by director code or broker code."
+
+  consultar_agente_venta(idCardOrPassport: string, userRole: string, userPhoneNumber: string, fromUserValidation: string = "", sessionId: string) -> {success: boolean, apiError: boolean, message: string, brokerDetails: object}
+    type: http
+    endpoint: "{{env.SALUDSA_MCP_ENDPOINT}}/consultarAgenteVenta"
+    method: POST
+    description: "Validate sales agent by national ID card of Broker/Director."
+
+  check_priority_transfer(idCard: string, channel: string = "web", sessionId: string) -> {hasPriority: boolean, transferType: string}
+    type: http
+    endpoint: "{{env.SALUDSA_MCP_ENDPOINT}}/checkPriorityTransfer"
+    method: POST
+    description: "Check XPR/PCA/SAC priority transfer eligibility."
+
+  get_security_questions(sessionId: string) -> {question: string, expected_answer: string, isOtpVerified: boolean, isAuthQVerified: boolean}
+    type: http
+    endpoint: "{{env.SALUDSA_MCP_ENDPOINT}}/getSecurityQuestions"
+    method: POST
+    description: "Return one random security question by user role (Holder, Beneficiary, Payer). Returns isOtpVerified/isAuthQVerified flags if already authenticated."

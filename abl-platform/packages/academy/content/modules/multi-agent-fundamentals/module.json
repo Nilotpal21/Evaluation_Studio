@@ -1,0 +1,12 @@
+{
+  "id": "multi-agent-fundamentals",
+  "title": "Multi-Agent Fundamentals",
+  "lessons": [
+    {
+      "id": "01-multi-agent-tutorial",
+      "title": "Multi-Agent Tutorial: Supervisors & Knowledge",
+      "sourceFile": "tutorials/03-multi-agent-and-knowledge.md",
+      "minutes": 19
+    }
+  ]
+}

@@ -1,0 +1,39 @@
+{
+  "format_version": "2.0",
+  "name": "External A2A Bridge Demo",
+  "slug": "external-a2a-bridge",
+  "description": "Platform-hosted agents collaborating with a Vercel-hosted external A2A agent using multi-turn context exchange and inline file delivery back into the platform",
+  "abl_version": "1.0",
+  "exported_at": "2026-04-22T00:00:00.000Z",
+  "entry_agent": "Platform_Bridge_Desk",
+  "dsl_format": "legacy",
+  "layers_included": ["core"],
+  "agents": {
+    "Platform_Bridge_Desk": {
+      "path": "agents/platform_bridge_desk.agent.abl",
+      "type": "supervisor",
+      "description": "Entry agent that hands user turns to the hosted external agent and handles callback-prefixed platform work locally"
+    },
+    "Platform_Research_Local": {
+      "path": "agents/platform_research_local.agent.abl",
+      "type": "agent",
+      "description": "Platform-local research specialist for callback turns from the hosted external service"
+    },
+    "Platform_File_Local": {
+      "path": "agents/platform_file_local.agent.abl",
+      "type": "agent",
+      "description": "Platform-local file receiver for inline A2A file delivery from the hosted external service"
+    }
+  },
+  "tools": {},
+  "metadata": {
+    "entity_counts": {
+      "agents": 3,
+      "tools_files": 0
+    },
+    "required_config_vars": ["EXTERNAL_AGENT_URL"],
+    "supporting_infrastructure": {
+      "external-vercel-agent": "Next.js service under external-vercel-agent/ that exposes A2A endpoints and calls this project back through a platform A2A connection"
+    }
+  }
+}

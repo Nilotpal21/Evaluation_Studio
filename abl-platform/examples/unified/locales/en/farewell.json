@@ -1,0 +1,10 @@
+{
+  "agent": "Farewell_Agent",
+  "locale": "en",
+  "strings": {
+    "feedback_prompt": "How was your experience today?",
+    "goodbye_bye": "Thank you for choosing our service! Have a wonderful trip and we look forward to helping you again soon. Safe travels!",
+    "goodbye_thanks": "You're welcome! It was my pleasure helping you. Is there anything else I can assist with before you go?",
+    "goodbye_done": "Perfect! Your session is complete. If you need any help with your booking, just come back anytime. Have a great day!"
+  }
+}

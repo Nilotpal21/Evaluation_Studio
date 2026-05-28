@@ -1,0 +1,98 @@
+{
+  "moduleId": "reuse-integration",
+  "passThreshold": 0.8,
+  "questions": [
+    {
+      "id": "ri-q1",
+      "type": "mcq",
+      "stem": "A consumer project imports a module with alias 'billing' that contains an agent named 'billing_lookup'. What is the mounted name of this agent in the consumer project?",
+      "options": [
+        {
+          "id": "a",
+          "text": "billing_billing_lookup (single underscore separator)"
+        },
+        {
+          "id": "b",
+          "text": "billing__billing_lookup (double underscore separator)",
+          "correct": true
+        },
+        {
+          "id": "c",
+          "text": "billing.billing_lookup (dot separator)"
+        }
+      ],
+      "explanation": "When a module is imported with an alias, all agent and tool names are automatically prefixed with the alias followed by a double underscore (alias__name). This naming convention prevents conflicts between modules and the project's own agents. The double underscore is also why aliases cannot contain double underscores themselves."
+    },
+    {
+      "id": "ri-q2",
+      "type": "fill-blank",
+      "stem": "A module release published with version 1.0.0 cannot be modified after publication. This guarantee is called the ___ guarantee.",
+      "answer": "immutability",
+      "acceptAlternatives": ["immutability", "Immutability", "immutable"],
+      "explanation": "Once a release is published, the artifact (DSL source, compiled IR), contract, and source hash cannot be modified. This immutability guarantee ensures that consumers always get exactly the code they pinned to. A release can be archived (hidden from catalog) but never deleted while referenced by consumers."
+    },
+    {
+      "id": "ri-q3",
+      "type": "mcq",
+      "stem": "A module author tries to publish a release for a tool that has an inline API key hardcoded in its HTTP auth configuration instead of using auth_profile_ref. What happens?",
+      "options": [
+        {
+          "id": "a",
+          "text": "The release publishes successfully with a warning about the inline credential"
+        },
+        {
+          "id": "b",
+          "text": "The publish is rejected with a LITERAL_AUTH_VALUE safety violation error",
+          "correct": true
+        },
+        {
+          "id": "c",
+          "text": "The system automatically converts the inline key to a config variable reference"
+        }
+      ],
+      "explanation": "The publish safety validator rejects inline API keys, PEM private keys, Bearer tokens, and other credential patterns. The author must use auth_profile_ref, {{env.*}}, {{config.*}}, or {{secrets.*}} templating for all sensitive values. This prevents secrets from being included in the immutable release artifact."
+    },
+    {
+      "id": "ri-q4",
+      "type": "mcq",
+      "stem": "An API client sends a request to list sessions but receives a 429 status code with a Retry-After header. What is the correct response strategy?",
+      "options": [
+        {
+          "id": "a",
+          "text": "Switch to a different API key and retry immediately"
+        },
+        {
+          "id": "b",
+          "text": "Implement exponential backoff, waiting at least the duration specified in the Retry-After header before retrying",
+          "correct": true
+        },
+        {
+          "id": "c",
+          "text": "Increase the request timeout and send the same request again immediately"
+        }
+      ],
+      "explanation": "A 429 Too Many Requests response means the per-tenant rate limit has been exceeded. The Retry-After header indicates how many seconds to wait before retrying. The platform documentation recommends implementing exponential backoff for 429 and 503 responses. The response also includes a retryAfterMs field in the JSON body for programmatic handling."
+    },
+    {
+      "id": "ri-q5",
+      "type": "mcq",
+      "stem": "A consumer project has a module dependency using selector type 'environment' with value 'production'. The module author promotes release 1.1.0 to production (previously 1.0.0). What happens to the consumer's dependency?",
+      "options": [
+        {
+          "id": "a",
+          "text": "The consumer's dependency automatically resolves to 1.1.0 on the next deployment, since it tracks the production environment pointer",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "The consumer must manually upgrade the dependency to 1.1.0 before it takes effect"
+        },
+        {
+          "id": "c",
+          "text": "The consumer's existing active deployment immediately switches to 1.1.0"
+        }
+      ],
+      "explanation": "Environment selectors track whatever release is promoted to that environment. When the module author promotes 1.1.0 to production, the consumer's dependency resolves to 1.1.0 on the next deployment build. However, existing active deployments are unaffected because they use frozen deployment module snapshots that capture the exact state at deploy time. The new version only takes effect when the consumer creates a new deployment."
+    }
+  ]
+}

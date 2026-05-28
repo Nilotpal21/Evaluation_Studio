@@ -1,0 +1,31 @@
+AGENT: Specialist_Booking
+
+GOAL: "Handle booking requests and collect booking details"
+
+FLOW:
+  entry_point: collect
+  steps:
+    - collect
+    - confirm
+
+collect:
+  GATHER:
+    - destination: required
+    - date: required
+  ON_INPUT:
+    - IF: input contains "paris"
+      SET: destination = "Paris"
+      SET: date = "2025-06-15"
+      THEN: confirm
+    - IF: input contains "london"
+      SET: destination = "London"
+      SET: date = "2025-07-01"
+      THEN: confirm
+    - ELSE:
+      THEN: collect
+
+confirm:
+  SET: confirmation_id = "BK-12345"
+  SET: total_price = "299.99"
+  RESPOND: "Booking confirmed for {{destination}} on {{date}}. Reference: {{confirmation_id}}, Total: ${{total_price}}"
+  THEN: COMPLETE

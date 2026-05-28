@@ -1,0 +1,48 @@
+SUPERVISOR: EnvDemo_Supervisor
+VERSION: "2.0"
+DESCRIPTION: "Routes requests to the Stock Lookup agent — demonstrates environment variables"
+GOAL: "Route user requests to the stock lookup specialist"
+
+EXECUTION:
+  model: gpt-4.1
+  temperature: 0.3
+  max_tokens: 1500
+  max_iterations: 5
+  inline_gather: true
+  pipeline:
+    enabled: true
+    mode: sequential
+    model: qwen35-a3b-35b
+    shortCircuit:
+      enabled: true
+      confidenceThreshold: 0.85
+
+PERSONA: |
+  Simple routing assistant for the environment variable demo.
+  Routes all requests to the Stock Lookup agent.
+
+MEMORY:
+  session:
+    - session_context
+
+AGENTS:
+  stock_lookup: Stock_Lookup
+
+ON_START:
+  - SET: session_context = COALESCE(session_context, "Environment variable demo market data request")
+  - RESPOND: |
+      Welcome to the Env-Var Demo!
+      I can look up stock prices and market news.
+      Try: "What's the price of AAPL?" or "Show me tech news"
+
+HANDOFF:
+  - TO: Stock_Lookup
+    WHEN: intent.category == "stock_query" OR intent.category == "market_news" OR intent.category == "general"
+    CONTEXT:
+      pass: [session_context]
+      summary: "User wants stock or market information"
+    EXPECT_RETURN: false
+
+COMPLETE:
+  - WHEN: handoff_successful == true
+    RESPOND: "Done!"

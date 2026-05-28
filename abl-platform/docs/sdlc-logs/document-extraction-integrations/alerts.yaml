@@ -1,0 +1,104 @@
+# Prometheus alert rules — Workflows → Document Extraction
+# LLD §3 Phase 4 task 4.6 / HLD §4.2 alerts.
+# Deploy target: abl-platform-deploy:prometheus/rules/workflows-document-extraction.yaml
+# Owner: Workflows team.
+groups:
+  - name: workflows-document-extraction
+    interval: 30s
+    rules:
+      # ── Queue saturation (two-queue topology) ─────────────────────────
+      - alert: DoclingIngestionQueueBacklog
+        expr: bullmq_queue_depth{queue="search-docling-extraction"} > 200
+        for: 10m
+        labels:
+          severity: warning
+          team: workflows
+        annotations:
+          summary: 'Docling ingestion queue depth > 200 for 10 minutes'
+          description: |
+            BullMQ queue `search-docling-extraction` has more than 200 waiting jobs for 10 minutes.
+            This is the ingestion side of the two-queue topology (LLD §1 D-2).
+            Investigate Docling service throughput or scale ingestion workers.
+
+      - alert: WorkflowDoclingQueueBacklog
+        expr: bullmq_queue_depth{queue="workflow-docling-extraction"} > 50
+        for: 10m
+        labels:
+          severity: warning
+          team: workflows
+        annotations:
+          summary: 'Workflow docling queue depth > 50 for 10 minutes'
+          description: |
+            BullMQ queue `workflow-docling-extraction` has more than 50 waiting jobs for 10 minutes.
+            Workflow-path traffic is being starved. Check reserved-slot configuration
+            (`WORKFLOW_DOCLING_MAX_CONCURRENT_JOBS`) and downstream Docling capacity.
+
+      # ── Callback delivery health ─────────────────────────────────────
+      - alert: WorkflowDoclingCallbackFailureRate
+        expr: |
+          (
+            sum(rate(workflow_docling_callback_post_failures_total[5m]))
+            /
+            clamp_min(sum(rate(workflow_docling_callback_post_attempts_total[5m])), 1)
+          ) > 0.001
+        for: 10m
+        labels:
+          severity: critical
+          team: workflows
+        annotations:
+          summary: 'Workflow docling callback failure ratio > 0.1% for 10 minutes'
+          description: |
+            More than 0.1% of callback POSTs from search-ai workers to the workflow-engine
+            callback route are failing. Check the callback-poster failure error_class
+            distribution (`workflow_docling_callback_post_failures_total{error_class=...}`)
+            — TIMESTAMP_EXPIRED indicates clock skew between worker/engine pods;
+            SIGNATURE_INVALID indicates a real auth event.
+
+      # ── Rate limiting ────────────────────────────────────────────────
+      - alert: WorkflowDoclingRateLimitedExcessive
+        expr: |
+          (
+            sum by (tenant) (rate(workflow_docling_rate_limited_total[5m]))
+            /
+            clamp_min(sum by (tenant) (rate(workflow_docling_callback_post_attempts_total[5m])), 1)
+          ) > 0.01
+        for: 10m
+        labels:
+          severity: warning
+          team: workflows
+        annotations:
+          summary: 'Tenant {{ $labels.tenant }} hitting Docling rate-limit > 1% for 10 minutes'
+          description: |
+            Tenant `{{ $labels.tenant }}` has more than 1% of extraction attempts hitting
+            the per-tenant rate-limiter for 10 minutes. Consider raising the per-tenant
+            quota in `ConnectorConnection.limitPerMinute` if the workload is legitimate,
+            or auditing the workflow design if the rate is anomalous.
+
+      # ── Azure DI cost cap ────────────────────────────────────────────
+      - alert: AzureDICostCapApproaching
+        expr: azure_di_cost_cap_used_ratio > 0.8
+        for: 5m
+        labels:
+          severity: warning
+          team: workflows
+        annotations:
+          summary: 'Azure DI cost cap used > 80% for {{ $labels.tenant }}/{{ $labels.project }}'
+          description: |
+            `usageCount / cap` for Azure DI connection `{{ $labels.tenant }}/{{ $labels.project }}`
+            ({{ $labels.cap_kind }} cap) has exceeded 80% of the monthly budget.
+            Pre-emptively raise the cap or warn the project owner before the hard cap kicks in.
+
+      # ── Azure DI circuit breaker ─────────────────────────────────────
+      - alert: AzureDICircuitBreakerOpen
+        expr: azure_di_circuit_breaker_state == 2
+        for: 5m
+        labels:
+          severity: critical
+          team: workflows
+        annotations:
+          summary: 'Azure DI breaker OPEN for {{ $labels.tenant }} for 5 minutes'
+          description: |
+            Azure Document Intelligence circuit breaker is open (state=2) for tenant
+            `{{ $labels.tenant }}` for 5 minutes. Outbound Azure DI calls are rejected
+            with `CIRCUIT_OPEN`. Investigate Azure DI service health and check the
+            tenant's recent failure burst.

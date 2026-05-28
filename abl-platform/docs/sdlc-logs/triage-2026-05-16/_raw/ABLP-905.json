@@ -1,0 +1,3758 @@
+{
+  "issue": {
+    "expand": "renderedFields,names,schema,operations,editmeta,changelog,versionedRepresentations",
+    "id": "547708",
+    "self": "https://koreteam.atlassian.net/rest/api/3/issue/547708",
+    "key": "ABLP-905",
+    "renderedFields": {
+      "statuscategorychangedate": "Tuesday 6:57 PM",
+      "issuetype": null,
+      "timespent": null,
+      "project": null,
+      "fixVersions": null,
+      "aggregatetimespent": null,
+      "statusCategory": null,
+      "resolution": null,
+      "customfield_13700": null,
+      "customfield_15205": null,
+      "resolutiondate": null,
+      "workratio": null,
+      "issuerestriction": null,
+      "watches": null,
+      "lastViewed": "Tuesday 2:06 PM",
+      "created": "07/May/26 6:56 PM",
+      "customfield_15279": null,
+      "priority": null,
+      "customfield_15514": null,
+      "labels": null,
+      "customfield_15508": null,
+      "timeestimate": null,
+      "aggregatetimeoriginalestimate": null,
+      "versions": null,
+      "issuelinks": null,
+      "assignee": null,
+      "updated": "Wednesday 10:23 AM",
+      "status": null,
+      "components": null,
+      "timeoriginalestimate": null,
+      "description": "<p>Importing a project archive that was created through the <b>official Studio export</b> fails at the <b>preview</b> stage with:</p>\n\n<div class=\"preformatted panel\" style=\"border-width: 1px;\"><div class=\"preformattedContent panelContent\">\n<pre>RUNTIME_CONFIG_SAVE_VALIDATION_FAILED:\nUnrecognized key(s) in object: 'projectId', 'tenantId', 'createdBy', '_v'</pre>\n</div></div>\n\n<p> Preview shows <b>0 Added / 0 Modified / 0 Removed</b> and the import cannot proceed. Re-exporting the project does not help — the issue is in the export/import contract itself.</p>\n\n<h3><a name=\"Stepstoreproduce\"></a>Steps to reproduce</h3>\n\n<ol>\n\t<li>In Studio, open  project</li>\n\t<li>Use <b>Export Project</b> to download the archive.</li>\n\t<li>In another (or the same) workspace, open <b>Import Project</b> and select the archive.</li>\n\t<li>Observe <b>Failed to preview import</b> banner with the error above and a blocking issue: <em>“Unrecognized key(s) in object: 'projectId', 'tenantId', 'createdBy', '_v'”</em>.</li>\n</ol>\n\n\n<h3><a name=\"Expected\"></a>Expected</h3>\n\n<p>Preview succeeds; runtime config is staged for import (added/modified/unchanged as appropriate).</p>\n\n<h3><a name=\"Actual\"></a>Actual</h3>\n\n<p>Preview fails on <tt>project_runtime_configs</tt> due to four unrecognized keys.</p>\n\n<hr />\n\n<p><b>Details:</b></p>\n\n<p>ProjectId: 019dd384-2796-7dd3-8abb-60a40e2143ce</p>\n\n<p>Email: <a href=\"mailto:upendher.musham@kore.com\" class=\"external-link\" rel=\"nofollow noreferrer\">upendher.musham@kore.com</a></p>\n\n<p>Workspace: goAgentic</p>\n\n<p>Project name: Cigna Demo</p>\n\n\n\n<hr />\n\n\n\n<p><b>Initial Analysis(May help for fixing)</b></p>\n\n<p>Two leaks on the <b>export</b> side and one re-injection on the <b>import</b> side, against a strict Zod save-validator:</p>\n\n<ol>\n\t<li><b>Exporter does not strip the custom version field or audit field.</b> <tt>packages/project-io/src/export/layer-assemblers/assembler-utils.ts</tt>:\n<div class=\"preformatted panel\" style=\"border-width: 1px;\"><div class=\"preformattedContent panelContent\">\n<pre>const DEFAULT_INTERNAL_KEYS = ['_id', '__v', 'projectId', 'tenantId', 'createdAt', 'updatedAt'];</pre>\n</div></div>\n<p>The runtime config model defines a <b>custom</b> <tt><em>v</tt> (single underscore — not Mongoose’s <tt></em>_v</tt>) and the document also carries <tt>createdBy</tt>:</p>\n<div class=\"preformatted panel\" style=\"border-width: 1px;\"><div class=\"preformattedContent panelContent\">\n<pre>// packages/database/src/models/project-runtime-config.model.ts\n_v: { type: Number, default: 1 },</pre>\n</div></div>\n<p>Neither <tt>_v</tt> nor <tt>createdBy</tt> is in <tt>DEFAULT_INTERNAL_KEYS</tt>, so both leak into <tt>config/runtime-config.json</tt>.</p></li>\n\t<li><b>Importer re-injects ownership unconditionally.</b> <tt>packages/project-io/src/import/layer-disassemblers/disassembler-utils.ts</tt> <tt>injectOwnership</tt> always sets <tt>projectId</tt>, <tt>tenantId</tt>, and <tt>createdBy</tt> on the staged record from server context.</li>\n\t<li><b>Save-side validator is strict.</b> The downstream save validator for <tt>project_runtime_configs</tt> does not recognize ownership/version fields, so it rejects all four (<tt>projectId</tt>, <tt>tenantId</tt>, <tt>createdBy</tt>, <tt>_v</tt>) with the literal Zod strict-object message.</li>\n</ol>\n\n\n<p>End result: even a clean Studio export ships an archive that the same platform’s importer rejects.</p>\n\n\n\n<p><span class=\"image-wrap\" style=\"\"><img src=\"https://koreteam.atlassian.net/rest/api/3/attachment/content/757691\" alt=\"image-20260508-024754.png\" width=\"862\" style=\"border: 0px solid black\" /></span></p>",
+      "customfield_15225": "",
+      "customfield_11300": null,
+      "timetracking": {},
+      "security": null,
+      "attachment": [
+        {
+          "self": "https://koreteam.atlassian.net/rest/api/3/attachment/757691",
+          "id": "757691",
+          "filename": "image-20260508-024754.png",
+          "author": {
+            "self": "https://koreteam.atlassian.net/rest/api/3/user?accountId=712020%3Aa4bdca42-00e1-40ae-8f10-83b46b10b367",
+            "accountId": "712020:a4bdca42-00e1-40ae-8f10-83b46b10b367",
+            "avatarUrls": {
+              "48x48": "https://secure.gravatar.com/avatar/919c8fcf256ed6af0ce154faa55a9d34?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FUM-3.png",
+              "24x24": "https://secure.gravatar.com/avatar/919c8fcf256ed6af0ce154faa55a9d34?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FUM-3.png",
+              "16x16": "https://secure.gravatar.com/avatar/919c8fcf256ed6af0ce154faa55a9d34?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FUM-3.png",
+              "32x32": "https://secure.gravatar.com/avatar/919c8fcf256ed6af0ce154faa55a9d34?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FUM-3.png"
+            },
+            "displayName": "Upendher Musham",
+            "active": true,
+            "timeZone": "Asia/Kolkata",
+            "accountType": "atlassian"
+          },
+          "created": "08/May/26 8:18 AM",
+          "size": "135 kB",
+          "mimeType": "image/png",
+          "content": "https://koreteam.atlassian.net/rest/api/3/attachment/content/757691",
+          "thumbnail": "https://koreteam.atlassian.net/rest/api/3/attachment/thumbnail/757691"
+        },
+        {
+          "self": "https://koreteam.atlassian.net/rest/api/3/attachment/759081",
+          "id": "759081",
+          "filename": "image-20260512-131720.png",
+          "author": {
+            "self": "https://koreteam.atlassian.net/rest/api/3/user?accountId=712020%3Aa4bdca42-00e1-40ae-8f10-83b46b10b367",
+            "accountId": "712020:a4bdca42-00e1-40ae-8f10-83b46b10b367",
+            "avatarUrls": {
+              "48x48": "https://secure.gravatar.com/avatar/919c8fcf256ed6af0ce154faa55a9d34?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FUM-3.png",
+              "24x24": "https://secure.gravatar.com/avatar/919c8fcf256ed6af0ce154faa55a9d34?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FUM-3.png",
+              "16x16": "https://secure.gravatar.com/avatar/919c8fcf256ed6af0ce154faa55a9d34?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FUM-3.png",
+              "32x32": "https://secure.gravatar.com/avatar/919c8fcf256ed6af0ce154faa55a9d34?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FUM-3.png"
+            },
+            "displayName": "Upendher Musham",
+            "active": true,
+            "timeZone": "Asia/Kolkata",
+            "accountType": "atlassian"
+          },
+          "created": "Tuesday 6:57 PM",
+          "size": "354 kB",
+          "mimeType": "image/png",
+          "content": "https://koreteam.atlassian.net/rest/api/3/attachment/content/759081",
+          "thumbnail": "https://koreteam.atlassian.net/rest/api/3/attachment/thumbnail/759081"
+        }
+      ],
+      "aggregatetimeestimate": null,
+      "summary": null,
+      "creator": null,
+      "subtasks": null,
+      "reporter": null,
+      "aggregateprogress": null,
+      "customfield_10002": null,
+      "customfield_10400": null,
+      "customfield_13900": null,
+      "environment": "",
+      "duedate": "Fri, 15/May/26",
+      "progress": null,
+      "votes": null,
+      "comment": {
+        "comments": [
+          {
+            "self": "https://koreteam.atlassian.net/rest/api/3/issue/547708/comment/1366714",
+            "id": "1366714",
+            "author": {
+              "self": "https://koreteam.atlassian.net/rest/api/3/user?accountId=557058%3A19965570-a9cd-4d76-b059-6af5ae4fdca7",
+              "accountId": "557058:19965570-a9cd-4d76-b059-6af5ae4fdca7",
+              "emailAddress": "prasanna@kore.com",
+              "avatarUrls": {
+                "48x48": "https://secure.gravatar.com/avatar/84aa6c5f7ca4865903e52515ef5499c4?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FPA-6.png",
+                "24x24": "https://secure.gravatar.com/avatar/84aa6c5f7ca4865903e52515ef5499c4?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FPA-6.png",
+                "16x16": "https://secure.gravatar.com/avatar/84aa6c5f7ca4865903e52515ef5499c4?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FPA-6.png",
+                "32x32": "https://secure.gravatar.com/avatar/84aa6c5f7ca4865903e52515ef5499c4?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FPA-6.png"
+              },
+              "displayName": "Prasanna Arikala",
+              "active": true,
+              "timeZone": "Asia/Kolkata",
+              "accountType": "atlassian"
+            },
+            "body": "<p>This has been fixed in Dev</p>",
+            "updateAuthor": {
+              "self": "https://koreteam.atlassian.net/rest/api/3/user?accountId=557058%3A19965570-a9cd-4d76-b059-6af5ae4fdca7",
+              "accountId": "557058:19965570-a9cd-4d76-b059-6af5ae4fdca7",
+              "emailAddress": "prasanna@kore.com",
+              "avatarUrls": {
+                "48x48": "https://secure.gravatar.com/avatar/84aa6c5f7ca4865903e52515ef5499c4?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FPA-6.png",
+                "24x24": "https://secure.gravatar.com/avatar/84aa6c5f7ca4865903e52515ef5499c4?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FPA-6.png",
+                "16x16": "https://secure.gravatar.com/avatar/84aa6c5f7ca4865903e52515ef5499c4?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FPA-6.png",
+                "32x32": "https://secure.gravatar.com/avatar/84aa6c5f7ca4865903e52515ef5499c4?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FPA-6.png"
+              },
+              "displayName": "Prasanna Arikala",
+              "active": true,
+              "timeZone": "Asia/Kolkata",
+              "accountType": "atlassian"
+            },
+            "created": "Tuesday 11:45 AM",
+            "updated": "Tuesday 11:45 AM",
+            "jsdPublic": true
+          },
+          {
+            "self": "https://koreteam.atlassian.net/rest/api/3/issue/547708/comment/1367363",
+            "id": "1367363",
+            "author": {
+              "self": "https://koreteam.atlassian.net/rest/api/3/user?accountId=712020%3Aa4bdca42-00e1-40ae-8f10-83b46b10b367",
+              "accountId": "712020:a4bdca42-00e1-40ae-8f10-83b46b10b367",
+              "avatarUrls": {
+                "48x48": "https://secure.gravatar.com/avatar/919c8fcf256ed6af0ce154faa55a9d34?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FUM-3.png",
+                "24x24": "https://secure.gravatar.com/avatar/919c8fcf256ed6af0ce154faa55a9d34?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FUM-3.png",
+                "16x16": "https://secure.gravatar.com/avatar/919c8fcf256ed6af0ce154faa55a9d34?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FUM-3.png",
+                "32x32": "https://secure.gravatar.com/avatar/919c8fcf256ed6af0ce154faa55a9d34?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FUM-3.png"
+              },
+              "displayName": "Upendher Musham",
+              "active": true,
+              "timeZone": "Asia/Kolkata",
+              "accountType": "atlassian"
+            },
+            "body": "<p>Above issue is fixed but Import/export issue is still <b>reproducible  when eval</b> artifacts are included while exporting.</p>\n\n\n<p><b>Observed behavior</b></p>\n\n<ul>\n\t<li>Export project from Workspace and import into another project.</li>\n\t<li>Import fails with schema validation errors when <tt>eval_sets</tt>, <tt>eval_scenarios</tt>, and <tt>eval_personas</tt> are part of the export.</li>\n\t<li>Import succeeds when evals are deselected during export.</li>\n</ul>\n\n\n<p><b>Validation errors seen(PFA)</b></p>\n\n<ul>\n\t<li><tt>eval_sets.personaModel</tt>: expected <tt>string</tt>, received <tt>null</tt></li>\n\t<li><tt>eval_scenarios.expectedMilestones<span class=\"error\">&#91;i&#93;</span></tt>: expected <tt>object</tt>, received <tt>string</tt></li>\n\t<li><tt>eval_scenarios.version</tt>: expected <tt>string</tt>, received <tt>number</tt></li>\n\t<li><tt>eval_personas.goals</tt>: expected <tt>array</tt>, received <tt>string</tt></li>\n\t<li><tt>eval_personas.constraints</tt>: expected <tt>array</tt>, received <tt>string</tt></li>\n</ul>\n\n\n<p><b>Expectation</b></p>\n\n<ul>\n\t<li>A direct round-trip (<tt>export -&gt; import</tt>) across workspaces should be schema-compatible without manual edits.</li>\n</ul>\n\n\n<p><b>Workaround</b></p>\n\n<ul>\n\t<li>Deselect evals during export; import completes successfully.</li>\n</ul>\n\n\n<p><b>Impact</b></p>\n\n<ul>\n\t<li>Prevents complete project migration across workspaces when eval content is required.</li>\n</ul>\n\n\n<hr />\n\n<p>Environment:</p>\n\n<p>ENV: dev</p>\n\n<p>Exported Project Id:019e077b-6005-7d43-8213-d87fcf6f56dd<br/>\nImported Project Id: 019e1c5a-f4db-7c27-afb2-f1f9a806e403 (same workspace) 019e1c53-0627-7a3a-bc38-9c2952981018(different workspace)</p>\n\n<p><span class=\"image-wrap\" style=\"\"><img src=\"https://koreteam.atlassian.net/rest/api/3/attachment/content/759081\" alt=\"image-20260512-131720.png\" width=\"851\" style=\"border: 0px solid black\" /></span></p>",
+            "updateAuthor": {
+              "self": "https://koreteam.atlassian.net/rest/api/3/user?accountId=712020%3Aa4bdca42-00e1-40ae-8f10-83b46b10b367",
+              "accountId": "712020:a4bdca42-00e1-40ae-8f10-83b46b10b367",
+              "avatarUrls": {
+                "48x48": "https://secure.gravatar.com/avatar/919c8fcf256ed6af0ce154faa55a9d34?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FUM-3.png",
+                "24x24": "https://secure.gravatar.com/avatar/919c8fcf256ed6af0ce154faa55a9d34?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FUM-3.png",
+                "16x16": "https://secure.gravatar.com/avatar/919c8fcf256ed6af0ce154faa55a9d34?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FUM-3.png",
+                "32x32": "https://secure.gravatar.com/avatar/919c8fcf256ed6af0ce154faa55a9d34?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FUM-3.png"
+              },
+              "displayName": "Upendher Musham",
+              "active": true,
+              "timeZone": "Asia/Kolkata",
+              "accountType": "atlassian"
+            },
+            "created": "Tuesday 6:57 PM",
+            "updated": "Tuesday 6:57 PM",
+            "jsdPublic": true
+          },
+          {
+            "self": "https://koreteam.atlassian.net/rest/api/3/issue/547708/comment/1367365",
+            "id": "1367365",
+            "author": {
+              "self": "https://koreteam.atlassian.net/rest/api/3/user?accountId=712020%3Aa4bdca42-00e1-40ae-8f10-83b46b10b367",
+              "accountId": "712020:a4bdca42-00e1-40ae-8f10-83b46b10b367",
+              "avatarUrls": {
+                "48x48": "https://secure.gravatar.com/avatar/919c8fcf256ed6af0ce154faa55a9d34?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FUM-3.png",
+                "24x24": "https://secure.gravatar.com/avatar/919c8fcf256ed6af0ce154faa55a9d34?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FUM-3.png",
+                "16x16": "https://secure.gravatar.com/avatar/919c8fcf256ed6af0ce154faa55a9d34?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FUM-3.png",
+                "32x32": "https://secure.gravatar.com/avatar/919c8fcf256ed6af0ce154faa55a9d34?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FUM-3.png"
+              },
+              "displayName": "Upendher Musham",
+              "active": true,
+              "timeZone": "Asia/Kolkata",
+              "accountType": "atlassian"
+            },
+            "body": "<p>Moving this issue to ToDo. Let me know if it needs to be tracked separately — I can raise a separate ticket for it.</p>",
+            "updateAuthor": {
+              "self": "https://koreteam.atlassian.net/rest/api/3/user?accountId=712020%3Aa4bdca42-00e1-40ae-8f10-83b46b10b367",
+              "accountId": "712020:a4bdca42-00e1-40ae-8f10-83b46b10b367",
+              "avatarUrls": {
+                "48x48": "https://secure.gravatar.com/avatar/919c8fcf256ed6af0ce154faa55a9d34?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FUM-3.png",
+                "24x24": "https://secure.gravatar.com/avatar/919c8fcf256ed6af0ce154faa55a9d34?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FUM-3.png",
+                "16x16": "https://secure.gravatar.com/avatar/919c8fcf256ed6af0ce154faa55a9d34?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FUM-3.png",
+                "32x32": "https://secure.gravatar.com/avatar/919c8fcf256ed6af0ce154faa55a9d34?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FUM-3.png"
+              },
+              "displayName": "Upendher Musham",
+              "active": true,
+              "timeZone": "Asia/Kolkata",
+              "accountType": "atlassian"
+            },
+            "created": "Tuesday 6:58 PM",
+            "updated": "Tuesday 6:58 PM",
+            "jsdPublic": true
+          }
+        ],
+        "self": "https://koreteam.atlassian.net/rest/api/3/issue/547708/comment",
+        "maxResults": 3,
+        "total": 3,
+        "startAt": 0
+      },
+      "worklog": {
+        "startAt": 0,
+        "maxResults": 20,
+        "total": 0,
+        "worklogs": []
+      }
+    },
+    "changelog": {
+      "startAt": 0,
+      "maxResults": 27,
+      "total": 27,
+      "histories": [
+        {
+          "id": "6166347",
+          "author": {
+            "self": "https://koreteam.atlassian.net/rest/api/3/user?accountId=712020%3Aea99dde1-b7af-4402-802e-57b925a1cde7",
+            "accountId": "712020:ea99dde1-b7af-4402-802e-57b925a1cde7",
+            "avatarUrls": {
+              "48x48": "https://secure.gravatar.com/avatar/1f3a8875fad9930cbfe9f3e99ce4151d?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FSC-4.png",
+              "24x24": "https://secure.gravatar.com/avatar/1f3a8875fad9930cbfe9f3e99ce4151d?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FSC-4.png",
+              "16x16": "https://secure.gravatar.com/avatar/1f3a8875fad9930cbfe9f3e99ce4151d?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FSC-4.png",
+              "32x32": "https://secure.gravatar.com/avatar/1f3a8875fad9930cbfe9f3e99ce4151d?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FSC-4.png"
+            },
+            "displayName": "Srinivas Chintalapati",
+            "active": true,
+            "timeZone": "Asia/Kolkata",
+            "accountType": "atlassian"
+          },
+          "created": "2026-05-13T10:23:24.166+0530",
+          "items": [
+            {
+              "field": "assignee",
+              "fieldtype": "jira",
+              "fieldId": "assignee",
+              "from": "712020:a4bdca42-00e1-40ae-8f10-83b46b10b367",
+              "fromString": "Upendher Musham",
+              "to": "557058:19965570-a9cd-4d76-b059-6af5ae4fdca7",
+              "toString": "Prasanna Arikala",
+              "tmpFromAccountId": null,
+              "tmpToAccountId": "557058:19965570-a9cd-4d76-b059-6af5ae4fdca7"
+            }
+          ]
+        },
+        {
+          "id": "6165303",
+          "author": {
+            "self": "https://koreteam.atlassian.net/rest/api/3/user?accountId=712020%3Aa4bdca42-00e1-40ae-8f10-83b46b10b367",
+            "accountId": "712020:a4bdca42-00e1-40ae-8f10-83b46b10b367",
+            "avatarUrls": {
+              "48x48": "https://secure.gravatar.com/avatar/919c8fcf256ed6af0ce154faa55a9d34?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FUM-3.png",
+              "24x24": "https://secure.gravatar.com/avatar/919c8fcf256ed6af0ce154faa55a9d34?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FUM-3.png",
+              "16x16": "https://secure.gravatar.com/avatar/919c8fcf256ed6af0ce154faa55a9d34?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FUM-3.png",
+              "32x32": "https://secure.gravatar.com/avatar/919c8fcf256ed6af0ce154faa55a9d34?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FUM-3.png"
+            },
+            "displayName": "Upendher Musham",
+            "active": true,
+            "timeZone": "Asia/Kolkata",
+            "accountType": "atlassian"
+          },
+          "created": "2026-05-12T18:57:33.631+0530",
+          "items": [
+            {
+              "field": "status",
+              "fieldtype": "jira",
+              "fieldId": "status",
+              "from": "14938",
+              "fromString": "Ready For QA",
+              "to": "13811",
+              "toString": "To Do"
+            }
+          ]
+        },
+        {
+          "id": "6165301",
+          "author": {
+            "self": "https://koreteam.atlassian.net/rest/api/3/user?accountId=712020%3Aa4bdca42-00e1-40ae-8f10-83b46b10b367",
+            "accountId": "712020:a4bdca42-00e1-40ae-8f10-83b46b10b367",
+            "avatarUrls": {
+              "48x48": "https://secure.gravatar.com/avatar/919c8fcf256ed6af0ce154faa55a9d34?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FUM-3.png",
+              "24x24": "https://secure.gravatar.com/avatar/919c8fcf256ed6af0ce154faa55a9d34?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FUM-3.png",
+              "16x16": "https://secure.gravatar.com/avatar/919c8fcf256ed6af0ce154faa55a9d34?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FUM-3.png",
+              "32x32": "https://secure.gravatar.com/avatar/919c8fcf256ed6af0ce154faa55a9d34?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FUM-3.png"
+            },
+            "displayName": "Upendher Musham",
+            "active": true,
+            "timeZone": "Asia/Kolkata",
+            "accountType": "atlassian"
+          },
+          "created": "2026-05-12T18:57:26.387+0530",
+          "items": [
+            {
+              "field": "Attachment",
+              "fieldtype": "jira",
+              "fieldId": "attachment",
+              "from": null,
+              "fromString": null,
+              "to": "759081",
+              "toString": "image-20260512-131720.png"
+            }
+          ]
+        },
+        {
+          "id": "6161846",
+          "author": {
+            "self": "https://koreteam.atlassian.net/rest/api/3/user?accountId=557058%3A19965570-a9cd-4d76-b059-6af5ae4fdca7",
+            "accountId": "557058:19965570-a9cd-4d76-b059-6af5ae4fdca7",
+            "emailAddress": "prasanna@kore.com",
+            "avatarUrls": {
+              "48x48": "https://secure.gravatar.com/avatar/84aa6c5f7ca4865903e52515ef5499c4?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FPA-6.png",
+              "24x24": "https://secure.gravatar.com/avatar/84aa6c5f7ca4865903e52515ef5499c4?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FPA-6.png",
+              "16x16": "https://secure.gravatar.com/avatar/84aa6c5f7ca4865903e52515ef5499c4?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FPA-6.png",
+              "32x32": "https://secure.gravatar.com/avatar/84aa6c5f7ca4865903e52515ef5499c4?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FPA-6.png"
+            },
+            "displayName": "Prasanna Arikala",
+            "active": true,
+            "timeZone": "Asia/Kolkata",
+            "accountType": "atlassian"
+          },
+          "created": "2026-05-12T11:45:02.510+0530",
+          "items": [
+            {
+              "field": "resolution",
+              "fieldtype": "jira",
+              "fieldId": "resolution",
+              "from": "10701",
+              "fromString": "Done",
+              "to": null,
+              "toString": null
+            },
+            {
+              "field": "status",
+              "fieldtype": "jira",
+              "fieldId": "status",
+              "from": "14937",
+              "fromString": "Development Completed",
+              "to": "14938",
+              "toString": "Ready For QA"
+            }
+          ]
+        },
+        {
+          "id": "6161845",
+          "author": {
+            "self": "https://koreteam.atlassian.net/rest/api/3/user?accountId=557058%3A19965570-a9cd-4d76-b059-6af5ae4fdca7",
+            "accountId": "557058:19965570-a9cd-4d76-b059-6af5ae4fdca7",
+            "emailAddress": "prasanna@kore.com",
+            "avatarUrls": {
+              "48x48": "https://secure.gravatar.com/avatar/84aa6c5f7ca4865903e52515ef5499c4?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FPA-6.png",
+              "24x24": "https://secure.gravatar.com/avatar/84aa6c5f7ca4865903e52515ef5499c4?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FPA-6.png",
+              "16x16": "https://secure.gravatar.com/avatar/84aa6c5f7ca4865903e52515ef5499c4?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FPA-6.png",
+              "32x32": "https://secure.gravatar.com/avatar/84aa6c5f7ca4865903e52515ef5499c4?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FPA-6.png"
+            },
+            "displayName": "Prasanna Arikala",
+            "active": true,
+            "timeZone": "Asia/Kolkata",
+            "accountType": "atlassian"
+          },
+          "created": "2026-05-12T11:44:58.995+0530",
+          "items": [
+            {
+              "field": "resolution",
+              "fieldtype": "jira",
+              "fieldId": "resolution",
+              "from": null,
+              "fromString": null,
+              "to": "10701",
+              "toString": "Done"
+            },
+            {
+              "field": "status",
+              "fieldtype": "jira",
+              "fieldId": "status",
+              "from": "13813",
+              "fromString": "In Review",
+              "to": "14937",
+              "toString": "Development Completed"
+            }
+          ]
+        },
+        {
+          "id": "6161842",
+          "author": {
+            "self": "https://koreteam.atlassian.net/rest/api/3/user?accountId=557058%3A19965570-a9cd-4d76-b059-6af5ae4fdca7",
+            "accountId": "557058:19965570-a9cd-4d76-b059-6af5ae4fdca7",
+            "emailAddress": "prasanna@kore.com",
+            "avatarUrls": {
+              "48x48": "https://secure.gravatar.com/avatar/84aa6c5f7ca4865903e52515ef5499c4?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FPA-6.png",
+              "24x24": "https://secure.gravatar.com/avatar/84aa6c5f7ca4865903e52515ef5499c4?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FPA-6.png",
+              "16x16": "https://secure.gravatar.com/avatar/84aa6c5f7ca4865903e52515ef5499c4?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FPA-6.png",
+              "32x32": "https://secure.gravatar.com/avatar/84aa6c5f7ca4865903e52515ef5499c4?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FPA-6.png"
+            },
+            "displayName": "Prasanna Arikala",
+            "active": true,
+            "timeZone": "Asia/Kolkata",
+            "accountType": "atlassian"
+          },
+          "created": "2026-05-12T11:44:56.460+0530",
+          "items": [
+            {
+              "field": "status",
+              "fieldtype": "jira",
+              "fieldId": "status",
+              "from": "13811",
+              "fromString": "To Do",
+              "to": "13813",
+              "toString": "In Review"
+            }
+          ]
+        },
+        {
+          "id": "6161838",
+          "author": {
+            "self": "https://koreteam.atlassian.net/rest/api/3/user?accountId=557058%3A19965570-a9cd-4d76-b059-6af5ae4fdca7",
+            "accountId": "557058:19965570-a9cd-4d76-b059-6af5ae4fdca7",
+            "emailAddress": "prasanna@kore.com",
+            "avatarUrls": {
+              "48x48": "https://secure.gravatar.com/avatar/84aa6c5f7ca4865903e52515ef5499c4?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FPA-6.png",
+              "24x24": "https://secure.gravatar.com/avatar/84aa6c5f7ca4865903e52515ef5499c4?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FPA-6.png",
+              "16x16": "https://secure.gravatar.com/avatar/84aa6c5f7ca4865903e52515ef5499c4?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FPA-6.png",
+              "32x32": "https://secure.gravatar.com/avatar/84aa6c5f7ca4865903e52515ef5499c4?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FPA-6.png"
+            },
+            "displayName": "Prasanna Arikala",
+            "active": true,
+            "timeZone": "Asia/Kolkata",
+            "accountType": "atlassian"
+          },
+          "created": "2026-05-12T11:44:45.948+0530",
+          "items": [
+            {
+              "field": "assignee",
+              "fieldtype": "jira",
+              "fieldId": "assignee",
+              "from": "557058:19965570-a9cd-4d76-b059-6af5ae4fdca7",
+              "fromString": "Prasanna Arikala",
+              "to": "712020:a4bdca42-00e1-40ae-8f10-83b46b10b367",
+              "toString": "Upendher Musham",
+              "tmpFromAccountId": null,
+              "tmpToAccountId": "712020:a4bdca42-00e1-40ae-8f10-83b46b10b367"
+            }
+          ]
+        },
+        {
+          "id": "6161591",
+          "author": {
+            "self": "https://koreteam.atlassian.net/rest/api/3/user?accountId=712020%3Aa4bdca42-00e1-40ae-8f10-83b46b10b367",
+            "accountId": "712020:a4bdca42-00e1-40ae-8f10-83b46b10b367",
+            "avatarUrls": {
+              "48x48": "https://secure.gravatar.com/avatar/919c8fcf256ed6af0ce154faa55a9d34?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FUM-3.png",
+              "24x24": "https://secure.gravatar.com/avatar/919c8fcf256ed6af0ce154faa55a9d34?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FUM-3.png",
+              "16x16": "https://secure.gravatar.com/avatar/919c8fcf256ed6af0ce154faa55a9d34?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FUM-3.png",
+              "32x32": "https://secure.gravatar.com/avatar/919c8fcf256ed6af0ce154faa55a9d34?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FUM-3.png"
+            },
+            "displayName": "Upendher Musham",
+            "active": true,
+            "timeZone": "Asia/Kolkata",
+            "accountType": "atlassian"
+          },
+          "created": "2026-05-12T10:56:17.191+0530",
+          "items": [
+            {
+              "field": "Link",
+              "fieldtype": "jira",
+              "from": "ABLP-1007",
+              "fromString": "This work item is cloned by ABLP-1007",
+              "to": null,
+              "toString": null
+            }
+          ]
+        },
+        {
+          "id": "6160636",
+          "author": {
+            "self": "https://koreteam.atlassian.net/rest/api/3/user?accountId=712020%3Aea99dde1-b7af-4402-802e-57b925a1cde7",
+            "accountId": "712020:ea99dde1-b7af-4402-802e-57b925a1cde7",
+            "avatarUrls": {
+              "48x48": "https://secure.gravatar.com/avatar/1f3a8875fad9930cbfe9f3e99ce4151d?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FSC-4.png",
+              "24x24": "https://secure.gravatar.com/avatar/1f3a8875fad9930cbfe9f3e99ce4151d?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FSC-4.png",
+              "16x16": "https://secure.gravatar.com/avatar/1f3a8875fad9930cbfe9f3e99ce4151d?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FSC-4.png",
+              "32x32": "https://secure.gravatar.com/avatar/1f3a8875fad9930cbfe9f3e99ce4151d?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FSC-4.png"
+            },
+            "displayName": "Srinivas Chintalapati",
+            "active": true,
+            "timeZone": "Asia/Kolkata",
+            "accountType": "atlassian"
+          },
+          "created": "2026-05-11T19:37:18.006+0530",
+          "items": [
+            {
+              "field": "duedate",
+              "fieldtype": "jira",
+              "fieldId": "duedate",
+              "from": null,
+              "fromString": null,
+              "to": "2026-05-15",
+              "toString": "2026-05-15 00:00:00.0"
+            }
+          ]
+        },
+        {
+          "id": "6160634",
+          "author": {
+            "self": "https://koreteam.atlassian.net/rest/api/3/user?accountId=712020%3Aea99dde1-b7af-4402-802e-57b925a1cde7",
+            "accountId": "712020:ea99dde1-b7af-4402-802e-57b925a1cde7",
+            "avatarUrls": {
+              "48x48": "https://secure.gravatar.com/avatar/1f3a8875fad9930cbfe9f3e99ce4151d?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FSC-4.png",
+              "24x24": "https://secure.gravatar.com/avatar/1f3a8875fad9930cbfe9f3e99ce4151d?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FSC-4.png",
+              "16x16": "https://secure.gravatar.com/avatar/1f3a8875fad9930cbfe9f3e99ce4151d?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FSC-4.png",
+              "32x32": "https://secure.gravatar.com/avatar/1f3a8875fad9930cbfe9f3e99ce4151d?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FSC-4.png"
+            },
+            "displayName": "Srinivas Chintalapati",
+            "active": true,
+            "timeZone": "Asia/Kolkata",
+            "accountType": "atlassian"
+          },
+          "created": "2026-05-11T19:37:11.257+0530",
+          "items": [
+            {
+              "field": "assignee",
+              "fieldtype": "jira",
+              "fieldId": "assignee",
+              "from": null,
+              "fromString": null,
+              "to": "557058:19965570-a9cd-4d76-b059-6af5ae4fdca7",
+              "toString": "Prasanna Arikala",
+              "tmpFromAccountId": null,
+              "tmpToAccountId": "557058:19965570-a9cd-4d76-b059-6af5ae4fdca7"
+            }
+          ]
+        },
+        {
+          "id": "6160401",
+          "author": {
+            "self": "https://koreteam.atlassian.net/rest/api/3/user?accountId=712020%3Aa4bdca42-00e1-40ae-8f10-83b46b10b367",
+            "accountId": "712020:a4bdca42-00e1-40ae-8f10-83b46b10b367",
+            "avatarUrls": {
+              "48x48": "https://secure.gravatar.com/avatar/919c8fcf256ed6af0ce154faa55a9d34?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FUM-3.png",
+              "24x24": "https://secure.gravatar.com/avatar/919c8fcf256ed6af0ce154faa55a9d34?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FUM-3.png",
+              "16x16": "https://secure.gravatar.com/avatar/919c8fcf256ed6af0ce154faa55a9d34?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FUM-3.png",
+              "32x32": "https://secure.gravatar.com/avatar/919c8fcf256ed6af0ce154faa55a9d34?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FUM-3.png"
+            },
+            "displayName": "Upendher Musham",
+            "active": true,
+            "timeZone": "Asia/Kolkata",
+            "accountType": "atlassian"
+          },
+          "created": "2026-05-11T18:56:03.739+0530",
+          "items": [
+            {
+              "field": "Link",
+              "fieldtype": "jira",
+              "from": null,
+              "fromString": null,
+              "to": "ABLP-1007",
+              "toString": "This work item is cloned by ABLP-1007"
+            }
+          ]
+        },
+        {
+          "id": "6158381",
+          "author": {
+            "self": "https://koreteam.atlassian.net/rest/api/3/user?accountId=712020%3Aa4bdca42-00e1-40ae-8f10-83b46b10b367",
+            "accountId": "712020:a4bdca42-00e1-40ae-8f10-83b46b10b367",
+            "avatarUrls": {
+              "48x48": "https://secure.gravatar.com/avatar/919c8fcf256ed6af0ce154faa55a9d34?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FUM-3.png",
+              "24x24": "https://secure.gravatar.com/avatar/919c8fcf256ed6af0ce154faa55a9d34?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FUM-3.png",
+              "16x16": "https://secure.gravatar.com/avatar/919c8fcf256ed6af0ce154faa55a9d34?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FUM-3.png",
+              "32x32": "https://secure.gravatar.com/avatar/919c8fcf256ed6af0ce154faa55a9d34?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FUM-3.png"
+            },
+            "displayName": "Upendher Musham",
+            "active": true,
+            "timeZone": "Asia/Kolkata",
+            "accountType": "atlassian"
+          },
+          "created": "2026-05-11T14:38:04.054+0530",
+          "items": [
+            {
+              "field": "Link",
+              "fieldtype": "jira",
+              "from": "ABLP-933",
+              "fromString": "This work item is cloned by ABLP-933",
+              "to": null,
+              "toString": null
+            }
+          ]
+        },
+        {
+          "id": "6158379",
+          "author": {
+            "self": "https://koreteam.atlassian.net/rest/api/3/user?accountId=712020%3Aa4bdca42-00e1-40ae-8f10-83b46b10b367",
+            "accountId": "712020:a4bdca42-00e1-40ae-8f10-83b46b10b367",
+            "avatarUrls": {
+              "48x48": "https://secure.gravatar.com/avatar/919c8fcf256ed6af0ce154faa55a9d34?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FUM-3.png",
+              "24x24": "https://secure.gravatar.com/avatar/919c8fcf256ed6af0ce154faa55a9d34?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FUM-3.png",
+              "16x16": "https://secure.gravatar.com/avatar/919c8fcf256ed6af0ce154faa55a9d34?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FUM-3.png",
+              "32x32": "https://secure.gravatar.com/avatar/919c8fcf256ed6af0ce154faa55a9d34?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FUM-3.png"
+            },
+            "displayName": "Upendher Musham",
+            "active": true,
+            "timeZone": "Asia/Kolkata",
+            "accountType": "atlassian"
+          },
+          "created": "2026-05-11T14:38:00.124+0530",
+          "items": [
+            {
+              "field": "Link",
+              "fieldtype": "jira",
+              "from": "ABLP-910",
+              "fromString": "This work item is cloned by ABLP-910",
+              "to": null,
+              "toString": null
+            }
+          ]
+        },
+        {
+          "id": "6157124",
+          "author": {
+            "self": "https://koreteam.atlassian.net/rest/api/3/user?accountId=712020%3Aa4bdca42-00e1-40ae-8f10-83b46b10b367",
+            "accountId": "712020:a4bdca42-00e1-40ae-8f10-83b46b10b367",
+            "avatarUrls": {
+              "48x48": "https://secure.gravatar.com/avatar/919c8fcf256ed6af0ce154faa55a9d34?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FUM-3.png",
+              "24x24": "https://secure.gravatar.com/avatar/919c8fcf256ed6af0ce154faa55a9d34?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FUM-3.png",
+              "16x16": "https://secure.gravatar.com/avatar/919c8fcf256ed6af0ce154faa55a9d34?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FUM-3.png",
+              "32x32": "https://secure.gravatar.com/avatar/919c8fcf256ed6af0ce154faa55a9d34?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FUM-3.png"
+            },
+            "displayName": "Upendher Musham",
+            "active": true,
+            "timeZone": "Asia/Kolkata",
+            "accountType": "atlassian"
+          },
+          "created": "2026-05-11T11:23:16.421+0530",
+          "items": [
+            {
+              "field": "Link",
+              "fieldtype": "jira",
+              "from": "ABLP-976",
+              "fromString": "This work item is cloned by ABLP-976",
+              "to": null,
+              "toString": null
+            }
+          ]
+        },
+        {
+          "id": "6157119",
+          "author": {
+            "self": "https://koreteam.atlassian.net/rest/api/3/user?accountId=712020%3Aa4bdca42-00e1-40ae-8f10-83b46b10b367",
+            "accountId": "712020:a4bdca42-00e1-40ae-8f10-83b46b10b367",
+            "avatarUrls": {
+              "48x48": "https://secure.gravatar.com/avatar/919c8fcf256ed6af0ce154faa55a9d34?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FUM-3.png",
+              "24x24": "https://secure.gravatar.com/avatar/919c8fcf256ed6af0ce154faa55a9d34?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FUM-3.png",
+              "16x16": "https://secure.gravatar.com/avatar/919c8fcf256ed6af0ce154faa55a9d34?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FUM-3.png",
+              "32x32": "https://secure.gravatar.com/avatar/919c8fcf256ed6af0ce154faa55a9d34?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FUM-3.png"
+            },
+            "displayName": "Upendher Musham",
+            "active": true,
+            "timeZone": "Asia/Kolkata",
+            "accountType": "atlassian"
+          },
+          "created": "2026-05-11T11:21:33.071+0530",
+          "items": [
+            {
+              "field": "Link",
+              "fieldtype": "jira",
+              "from": null,
+              "fromString": null,
+              "to": "ABLP-976",
+              "toString": "This work item is cloned by ABLP-976"
+            }
+          ]
+        },
+        {
+          "id": "6155991",
+          "author": {
+            "self": "https://koreteam.atlassian.net/rest/api/3/user?accountId=712020%3A47a9332f-1bd5-4f60-be17-6a887568d9dd",
+            "accountId": "712020:47a9332f-1bd5-4f60-be17-6a887568d9dd",
+            "avatarUrls": {
+              "48x48": "https://secure.gravatar.com/avatar/0c7052595fd000618b2370f210c34a54?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FVB-1.png",
+              "24x24": "https://secure.gravatar.com/avatar/0c7052595fd000618b2370f210c34a54?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FVB-1.png",
+              "16x16": "https://secure.gravatar.com/avatar/0c7052595fd000618b2370f210c34a54?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FVB-1.png",
+              "32x32": "https://secure.gravatar.com/avatar/0c7052595fd000618b2370f210c34a54?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FVB-1.png"
+            },
+            "displayName": "Vikash Bhattar",
+            "active": true,
+            "timeZone": "Asia/Kolkata",
+            "accountType": "atlassian"
+          },
+          "created": "2026-05-09T03:12:18.015+0530",
+          "items": [
+            {
+              "field": "Link",
+              "fieldtype": "jira",
+              "from": null,
+              "fromString": null,
+              "to": "ABLP-933",
+              "toString": "This work item is cloned by ABLP-933"
+            }
+          ]
+        },
+        {
+          "id": "6155988",
+          "author": {
+            "self": "https://koreteam.atlassian.net/rest/api/3/user?accountId=712020%3A47a9332f-1bd5-4f60-be17-6a887568d9dd",
+            "accountId": "712020:47a9332f-1bd5-4f60-be17-6a887568d9dd",
+            "avatarUrls": {
+              "48x48": "https://secure.gravatar.com/avatar/0c7052595fd000618b2370f210c34a54?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FVB-1.png",
+              "24x24": "https://secure.gravatar.com/avatar/0c7052595fd000618b2370f210c34a54?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FVB-1.png",
+              "16x16": "https://secure.gravatar.com/avatar/0c7052595fd000618b2370f210c34a54?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FVB-1.png",
+              "32x32": "https://secure.gravatar.com/avatar/0c7052595fd000618b2370f210c34a54?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FVB-1.png"
+            },
+            "displayName": "Vikash Bhattar",
+            "active": true,
+            "timeZone": "Asia/Kolkata",
+            "accountType": "atlassian"
+          },
+          "created": "2026-05-09T03:08:34.686+0530",
+          "items": [
+            {
+              "field": "labels",
+              "fieldtype": "jira",
+              "fieldId": "labels",
+              "from": null,
+              "fromString": "Cigna",
+              "to": null,
+              "toString": "Cigna go-agentic-priority"
+            }
+          ]
+        },
+        {
+          "id": "6151732",
+          "author": {
+            "self": "https://koreteam.atlassian.net/rest/api/3/user?accountId=712020%3Aa4bdca42-00e1-40ae-8f10-83b46b10b367",
+            "accountId": "712020:a4bdca42-00e1-40ae-8f10-83b46b10b367",
+            "avatarUrls": {
+              "48x48": "https://secure.gravatar.com/avatar/919c8fcf256ed6af0ce154faa55a9d34?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FUM-3.png",
+              "24x24": "https://secure.gravatar.com/avatar/919c8fcf256ed6af0ce154faa55a9d34?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FUM-3.png",
+              "16x16": "https://secure.gravatar.com/avatar/919c8fcf256ed6af0ce154faa55a9d34?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FUM-3.png",
+              "32x32": "https://secure.gravatar.com/avatar/919c8fcf256ed6af0ce154faa55a9d34?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FUM-3.png"
+            },
+            "displayName": "Upendher Musham",
+            "active": true,
+            "timeZone": "Asia/Kolkata",
+            "accountType": "atlassian"
+          },
+          "created": "2026-05-08T10:33:25.240+0530",
+          "items": [
+            {
+              "field": "Link",
+              "fieldtype": "jira",
+              "from": "ABLP-900",
+              "fromString": "This work item clones ABLP-900",
+              "to": null,
+              "toString": null
+            }
+          ]
+        },
+        {
+          "id": "6151607",
+          "author": {
+            "self": "https://koreteam.atlassian.net/rest/api/3/user?accountId=712020%3Aa4bdca42-00e1-40ae-8f10-83b46b10b367",
+            "accountId": "712020:a4bdca42-00e1-40ae-8f10-83b46b10b367",
+            "avatarUrls": {
+              "48x48": "https://secure.gravatar.com/avatar/919c8fcf256ed6af0ce154faa55a9d34?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FUM-3.png",
+              "24x24": "https://secure.gravatar.com/avatar/919c8fcf256ed6af0ce154faa55a9d34?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FUM-3.png",
+              "16x16": "https://secure.gravatar.com/avatar/919c8fcf256ed6af0ce154faa55a9d34?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FUM-3.png",
+              "32x32": "https://secure.gravatar.com/avatar/919c8fcf256ed6af0ce154faa55a9d34?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FUM-3.png"
+            },
+            "displayName": "Upendher Musham",
+            "active": true,
+            "timeZone": "Asia/Kolkata",
+            "accountType": "atlassian"
+          },
+          "created": "2026-05-08T08:32:44.354+0530",
+          "items": [
+            {
+              "field": "Link",
+              "fieldtype": "jira",
+              "from": "ABLP-911",
+              "fromString": "This work item is cloned by ABLP-911",
+              "to": null,
+              "toString": null
+            }
+          ]
+        },
+        {
+          "id": "6151603",
+          "author": {
+            "self": "https://koreteam.atlassian.net/rest/api/3/user?accountId=712020%3Aa4bdca42-00e1-40ae-8f10-83b46b10b367",
+            "accountId": "712020:a4bdca42-00e1-40ae-8f10-83b46b10b367",
+            "avatarUrls": {
+              "48x48": "https://secure.gravatar.com/avatar/919c8fcf256ed6af0ce154faa55a9d34?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FUM-3.png",
+              "24x24": "https://secure.gravatar.com/avatar/919c8fcf256ed6af0ce154faa55a9d34?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FUM-3.png",
+              "16x16": "https://secure.gravatar.com/avatar/919c8fcf256ed6af0ce154faa55a9d34?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FUM-3.png",
+              "32x32": "https://secure.gravatar.com/avatar/919c8fcf256ed6af0ce154faa55a9d34?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FUM-3.png"
+            },
+            "displayName": "Upendher Musham",
+            "active": true,
+            "timeZone": "Asia/Kolkata",
+            "accountType": "atlassian"
+          },
+          "created": "2026-05-08T08:24:18.448+0530",
+          "items": [
+            {
+              "field": "Link",
+              "fieldtype": "jira",
+              "from": null,
+              "fromString": null,
+              "to": "ABLP-911",
+              "toString": "This work item is cloned by ABLP-911"
+            }
+          ]
+        },
+        {
+          "id": "6151599",
+          "author": {
+            "self": "https://koreteam.atlassian.net/rest/api/3/user?accountId=712020%3Aa4bdca42-00e1-40ae-8f10-83b46b10b367",
+            "accountId": "712020:a4bdca42-00e1-40ae-8f10-83b46b10b367",
+            "avatarUrls": {
+              "48x48": "https://secure.gravatar.com/avatar/919c8fcf256ed6af0ce154faa55a9d34?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FUM-3.png",
+              "24x24": "https://secure.gravatar.com/avatar/919c8fcf256ed6af0ce154faa55a9d34?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FUM-3.png",
+              "16x16": "https://secure.gravatar.com/avatar/919c8fcf256ed6af0ce154faa55a9d34?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FUM-3.png",
+              "32x32": "https://secure.gravatar.com/avatar/919c8fcf256ed6af0ce154faa55a9d34?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FUM-3.png"
+            },
+            "displayName": "Upendher Musham",
+            "active": true,
+            "timeZone": "Asia/Kolkata",
+            "accountType": "atlassian"
+          },
+          "created": "2026-05-08T08:23:10.097+0530",
+          "items": [
+            {
+              "field": "description",
+              "fieldtype": "jira",
+              "fieldId": "description",
+              "from": null,
+              "fromString": "Importing a project archive that was created through the *official Studio export* fails at the *preview* stage with:\n\n{noformat}RUNTIME_CONFIG_SAVE_VALIDATION_FAILED:\nUnrecognized key(s) in object: 'projectId', 'tenantId', 'createdBy', '_v'{noformat}\n\n Preview shows *0 Added / 0 Modified / 0 Removed* and the import cannot proceed. Re-exporting the project does not help — the issue is in the export/import contract itself.\n\nh3. Steps to reproduce\n\n# In Studio, open any project that has a {{ProjectRuntimeConfig}} document.\n# Use *Export Project* to download the archive.\n# In another (or the same) workspace, open *Import Project* and select the archive.\n# Observe *Failed to preview import* banner with the error above and a blocking issue: _“Unrecognized key(s) in object: 'projectId', 'tenantId', 'createdBy', '_v'”_.\n\nh3. Expected\n\nPreview succeeds; runtime config is staged for import (added/modified/unchanged as appropriate).\n\nh3. Actual\n\nPreview fails on {{project_runtime_configs}} due to four unrecognized keys.\n\n\n\n----\n\n\n\n*Initial Analysis(May help for fixing)*\n\nTwo leaks on the *export* side and one re-injection on the *import* side, against a strict Zod save-validator:\n\n# *Exporter does not strip the custom version field or audit field.* {{packages/project-io/src/export/layer-assemblers/assembler-utils.ts}}:\n{noformat}const DEFAULT_INTERNAL_KEYS = ['_id', '__v', 'projectId', 'tenantId', 'createdAt', 'updatedAt'];{noformat}\nThe runtime config model defines a *custom* {{_v}} (single underscore — not Mongoose’s {{__v}}) and the document also carries {{createdBy}}:\n{noformat}// packages/database/src/models/project-runtime-config.model.ts\n_v: { type: Number, default: 1 },{noformat}\nNeither {{_v}} nor {{createdBy}} is in {{DEFAULT_INTERNAL_KEYS}}, so both leak into {{config/runtime-config.json}}.\n# *Importer re-injects ownership unconditionally.* {{packages/project-io/src/import/layer-disassemblers/disassembler-utils.ts}} {{injectOwnership}} always sets {{projectId}}, {{tenantId}}, and {{createdBy}} on the staged record from server context.\n# *Save-side validator is strict.* The downstream save validator for {{project_runtime_configs}} does not recognize ownership/version fields, so it rejects all four ({{projectId}}, {{tenantId}}, {{createdBy}}, {{_v}}) with the literal Zod strict-object message.\n\nEnd result: even a clean Studio export ships an archive that the same platform’s importer rejects.\n\n\n\n!image-20260508-024754.png|width=862,alt=\"image-20260508-024754.png\"!",
+              "to": null,
+              "toString": "Importing a project archive that was created through the *official Studio export* fails at the *preview* stage with:\n\n{noformat}RUNTIME_CONFIG_SAVE_VALIDATION_FAILED:\nUnrecognized key(s) in object: 'projectId', 'tenantId', 'createdBy', '_v'{noformat}\n\n Preview shows *0 Added / 0 Modified / 0 Removed* and the import cannot proceed. Re-exporting the project does not help — the issue is in the export/import contract itself.\n\nh3. Steps to reproduce\n\n# In Studio, open  project \n# Use *Export Project* to download the archive.\n# In another (or the same) workspace, open *Import Project* and select the archive.\n# Observe *Failed to preview import* banner with the error above and a blocking issue: _“Unrecognized key(s) in object: 'projectId', 'tenantId', 'createdBy', '_v'”_.\n\nh3. Expected\n\nPreview succeeds; runtime config is staged for import (added/modified/unchanged as appropriate).\n\nh3. Actual\n\nPreview fails on {{project_runtime_configs}} due to four unrecognized keys.\n\n----\n\n*Details:*\n\nProjectId: 019dd384-2796-7dd3-8abb-60a40e2143ce\n\nEmail: [upendher.musham@kore.com|mailto:upendher.musham@kore.com]\n\nWorkspace: goAgentic\n\nProject name: Cigna Demo\n\n\n\n----\n\n\n\n*Initial Analysis(May help for fixing)*\n\nTwo leaks on the *export* side and one re-injection on the *import* side, against a strict Zod save-validator:\n\n# *Exporter does not strip the custom version field or audit field.* {{packages/project-io/src/export/layer-assemblers/assembler-utils.ts}}:\n{noformat}const DEFAULT_INTERNAL_KEYS = ['_id', '__v', 'projectId', 'tenantId', 'createdAt', 'updatedAt'];{noformat}\nThe runtime config model defines a *custom* {{_v}} (single underscore — not Mongoose’s {{__v}}) and the document also carries {{createdBy}}:\n{noformat}// packages/database/src/models/project-runtime-config.model.ts\n_v: { type: Number, default: 1 },{noformat}\nNeither {{_v}} nor {{createdBy}} is in {{DEFAULT_INTERNAL_KEYS}}, so both leak into {{config/runtime-config.json}}.\n# *Importer re-injects ownership unconditionally.* {{packages/project-io/src/import/layer-disassemblers/disassembler-utils.ts}} {{injectOwnership}} always sets {{projectId}}, {{tenantId}}, and {{createdBy}} on the staged record from server context.\n# *Save-side validator is strict.* The downstream save validator for {{project_runtime_configs}} does not recognize ownership/version fields, so it rejects all four ({{projectId}}, {{tenantId}}, {{createdBy}}, {{_v}}) with the literal Zod strict-object message.\n\nEnd result: even a clean Studio export ships an archive that the same platform’s importer rejects.\n\n\n\n!image-20260508-024754.png|width=862,alt=\"image-20260508-024754.png\"!"
+            }
+          ]
+        },
+        {
+          "id": "6151585",
+          "author": {
+            "self": "https://koreteam.atlassian.net/rest/api/3/user?accountId=712020%3Aa4bdca42-00e1-40ae-8f10-83b46b10b367",
+            "accountId": "712020:a4bdca42-00e1-40ae-8f10-83b46b10b367",
+            "avatarUrls": {
+              "48x48": "https://secure.gravatar.com/avatar/919c8fcf256ed6af0ce154faa55a9d34?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FUM-3.png",
+              "24x24": "https://secure.gravatar.com/avatar/919c8fcf256ed6af0ce154faa55a9d34?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FUM-3.png",
+              "16x16": "https://secure.gravatar.com/avatar/919c8fcf256ed6af0ce154faa55a9d34?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FUM-3.png",
+              "32x32": "https://secure.gravatar.com/avatar/919c8fcf256ed6af0ce154faa55a9d34?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FUM-3.png"
+            },
+            "displayName": "Upendher Musham",
+            "active": true,
+            "timeZone": "Asia/Kolkata",
+            "accountType": "atlassian"
+          },
+          "created": "2026-05-08T08:19:52.598+0530",
+          "items": [
+            {
+              "field": "Link",
+              "fieldtype": "jira",
+              "from": null,
+              "fromString": null,
+              "to": "ABLP-910",
+              "toString": "This work item is cloned by ABLP-910"
+            }
+          ]
+        },
+        {
+          "id": "6151579",
+          "author": {
+            "self": "https://koreteam.atlassian.net/rest/api/3/user?accountId=712020%3Aa4bdca42-00e1-40ae-8f10-83b46b10b367",
+            "accountId": "712020:a4bdca42-00e1-40ae-8f10-83b46b10b367",
+            "avatarUrls": {
+              "48x48": "https://secure.gravatar.com/avatar/919c8fcf256ed6af0ce154faa55a9d34?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FUM-3.png",
+              "24x24": "https://secure.gravatar.com/avatar/919c8fcf256ed6af0ce154faa55a9d34?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FUM-3.png",
+              "16x16": "https://secure.gravatar.com/avatar/919c8fcf256ed6af0ce154faa55a9d34?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FUM-3.png",
+              "32x32": "https://secure.gravatar.com/avatar/919c8fcf256ed6af0ce154faa55a9d34?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FUM-3.png"
+            },
+            "displayName": "Upendher Musham",
+            "active": true,
+            "timeZone": "Asia/Kolkata",
+            "accountType": "atlassian"
+          },
+          "created": "2026-05-08T08:18:27.313+0530",
+          "items": [
+            {
+              "field": "Attachment",
+              "fieldtype": "jira",
+              "fieldId": "attachment",
+              "from": null,
+              "fromString": null,
+              "to": "757691",
+              "toString": "image-20260508-024754.png"
+            }
+          ]
+        },
+        {
+          "id": "6151580",
+          "author": {
+            "self": "https://koreteam.atlassian.net/rest/api/3/user?accountId=712020%3Aa4bdca42-00e1-40ae-8f10-83b46b10b367",
+            "accountId": "712020:a4bdca42-00e1-40ae-8f10-83b46b10b367",
+            "avatarUrls": {
+              "48x48": "https://secure.gravatar.com/avatar/919c8fcf256ed6af0ce154faa55a9d34?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FUM-3.png",
+              "24x24": "https://secure.gravatar.com/avatar/919c8fcf256ed6af0ce154faa55a9d34?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FUM-3.png",
+              "16x16": "https://secure.gravatar.com/avatar/919c8fcf256ed6af0ce154faa55a9d34?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FUM-3.png",
+              "32x32": "https://secure.gravatar.com/avatar/919c8fcf256ed6af0ce154faa55a9d34?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FUM-3.png"
+            },
+            "displayName": "Upendher Musham",
+            "active": true,
+            "timeZone": "Asia/Kolkata",
+            "accountType": "atlassian"
+          },
+          "created": "2026-05-08T08:18:27.071+0530",
+          "items": [
+            {
+              "field": "description",
+              "fieldtype": "jira",
+              "fieldId": "description",
+              "from": null,
+              "fromString": "Importing a project archive that was created through the *official Studio export* fails at the *preview* stage with:\n\n{noformat}RUNTIME_CONFIG_SAVE_VALIDATION_FAILED:\nUnrecognized key(s) in object: 'projectId', 'tenantId', 'createdBy', '_v'{noformat}\n\n Preview shows *0 Added / 0 Modified / 0 Removed* and the import cannot proceed. Re-exporting the project does not help — the issue is in the export/import contract itself.\n\nh3. Steps to reproduce\n\n# In Studio, open any project that has a {{ProjectRuntimeConfig}} document.\n# Use *Export Project* to download the archive.\n# In another (or the same) workspace, open *Import Project* and select the archive.\n# Observe *Failed to preview import* banner with the error above and a blocking issue: _“Unrecognized key(s) in object: 'projectId', 'tenantId', 'createdBy', '_v'”_.\n\nh3. Expected\n\nPreview succeeds; runtime config is staged for import (added/modified/unchanged as appropriate).\n\nh3. Actual\n\nPreview fails on {{project_runtime_configs}} due to four unrecognized keys.\n\n\n\n----\n\n\n\n*Initial Analysis(May help for fixing)*\n\nTwo leaks on the *export* side and one re-injection on the *import* side, against a strict Zod save-validator:\n\n# *Exporter does not strip the custom version field or audit field.* {{packages/project-io/src/export/layer-assemblers/assembler-utils.ts}}:\n{noformat}const DEFAULT_INTERNAL_KEYS = ['_id', '__v', 'projectId', 'tenantId', 'createdAt', 'updatedAt'];{noformat}\nThe runtime config model defines a *custom* {{_v}} (single underscore — not Mongoose’s {{__v}}) and the document also carries {{createdBy}}:\n{noformat}// packages/database/src/models/project-runtime-config.model.ts\n_v: { type: Number, default: 1 },{noformat}\nNeither {{_v}} nor {{createdBy}} is in {{DEFAULT_INTERNAL_KEYS}}, so both leak into {{config/runtime-config.json}}.\n# *Importer re-injects ownership unconditionally.* {{packages/project-io/src/import/layer-disassemblers/disassembler-utils.ts}} {{injectOwnership}} always sets {{projectId}}, {{tenantId}}, and {{createdBy}} on the staged record from server context.\n# *Save-side validator is strict.* The downstream save validator for {{project_runtime_configs}} does not recognize ownership/version fields, so it rejects all four ({{projectId}}, {{tenantId}}, {{createdBy}}, {{_v}}) with the literal Zod strict-object message.\n\nEnd result: even a clean Studio export ships an archive that the same platform’s importer rejects.",
+              "to": null,
+              "toString": "Importing a project archive that was created through the *official Studio export* fails at the *preview* stage with:\n\n{noformat}RUNTIME_CONFIG_SAVE_VALIDATION_FAILED:\nUnrecognized key(s) in object: 'projectId', 'tenantId', 'createdBy', '_v'{noformat}\n\n Preview shows *0 Added / 0 Modified / 0 Removed* and the import cannot proceed. Re-exporting the project does not help — the issue is in the export/import contract itself.\n\nh3. Steps to reproduce\n\n# In Studio, open any project that has a {{ProjectRuntimeConfig}} document.\n# Use *Export Project* to download the archive.\n# In another (or the same) workspace, open *Import Project* and select the archive.\n# Observe *Failed to preview import* banner with the error above and a blocking issue: _“Unrecognized key(s) in object: 'projectId', 'tenantId', 'createdBy', '_v'”_.\n\nh3. Expected\n\nPreview succeeds; runtime config is staged for import (added/modified/unchanged as appropriate).\n\nh3. Actual\n\nPreview fails on {{project_runtime_configs}} due to four unrecognized keys.\n\n\n\n----\n\n\n\n*Initial Analysis(May help for fixing)*\n\nTwo leaks on the *export* side and one re-injection on the *import* side, against a strict Zod save-validator:\n\n# *Exporter does not strip the custom version field or audit field.* {{packages/project-io/src/export/layer-assemblers/assembler-utils.ts}}:\n{noformat}const DEFAULT_INTERNAL_KEYS = ['_id', '__v', 'projectId', 'tenantId', 'createdAt', 'updatedAt'];{noformat}\nThe runtime config model defines a *custom* {{_v}} (single underscore — not Mongoose’s {{__v}}) and the document also carries {{createdBy}}:\n{noformat}// packages/database/src/models/project-runtime-config.model.ts\n_v: { type: Number, default: 1 },{noformat}\nNeither {{_v}} nor {{createdBy}} is in {{DEFAULT_INTERNAL_KEYS}}, so both leak into {{config/runtime-config.json}}.\n# *Importer re-injects ownership unconditionally.* {{packages/project-io/src/import/layer-disassemblers/disassembler-utils.ts}} {{injectOwnership}} always sets {{projectId}}, {{tenantId}}, and {{createdBy}} on the staged record from server context.\n# *Save-side validator is strict.* The downstream save validator for {{project_runtime_configs}} does not recognize ownership/version fields, so it rejects all four ({{projectId}}, {{tenantId}}, {{createdBy}}, {{_v}}) with the literal Zod strict-object message.\n\nEnd result: even a clean Studio export ships an archive that the same platform’s importer rejects.\n\n\n\n!image-20260508-024754.png|width=862,alt=\"image-20260508-024754.png\"!"
+            }
+          ]
+        },
+        {
+          "id": "6151574",
+          "author": {
+            "self": "https://koreteam.atlassian.net/rest/api/3/user?accountId=712020%3Aa4bdca42-00e1-40ae-8f10-83b46b10b367",
+            "accountId": "712020:a4bdca42-00e1-40ae-8f10-83b46b10b367",
+            "avatarUrls": {
+              "48x48": "https://secure.gravatar.com/avatar/919c8fcf256ed6af0ce154faa55a9d34?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FUM-3.png",
+              "24x24": "https://secure.gravatar.com/avatar/919c8fcf256ed6af0ce154faa55a9d34?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FUM-3.png",
+              "16x16": "https://secure.gravatar.com/avatar/919c8fcf256ed6af0ce154faa55a9d34?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FUM-3.png",
+              "32x32": "https://secure.gravatar.com/avatar/919c8fcf256ed6af0ce154faa55a9d34?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FUM-3.png"
+            },
+            "displayName": "Upendher Musham",
+            "active": true,
+            "timeZone": "Asia/Kolkata",
+            "accountType": "atlassian"
+          },
+          "created": "2026-05-08T08:14:27.902+0530",
+          "items": [
+            {
+              "field": "description",
+              "fieldtype": "jira",
+              "fieldId": "description",
+              "from": null,
+              "fromString": "In real time voice using the Grok realtime model, the top-level supervisor {{CignaRouter}} is incorrectly invoking the {{__return_to_parent__}} tool after authentication is completed by {{CAIAuth_Specialist}}.\n\nAfter the auth flow completes, the trace shows:\n\n{quote}“Thread Returned — CAIAuth_Specialist”{quote}\n\nAt this point, {{CignaRouter}} sometimes selects {{__return_to_parent__}} with reasoning such as:\n\n{quote}“Authentication successful”{quote}\n\nSince {{CignaRouter}} is the root/top-level supervisor, it does not have a parent thread. As a result, the tool invocation fails with the following error:\n\n{noformat}{\n  \"success\": false,\n  \"message\": \"No parent to return to.\"\n}{noformat}\n\n\n\n----\n\nh3. Expected Behavior\n\nAfter authentication completes and control returns from {{CAIAuth_Specialist}}, {{CignaRouter}} should follow:\n\n{noformat}ON_RETURN: resume_intent{noformat}\n\nThe router should then continue intent-based routing (e.g., order, case, eligibility flows, etc.) instead of attempting a parent return.\n\n----\n\nh3. Details\n\n*  Model: Grok realtime s2s(grok-2-1212)\n*  Project ID: {{019dd384-2796-7dd3-8abb-60a40e2143ce}} \n\nh3. ",
+              "to": null,
+              "toString": "Importing a project archive that was created through the *official Studio export* fails at the *preview* stage with:\n\n{noformat}RUNTIME_CONFIG_SAVE_VALIDATION_FAILED:\nUnrecognized key(s) in object: 'projectId', 'tenantId', 'createdBy', '_v'{noformat}\n\n Preview shows *0 Added / 0 Modified / 0 Removed* and the import cannot proceed. Re-exporting the project does not help — the issue is in the export/import contract itself.\n\nh3. Steps to reproduce\n\n# In Studio, open any project that has a {{ProjectRuntimeConfig}} document.\n# Use *Export Project* to download the archive.\n# In another (or the same) workspace, open *Import Project* and select the archive.\n# Observe *Failed to preview import* banner with the error above and a blocking issue: _“Unrecognized key(s) in object: 'projectId', 'tenantId', 'createdBy', '_v'”_.\n\nh3. Expected\n\nPreview succeeds; runtime config is staged for import (added/modified/unchanged as appropriate).\n\nh3. Actual\n\nPreview fails on {{project_runtime_configs}} due to four unrecognized keys.\n\n\n\n----\n\n\n\n*Initial Analysis(May help for fixing)*\n\nTwo leaks on the *export* side and one re-injection on the *import* side, against a strict Zod save-validator:\n\n# *Exporter does not strip the custom version field or audit field.* {{packages/project-io/src/export/layer-assemblers/assembler-utils.ts}}:\n{noformat}const DEFAULT_INTERNAL_KEYS = ['_id', '__v', 'projectId', 'tenantId', 'createdAt', 'updatedAt'];{noformat}\nThe runtime config model defines a *custom* {{_v}} (single underscore — not Mongoose’s {{__v}}) and the document also carries {{createdBy}}:\n{noformat}// packages/database/src/models/project-runtime-config.model.ts\n_v: { type: Number, default: 1 },{noformat}\nNeither {{_v}} nor {{createdBy}} is in {{DEFAULT_INTERNAL_KEYS}}, so both leak into {{config/runtime-config.json}}.\n# *Importer re-injects ownership unconditionally.* {{packages/project-io/src/import/layer-disassemblers/disassembler-utils.ts}} {{injectOwnership}} always sets {{projectId}}, {{tenantId}}, and {{createdBy}} on the staged record from server context.\n# *Save-side validator is strict.* The downstream save validator for {{project_runtime_configs}} does not recognize ownership/version fields, so it rejects all four ({{projectId}}, {{tenantId}}, {{createdBy}}, {{_v}}) with the literal Zod strict-object message.\n\nEnd result: even a clean Studio export ships an archive that the same platform’s importer rejects."
+            }
+          ]
+        },
+        {
+          "id": "6151572",
+          "author": {
+            "self": "https://koreteam.atlassian.net/rest/api/3/user?accountId=712020%3Aa4bdca42-00e1-40ae-8f10-83b46b10b367",
+            "accountId": "712020:a4bdca42-00e1-40ae-8f10-83b46b10b367",
+            "avatarUrls": {
+              "48x48": "https://secure.gravatar.com/avatar/919c8fcf256ed6af0ce154faa55a9d34?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FUM-3.png",
+              "24x24": "https://secure.gravatar.com/avatar/919c8fcf256ed6af0ce154faa55a9d34?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FUM-3.png",
+              "16x16": "https://secure.gravatar.com/avatar/919c8fcf256ed6af0ce154faa55a9d34?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FUM-3.png",
+              "32x32": "https://secure.gravatar.com/avatar/919c8fcf256ed6af0ce154faa55a9d34?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FUM-3.png"
+            },
+            "displayName": "Upendher Musham",
+            "active": true,
+            "timeZone": "Asia/Kolkata",
+            "accountType": "atlassian"
+          },
+          "created": "2026-05-08T08:11:52.095+0530",
+          "items": [
+            {
+              "field": "summary",
+              "fieldtype": "jira",
+              "fieldId": "summary",
+              "from": null,
+              "fromString": "Issue with exporting the project",
+              "to": null,
+              "toString": "Issue with importing  the project into workspace"
+            }
+          ]
+        },
+        {
+          "id": "6150308",
+          "author": {
+            "self": "https://koreteam.atlassian.net/rest/api/3/user?accountId=712020%3Aa4bdca42-00e1-40ae-8f10-83b46b10b367",
+            "accountId": "712020:a4bdca42-00e1-40ae-8f10-83b46b10b367",
+            "avatarUrls": {
+              "48x48": "https://secure.gravatar.com/avatar/919c8fcf256ed6af0ce154faa55a9d34?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FUM-3.png",
+              "24x24": "https://secure.gravatar.com/avatar/919c8fcf256ed6af0ce154faa55a9d34?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FUM-3.png",
+              "16x16": "https://secure.gravatar.com/avatar/919c8fcf256ed6af0ce154faa55a9d34?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FUM-3.png",
+              "32x32": "https://secure.gravatar.com/avatar/919c8fcf256ed6af0ce154faa55a9d34?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FUM-3.png"
+            },
+            "displayName": "Upendher Musham",
+            "active": true,
+            "timeZone": "Asia/Kolkata",
+            "accountType": "atlassian"
+          },
+          "created": "2026-05-07T18:56:53.325+0530",
+          "items": [
+            {
+              "field": "Link",
+              "fieldtype": "jira",
+              "from": null,
+              "fromString": null,
+              "to": "ABLP-900",
+              "toString": "This work item clones ABLP-900"
+            }
+          ]
+        }
+      ]
+    },
+    "fields": {
+      "statuscategorychangedate": "2026-05-12T18:57:33.632+0530",
+      "issuetype": {
+        "self": "https://koreteam.atlassian.net/rest/api/3/issuetype/13402",
+        "id": "13402",
+        "description": "",
+        "iconUrl": "https://koreteam.atlassian.net/rest/api/2/universal_avatar/view/type/issuetype/avatar/10703?size=medium",
+        "name": "Bug",
+        "subtask": false,
+        "avatarId": 10703,
+        "entityId": "ffe81e74-168d-44e4-b40a-87293f5b8180",
+        "hierarchyLevel": 0
+      },
+      "timespent": null,
+      "project": {
+        "self": "https://koreteam.atlassian.net/rest/api/3/project/17286",
+        "id": "17286",
+        "key": "ABLP",
+        "name": "Agent-Platform-v2",
+        "projectTypeKey": "software",
+        "simplified": true,
+        "avatarUrls": {
+          "48x48": "https://koreteam.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/15404",
+          "24x24": "https://koreteam.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/15404?size=small",
+          "16x16": "https://koreteam.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/15404?size=xsmall",
+          "32x32": "https://koreteam.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/15404?size=medium"
+        }
+      },
+      "fixVersions": [],
+      "aggregatetimespent": null,
+      "statusCategory": {
+        "self": "https://koreteam.atlassian.net/rest/api/3/statuscategory/2",
+        "id": 2,
+        "key": "new",
+        "colorName": "blue-gray",
+        "name": "To Do"
+      },
+      "resolution": null,
+      "customfield_13700": "{pullrequest={dataType=pullrequest, state=DECLINED, stateCount=1}, json={\"cachedValue\":{\"errors\":[],\"summary\":{\"pullrequest\":{\"overall\":{\"count\":1,\"lastUpdated\":\"2026-05-13T16:54:44.275+0530\",\"stateCount\":1,\"state\":\"DECLINED\",\"dataType\":\"pullrequest\",\"open\":false},\"byInstanceType\":{\"bitbucket\":{\"count\":1,\"name\":\"Bitbucket Cloud\"}}}}},\"isStale\":true}}",
+      "customfield_15205": null,
+      "resolutiondate": null,
+      "workratio": -1,
+      "issuerestriction": {
+        "issuerestrictions": {},
+        "shouldDisplay": true
+      },
+      "watches": {
+        "self": "https://koreteam.atlassian.net/rest/api/3/issue/ABLP-905/watchers",
+        "watchCount": 2,
+        "isWatching": true
+      },
+      "lastViewed": "2026-05-12T14:06:49.805+0530",
+      "created": "2026-05-07T18:56:52.045+0530",
+      "customfield_15279": null,
+      "priority": {
+        "self": "https://koreteam.atlassian.net/rest/api/3/priority/10200",
+        "iconUrl": "https://koreteam.atlassian.net/images/icons/priorities/trivial_new.svg",
+        "name": "None",
+        "id": "10200"
+      },
+      "customfield_15514": null,
+      "labels": ["Cigna", "go-agentic-priority"],
+      "customfield_15508": null,
+      "timeestimate": null,
+      "aggregatetimeoriginalestimate": null,
+      "versions": [],
+      "issuelinks": [],
+      "assignee": {
+        "self": "https://koreteam.atlassian.net/rest/api/3/user?accountId=557058%3A19965570-a9cd-4d76-b059-6af5ae4fdca7",
+        "accountId": "557058:19965570-a9cd-4d76-b059-6af5ae4fdca7",
+        "emailAddress": "prasanna@kore.com",
+        "avatarUrls": {
+          "48x48": "https://secure.gravatar.com/avatar/84aa6c5f7ca4865903e52515ef5499c4?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FPA-6.png",
+          "24x24": "https://secure.gravatar.com/avatar/84aa6c5f7ca4865903e52515ef5499c4?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FPA-6.png",
+          "16x16": "https://secure.gravatar.com/avatar/84aa6c5f7ca4865903e52515ef5499c4?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FPA-6.png",
+          "32x32": "https://secure.gravatar.com/avatar/84aa6c5f7ca4865903e52515ef5499c4?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FPA-6.png"
+        },
+        "displayName": "Prasanna Arikala",
+        "active": true,
+        "timeZone": "Asia/Kolkata",
+        "accountType": "atlassian"
+      },
+      "updated": "2026-05-13T10:23:24.166+0530",
+      "status": {
+        "self": "https://koreteam.atlassian.net/rest/api/3/status/13811",
+        "description": "",
+        "iconUrl": "https://koreteam.atlassian.net/images/icons/statuses/generic.png",
+        "name": "To Do",
+        "id": "13811",
+        "statusCategory": {
+          "self": "https://koreteam.atlassian.net/rest/api/3/statuscategory/2",
+          "id": 2,
+          "key": "new",
+          "colorName": "blue-gray",
+          "name": "To Do"
+        }
+      },
+      "components": [],
+      "timeoriginalestimate": null,
+      "description": {
+        "type": "doc",
+        "version": 1,
+        "content": [
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "type": "text",
+                "text": "Importing a project archive that was created through the "
+              },
+              {
+                "type": "text",
+                "text": "official Studio export",
+                "marks": [
+                  {
+                    "type": "strong"
+                  }
+                ]
+              },
+              {
+                "type": "text",
+                "text": " fails at the "
+              },
+              {
+                "type": "text",
+                "text": "preview",
+                "marks": [
+                  {
+                    "type": "strong"
+                  }
+                ]
+              },
+              {
+                "type": "text",
+                "text": " stage with:"
+              }
+            ],
+            "attrs": {
+              "localId": "f3da759840ef"
+            }
+          },
+          {
+            "type": "codeBlock",
+            "attrs": {
+              "localId": "d819893ada11"
+            },
+            "content": [
+              {
+                "type": "text",
+                "text": "RUNTIME_CONFIG_SAVE_VALIDATION_FAILED:\nUnrecognized key(s) in object: 'projectId', 'tenantId', 'createdBy', '_v'"
+              }
+            ]
+          },
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "type": "text",
+                "text": " Preview shows "
+              },
+              {
+                "type": "text",
+                "text": "0 Added / 0 Modified / 0 Removed",
+                "marks": [
+                  {
+                    "type": "strong"
+                  }
+                ]
+              },
+              {
+                "type": "text",
+                "text": " and the import cannot proceed. Re-exporting the project does not help — the issue is in the export/import contract itself."
+              }
+            ],
+            "attrs": {
+              "localId": "f3da759840ef"
+            }
+          },
+          {
+            "type": "heading",
+            "attrs": {
+              "level": 3,
+              "localId": "2bc762defdbf"
+            },
+            "content": [
+              {
+                "type": "text",
+                "text": "Steps to reproduce"
+              }
+            ]
+          },
+          {
+            "type": "orderedList",
+            "attrs": {
+              "order": 1,
+              "localId": "08665d30fbda"
+            },
+            "content": [
+              {
+                "type": "listItem",
+                "attrs": {
+                  "localId": "97fd3ffcbf8c"
+                },
+                "content": [
+                  {
+                    "type": "paragraph",
+                    "content": [
+                      {
+                        "type": "text",
+                        "text": "In Studio, open  project "
+                      }
+                    ],
+                    "attrs": {
+                      "localId": "e39cf2441277"
+                    }
+                  }
+                ]
+              },
+              {
+                "type": "listItem",
+                "attrs": {
+                  "localId": "a0b0ddb98597"
+                },
+                "content": [
+                  {
+                    "type": "paragraph",
+                    "content": [
+                      {
+                        "type": "text",
+                        "text": "Use "
+                      },
+                      {
+                        "type": "text",
+                        "text": "Export Project",
+                        "marks": [
+                          {
+                            "type": "strong"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "text",
+                        "text": " to download the archive."
+                      }
+                    ],
+                    "attrs": {
+                      "localId": "e0d0ddabd52d"
+                    }
+                  }
+                ]
+              },
+              {
+                "type": "listItem",
+                "attrs": {
+                  "localId": "f1541a8af87e"
+                },
+                "content": [
+                  {
+                    "type": "paragraph",
+                    "content": [
+                      {
+                        "type": "text",
+                        "text": "In another (or the same) workspace, open "
+                      },
+                      {
+                        "type": "text",
+                        "text": "Import Project",
+                        "marks": [
+                          {
+                            "type": "strong"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "text",
+                        "text": " and select the archive."
+                      }
+                    ],
+                    "attrs": {
+                      "localId": "b5ba1d7e44ad"
+                    }
+                  }
+                ]
+              },
+              {
+                "type": "listItem",
+                "attrs": {
+                  "localId": "f725a07488f7"
+                },
+                "content": [
+                  {
+                    "type": "paragraph",
+                    "content": [
+                      {
+                        "type": "text",
+                        "text": "Observe "
+                      },
+                      {
+                        "type": "text",
+                        "text": "Failed to preview import",
+                        "marks": [
+                          {
+                            "type": "strong"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "text",
+                        "text": " banner with the error above and a blocking issue: "
+                      },
+                      {
+                        "type": "text",
+                        "text": "“Unrecognized key(s) in object: 'projectId', 'tenantId', 'createdBy', '_v'”",
+                        "marks": [
+                          {
+                            "type": "em"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "text",
+                        "text": "."
+                      }
+                    ],
+                    "attrs": {
+                      "localId": "c353f5d0d785"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "heading",
+            "attrs": {
+              "level": 3,
+              "localId": "e73da99216a3"
+            },
+            "content": [
+              {
+                "type": "text",
+                "text": "Expected"
+              }
+            ]
+          },
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "type": "text",
+                "text": "Preview succeeds; runtime config is staged for import (added/modified/unchanged as appropriate)."
+              }
+            ],
+            "attrs": {
+              "localId": "2f45bc34bc0c"
+            }
+          },
+          {
+            "type": "heading",
+            "attrs": {
+              "level": 3,
+              "localId": "debe0514b816"
+            },
+            "content": [
+              {
+                "type": "text",
+                "text": "Actual"
+              }
+            ]
+          },
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "type": "text",
+                "text": "Preview fails on "
+              },
+              {
+                "type": "text",
+                "text": "project_runtime_configs",
+                "marks": [
+                  {
+                    "type": "code"
+                  }
+                ]
+              },
+              {
+                "type": "text",
+                "text": " due to four unrecognized keys."
+              }
+            ],
+            "attrs": {
+              "localId": "0ec6ca90690f"
+            }
+          },
+          {
+            "type": "rule",
+            "attrs": {
+              "localId": "113d9a977423"
+            }
+          },
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "type": "text",
+                "text": "Details:",
+                "marks": [
+                  {
+                    "type": "strong"
+                  }
+                ]
+              }
+            ],
+            "attrs": {
+              "localId": "65e6e8a5cdd1"
+            }
+          },
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "type": "text",
+                "text": "ProjectId: 019dd384-2796-7dd3-8abb-60a40e2143ce"
+              }
+            ],
+            "attrs": {
+              "localId": "dd7ff8340539"
+            }
+          },
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "type": "text",
+                "text": "Email: "
+              },
+              {
+                "type": "text",
+                "text": "upendher.musham@kore.com",
+                "marks": [
+                  {
+                    "type": "link",
+                    "attrs": {
+                      "href": "mailto:upendher.musham@kore.com"
+                    }
+                  }
+                ]
+              }
+            ],
+            "attrs": {
+              "localId": "6b1b52faa727"
+            }
+          },
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "type": "text",
+                "text": "Workspace: goAgentic"
+              }
+            ],
+            "attrs": {
+              "localId": "e25529403aa0"
+            }
+          },
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "type": "text",
+                "text": "Project name: Cigna Demo"
+              }
+            ],
+            "attrs": {
+              "localId": "04ed6c9b00ab"
+            }
+          },
+          {
+            "type": "paragraph",
+            "attrs": {
+              "localId": "b25faee6b075"
+            }
+          },
+          {
+            "type": "rule",
+            "attrs": {
+              "localId": "d0d3886d2c57"
+            }
+          },
+          {
+            "type": "paragraph",
+            "attrs": {
+              "localId": "88a82467c4b8"
+            }
+          },
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "type": "text",
+                "text": "Initial Analysis(May help for fixing)",
+                "marks": [
+                  {
+                    "type": "strong"
+                  }
+                ]
+              }
+            ],
+            "attrs": {
+              "localId": "37bf79790b62"
+            }
+          },
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "type": "text",
+                "text": "Two leaks on the "
+              },
+              {
+                "type": "text",
+                "text": "export",
+                "marks": [
+                  {
+                    "type": "strong"
+                  }
+                ]
+              },
+              {
+                "type": "text",
+                "text": " side and one re-injection on the "
+              },
+              {
+                "type": "text",
+                "text": "import",
+                "marks": [
+                  {
+                    "type": "strong"
+                  }
+                ]
+              },
+              {
+                "type": "text",
+                "text": " side, against a strict Zod save-validator:"
+              }
+            ],
+            "attrs": {
+              "localId": "624a4491ea75"
+            }
+          },
+          {
+            "type": "orderedList",
+            "attrs": {
+              "order": 1,
+              "localId": "308af221bfda"
+            },
+            "content": [
+              {
+                "type": "listItem",
+                "attrs": {
+                  "localId": "20e833b9a805"
+                },
+                "content": [
+                  {
+                    "type": "paragraph",
+                    "content": [
+                      {
+                        "type": "text",
+                        "text": "Exporter does not strip the custom version field or audit field.",
+                        "marks": [
+                          {
+                            "type": "strong"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "text",
+                        "text": " "
+                      },
+                      {
+                        "type": "text",
+                        "text": "packages/project-io/src/export/layer-assemblers/assembler-utils.ts",
+                        "marks": [
+                          {
+                            "type": "code"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "text",
+                        "text": ":"
+                      }
+                    ],
+                    "attrs": {
+                      "localId": "4bd734b60fda"
+                    }
+                  },
+                  {
+                    "type": "codeBlock",
+                    "attrs": {
+                      "localId": "af68eeb22e42"
+                    },
+                    "content": [
+                      {
+                        "type": "text",
+                        "text": "const DEFAULT_INTERNAL_KEYS = ['_id', '__v', 'projectId', 'tenantId', 'createdAt', 'updatedAt'];"
+                      }
+                    ]
+                  },
+                  {
+                    "type": "paragraph",
+                    "content": [
+                      {
+                        "type": "text",
+                        "text": "The runtime config model defines a "
+                      },
+                      {
+                        "type": "text",
+                        "text": "custom ",
+                        "marks": [
+                          {
+                            "type": "strong"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "text",
+                        "text": "_v",
+                        "marks": [
+                          {
+                            "type": "code"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "text",
+                        "text": " (single underscore — not Mongoose’s "
+                      },
+                      {
+                        "type": "text",
+                        "text": "__v",
+                        "marks": [
+                          {
+                            "type": "code"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "text",
+                        "text": ") and the document also carries "
+                      },
+                      {
+                        "type": "text",
+                        "text": "createdBy",
+                        "marks": [
+                          {
+                            "type": "code"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "text",
+                        "text": ":"
+                      }
+                    ],
+                    "attrs": {
+                      "localId": "45dcab1c664b"
+                    }
+                  },
+                  {
+                    "type": "codeBlock",
+                    "attrs": {
+                      "localId": "9ba0b663b016"
+                    },
+                    "content": [
+                      {
+                        "type": "text",
+                        "text": "// packages/database/src/models/project-runtime-config.model.ts\n_v: { type: Number, default: 1 },"
+                      }
+                    ]
+                  },
+                  {
+                    "type": "paragraph",
+                    "content": [
+                      {
+                        "type": "text",
+                        "text": "Neither "
+                      },
+                      {
+                        "type": "text",
+                        "text": "_v",
+                        "marks": [
+                          {
+                            "type": "code"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "text",
+                        "text": " nor "
+                      },
+                      {
+                        "type": "text",
+                        "text": "createdBy",
+                        "marks": [
+                          {
+                            "type": "code"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "text",
+                        "text": " is in "
+                      },
+                      {
+                        "type": "text",
+                        "text": "DEFAULT_INTERNAL_KEYS",
+                        "marks": [
+                          {
+                            "type": "code"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "text",
+                        "text": ", so both leak into "
+                      },
+                      {
+                        "type": "text",
+                        "text": "config/runtime-config.json",
+                        "marks": [
+                          {
+                            "type": "code"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "text",
+                        "text": "."
+                      }
+                    ],
+                    "attrs": {
+                      "localId": "88ecba0092f1"
+                    }
+                  }
+                ]
+              },
+              {
+                "type": "listItem",
+                "attrs": {
+                  "localId": "11fa8a979225"
+                },
+                "content": [
+                  {
+                    "type": "paragraph",
+                    "content": [
+                      {
+                        "type": "text",
+                        "text": "Importer re-injects ownership unconditionally.",
+                        "marks": [
+                          {
+                            "type": "strong"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "text",
+                        "text": " "
+                      },
+                      {
+                        "type": "text",
+                        "text": "packages/project-io/src/import/layer-disassemblers/disassembler-utils.ts",
+                        "marks": [
+                          {
+                            "type": "code"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "text",
+                        "text": " "
+                      },
+                      {
+                        "type": "text",
+                        "text": "injectOwnership",
+                        "marks": [
+                          {
+                            "type": "code"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "text",
+                        "text": " always sets "
+                      },
+                      {
+                        "type": "text",
+                        "text": "projectId",
+                        "marks": [
+                          {
+                            "type": "code"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "text",
+                        "text": ", "
+                      },
+                      {
+                        "type": "text",
+                        "text": "tenantId",
+                        "marks": [
+                          {
+                            "type": "code"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "text",
+                        "text": ", and "
+                      },
+                      {
+                        "type": "text",
+                        "text": "createdBy",
+                        "marks": [
+                          {
+                            "type": "code"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "text",
+                        "text": " on the staged record from server context."
+                      }
+                    ],
+                    "attrs": {
+                      "localId": "2dcb847b06df"
+                    }
+                  }
+                ]
+              },
+              {
+                "type": "listItem",
+                "attrs": {
+                  "localId": "d7e49f826cd9"
+                },
+                "content": [
+                  {
+                    "type": "paragraph",
+                    "content": [
+                      {
+                        "type": "text",
+                        "text": "Save-side validator is strict.",
+                        "marks": [
+                          {
+                            "type": "strong"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "text",
+                        "text": " The downstream save validator for "
+                      },
+                      {
+                        "type": "text",
+                        "text": "project_runtime_configs",
+                        "marks": [
+                          {
+                            "type": "code"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "text",
+                        "text": " does not recognize ownership/version fields, so it rejects all four ("
+                      },
+                      {
+                        "type": "text",
+                        "text": "projectId",
+                        "marks": [
+                          {
+                            "type": "code"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "text",
+                        "text": ", "
+                      },
+                      {
+                        "type": "text",
+                        "text": "tenantId",
+                        "marks": [
+                          {
+                            "type": "code"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "text",
+                        "text": ", "
+                      },
+                      {
+                        "type": "text",
+                        "text": "createdBy",
+                        "marks": [
+                          {
+                            "type": "code"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "text",
+                        "text": ", "
+                      },
+                      {
+                        "type": "text",
+                        "text": "_v",
+                        "marks": [
+                          {
+                            "type": "code"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "text",
+                        "text": ") with the literal Zod strict-object message."
+                      }
+                    ],
+                    "attrs": {
+                      "localId": "23b6ec7b8afa"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "type": "text",
+                "text": "End result: even a clean Studio export ships an archive that the same platform’s importer rejects."
+              }
+            ],
+            "attrs": {
+              "localId": "fa912c0f5f38"
+            }
+          },
+          {
+            "type": "paragraph",
+            "attrs": {
+              "localId": "cce66b1e92c9"
+            }
+          },
+          {
+            "type": "mediaSingle",
+            "attrs": {
+              "width": 862,
+              "widthType": "pixel",
+              "localId": "55b563b947d2",
+              "layout": "align-start"
+            },
+            "content": [
+              {
+                "type": "media",
+                "attrs": {
+                  "type": "file",
+                  "id": "f0877a44-0de9-4a59-b07e-0999bf59c280",
+                  "alt": "image-20260508-024754.png",
+                  "collection": "",
+                  "localId": "20a57e469f35",
+                  "height": 658,
+                  "width": 862
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "customfield_15225": null,
+      "customfield_11300": null,
+      "timetracking": {},
+      "security": null,
+      "attachment": [
+        {
+          "self": "https://koreteam.atlassian.net/rest/api/3/attachment/757691",
+          "id": "757691",
+          "filename": "image-20260508-024754.png",
+          "author": {
+            "self": "https://koreteam.atlassian.net/rest/api/3/user?accountId=712020%3Aa4bdca42-00e1-40ae-8f10-83b46b10b367",
+            "accountId": "712020:a4bdca42-00e1-40ae-8f10-83b46b10b367",
+            "avatarUrls": {
+              "48x48": "https://secure.gravatar.com/avatar/919c8fcf256ed6af0ce154faa55a9d34?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FUM-3.png",
+              "24x24": "https://secure.gravatar.com/avatar/919c8fcf256ed6af0ce154faa55a9d34?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FUM-3.png",
+              "16x16": "https://secure.gravatar.com/avatar/919c8fcf256ed6af0ce154faa55a9d34?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FUM-3.png",
+              "32x32": "https://secure.gravatar.com/avatar/919c8fcf256ed6af0ce154faa55a9d34?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FUM-3.png"
+            },
+            "displayName": "Upendher Musham",
+            "active": true,
+            "timeZone": "Asia/Kolkata",
+            "accountType": "atlassian"
+          },
+          "created": "2026-05-08T08:18:27.080+0530",
+          "size": 138575,
+          "mimeType": "image/png",
+          "content": "https://koreteam.atlassian.net/rest/api/3/attachment/content/757691",
+          "thumbnail": "https://koreteam.atlassian.net/rest/api/3/attachment/thumbnail/757691"
+        },
+        {
+          "self": "https://koreteam.atlassian.net/rest/api/3/attachment/759081",
+          "id": "759081",
+          "filename": "image-20260512-131720.png",
+          "author": {
+            "self": "https://koreteam.atlassian.net/rest/api/3/user?accountId=712020%3Aa4bdca42-00e1-40ae-8f10-83b46b10b367",
+            "accountId": "712020:a4bdca42-00e1-40ae-8f10-83b46b10b367",
+            "avatarUrls": {
+              "48x48": "https://secure.gravatar.com/avatar/919c8fcf256ed6af0ce154faa55a9d34?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FUM-3.png",
+              "24x24": "https://secure.gravatar.com/avatar/919c8fcf256ed6af0ce154faa55a9d34?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FUM-3.png",
+              "16x16": "https://secure.gravatar.com/avatar/919c8fcf256ed6af0ce154faa55a9d34?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FUM-3.png",
+              "32x32": "https://secure.gravatar.com/avatar/919c8fcf256ed6af0ce154faa55a9d34?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FUM-3.png"
+            },
+            "displayName": "Upendher Musham",
+            "active": true,
+            "timeZone": "Asia/Kolkata",
+            "accountType": "atlassian"
+          },
+          "created": "2026-05-12T18:57:26.138+0530",
+          "size": 362969,
+          "mimeType": "image/png",
+          "content": "https://koreteam.atlassian.net/rest/api/3/attachment/content/759081",
+          "thumbnail": "https://koreteam.atlassian.net/rest/api/3/attachment/thumbnail/759081"
+        }
+      ],
+      "aggregatetimeestimate": null,
+      "summary": "Issue with importing  the project into workspace",
+      "creator": {
+        "self": "https://koreteam.atlassian.net/rest/api/3/user?accountId=712020%3Aa4bdca42-00e1-40ae-8f10-83b46b10b367",
+        "accountId": "712020:a4bdca42-00e1-40ae-8f10-83b46b10b367",
+        "avatarUrls": {
+          "48x48": "https://secure.gravatar.com/avatar/919c8fcf256ed6af0ce154faa55a9d34?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FUM-3.png",
+          "24x24": "https://secure.gravatar.com/avatar/919c8fcf256ed6af0ce154faa55a9d34?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FUM-3.png",
+          "16x16": "https://secure.gravatar.com/avatar/919c8fcf256ed6af0ce154faa55a9d34?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FUM-3.png",
+          "32x32": "https://secure.gravatar.com/avatar/919c8fcf256ed6af0ce154faa55a9d34?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FUM-3.png"
+        },
+        "displayName": "Upendher Musham",
+        "active": true,
+        "timeZone": "Asia/Kolkata",
+        "accountType": "atlassian"
+      },
+      "subtasks": [],
+      "reporter": {
+        "self": "https://koreteam.atlassian.net/rest/api/3/user?accountId=712020%3Aa4bdca42-00e1-40ae-8f10-83b46b10b367",
+        "accountId": "712020:a4bdca42-00e1-40ae-8f10-83b46b10b367",
+        "avatarUrls": {
+          "48x48": "https://secure.gravatar.com/avatar/919c8fcf256ed6af0ce154faa55a9d34?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FUM-3.png",
+          "24x24": "https://secure.gravatar.com/avatar/919c8fcf256ed6af0ce154faa55a9d34?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FUM-3.png",
+          "16x16": "https://secure.gravatar.com/avatar/919c8fcf256ed6af0ce154faa55a9d34?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FUM-3.png",
+          "32x32": "https://secure.gravatar.com/avatar/919c8fcf256ed6af0ce154faa55a9d34?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FUM-3.png"
+        },
+        "displayName": "Upendher Musham",
+        "active": true,
+        "timeZone": "Asia/Kolkata",
+        "accountType": "atlassian"
+      },
+      "aggregateprogress": {
+        "progress": 0,
+        "total": 0
+      },
+      "customfield_10002": null,
+      "customfield_10400": "1|i0hkob:",
+      "customfield_13900": {
+        "id": "94430370-d9f2-485b-80cc-f800622a788b",
+        "name": "GoAgentic",
+        "avatarUrl": "",
+        "isVisible": true,
+        "isVerified": false,
+        "title": "GoAgentic",
+        "isShared": true
+      },
+      "environment": null,
+      "duedate": "2026-05-15",
+      "progress": {
+        "progress": 0,
+        "total": 0
+      },
+      "votes": {
+        "self": "https://koreteam.atlassian.net/rest/api/3/issue/ABLP-905/votes",
+        "votes": 0,
+        "hasVoted": false
+      },
+      "comment": {
+        "comments": [
+          {
+            "self": "https://koreteam.atlassian.net/rest/api/3/issue/547708/comment/1366714",
+            "id": "1366714",
+            "author": {
+              "self": "https://koreteam.atlassian.net/rest/api/3/user?accountId=557058%3A19965570-a9cd-4d76-b059-6af5ae4fdca7",
+              "accountId": "557058:19965570-a9cd-4d76-b059-6af5ae4fdca7",
+              "emailAddress": "prasanna@kore.com",
+              "avatarUrls": {
+                "48x48": "https://secure.gravatar.com/avatar/84aa6c5f7ca4865903e52515ef5499c4?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FPA-6.png",
+                "24x24": "https://secure.gravatar.com/avatar/84aa6c5f7ca4865903e52515ef5499c4?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FPA-6.png",
+                "16x16": "https://secure.gravatar.com/avatar/84aa6c5f7ca4865903e52515ef5499c4?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FPA-6.png",
+                "32x32": "https://secure.gravatar.com/avatar/84aa6c5f7ca4865903e52515ef5499c4?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FPA-6.png"
+              },
+              "displayName": "Prasanna Arikala",
+              "active": true,
+              "timeZone": "Asia/Kolkata",
+              "accountType": "atlassian"
+            },
+            "body": {
+              "type": "doc",
+              "version": 1,
+              "content": [
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "This has been fixed in Dev"
+                    }
+                  ],
+                  "attrs": {
+                    "localId": "4430ce06c6f3"
+                  }
+                }
+              ]
+            },
+            "updateAuthor": {
+              "self": "https://koreteam.atlassian.net/rest/api/3/user?accountId=557058%3A19965570-a9cd-4d76-b059-6af5ae4fdca7",
+              "accountId": "557058:19965570-a9cd-4d76-b059-6af5ae4fdca7",
+              "emailAddress": "prasanna@kore.com",
+              "avatarUrls": {
+                "48x48": "https://secure.gravatar.com/avatar/84aa6c5f7ca4865903e52515ef5499c4?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FPA-6.png",
+                "24x24": "https://secure.gravatar.com/avatar/84aa6c5f7ca4865903e52515ef5499c4?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FPA-6.png",
+                "16x16": "https://secure.gravatar.com/avatar/84aa6c5f7ca4865903e52515ef5499c4?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FPA-6.png",
+                "32x32": "https://secure.gravatar.com/avatar/84aa6c5f7ca4865903e52515ef5499c4?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FPA-6.png"
+              },
+              "displayName": "Prasanna Arikala",
+              "active": true,
+              "timeZone": "Asia/Kolkata",
+              "accountType": "atlassian"
+            },
+            "created": "2026-05-12T11:45:04.415+0530",
+            "updated": "2026-05-12T11:45:04.415+0530",
+            "jsdPublic": true
+          },
+          {
+            "self": "https://koreteam.atlassian.net/rest/api/3/issue/547708/comment/1367363",
+            "id": "1367363",
+            "author": {
+              "self": "https://koreteam.atlassian.net/rest/api/3/user?accountId=712020%3Aa4bdca42-00e1-40ae-8f10-83b46b10b367",
+              "accountId": "712020:a4bdca42-00e1-40ae-8f10-83b46b10b367",
+              "avatarUrls": {
+                "48x48": "https://secure.gravatar.com/avatar/919c8fcf256ed6af0ce154faa55a9d34?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FUM-3.png",
+                "24x24": "https://secure.gravatar.com/avatar/919c8fcf256ed6af0ce154faa55a9d34?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FUM-3.png",
+                "16x16": "https://secure.gravatar.com/avatar/919c8fcf256ed6af0ce154faa55a9d34?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FUM-3.png",
+                "32x32": "https://secure.gravatar.com/avatar/919c8fcf256ed6af0ce154faa55a9d34?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FUM-3.png"
+              },
+              "displayName": "Upendher Musham",
+              "active": true,
+              "timeZone": "Asia/Kolkata",
+              "accountType": "atlassian"
+            },
+            "body": {
+              "type": "doc",
+              "version": 1,
+              "content": [
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "Above issue is fixed but Import/export issue is still "
+                    },
+                    {
+                      "type": "text",
+                      "text": "reproducible  when eval",
+                      "marks": [
+                        {
+                          "type": "strong"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "text": " artifacts are included while exporting."
+                    },
+                    {
+                      "type": "hardBreak"
+                    }
+                  ],
+                  "attrs": {
+                    "localId": "bbcf3b1129ff"
+                  }
+                },
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "Observed behavior",
+                      "marks": [
+                        {
+                          "type": "strong"
+                        }
+                      ]
+                    }
+                  ],
+                  "attrs": {
+                    "localId": "216fd779feb0"
+                  }
+                },
+                {
+                  "type": "bulletList",
+                  "content": [
+                    {
+                      "type": "listItem",
+                      "attrs": {
+                        "localId": "8d81b299aa4a"
+                      },
+                      "content": [
+                        {
+                          "type": "paragraph",
+                          "content": [
+                            {
+                              "type": "text",
+                              "text": "Export project from Workspace and import into another project."
+                            }
+                          ],
+                          "attrs": {
+                            "localId": "4b694e4b42f2"
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "type": "listItem",
+                      "attrs": {
+                        "localId": "37a7fb15b581"
+                      },
+                      "content": [
+                        {
+                          "type": "paragraph",
+                          "content": [
+                            {
+                              "type": "text",
+                              "text": "Import fails with schema validation errors when "
+                            },
+                            {
+                              "type": "text",
+                              "text": "eval_sets",
+                              "marks": [
+                                {
+                                  "type": "code"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "text",
+                              "text": ", "
+                            },
+                            {
+                              "type": "text",
+                              "text": "eval_scenarios",
+                              "marks": [
+                                {
+                                  "type": "code"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "text",
+                              "text": ", and "
+                            },
+                            {
+                              "type": "text",
+                              "text": "eval_personas",
+                              "marks": [
+                                {
+                                  "type": "code"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "text",
+                              "text": " are part of the export."
+                            }
+                          ],
+                          "attrs": {
+                            "localId": "e4a4e15b0b20"
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "type": "listItem",
+                      "attrs": {
+                        "localId": "8324d0c95614"
+                      },
+                      "content": [
+                        {
+                          "type": "paragraph",
+                          "content": [
+                            {
+                              "type": "text",
+                              "text": "Import succeeds when evals are deselected during export."
+                            }
+                          ],
+                          "attrs": {
+                            "localId": "993f4511280d"
+                          }
+                        }
+                      ]
+                    }
+                  ],
+                  "attrs": {
+                    "localId": "1a9f5b7f664c"
+                  }
+                },
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "Validation errors seen(PFA)",
+                      "marks": [
+                        {
+                          "type": "strong"
+                        }
+                      ]
+                    }
+                  ],
+                  "attrs": {
+                    "localId": "ba0f112ad37d"
+                  }
+                },
+                {
+                  "type": "bulletList",
+                  "content": [
+                    {
+                      "type": "listItem",
+                      "attrs": {
+                        "localId": "ce7e34b7fc25"
+                      },
+                      "content": [
+                        {
+                          "type": "paragraph",
+                          "content": [
+                            {
+                              "type": "text",
+                              "text": "eval_sets.personaModel",
+                              "marks": [
+                                {
+                                  "type": "code"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "text",
+                              "text": ": expected "
+                            },
+                            {
+                              "type": "text",
+                              "text": "string",
+                              "marks": [
+                                {
+                                  "type": "code"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "text",
+                              "text": ", received "
+                            },
+                            {
+                              "type": "text",
+                              "text": "null",
+                              "marks": [
+                                {
+                                  "type": "code"
+                                }
+                              ]
+                            }
+                          ],
+                          "attrs": {
+                            "localId": "1ad7d0d0c9a9"
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "type": "listItem",
+                      "attrs": {
+                        "localId": "8d5c2a4d68ec"
+                      },
+                      "content": [
+                        {
+                          "type": "paragraph",
+                          "content": [
+                            {
+                              "type": "text",
+                              "text": "eval_scenarios.expectedMilestones[i]",
+                              "marks": [
+                                {
+                                  "type": "code"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "text",
+                              "text": ": expected "
+                            },
+                            {
+                              "type": "text",
+                              "text": "object",
+                              "marks": [
+                                {
+                                  "type": "code"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "text",
+                              "text": ", received "
+                            },
+                            {
+                              "type": "text",
+                              "text": "string",
+                              "marks": [
+                                {
+                                  "type": "code"
+                                }
+                              ]
+                            }
+                          ],
+                          "attrs": {
+                            "localId": "5b79362004c2"
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "type": "listItem",
+                      "attrs": {
+                        "localId": "72827a3c91fe"
+                      },
+                      "content": [
+                        {
+                          "type": "paragraph",
+                          "content": [
+                            {
+                              "type": "text",
+                              "text": "eval_scenarios.version",
+                              "marks": [
+                                {
+                                  "type": "code"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "text",
+                              "text": ": expected "
+                            },
+                            {
+                              "type": "text",
+                              "text": "string",
+                              "marks": [
+                                {
+                                  "type": "code"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "text",
+                              "text": ", received "
+                            },
+                            {
+                              "type": "text",
+                              "text": "number",
+                              "marks": [
+                                {
+                                  "type": "code"
+                                }
+                              ]
+                            }
+                          ],
+                          "attrs": {
+                            "localId": "eaa1e0c5fb08"
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "type": "listItem",
+                      "attrs": {
+                        "localId": "15a21d6d45c2"
+                      },
+                      "content": [
+                        {
+                          "type": "paragraph",
+                          "content": [
+                            {
+                              "type": "text",
+                              "text": "eval_personas.goals",
+                              "marks": [
+                                {
+                                  "type": "code"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "text",
+                              "text": ": expected "
+                            },
+                            {
+                              "type": "text",
+                              "text": "array",
+                              "marks": [
+                                {
+                                  "type": "code"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "text",
+                              "text": ", received "
+                            },
+                            {
+                              "type": "text",
+                              "text": "string",
+                              "marks": [
+                                {
+                                  "type": "code"
+                                }
+                              ]
+                            }
+                          ],
+                          "attrs": {
+                            "localId": "f8711c2925b1"
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "type": "listItem",
+                      "attrs": {
+                        "localId": "1e1e520b71b5"
+                      },
+                      "content": [
+                        {
+                          "type": "paragraph",
+                          "content": [
+                            {
+                              "type": "text",
+                              "text": "eval_personas.constraints",
+                              "marks": [
+                                {
+                                  "type": "code"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "text",
+                              "text": ": expected "
+                            },
+                            {
+                              "type": "text",
+                              "text": "array",
+                              "marks": [
+                                {
+                                  "type": "code"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "text",
+                              "text": ", received "
+                            },
+                            {
+                              "type": "text",
+                              "text": "string",
+                              "marks": [
+                                {
+                                  "type": "code"
+                                }
+                              ]
+                            }
+                          ],
+                          "attrs": {
+                            "localId": "e6c1772c8dc7"
+                          }
+                        }
+                      ]
+                    }
+                  ],
+                  "attrs": {
+                    "localId": "9043843c9114"
+                  }
+                },
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "Expectation",
+                      "marks": [
+                        {
+                          "type": "strong"
+                        }
+                      ]
+                    }
+                  ],
+                  "attrs": {
+                    "localId": "00dc5470853c"
+                  }
+                },
+                {
+                  "type": "bulletList",
+                  "content": [
+                    {
+                      "type": "listItem",
+                      "attrs": {
+                        "localId": "aab50f8285ef"
+                      },
+                      "content": [
+                        {
+                          "type": "paragraph",
+                          "content": [
+                            {
+                              "type": "text",
+                              "text": "A direct round-trip ("
+                            },
+                            {
+                              "type": "text",
+                              "text": "export -> import",
+                              "marks": [
+                                {
+                                  "type": "code"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "text",
+                              "text": ") across workspaces should be schema-compatible without manual edits."
+                            }
+                          ],
+                          "attrs": {
+                            "localId": "2a1c4018eb10"
+                          }
+                        }
+                      ]
+                    }
+                  ],
+                  "attrs": {
+                    "localId": "3b445ccd21e6"
+                  }
+                },
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "Workaround",
+                      "marks": [
+                        {
+                          "type": "strong"
+                        }
+                      ]
+                    }
+                  ],
+                  "attrs": {
+                    "localId": "ddbce37d6eb7"
+                  }
+                },
+                {
+                  "type": "bulletList",
+                  "content": [
+                    {
+                      "type": "listItem",
+                      "attrs": {
+                        "localId": "c7e48bc86b34"
+                      },
+                      "content": [
+                        {
+                          "type": "paragraph",
+                          "content": [
+                            {
+                              "type": "text",
+                              "text": "Deselect evals during export; import completes successfully."
+                            }
+                          ],
+                          "attrs": {
+                            "localId": "3379577c8d92"
+                          }
+                        }
+                      ]
+                    }
+                  ],
+                  "attrs": {
+                    "localId": "79b017927249"
+                  }
+                },
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "Impact",
+                      "marks": [
+                        {
+                          "type": "strong"
+                        }
+                      ]
+                    }
+                  ],
+                  "attrs": {
+                    "localId": "dc627e4277ad"
+                  }
+                },
+                {
+                  "type": "bulletList",
+                  "content": [
+                    {
+                      "type": "listItem",
+                      "attrs": {
+                        "localId": "3ced96df67a6"
+                      },
+                      "content": [
+                        {
+                          "type": "paragraph",
+                          "content": [
+                            {
+                              "type": "text",
+                              "text": "Prevents complete project migration across workspaces when eval content is required."
+                            }
+                          ],
+                          "attrs": {
+                            "localId": "5118e2430821"
+                          }
+                        }
+                      ]
+                    }
+                  ],
+                  "attrs": {
+                    "localId": "2e132f37968f"
+                  }
+                },
+                {
+                  "type": "rule",
+                  "attrs": {
+                    "localId": "a0080c925b75"
+                  }
+                },
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "Environment:"
+                    }
+                  ],
+                  "attrs": {
+                    "localId": "6b3331037a57"
+                  }
+                },
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "ENV: dev"
+                    }
+                  ],
+                  "attrs": {
+                    "localId": "621948e293b3"
+                  }
+                },
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "Exported Project Id:019e077b-6005-7d43-8213-d87fcf6f56dd"
+                    },
+                    {
+                      "type": "hardBreak"
+                    },
+                    {
+                      "type": "text",
+                      "text": "Imported Project Id: 019e1c5a-f4db-7c27-afb2-f1f9a806e403 (same workspace) 019e1c53-0627-7a3a-bc38-9c2952981018(different workspace)"
+                    }
+                  ],
+                  "attrs": {
+                    "localId": "885053208a14"
+                  }
+                },
+                {
+                  "type": "mediaSingle",
+                  "attrs": {
+                    "width": 851,
+                    "widthType": "pixel",
+                    "localId": "a418ccb87de0",
+                    "layout": "align-start"
+                  },
+                  "content": [
+                    {
+                      "type": "media",
+                      "attrs": {
+                        "type": "file",
+                        "id": "a3600707-67a0-457d-bbbf-d0131e479b85",
+                        "alt": "image-20260512-131720.png",
+                        "collection": "",
+                        "localId": "20bd92df543c",
+                        "height": 844,
+                        "width": 1604
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "updateAuthor": {
+              "self": "https://koreteam.atlassian.net/rest/api/3/user?accountId=712020%3Aa4bdca42-00e1-40ae-8f10-83b46b10b367",
+              "accountId": "712020:a4bdca42-00e1-40ae-8f10-83b46b10b367",
+              "avatarUrls": {
+                "48x48": "https://secure.gravatar.com/avatar/919c8fcf256ed6af0ce154faa55a9d34?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FUM-3.png",
+                "24x24": "https://secure.gravatar.com/avatar/919c8fcf256ed6af0ce154faa55a9d34?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FUM-3.png",
+                "16x16": "https://secure.gravatar.com/avatar/919c8fcf256ed6af0ce154faa55a9d34?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FUM-3.png",
+                "32x32": "https://secure.gravatar.com/avatar/919c8fcf256ed6af0ce154faa55a9d34?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FUM-3.png"
+              },
+              "displayName": "Upendher Musham",
+              "active": true,
+              "timeZone": "Asia/Kolkata",
+              "accountType": "atlassian"
+            },
+            "created": "2026-05-12T18:57:26.434+0530",
+            "updated": "2026-05-12T18:57:51.681+0530",
+            "jsdPublic": true
+          },
+          {
+            "self": "https://koreteam.atlassian.net/rest/api/3/issue/547708/comment/1367365",
+            "id": "1367365",
+            "author": {
+              "self": "https://koreteam.atlassian.net/rest/api/3/user?accountId=712020%3Aa4bdca42-00e1-40ae-8f10-83b46b10b367",
+              "accountId": "712020:a4bdca42-00e1-40ae-8f10-83b46b10b367",
+              "avatarUrls": {
+                "48x48": "https://secure.gravatar.com/avatar/919c8fcf256ed6af0ce154faa55a9d34?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FUM-3.png",
+                "24x24": "https://secure.gravatar.com/avatar/919c8fcf256ed6af0ce154faa55a9d34?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FUM-3.png",
+                "16x16": "https://secure.gravatar.com/avatar/919c8fcf256ed6af0ce154faa55a9d34?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FUM-3.png",
+                "32x32": "https://secure.gravatar.com/avatar/919c8fcf256ed6af0ce154faa55a9d34?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FUM-3.png"
+              },
+              "displayName": "Upendher Musham",
+              "active": true,
+              "timeZone": "Asia/Kolkata",
+              "accountType": "atlassian"
+            },
+            "body": {
+              "type": "doc",
+              "version": 1,
+              "content": [
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "Moving this issue to ToDo. Let me know if it needs to be tracked separately — I can raise a separate ticket for it."
+                    }
+                  ],
+                  "attrs": {
+                    "localId": "c234506be83e"
+                  }
+                }
+              ]
+            },
+            "updateAuthor": {
+              "self": "https://koreteam.atlassian.net/rest/api/3/user?accountId=712020%3Aa4bdca42-00e1-40ae-8f10-83b46b10b367",
+              "accountId": "712020:a4bdca42-00e1-40ae-8f10-83b46b10b367",
+              "avatarUrls": {
+                "48x48": "https://secure.gravatar.com/avatar/919c8fcf256ed6af0ce154faa55a9d34?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FUM-3.png",
+                "24x24": "https://secure.gravatar.com/avatar/919c8fcf256ed6af0ce154faa55a9d34?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FUM-3.png",
+                "16x16": "https://secure.gravatar.com/avatar/919c8fcf256ed6af0ce154faa55a9d34?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FUM-3.png",
+                "32x32": "https://secure.gravatar.com/avatar/919c8fcf256ed6af0ce154faa55a9d34?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FUM-3.png"
+              },
+              "displayName": "Upendher Musham",
+              "active": true,
+              "timeZone": "Asia/Kolkata",
+              "accountType": "atlassian"
+            },
+            "created": "2026-05-12T18:58:55.711+0530",
+            "updated": "2026-05-12T18:58:55.711+0530",
+            "jsdPublic": true
+          }
+        ],
+        "self": "https://koreteam.atlassian.net/rest/api/3/issue/547708/comment",
+        "maxResults": 3,
+        "total": 3,
+        "startAt": 0
+      },
+      "worklog": {
+        "startAt": 0,
+        "maxResults": 20,
+        "total": 0,
+        "worklogs": []
+      }
+    }
+  },
+  "comments": {
+    "startAt": 0,
+    "maxResults": 100,
+    "total": 3,
+    "comments": [
+      {
+        "self": "https://koreteam.atlassian.net/rest/api/3/issue/547708/comment/1366714",
+        "id": "1366714",
+        "author": {
+          "self": "https://koreteam.atlassian.net/rest/api/3/user?accountId=557058%3A19965570-a9cd-4d76-b059-6af5ae4fdca7",
+          "accountId": "557058:19965570-a9cd-4d76-b059-6af5ae4fdca7",
+          "emailAddress": "prasanna@kore.com",
+          "avatarUrls": {
+            "48x48": "https://secure.gravatar.com/avatar/84aa6c5f7ca4865903e52515ef5499c4?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FPA-6.png",
+            "24x24": "https://secure.gravatar.com/avatar/84aa6c5f7ca4865903e52515ef5499c4?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FPA-6.png",
+            "16x16": "https://secure.gravatar.com/avatar/84aa6c5f7ca4865903e52515ef5499c4?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FPA-6.png",
+            "32x32": "https://secure.gravatar.com/avatar/84aa6c5f7ca4865903e52515ef5499c4?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FPA-6.png"
+          },
+          "displayName": "Prasanna Arikala",
+          "active": true,
+          "timeZone": "Asia/Kolkata",
+          "accountType": "atlassian"
+        },
+        "body": {
+          "type": "doc",
+          "version": 1,
+          "content": [
+            {
+              "type": "paragraph",
+              "content": [
+                {
+                  "type": "text",
+                  "text": "This has been fixed in Dev"
+                }
+              ],
+              "attrs": {
+                "localId": "4430ce06c6f3"
+              }
+            }
+          ]
+        },
+        "renderedBody": "<p>This has been fixed in Dev</p>",
+        "updateAuthor": {
+          "self": "https://koreteam.atlassian.net/rest/api/3/user?accountId=557058%3A19965570-a9cd-4d76-b059-6af5ae4fdca7",
+          "accountId": "557058:19965570-a9cd-4d76-b059-6af5ae4fdca7",
+          "emailAddress": "prasanna@kore.com",
+          "avatarUrls": {
+            "48x48": "https://secure.gravatar.com/avatar/84aa6c5f7ca4865903e52515ef5499c4?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FPA-6.png",
+            "24x24": "https://secure.gravatar.com/avatar/84aa6c5f7ca4865903e52515ef5499c4?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FPA-6.png",
+            "16x16": "https://secure.gravatar.com/avatar/84aa6c5f7ca4865903e52515ef5499c4?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FPA-6.png",
+            "32x32": "https://secure.gravatar.com/avatar/84aa6c5f7ca4865903e52515ef5499c4?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FPA-6.png"
+          },
+          "displayName": "Prasanna Arikala",
+          "active": true,
+          "timeZone": "Asia/Kolkata",
+          "accountType": "atlassian"
+        },
+        "created": "2026-05-12T11:45:04.415+0530",
+        "updated": "2026-05-12T11:45:04.415+0530",
+        "jsdPublic": true
+      },
+      {
+        "self": "https://koreteam.atlassian.net/rest/api/3/issue/547708/comment/1367363",
+        "id": "1367363",
+        "author": {
+          "self": "https://koreteam.atlassian.net/rest/api/3/user?accountId=712020%3Aa4bdca42-00e1-40ae-8f10-83b46b10b367",
+          "accountId": "712020:a4bdca42-00e1-40ae-8f10-83b46b10b367",
+          "avatarUrls": {
+            "48x48": "https://secure.gravatar.com/avatar/919c8fcf256ed6af0ce154faa55a9d34?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FUM-3.png",
+            "24x24": "https://secure.gravatar.com/avatar/919c8fcf256ed6af0ce154faa55a9d34?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FUM-3.png",
+            "16x16": "https://secure.gravatar.com/avatar/919c8fcf256ed6af0ce154faa55a9d34?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FUM-3.png",
+            "32x32": "https://secure.gravatar.com/avatar/919c8fcf256ed6af0ce154faa55a9d34?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FUM-3.png"
+          },
+          "displayName": "Upendher Musham",
+          "active": true,
+          "timeZone": "Asia/Kolkata",
+          "accountType": "atlassian"
+        },
+        "body": {
+          "type": "doc",
+          "version": 1,
+          "content": [
+            {
+              "type": "paragraph",
+              "content": [
+                {
+                  "type": "text",
+                  "text": "Above issue is fixed but Import/export issue is still "
+                },
+                {
+                  "type": "text",
+                  "text": "reproducible  when eval",
+                  "marks": [
+                    {
+                      "type": "strong"
+                    }
+                  ]
+                },
+                {
+                  "type": "text",
+                  "text": " artifacts are included while exporting."
+                },
+                {
+                  "type": "hardBreak"
+                }
+              ],
+              "attrs": {
+                "localId": "bbcf3b1129ff"
+              }
+            },
+            {
+              "type": "paragraph",
+              "content": [
+                {
+                  "type": "text",
+                  "text": "Observed behavior",
+                  "marks": [
+                    {
+                      "type": "strong"
+                    }
+                  ]
+                }
+              ],
+              "attrs": {
+                "localId": "216fd779feb0"
+              }
+            },
+            {
+              "type": "bulletList",
+              "content": [
+                {
+                  "type": "listItem",
+                  "attrs": {
+                    "localId": "8d81b299aa4a"
+                  },
+                  "content": [
+                    {
+                      "type": "paragraph",
+                      "content": [
+                        {
+                          "type": "text",
+                          "text": "Export project from Workspace and import into another project."
+                        }
+                      ],
+                      "attrs": {
+                        "localId": "4b694e4b42f2"
+                      }
+                    }
+                  ]
+                },
+                {
+                  "type": "listItem",
+                  "attrs": {
+                    "localId": "37a7fb15b581"
+                  },
+                  "content": [
+                    {
+                      "type": "paragraph",
+                      "content": [
+                        {
+                          "type": "text",
+                          "text": "Import fails with schema validation errors when "
+                        },
+                        {
+                          "type": "text",
+                          "text": "eval_sets",
+                          "marks": [
+                            {
+                              "type": "code"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "text",
+                          "text": ", "
+                        },
+                        {
+                          "type": "text",
+                          "text": "eval_scenarios",
+                          "marks": [
+                            {
+                              "type": "code"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "text",
+                          "text": ", and "
+                        },
+                        {
+                          "type": "text",
+                          "text": "eval_personas",
+                          "marks": [
+                            {
+                              "type": "code"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "text",
+                          "text": " are part of the export."
+                        }
+                      ],
+                      "attrs": {
+                        "localId": "e4a4e15b0b20"
+                      }
+                    }
+                  ]
+                },
+                {
+                  "type": "listItem",
+                  "attrs": {
+                    "localId": "8324d0c95614"
+                  },
+                  "content": [
+                    {
+                      "type": "paragraph",
+                      "content": [
+                        {
+                          "type": "text",
+                          "text": "Import succeeds when evals are deselected during export."
+                        }
+                      ],
+                      "attrs": {
+                        "localId": "993f4511280d"
+                      }
+                    }
+                  ]
+                }
+              ],
+              "attrs": {
+                "localId": "1a9f5b7f664c"
+              }
+            },
+            {
+              "type": "paragraph",
+              "content": [
+                {
+                  "type": "text",
+                  "text": "Validation errors seen(PFA)",
+                  "marks": [
+                    {
+                      "type": "strong"
+                    }
+                  ]
+                }
+              ],
+              "attrs": {
+                "localId": "ba0f112ad37d"
+              }
+            },
+            {
+              "type": "bulletList",
+              "content": [
+                {
+                  "type": "listItem",
+                  "attrs": {
+                    "localId": "ce7e34b7fc25"
+                  },
+                  "content": [
+                    {
+                      "type": "paragraph",
+                      "content": [
+                        {
+                          "type": "text",
+                          "text": "eval_sets.personaModel",
+                          "marks": [
+                            {
+                              "type": "code"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "text",
+                          "text": ": expected "
+                        },
+                        {
+                          "type": "text",
+                          "text": "string",
+                          "marks": [
+                            {
+                              "type": "code"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "text",
+                          "text": ", received "
+                        },
+                        {
+                          "type": "text",
+                          "text": "null",
+                          "marks": [
+                            {
+                              "type": "code"
+                            }
+                          ]
+                        }
+                      ],
+                      "attrs": {
+                        "localId": "1ad7d0d0c9a9"
+                      }
+                    }
+                  ]
+                },
+                {
+                  "type": "listItem",
+                  "attrs": {
+                    "localId": "8d5c2a4d68ec"
+                  },
+                  "content": [
+                    {
+                      "type": "paragraph",
+                      "content": [
+                        {
+                          "type": "text",
+                          "text": "eval_scenarios.expectedMilestones[i]",
+                          "marks": [
+                            {
+                              "type": "code"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "text",
+                          "text": ": expected "
+                        },
+                        {
+                          "type": "text",
+                          "text": "object",
+                          "marks": [
+                            {
+                              "type": "code"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "text",
+                          "text": ", received "
+                        },
+                        {
+                          "type": "text",
+                          "text": "string",
+                          "marks": [
+                            {
+                              "type": "code"
+                            }
+                          ]
+                        }
+                      ],
+                      "attrs": {
+                        "localId": "5b79362004c2"
+                      }
+                    }
+                  ]
+                },
+                {
+                  "type": "listItem",
+                  "attrs": {
+                    "localId": "72827a3c91fe"
+                  },
+                  "content": [
+                    {
+                      "type": "paragraph",
+                      "content": [
+                        {
+                          "type": "text",
+                          "text": "eval_scenarios.version",
+                          "marks": [
+                            {
+                              "type": "code"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "text",
+                          "text": ": expected "
+                        },
+                        {
+                          "type": "text",
+                          "text": "string",
+                          "marks": [
+                            {
+                              "type": "code"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "text",
+                          "text": ", received "
+                        },
+                        {
+                          "type": "text",
+                          "text": "number",
+                          "marks": [
+                            {
+                              "type": "code"
+                            }
+                          ]
+                        }
+                      ],
+                      "attrs": {
+                        "localId": "eaa1e0c5fb08"
+                      }
+                    }
+                  ]
+                },
+                {
+                  "type": "listItem",
+                  "attrs": {
+                    "localId": "15a21d6d45c2"
+                  },
+                  "content": [
+                    {
+                      "type": "paragraph",
+                      "content": [
+                        {
+                          "type": "text",
+                          "text": "eval_personas.goals",
+                          "marks": [
+                            {
+                              "type": "code"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "text",
+                          "text": ": expected "
+                        },
+                        {
+                          "type": "text",
+                          "text": "array",
+                          "marks": [
+                            {
+                              "type": "code"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "text",
+                          "text": ", received "
+                        },
+                        {
+                          "type": "text",
+                          "text": "string",
+                          "marks": [
+                            {
+                              "type": "code"
+                            }
+                          ]
+                        }
+                      ],
+                      "attrs": {
+                        "localId": "f8711c2925b1"
+                      }
+                    }
+                  ]
+                },
+                {
+                  "type": "listItem",
+                  "attrs": {
+                    "localId": "1e1e520b71b5"
+                  },
+                  "content": [
+                    {
+                      "type": "paragraph",
+                      "content": [
+                        {
+                          "type": "text",
+                          "text": "eval_personas.constraints",
+                          "marks": [
+                            {
+                              "type": "code"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "text",
+                          "text": ": expected "
+                        },
+                        {
+                          "type": "text",
+                          "text": "array",
+                          "marks": [
+                            {
+                              "type": "code"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "text",
+                          "text": ", received "
+                        },
+                        {
+                          "type": "text",
+                          "text": "string",
+                          "marks": [
+                            {
+                              "type": "code"
+                            }
+                          ]
+                        }
+                      ],
+                      "attrs": {
+                        "localId": "e6c1772c8dc7"
+                      }
+                    }
+                  ]
+                }
+              ],
+              "attrs": {
+                "localId": "9043843c9114"
+              }
+            },
+            {
+              "type": "paragraph",
+              "content": [
+                {
+                  "type": "text",
+                  "text": "Expectation",
+                  "marks": [
+                    {
+                      "type": "strong"
+                    }
+                  ]
+                }
+              ],
+              "attrs": {
+                "localId": "00dc5470853c"
+              }
+            },
+            {
+              "type": "bulletList",
+              "content": [
+                {
+                  "type": "listItem",
+                  "attrs": {
+                    "localId": "aab50f8285ef"
+                  },
+                  "content": [
+                    {
+                      "type": "paragraph",
+                      "content": [
+                        {
+                          "type": "text",
+                          "text": "A direct round-trip ("
+                        },
+                        {
+                          "type": "text",
+                          "text": "export -> import",
+                          "marks": [
+                            {
+                              "type": "code"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "text",
+                          "text": ") across workspaces should be schema-compatible without manual edits."
+                        }
+                      ],
+                      "attrs": {
+                        "localId": "2a1c4018eb10"
+                      }
+                    }
+                  ]
+                }
+              ],
+              "attrs": {
+                "localId": "3b445ccd21e6"
+              }
+            },
+            {
+              "type": "paragraph",
+              "content": [
+                {
+                  "type": "text",
+                  "text": "Workaround",
+                  "marks": [
+                    {
+                      "type": "strong"
+                    }
+                  ]
+                }
+              ],
+              "attrs": {
+                "localId": "ddbce37d6eb7"
+              }
+            },
+            {
+              "type": "bulletList",
+              "content": [
+                {
+                  "type": "listItem",
+                  "attrs": {
+                    "localId": "c7e48bc86b34"
+                  },
+                  "content": [
+                    {
+                      "type": "paragraph",
+                      "content": [
+                        {
+                          "type": "text",
+                          "text": "Deselect evals during export; import completes successfully."
+                        }
+                      ],
+                      "attrs": {
+                        "localId": "3379577c8d92"
+                      }
+                    }
+                  ]
+                }
+              ],
+              "attrs": {
+                "localId": "79b017927249"
+              }
+            },
+            {
+              "type": "paragraph",
+              "content": [
+                {
+                  "type": "text",
+                  "text": "Impact",
+                  "marks": [
+                    {
+                      "type": "strong"
+                    }
+                  ]
+                }
+              ],
+              "attrs": {
+                "localId": "dc627e4277ad"
+              }
+            },
+            {
+              "type": "bulletList",
+              "content": [
+                {
+                  "type": "listItem",
+                  "attrs": {
+                    "localId": "3ced96df67a6"
+                  },
+                  "content": [
+                    {
+                      "type": "paragraph",
+                      "content": [
+                        {
+                          "type": "text",
+                          "text": "Prevents complete project migration across workspaces when eval content is required."
+                        }
+                      ],
+                      "attrs": {
+                        "localId": "5118e2430821"
+                      }
+                    }
+                  ]
+                }
+              ],
+              "attrs": {
+                "localId": "2e132f37968f"
+              }
+            },
+            {
+              "type": "rule",
+              "attrs": {
+                "localId": "a0080c925b75"
+              }
+            },
+            {
+              "type": "paragraph",
+              "content": [
+                {
+                  "type": "text",
+                  "text": "Environment:"
+                }
+              ],
+              "attrs": {
+                "localId": "6b3331037a57"
+              }
+            },
+            {
+              "type": "paragraph",
+              "content": [
+                {
+                  "type": "text",
+                  "text": "ENV: dev"
+                }
+              ],
+              "attrs": {
+                "localId": "621948e293b3"
+              }
+            },
+            {
+              "type": "paragraph",
+              "content": [
+                {
+                  "type": "text",
+                  "text": "Exported Project Id:019e077b-6005-7d43-8213-d87fcf6f56dd"
+                },
+                {
+                  "type": "hardBreak"
+                },
+                {
+                  "type": "text",
+                  "text": "Imported Project Id: 019e1c5a-f4db-7c27-afb2-f1f9a806e403 (same workspace) 019e1c53-0627-7a3a-bc38-9c2952981018(different workspace)"
+                }
+              ],
+              "attrs": {
+                "localId": "885053208a14"
+              }
+            },
+            {
+              "type": "mediaSingle",
+              "attrs": {
+                "width": 851,
+                "widthType": "pixel",
+                "localId": "a418ccb87de0",
+                "layout": "align-start"
+              },
+              "content": [
+                {
+                  "type": "media",
+                  "attrs": {
+                    "type": "file",
+                    "id": "a3600707-67a0-457d-bbbf-d0131e479b85",
+                    "alt": "image-20260512-131720.png",
+                    "collection": "",
+                    "localId": "20bd92df543c",
+                    "height": 844,
+                    "width": 1604
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        "renderedBody": "<p>Above issue is fixed but Import/export issue is still <b>reproducible  when eval</b> artifacts are included while exporting.</p>\n\n\n<p><b>Observed behavior</b></p>\n\n<ul>\n\t<li>Export project from Workspace and import into another project.</li>\n\t<li>Import fails with schema validation errors when <tt>eval_sets</tt>, <tt>eval_scenarios</tt>, and <tt>eval_personas</tt> are part of the export.</li>\n\t<li>Import succeeds when evals are deselected during export.</li>\n</ul>\n\n\n<p><b>Validation errors seen(PFA)</b></p>\n\n<ul>\n\t<li><tt>eval_sets.personaModel</tt>: expected <tt>string</tt>, received <tt>null</tt></li>\n\t<li><tt>eval_scenarios.expectedMilestones<span class=\"error\">&#91;i&#93;</span></tt>: expected <tt>object</tt>, received <tt>string</tt></li>\n\t<li><tt>eval_scenarios.version</tt>: expected <tt>string</tt>, received <tt>number</tt></li>\n\t<li><tt>eval_personas.goals</tt>: expected <tt>array</tt>, received <tt>string</tt></li>\n\t<li><tt>eval_personas.constraints</tt>: expected <tt>array</tt>, received <tt>string</tt></li>\n</ul>\n\n\n<p><b>Expectation</b></p>\n\n<ul>\n\t<li>A direct round-trip (<tt>export -&gt; import</tt>) across workspaces should be schema-compatible without manual edits.</li>\n</ul>\n\n\n<p><b>Workaround</b></p>\n\n<ul>\n\t<li>Deselect evals during export; import completes successfully.</li>\n</ul>\n\n\n<p><b>Impact</b></p>\n\n<ul>\n\t<li>Prevents complete project migration across workspaces when eval content is required.</li>\n</ul>\n\n\n<hr />\n\n<p>Environment:</p>\n\n<p>ENV: dev</p>\n\n<p>Exported Project Id:019e077b-6005-7d43-8213-d87fcf6f56dd<br/>\nImported Project Id: 019e1c5a-f4db-7c27-afb2-f1f9a806e403 (same workspace) 019e1c53-0627-7a3a-bc38-9c2952981018(different workspace)</p>\n\n<p><span class=\"image-wrap\" style=\"\"><img src=\"https://koreteam.atlassian.net/rest/api/3/attachment/content/759081\" alt=\"image-20260512-131720.png\" width=\"851\" style=\"border: 0px solid black\" /></span></p>",
+        "updateAuthor": {
+          "self": "https://koreteam.atlassian.net/rest/api/3/user?accountId=712020%3Aa4bdca42-00e1-40ae-8f10-83b46b10b367",
+          "accountId": "712020:a4bdca42-00e1-40ae-8f10-83b46b10b367",
+          "avatarUrls": {
+            "48x48": "https://secure.gravatar.com/avatar/919c8fcf256ed6af0ce154faa55a9d34?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FUM-3.png",
+            "24x24": "https://secure.gravatar.com/avatar/919c8fcf256ed6af0ce154faa55a9d34?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FUM-3.png",
+            "16x16": "https://secure.gravatar.com/avatar/919c8fcf256ed6af0ce154faa55a9d34?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FUM-3.png",
+            "32x32": "https://secure.gravatar.com/avatar/919c8fcf256ed6af0ce154faa55a9d34?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FUM-3.png"
+          },
+          "displayName": "Upendher Musham",
+          "active": true,
+          "timeZone": "Asia/Kolkata",
+          "accountType": "atlassian"
+        },
+        "created": "2026-05-12T18:57:26.434+0530",
+        "updated": "2026-05-12T18:57:51.681+0530",
+        "jsdPublic": true
+      },
+      {
+        "self": "https://koreteam.atlassian.net/rest/api/3/issue/547708/comment/1367365",
+        "id": "1367365",
+        "author": {
+          "self": "https://koreteam.atlassian.net/rest/api/3/user?accountId=712020%3Aa4bdca42-00e1-40ae-8f10-83b46b10b367",
+          "accountId": "712020:a4bdca42-00e1-40ae-8f10-83b46b10b367",
+          "avatarUrls": {
+            "48x48": "https://secure.gravatar.com/avatar/919c8fcf256ed6af0ce154faa55a9d34?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FUM-3.png",
+            "24x24": "https://secure.gravatar.com/avatar/919c8fcf256ed6af0ce154faa55a9d34?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FUM-3.png",
+            "16x16": "https://secure.gravatar.com/avatar/919c8fcf256ed6af0ce154faa55a9d34?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FUM-3.png",
+            "32x32": "https://secure.gravatar.com/avatar/919c8fcf256ed6af0ce154faa55a9d34?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FUM-3.png"
+          },
+          "displayName": "Upendher Musham",
+          "active": true,
+          "timeZone": "Asia/Kolkata",
+          "accountType": "atlassian"
+        },
+        "body": {
+          "type": "doc",
+          "version": 1,
+          "content": [
+            {
+              "type": "paragraph",
+              "content": [
+                {
+                  "type": "text",
+                  "text": "Moving this issue to ToDo. Let me know if it needs to be tracked separately — I can raise a separate ticket for it."
+                }
+              ],
+              "attrs": {
+                "localId": "c234506be83e"
+              }
+            }
+          ]
+        },
+        "renderedBody": "<p>Moving this issue to ToDo. Let me know if it needs to be tracked separately — I can raise a separate ticket for it.</p>",
+        "updateAuthor": {
+          "self": "https://koreteam.atlassian.net/rest/api/3/user?accountId=712020%3Aa4bdca42-00e1-40ae-8f10-83b46b10b367",
+          "accountId": "712020:a4bdca42-00e1-40ae-8f10-83b46b10b367",
+          "avatarUrls": {
+            "48x48": "https://secure.gravatar.com/avatar/919c8fcf256ed6af0ce154faa55a9d34?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FUM-3.png",
+            "24x24": "https://secure.gravatar.com/avatar/919c8fcf256ed6af0ce154faa55a9d34?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FUM-3.png",
+            "16x16": "https://secure.gravatar.com/avatar/919c8fcf256ed6af0ce154faa55a9d34?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FUM-3.png",
+            "32x32": "https://secure.gravatar.com/avatar/919c8fcf256ed6af0ce154faa55a9d34?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FUM-3.png"
+          },
+          "displayName": "Upendher Musham",
+          "active": true,
+          "timeZone": "Asia/Kolkata",
+          "accountType": "atlassian"
+        },
+        "created": "2026-05-12T18:58:55.711+0530",
+        "updated": "2026-05-12T18:58:55.711+0530",
+        "parentId": 1367363,
+        "jsdPublic": true
+      }
+    ]
+  }
+}

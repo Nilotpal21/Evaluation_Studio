@@ -1,0 +1,1571 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Studio Agent Editor Regression Review</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --bg: #f3efe7;
+        --paper: #fffdf9;
+        --ink: #1d1d1b;
+        --muted: #5b5a57;
+        --line: #d9d2c4;
+        --accent: #0d6b57;
+        --accent-soft: rgba(13, 107, 87, 0.08);
+        --mono-bg: #f5f1e9;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        font-family: Georgia, 'Iowan Old Style', 'Palatino Linotype', serif;
+        color: var(--ink);
+        background:
+          radial-gradient(circle at top left, rgba(13, 107, 87, 0.08), transparent 30%),
+          linear-gradient(180deg, #f7f3eb 0%, var(--bg) 100%);
+      }
+      .page {
+        width: 1440px;
+        margin: 0 auto;
+        padding: 48px 48px 80px;
+      }
+      .hero {
+        padding: 36px 40px;
+        border: 1px solid var(--line);
+        border-radius: 28px;
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.96), rgba(255, 250, 241, 0.92));
+        box-shadow: 0 18px 60px rgba(55, 42, 23, 0.08);
+      }
+      .eyebrow {
+        display: inline-block;
+        padding: 6px 10px;
+        border-radius: 999px;
+        background: var(--accent-soft);
+        color: var(--accent);
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+      h1 {
+        margin: 18px 0 10px;
+        font-size: 52px;
+        line-height: 1.05;
+      }
+      .hero p {
+        margin: 0;
+        max-width: 980px;
+        font-size: 20px;
+        line-height: 1.6;
+        color: var(--muted);
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 24px;
+        margin-top: 28px;
+      }
+      .card {
+        margin-top: 28px;
+        padding: 28px;
+        border-radius: 24px;
+        border: 1px solid var(--line);
+        background: rgba(255, 253, 249, 0.94);
+        box-shadow: 0 14px 42px rgba(50, 38, 23, 0.08);
+      }
+      h2 {
+        margin: 14px 0 12px;
+        font-size: 30px;
+        line-height: 1.15;
+      }
+      p,
+      li {
+        font-size: 18px;
+        line-height: 1.6;
+        color: var(--muted);
+      }
+      ul {
+        margin: 12px 0 0 20px;
+        padding: 0;
+      }
+      .snippet {
+        margin-top: 18px;
+        border-radius: 18px;
+        overflow: hidden;
+        border: 1px solid var(--line);
+        background: var(--mono-bg);
+      }
+      .path {
+        padding: 10px 14px;
+        background: rgba(13, 107, 87, 0.09);
+        color: var(--accent);
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+        font-size: 13px;
+        font-weight: 700;
+      }
+      pre {
+        margin: 0;
+        padding: 16px 18px 18px;
+        overflow: hidden;
+        white-space: pre-wrap;
+        word-break: break-word;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+        font-size: 13px;
+        line-height: 1.45;
+        color: #233036;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <section class="hero" data-shot="hero">
+        <div class="eyebrow">Review Walkthrough</div>
+        <h1>Studio Agent Editor Fixes</h1>
+        <p>
+          This review page was generated from the actual changed source so you can inspect the
+          implementation end to end: import normalization, model-save semantics, Studio UX cleanup,
+          delete/navigation flows, trace readability, SDK handoff behavior, and the regression locks
+          that keep the fixes from drifting.
+        </p>
+      </section>
+
+      <section id="import" class="card" data-shot="import">
+        <div class="eyebrow">Implementation Slice</div>
+        <h2>.abl Import Normalization</h2>
+        <p>
+          Loose top-level agent, tool, and behavior profile files now normalize into canonical
+          import paths, and project manifests are rewritten to match the normalized paths.
+        </p>
+
+        <div class="snippet">
+          <div class="path">packages/project-io/src/import/path-normalizer.ts</div>
+          <pre>
+  27   /\.agent\.abl$/,
+  28   /\.agent\.yaml$/,
+  29   /\.tools\.abl$/,
+  30   /\.behavior_profile\.abl$/,
+  31 ];
+  32 
+  33 function looksLikeAgentDsl(content: string): boolean {
+  34   return /^\s*(?:AGENT|SUPERVISOR|agent|supervisor)\s*:/m.test(content);
+  35 }
+  36 
+  37 function looksLikeToolDsl(content: string): boolean {
+  38   return /^\s*TOOLS?\s*:/m.test(content) || /^\s*\w+\s*\(/m.test(content);
+  39 }
+  40 
+  41 function remapManifestPaths(
+  42   manifestContent: string,
+  43   normalizedPathMap: Map&lt;string, string&gt;,
+  44 ): string | null {
+  45   try {
+  46     const parsed = JSON.parse(manifestContent) as Record&lt;string, unknown&gt;;
+  47     let changed = false;
+  48 
+  49     const rewriteRecords = (records: unknown) =&gt; {
+  50       if (!records || typeof records !== 'object' || Array.isArray(records)) {
+  51         return;
+  52       }
+  53 
+  54       for (const record of Object.values(records as Record&lt;string, unknown&gt;)) {
+  55         if (!record || typeof record !== 'object' || Array.isArray(record)) {
+  56           continue;
+  57         }
+  58 
+  59         const currentPath = (record as { path?: unknown }).path;
+  60         if (typeof currentPath !== 'string') {
+  61           continue;
+  62         }
+  63 
+  64         const rewrittenPath = normalizedPathMap.get(currentPath);
+  65         if (rewrittenPath &amp;&amp; rewrittenPath !== currentPath) {
+  66           (record as { path: string }).path = rewrittenPath;
+  67           changed = true;
+  68         }
+  69       }
+  70     };
+  71 
+  72     rewriteRecords(parsed.agents);
+  73     rewriteRecords(parsed.tools);
+  74     rewriteRecords(parsed.behavior_profiles);
+  75 
+  76     return changed ? JSON.stringify(parsed, null, 2) : null;
+  77   } catch {
+  78     return null;
+  79   }
+  80 }
+  81 
+  82 function normalizeLooseImportPaths(files: Map&lt;string, string&gt;): Map&lt;string, string&gt; {
+  83   const normalized = new Map&lt;string, string&gt;();
+  84   const normalizedPathMap = new Map&lt;string, string&gt;();
+  85 
+  86   for (const [path, content] of files) {
+  87     if (path === 'project.json' || path === 'abl.lock') {
+  88       normalized.set(path, content);
+  89       continue;
+  90     }
+  91 
+  92     const segments = path.split('/');
+  93     const fileName = segments.at(-1) ?? path;
+  94     const parentDir = segments.length &gt; 1 ? segments.slice(0, -1).join('/') : '';
+  95 
+  96     let normalizedPath = path;
+  97 
+  98     if (!parentDir &amp;&amp; (fileName.endsWith('.agent.abl') || fileName.endsWith('.agent.yaml'))) {
+  99       normalizedPath = `agents/${fileName}`;
+ 100     } else if (!parentDir &amp;&amp; fileName.endsWith('.tools.abl')) {
+ 101       normalizedPath = `tools/${fileName}`;
+ 102     } else if (!parentDir &amp;&amp; fileName.endsWith('.behavior_profile.abl')) {
+ 103       normalizedPath = `behavior_profiles/${fileName}`;
+ 104     } else if (
+ 105       (parentDir === '' || parentDir === 'agents' || parentDir.startsWith('agents/')) &amp;&amp;
+ 106       fileName.endsWith('.abl') &amp;&amp;
+ 107       !fileName.endsWith('.agent.abl') &amp;&amp;
+ 108       looksLikeAgentDsl(content)
+ 109     ) {
+ 110       const targetDir = parentDir || 'agents';
+ 111       normalizedPath = `${targetDir}/${fileName.replace(/\.abl$/, '.agent.abl')}`;
+ 112     } else if (
+ 113       (parentDir === '' || parentDir === 'tools' || parentDir.startsWith('tools/')) &amp;&amp;
+ 114       fileName.endsWith('.abl') &amp;&amp;
+ 115       !fileName.endsWith('.tools.abl') &amp;&amp;
+ 116       looksLikeToolDsl(content)
+ 117     ) {
+ 118       const targetDir = parentDir || 'tools';
+ 119       normalizedPath = `${targetDir}/${fileName.replace(/\.abl$/, '.tools.abl')}`;
+ 120     }
+ 121 
+ 122     normalized.set(normalizedPath, content);
+ 123     if (normalizedPath !== path) {
+ 124       normalizedPathMap.set(path, normalizedPath);
+ 125     }
+ 126   }
+ 127 
+ 128   if (normalizedPathMap.size === 0) {
+ 129     return normalized;</pre
+          >
+        </div>
+
+        <div class="snippet">
+          <div class="path">packages/project-io/src/__tests__/project-importer.test.ts</div>
+          <pre>
+  80 
+  81   it('normalizes a loose top-level agent .abl file into the canonical agents path', () =&gt; {
+  82     const files = new Map([
+  83       [
+  84         'support-bot.abl',
+  85         `AGENT: SupportBot
+  86 GOAL: Help customers
+  87 `,
+  88       ],
+  89     ]);
+  90 
+  91     const result = stripCommonPrefix(files);
+  92 
+  93     expect(result.strippedPrefix).toBeNull();
+  94     expect([...result.files.keys()]).toEqual(['agents/support-bot.agent.abl']);
+  95   });
+  96 
+  97   it('rewrites manifest paths when a loose top-level agent .abl file is normalized', () =&gt; {
+  98     const files = new Map([
+  99       [
+ 100         'project.json',
+ 101         JSON.stringify({
+ 102           name: 'Support',
+ 103           slug: 'support',
+ 104           version: '1.0.0',
+ 105           abl_version: '1.0',
+ 106           exported_at: new Date().toISOString(),
+ 107           exported_by: 'user-1',
+ 108           entry_agent: 'SupportBot',
+ 109           agents: {
+ 110             SupportBot: {
+ 111               path: 'support-bot.abl',
+ 112               owner: null,
+ 113               ownerTeam: null,
+ 114               description: null,
+ 115               version: null,
+ 116             },
+ 117           },
+ 118           tools: {},
+ 119           behavior_profiles: {},
+ 120           dependencies: { agent_references: [], tool_imports: [] },
+ 121         }),
+ 122       ],
+ 123       [
+ 124         'support-bot.abl',
+ 125         `AGENT: SupportBot
+ 126 GOAL: Help customers
+ 127 `,
+ 128       ],
+ 129     ]);
+ 130 
+ 131     const result = stripCommonPrefix(files);
+ 132     const manifest = JSON.parse(result.files.get('project.json') ?? '{}') as {
+ 133       agents?: Record&lt;string, { path?: string }&gt;;
+ 134     };
+ 135 
+ 136     expect(manifest.agents?.SupportBot?.path).toBe('agents/support-bot.agent.abl');
+ 137     expect(result.files.has('agents/support-bot.agent.abl')).toBe(true);</pre
+          >
+        </div>
+      </section>
+
+      <section id="runtime-save" class="card" data-shot="runtime-save">
+        <div class="eyebrow">Implementation Slice</div>
+        <h2>Runtime Model Save Semantics</h2>
+        <p>
+          Agent model config updates now preserve omitted fields instead of nulling them out, which
+          fixes the model selection reverting during partial saves.
+        </p>
+
+        <div class="snippet">
+          <div class="path">apps/runtime/src/routes/agent-model-config.ts</div>
+          <pre>
+ 205         useStreaming,
+ 206       } = req.body;
+ 207 
+ 208       // Additional validation for temperature bounds (Zod schema has basic type check)
+ 209       if (
+ 210         temperature !== undefined &amp;&amp;
+ 211         temperature !== null &amp;&amp;
+ 212         (temperature &lt; 0 || temperature &gt; 2)
+ 213       ) {
+ 214         res
+ 215           .status(400)
+ 216           .json({ success: false, error: 'temperature must be a number between 0 and 2' });
+ 217         return;
+ 218       }
+ 219 
+ 220       // Additional validation for maxTokens bounds (Zod schema has basic type check)
+ 221       if (maxTokens !== undefined &amp;&amp; maxTokens !== null &amp;&amp; maxTokens &lt; 1) {
+ 222         res.status(400).json({ success: false, error: 'maxTokens must be a positive number' });
+ 223         return;
+ 224       }
+ 225 
+ 226       const update: Parameters&lt;typeof upsertAgentModelConfig&gt;[0] = {
+ 227         projectId,
+ 228         agentName,
+ 229       };
+ 230 
+ 231       if (Object.prototype.hasOwnProperty.call(req.body, 'defaultModel')) {
+ 232         update.defaultModel = defaultModel ?? null;
+ 233       }
+ 234 
+ 235       if (Object.prototype.hasOwnProperty.call(req.body, 'operationModels')) {
+ 236         update.operationModels = operationModels ?? {};
+ 237       }
+ 238 
+ 239       if (Object.prototype.hasOwnProperty.call(req.body, 'temperature')) {
+ 240         update.temperature = temperature ?? null;
+ 241       }
+ 242 
+ 243       if (Object.prototype.hasOwnProperty.call(req.body, 'maxTokens')) {
+ 244         update.maxTokens = maxTokens ?? null;
+ 245       }
+ 246 
+ 247       if (Object.prototype.hasOwnProperty.call(req.body, 'hyperParameters')) {
+ 248         update.hyperParameters = hyperParameters ?? null;
+ 249       }
+ 250 
+ 251       if (Object.prototype.hasOwnProperty.call(req.body, 'useResponsesApi')) {
+ 252         update.useResponsesApi = useResponsesApi ?? null;
+ 253       }
+ 254 
+ 255       if (Object.prototype.hasOwnProperty.call(req.body, 'useStreaming')) {
+ 256         update.useStreaming = useStreaming ?? null;
+ 257       }
+ 258 
+ 259       const config = await upsertAgentModelConfig(update);
+ 260 
+ 261       if (!config) {
+ 262         res.status(404).json({ success: false, error: 'Project not found or access denied' });
+ 263         return;
+ 264       }
+ 265 
+ 266       log.info('Agent model config saved', {
+ 267         projectId,</pre
+          >
+        </div>
+
+        <div class="snippet">
+          <div class="path">apps/runtime/src/repos/project-repo.ts</div>
+          <pre>
+ 471 export async function upsertAgentModelConfig(params: {
+ 472   projectId: string;
+ 473   agentName: string;
+ 474   defaultModel?: string | null;
+ 475   operationModels?: Record&lt;string, string&gt; | null;
+ 476   temperature?: number | null;
+ 477   maxTokens?: number | null;
+ 478   hyperParameters?: Record&lt;string, unknown&gt; | null;
+ 479   useResponsesApi?: boolean | null;
+ 480   useStreaming?: boolean | null;
+ 481   tenantId?: string;
+ 482 }) {
+ 483   const {
+ 484     projectId,
+ 485     agentName,
+ 486     defaultModel,
+ 487     operationModels,
+ 488     temperature,
+ 489     maxTokens,
+ 490     hyperParameters,
+ 491     useResponsesApi,
+ 492     useStreaming,
+ 493     tenantId,
+ 494   } = params;
+ 495 
+ 496   if (tenantId) {
+ 497     const { Project } = await import('@agent-platform/database/models');
+ 498     const project = await Project.findOne({ _id: projectId, tenantId }, { _id: 1 }).lean();
+ 499     if (!project) return null;
+ 500   }
+ 501 
+ 502   const setFields: Record&lt;string, unknown&gt; = {};
+ 503   if (defaultModel !== undefined) {
+ 504     setFields.defaultModel = defaultModel ?? null;
+ 505   }
+ 506   if (operationModels !== undefined) {
+ 507     setFields.operationModels = operationModels ?? null;
+ 508   }
+ 509   if (temperature !== undefined) {
+ 510     setFields.temperature = temperature ?? null;
+ 511   }
+ 512   if (maxTokens !== undefined) {
+ 513     setFields.maxTokens = maxTokens ?? null;
+ 514   }
+ 515   if (hyperParameters !== undefined) {
+ 516     setFields.hyperParameters = hyperParameters ?? null;
+ 517   }
+ 518   if (useResponsesApi !== undefined) {
+ 519     setFields.useResponsesApi = useResponsesApi ?? null;
+ 520   }
+ 521   if (useStreaming !== undefined) {
+ 522     setFields.useStreaming = useStreaming ?? null;
+ 523   }
+ 524 
+ 525   if (Object.keys(setFields).length === 0) {
+ 526     return findAgentModelConfig(projectId, agentName, tenantId);</pre
+          >
+        </div>
+
+        <div class="snippet">
+          <div class="path">apps/runtime/src/__tests__/sessions/repos-project.test.ts</div>
+          <pre>
+ 705   it('upsertAgentModelConfig preserves existing fields when a partial update omits them', async () =&gt; {
+ 706     await upsertAgentModelConfig({
+ 707       projectId: 'proj-mc3',
+ 708       agentName: 'mc_agent3',
+ 709       defaultModel: 'claude-sonnet-4-6',
+ 710       temperature: 0.4,
+ 711       maxTokens: 4096,
+ 712       useStreaming: true,
+ 713     });
+ 714 
+ 715     const updated = await upsertAgentModelConfig({
+ 716       projectId: 'proj-mc3',
+ 717       agentName: 'mc_agent3',
+ 718       hyperParameters: { top_p: 0.9 },
+ 719     });
+ 720 
+ 721     expect(updated.defaultModel).toBe('claude-sonnet-4-6');
+ 722     expect(updated.temperature).toBe(0.4);
+ 723     expect(updated.maxTokens).toBe(4096);
+ 724     expect(updated.useStreaming).toBe(true);
+ 725     expect(updated.hyperParameters).toEqual({ top_p: 0.9 });
+ 726   });
+ 727 
+ 728   it('findAgentModelConfig returns existing config', async () =&gt; {
+ 729     await AgentModelConfig.create({</pre
+          >
+        </div>
+      </section>
+
+      <section id="execution-ux" class="card" data-shot="execution-ux">
+        <div class="eyebrow">Implementation Slice</div>
+        <h2>Execution Config UX</h2>
+        <p>
+          The DSL primary model stays in the main execution section, while runtime-only model
+          overrides live in a collapsed advanced panel with separate save semantics and explicit
+          copy.
+        </p>
+
+        <div class="snippet">
+          <div class="path">
+            apps/studio/src/components/agent-editor/sections/ExecutionEditor.tsx
+          </div>
+          <pre>
+  39   onArchClick,
+  40 }: SectionEditorProps&lt;'execution'&gt;) {
+  41   const agentName = useAgentEditorStore((s) =&gt; s.agentName);
+  42   const projectId = useAgentEditorStore((s) =&gt; s.projectId);
+  43   const [showAdvancedOverrides, setShowAdvancedOverrides] = useState(false);
+  44 
+  45   const update = useCallback(
+  46     &lt;K extends keyof typeof data&gt;(field: K, value: (typeof data)[K]) =&gt; {
+  47       onChange({ ...data, [field]: value });
+  48     },
+  49     [data, onChange],
+  50   );
+  51 
+  52   const thinkingValue = useMemo(() =&gt; {
+  53     if (data.enableThinking === true) return 'enabled';
+  54     if (data.enableThinking === false) return 'disabled';
+  55     return 'inherit';
+  56   }, [data.enableThinking]);
+  57 
+  58   return (
+  59     &lt;div className=&quot;p-5 overflow-y-auto h-full&quot;&gt;
+  60       &lt;SectionHeader onArchClick={onArchClick} /&gt;
+  61 
+  62       &lt;SubSection title=&quot;Model&quot; first&gt;
+  63         &lt;Field label=&quot;Primary Model&quot;&gt;
+  64           &lt;SelectField
+  65             value={data.model ?? ''}
+  66             onChange={(v) =&gt; update('model', v || undefined)}
+  67             options={[...MODEL_OPTIONS]}
+  68             disabled={readOnly}
+  69           /&gt;
+  70         &lt;/Field&gt;
+  71       &lt;/SubSection&gt;
+  72 
+  73       &lt;SubSection title=&quot;Generation&quot;&gt;
+  74         &lt;Field label=&quot;Temperature&quot;&gt;
+  75           &lt;div className=&quot;flex items-center gap-3&quot;&gt;
+  76             &lt;input
+  77               type=&quot;range&quot;
+  78               min={0}
+  79               max={2}
+  80               step={0.1}
+  81               value={data.temperature ?? 0.7}
+  82               onChange={(e: ChangeEvent&lt;HTMLInputElement&gt;) =&gt;
+  83                 update('temperature', parseFloat(e.target.value))
+  84               }
+  85               disabled={readOnly}
+  86               className=&quot;flex-1 h-1.5 rounded-full accent-accent&quot;
+  87             /&gt;
+  88             &lt;span className=&quot;text-sm text-foreground tabular-nums w-8 text-right font-mono&quot;&gt;
+  89               {(data.temperature ?? 0.7).toFixed(1)}
+  90             &lt;/span&gt;
+  91           &lt;/div&gt;
+  92         &lt;/Field&gt;
+  93         &lt;Field label=&quot;Max Tokens&quot;&gt;
+  94           &lt;input
+  95             type=&quot;number&quot;
+  96             value={data.maxTokens ?? ''}
+  97             onChange={(e: ChangeEvent&lt;HTMLInputElement&gt;) =&gt; {
+  98               const raw = e.target.value;
+  99               update('maxTokens', raw === '' ? undefined : parseInt(raw, 10) || undefined);
+ 100             }}
+ 101             placeholder=&quot;Default&quot;
+ 102             className={numberInputClasses}
+ 103             readOnly={readOnly}
+ 104           /&gt;
+ 105         &lt;/Field&gt;
+ 106       &lt;/SubSection&gt;
+ 107 
+ 108       &lt;SubSection title=&quot;Thinking&quot;&gt;
+ 109         &lt;Field label=&quot;Enable Thinking&quot;&gt;
+ 110           &lt;SelectField
+ 111             value={thinkingValue}
+ 112             onChange={(v) =&gt; {
+ 113               const mapped = v === 'enabled' ? true : v === 'disabled' ? false : null;
+ 114               update('enableThinking', mapped);
+ 115             }}
+ 116             options={[...THINKING_OPTIONS]}
+ 117             disabled={readOnly}
+ 118           /&gt;
+ 119         &lt;/Field&gt;
+ 120       &lt;/SubSection&gt;
+ 121 
+ 122       {agentName &amp;&amp; projectId &amp;&amp; (
+ 123         &lt;SubSection title=&quot;Advanced Runtime Overrides&quot;&gt;
+ 124           &lt;div className=&quot;space-y-3&quot;&gt;
+ 125             &lt;button
+ 126               type=&quot;button&quot;
+ 127               onClick={() =&gt; setShowAdvancedOverrides((current) =&gt; !current)}
+ 128               aria-expanded={showAdvancedOverrides}
+ 129               className=&quot;flex w-full items-center justify-between rounded-xl border border-default bg-background-subtle px-3 py-2 text-left transition-default hover:border-border-focus hover:bg-background-muted&quot;
+ 130             &gt;
+ 131               &lt;div&gt;
+ 132                 &lt;div className=&quot;text-sm font-medium text-foreground&quot;&gt;
+ 133                   Runtime-only model overrides
+ 134                 &lt;/div&gt;
+ 135                 &lt;div className=&quot;mt-1 text-xs text-muted&quot;&gt;
+ 136                   Use these only when you need a runtime override that does not change the DSL
+ 137                   primary model above.
+ 138                 &lt;/div&gt;
+ 139               &lt;/div&gt;
+ 140               &lt;span className=&quot;text-xs font-medium text-accent&quot;&gt;
+ 141                 {showAdvancedOverrides ? 'Hide' : 'Show'}
+ 142               &lt;/span&gt;
+ 143             &lt;/button&gt;
+ 144 
+ 145             {showAdvancedOverrides ? (
+ 146               &lt;div className=&quot;rounded-xl border border-default bg-background px-4 py-4&quot;&gt;
+ 147                 &lt;p className=&quot;mb-4 text-xs text-muted&quot;&gt;
+ 148                   Changes in this panel save separately from the DSL editor and apply as runtime
+ 149                   overrides.
+ 150                 &lt;/p&gt;
+ 151                 &lt;AgentModelTab
+ 152                   projectId={projectId}
+ 153                   agentName={agentName}
+ 154                   embedded
+ 155                   modelLabel=&quot;Runtime Override Model&quot;
+ 156                   modelDescription=&quot;Optional runtime-only override. Leave this empty to follow the DSL primary model above.&quot;
+ 157                 /&gt;
+ 158               &lt;/div&gt;
+ 159             ) : null}</pre
+          >
+        </div>
+
+        <div class="snippet">
+          <div class="path">apps/studio/src/components/agents/AgentModelTab.tsx</div>
+          <pre>
+  44 interface AgentModelTabProps {
+  45   projectId: string;
+  46   agentName: string;
+  47   embedded?: boolean;
+  48   modelLabel?: string;
+  49   modelDescription?: string;
+  50 }
+  51 </pre
+          >
+        </div>
+
+        <div class="snippet">
+          <div class="path">apps/studio/src/components/agents/AgentModelTab.tsx</div>
+          <pre>
+ 360   }
+ 361 
+ 362   return (
+ 363     &lt;div className={clsx(embedded ? 'space-y-6' : 'max-w-xl py-6 space-y-6')}&gt;
+ 364       {/* Default Model */}
+ 365       &lt;div&gt;
+ 366         &lt;Select
+ 367           label={modelLabel ?? t('default_model_label')}
+ 368           value={config.defaultModel || ''}
+ 369           onChange={(v) =&gt; handleModelChange(v || null)}
+ 370           options={[
+ 371             {
+ 372               value: '',
+ 373               label: projectDefault
+ 374                 ? t('use_project_default_with_name', { name: projectDefault.name })
+ 375                 : t('use_project_default'),
+ 376             },
+ 377             ...projectModels.map((m) =&gt; ({
+ 378               value: m.modelId,
+ 379               label: `${m.name} (${m.modelId})`,
+ 380             })),
+ 381           ]}</pre
+          >
+        </div>
+
+        <div class="snippet">
+          <div class="path">apps/studio/src/__tests__/components/execution-editor.test.tsx</div>
+          <pre>
+ 417 
+ 418   it('does not render AgentModelTab when agentName is null', () =&gt; {
+ 419     mockStoreState.agentName = null;
+ 420     mockStoreState.projectId = 'proj-1';
+ 421     renderEditor();
+ 422     expect(screen.queryByTestId('agent-model-tab')).not.toBeInTheDocument();
+ 423   });
+ 424 
+ 425   it('does not render AgentModelTab when projectId is null', () =&gt; {
+ 426     mockStoreState.agentName = 'my_agent';
+ 427     mockStoreState.projectId = null;
+ 428     renderEditor();
+ 429     expect(screen.queryByTestId('agent-model-tab')).not.toBeInTheDocument();
+ 430   });
+ 431 
+ 432   it('shows the runtime overrides section collapsed when both agentName and projectId exist', () =&gt; {
+ 433     mockStoreState.agentName = 'my_agent';
+ 434     mockStoreState.projectId = 'proj-1';
+ 435     renderEditor();
+ 436     expect(screen.getByText('Advanced Runtime Overrides')).toBeInTheDocument();
+ 437     expect(screen.getByRole('button', { name: /runtime-only model overrides/i })).toHaveAttribute(
+ 438       'aria-expanded',
+ 439       'false',
+ 440     );
+ 441     expect(screen.queryByTestId('agent-model-tab')).not.toBeInTheDocument();
+ 442   });
+ 443 
+ 444   it('shows embedded runtime overrides only after expanding the advanced panel', () =&gt; {
+ 445     mockStoreState.agentName = 'my_agent';
+ 446     mockStoreState.projectId = 'proj-1';
+ 447     renderEditor();
+ 448 
+ 449     fireEvent.click(screen.getByRole('button', { name: /runtime-only model overrides/i }));
+ 450 
+ 451     expect(screen.getByTestId('agent-model-tab')).toBeInTheDocument();
+ 452     expect(screen.getByText(/AgentModelTab: proj-1\/my_agent \[embedded\]/)).toBeInTheDocument();
+ 453     expect(screen.getByText(/Runtime Override Model/)).toBeInTheDocument();
+ 454     expect(
+ 455       screen.getByText(
+ 456         /Optional runtime-only override\. Leave this empty to follow the DSL primary model above\./,
+ 457       ),
+ 458     ).toBeInTheDocument();
+ 459     expect(screen.getByRole('button', { name: /runtime-only model overrides/i })).toHaveAttribute(
+ 460       'aria-expanded',
+ 461       'true',</pre
+          >
+        </div>
+      </section>
+
+      <section id="studio-nav-delete" class="card" data-shot="studio-nav-delete">
+        <div class="eyebrow">Implementation Slice</div>
+        <h2>Studio Editor Navigation And Delete</h2>
+        <p>
+          The unified agent editor now exposes delete with dependency warnings, and Studio Chat now
+          has a direct Back to Agent action for a tighter build-test loop.
+        </p>
+
+        <div class="snippet">
+          <div class="path">apps/studio/src/components/agent-editor/AgentEditor.tsx</div>
+          <pre>
+ 262     [navigate, projectId],
+ 263   );
+ 264 
+ 265   const topologyKey = projectId ? `/api/projects/${projectId}/topology` : null;
+ 266   const { data: topologyData } = useSWR&lt;AgentTopologyResponse&gt;(topologyKey, fetchProjectTopology, {
+ 267     revalidateOnFocus: false,
+ 268     shouldRetryOnError: false,
+ 269   });
+ 270 
+ 271   const topologyAgentName = useMemo(
+ 272     () =&gt; extractDeclaredAgentName(dsl) ?? agentName ?? null,
+ 273     [agentName, dsl],
+ 274   );
+ 275 
+ 276   const deleteImpact = useMemo(() =&gt; {
+ 277     const targetNames = new Set(
+ 278       [agentName, topologyAgentName].filter((value): value is string =&gt; Boolean(value)),
+ 279     );
+ 280 
+ 281     const fallbackEntry =
+ 282       currentProject?.entryAgentName != null &amp;&amp; targetNames.has(currentProject.entryAgentName);
+ 283     if (!topologyData) {
+ 284       return { isEntryAgent: fallbackEntry, incomingReferences: [] as DeleteImpactReference[] };
+ 285     }
+ 286 
+ 287     const isEntryFromTopology = topologyData.topology.nodes.some(
+ 288       (node) =&gt; node.isEntry &amp;&amp; (targetNames.has(node.id) || targetNames.has(node.name)),
+ 289     );
+ 290 
+ 291     const incomingBySource = new Map&lt;string, Set&lt;AgentDependencyType&gt;&gt;();
+ 292     for (const edge of topologyData.topology.edges) {
+ 293       if (!targetNames.has(edge.to)) continue;
+ 294 
+ 295       const sourceTypes = incomingBySource.get(edge.from) ?? new Set&lt;AgentDependencyType&gt;();
+ 296       sourceTypes.add(edge.type);
+ 297       incomingBySource.set(edge.from, sourceTypes);
+ 298     }
+ 299 
+ 300     const incomingReferences = Array.from(incomingBySource.entries())
+ 301       .map(([source, types]) =&gt; ({
+ 302         source,
+ 303         types: Array.from(types).sort(),
+ 304       }))
+ 305       .sort((left, right) =&gt; left.source.localeCompare(right.source));
+ 306 
+ 307     return {
+ 308       isEntryAgent: fallbackEntry || isEntryFromTopology,
+ 309       incomingReferences,
+ 310     };
+ 311   }, [agentName, currentProject?.entryAgentName, topologyAgentName, topologyData]);
+ 312 
+ 313   const handleDelete = useCallback(async () =&gt; {
+ 314     if (!projectId || !agentName) return;
+ 315 
+ 316     setIsDeleting(true);
+ 317     try {
+ 318       await removeAgentFromProject(projectId, agentName);
+ 319       toast.success(tAgents('delete_success'));
+ 320       navigate(`/projects/${projectId}/agents`);
+ 321     } catch (err) {
+ 322       toast.error(sanitizeError(err, tAgents('delete_failed')));
+ 323     } finally {
+ 324       setIsDeleting(false);
+ 325       setDeleteConfirmOpen(false);
+ 326     }
+ 327   }, [agentName, navigate, projectId, tAgents]);
+ 328 
+ 329   // ---------------------------------------------------------------------------
+ 330   // Edit locking — acquire on mount, release on unmount</pre
+          >
+        </div>
+
+        <div class="snippet">
+          <div class="path">apps/studio/src/components/agent-editor/AgentEditor.tsx</div>
+          <pre>
+ 577   const hasReasoningSteps = sections.flow?.steps?.some((s) =&gt; s.reasoning) ?? false;
+ 578   const mode = !hasFlow ? 'Reasoning' : hasReasoningSteps ? 'Mixed' : 'Flow';
+ 579   const model = sections.execution.model;
+ 580   const deleteConfirmDialog = (
+ 581     &lt;ConfirmDialog
+ 582       open={deleteConfirmOpen}
+ 583       onClose={() =&gt; setDeleteConfirmOpen(false)}
+ 584       onConfirm={handleDelete}
+ 585       title={tAgents('delete_confirm')}
+ 586       description={tAgents('delete_confirm_description')}
+ 587       confirmLabel={tCommon('delete')}
+ 588       loading={isDeleting}
+ 589     &gt;
+ 590       {(deleteImpact.isEntryAgent || deleteImpact.incomingReferences.length &gt; 0) &amp;&amp; (
+ 591         &lt;div className=&quot;mb-6 flex w-full flex-col gap-3 text-left&quot;&gt;
+ 592           {deleteImpact.isEntryAgent &amp;&amp; (
+ 593             &lt;div className=&quot;rounded-lg border border-warning/30 bg-warning-subtle/30 p-3&quot;&gt;
+ 594               &lt;p className=&quot;text-xs font-medium uppercase tracking-wide text-warning&quot;&gt;
+ 595                 {tAgents('detail.delete_entry_warning_title')}
+ 596               &lt;/p&gt;
+ 597               &lt;p className=&quot;mt-1 text-sm text-foreground&quot;&gt;
+ 598                 {tAgents('detail.delete_entry_warning_description')}
+ 599               &lt;/p&gt;
+ 600             &lt;/div&gt;
+ 601           )}
+ 602 
+ 603           {deleteImpact.incomingReferences.length &gt; 0 &amp;&amp; (
+ 604             &lt;div className=&quot;rounded-lg border border-warning/30 bg-warning-subtle/30 p-3&quot;&gt;
+ 605               &lt;p className=&quot;text-xs font-medium uppercase tracking-wide text-warning&quot;&gt;
+ 606                 {tAgents('detail.delete_dependency_warning_title')}
+ 607               &lt;/p&gt;
+ 608               &lt;p className=&quot;mt-1 text-sm text-foreground&quot;&gt;
+ 609                 {tAgents('detail.delete_dependency_warning_description', {
+ 610                   count: deleteImpact.incomingReferences.length,
+ 611                 })}
+ 612               &lt;/p&gt;
+ 613               &lt;ul className=&quot;mt-3 space-y-1.5 text-sm text-foreground&quot;&gt;
+ 614                 {deleteImpact.incomingReferences.map((reference) =&gt; (
+ 615                   &lt;li key={reference.source} className=&quot;flex items-center justify-between gap-3&quot;&gt;
+ 616                     &lt;span className=&quot;font-mono&quot;&gt;{reference.source}&lt;/span&gt;
+ 617                     &lt;span className=&quot;text-xs uppercase tracking-wide text-muted&quot;&gt;
+ 618                       {reference.types
+ 619                         .map((type) =&gt;
+ 620                           type === 'handoff'
+ 621                             ? tAgents('detail.delete_dependency_type_handoff')
+ 622                             : tAgents('detail.delete_dependency_type_delegate'),
+ 623                         )
+ 624                         .join(', ')}
+ 625                     &lt;/span&gt;
+ 626                   &lt;/li&gt;
+ 627                 ))}
+ 628               &lt;/ul&gt;
+ 629             &lt;/div&gt;
+ 630           )}
+ 631         &lt;/div&gt;
+ 632       )}
+ 633     &lt;/ConfirmDialog&gt;</pre
+          >
+        </div>
+
+        <div class="snippet">
+          <div class="path">apps/studio/src/components/chat/StudioChatHeader.tsx</div>
+          <pre>
+  33 }
+  34 
+  35 export function StudioChatHeader({
+  36   agent,
+  37   onBackToAgent,
+  38   onToggleDebug,
+  39   debugPanelOpen,
+  40   onExport,
+  41   onReset,
+  42   hasTestContext,
+  43   messagesCount,
+  44 }: StudioChatHeaderProps) {
+  45   const t = useTranslations('chat.panel');
+  46   type ChatPanelTranslationKey = Parameters&lt;typeof t&gt;[0];
+  47 
+  48   if (!agent) return null;
+  49 
+  50   const resolveBadgeLabel = (prefix: 'agent_type' | 'agent_mode', value: string): string =&gt; {
+  51     const key = `${prefix}_${value}` as ChatPanelTranslationKey;
+  52     return t.has(key) ? t(key) : humanizeBadgeLabel(value);
+  53   };
+  54 
+  55   return (
+  56     &lt;header className=&quot;flex-shrink-0 px-6 py-4 border-b border-default bg-background-subtle glass animate-fade-in-down&quot;&gt;
+  57       &lt;div className=&quot;flex items-center justify-between&quot;&gt;
+  58         &lt;div className=&quot;flex items-center gap-3&quot;&gt;
+  59           &lt;div className=&quot;w-10 h-10 rounded-xl bg-accent-subtle flex items-center justify-center&quot;&gt;
+  60             &lt;Bot className=&quot;w-5 h-5 text-accent&quot; /&gt;
+  61           &lt;/div&gt;
+  62           &lt;div&gt;
+  63             &lt;h2 className=&quot;font-semibold text-foreground flex items-center gap-2&quot;&gt;{agent.name}&lt;/h2&gt;
+  64             &lt;div className=&quot;flex items-center gap-2 mt-0.5&quot;&gt;
+  65               &lt;span className=&quot;text-xs px-2 py-0.5 rounded-full bg-background-muted text-muted&quot;&gt;
+  66                 {resolveBadgeLabel('agent_type', agent.type)}
+  67               &lt;/span&gt;
+  68               &lt;span className=&quot;text-xs px-2 py-0.5 rounded-full bg-background-muted text-muted&quot;&gt;
+  69                 {resolveBadgeLabel('agent_mode', agent.mode)}
+  70               &lt;/span&gt;
+  71               &lt;span className=&quot;text-xs text-subtle&quot;&gt;
+  72                 {t('tools_count', { count: agent.toolCount ?? 0 })}
+  73               &lt;/span&gt;
+  74               {hasTestContext &amp;&amp; (
+  75                 &lt;span
+  76                   className=&quot;flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-accent-subtle text-accent&quot;
+  77                   title={t('test_context_active')}
+  78                 &gt;
+  79                   &lt;FlaskConical className=&quot;w-3 h-3&quot; /&gt;
+  80                   {t('test_context')}
+  81                 &lt;/span&gt;
+  82               )}
+  83             &lt;/div&gt;
+  84           &lt;/div&gt;
+  85         &lt;/div&gt;
+  86 
+  87         &lt;div className=&quot;flex items-center gap-2&quot;&gt;
+  88           {onBackToAgent &amp;&amp; (
+  89             &lt;button
+  90               onClick={onBackToAgent}
+  91               className=&quot;px-3 py-2 text-sm text-muted hover:text-foreground hover:bg-background-muted rounded-lg transition-default btn-press flex items-center gap-2&quot;
+  92               title=&quot;Back to agent editor&quot;
+  93             &gt;
+  94               &lt;ArrowLeft className=&quot;w-4 h-4 icon-hover&quot; /&gt;
+  95               &lt;span className=&quot;hidden sm:inline&quot;&gt;Back to Agent&lt;/span&gt;
+  96             &lt;/button&gt;
+  97           )}
+  98           &lt;button
+  99             onClick={onExport}
+ 100             disabled={messagesCount === 0}
+ 101             className=&quot;px-3 py-2 text-sm text-muted hover:text-foreground hover:bg-background-muted rounded-lg transition-default btn-press disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-2&quot;
+ 102             title={t('export_transcript')}</pre
+          >
+        </div>
+
+        <div class="snippet">
+          <div class="path">apps/studio/src/components/chat/StudioChatPanel.tsx</div>
+          <pre>
+ 194   const { send, resetSession } = useWebSocketContext();
+ 195   const agentName = useNavigationStore((s) =&gt; s.subPage);
+ 196   const projectId = useNavigationStore((s) =&gt; s.projectId);
+ 197   const navigate = useNavigationStore((s) =&gt; s.navigate);
+ 198   const sessionId = useSessionStore((s) =&gt; s.sessionId);
+ 199   const hasTestContext = useTestContextStore((s) =&gt; s.hasContext());
+ 200   const setDebugPanelOpen = useObservatoryStore((s) =&gt; s.setDebugPanelOpen);
+ 201   const setDebugPanelTab = useObservatoryStore((s) =&gt; s.setDebugPanelTab);
+ 202 
+ 203   // --- Handlers ---
+ 204 
+ 205   const handleReset = useCallback(() =&gt; {
+ 206     resetSession();
+ 207   }, [resetSession]);
+ 208 
+ 209   const handleExport = useCallback(() =&gt; {
+ 210     const state = useSessionStore.getState();
+ 211     if (!state.sessionId || state.messages.length === 0) return;
+ 212 
+ 213     const data = {
+ 214       sessionId: state.sessionId,
+ 215       agent: agent?.name,
+ 216       messages: state.messages,
+ 217       exportedAt: new Date().toISOString(),
+ 218     };
+ 219     const blob = new Blob([JSON.stringify(data, null, 2)], {
+ 220       type: 'application/json',
+ 221     });
+ 222     const url = URL.createObjectURL(blob);
+ 223     const a = document.createElement('a');
+ 224     a.href = url;
+ 225     a.download = `${agent?.name || 'session'}-${new Date().toISOString().replace(/[:.]/g, '-')}.json`;
+ 226     a.click();
+ 227     URL.revokeObjectURL(url);
+ 228   }, [agent?.name]);
+ 229 
+ 230   const handleBackToAgent = useCallback(() =&gt; {
+ 231     if (!projectId || !agentName) return;
+ 232     navigate(`/projects/${projectId}/agents/${agentName}`);
+ 233   }, [agentName, navigate, projectId]);
+ 234 
+ 235   const handleViewTrace = useCallback(
+ 236     (metadata: MessageMetadata) =&gt; {
+ 237       // Open debug panel and switch to traces tab
+ 238       setDebugPanelOpen(true);
+ 239       setDebugPanelTab('traces');
+ 240     },
+ 241     [setDebugPanelOpen, setDebugPanelTab],
+ 242   );
+ 243 
+ 244   const handleUploadFile = useCallback(async (file: File): Promise&lt;string&gt; =&gt; {
+ 245     const currentProjectId = useNavigationStore.getState().projectId;
+ 246     const currentSessionId = useSessionStore.getState().sessionId;
+ 247     if (!currentProjectId || !currentSessionId) {
+ 248       throw new Error('No active project or session for file upload');
+ 249     }
+ 250 
+ 251     const formData = new FormData();
+ 252     formData.append('file', file);
+ 253 
+ 254     const response = await apiFetch(
+ 255       `/api/projects/${encodeURIComponent(currentProjectId)}/sessions/${encodeURIComponent(currentSessionId)}/attachments`,
+ 256       {
+ 257         method: 'POST',
+ 258         body: formData,
+ 259       },
+ 260     );
+ 261 
+ 262     if (!response.ok) {
+ 263       throw new Error(`Upload failed: ${response.statusText}`);
+ 264     }
+ 265 
+ 266     const result = await response.json();
+ 267     const attachmentId = result.attachmentId ?? result.id;
+ 268     if (!attachmentId) {
+ 269       throw new Error('Upload succeeded but server returned no attachment ID');
+ 270     }
+ 271     return attachmentId;
+ 272   }, []);
+ 273 
+ 274   // --- Detect active auth challenge from messages ---
+ 275 
+ 276   const activeAuthChallenge = useMemo(() =&gt; {
+ 277     // Walk backwards to find the most recent auth challenge
+ 278     for (let i = messages.length - 1; i &gt;= 0; i--) {
+ 279       const msg = messages[i];
+ 280       if (msg.role === 'system') {
+ 281         const challenge = parseAuthChallengeData(msg.content);
+ 282         if (challenge) return challenge;
+ 283       }
+ 284     }
+ 285     return null;
+ 286   }, [messages]);
+ 287 
+ 288   // --- Detect pending CSAT survey from messages ---
+ 289 
+ 290   const activeCsatMessage = useMemo(() =&gt; {
+ 291     for (let i = messages.length - 1; i &gt;= 0; i--) {
+ 292       if (messages[i].csatData) return messages[i];
+ 293     }
+ 294     return null;
+ 295   }, [messages]);
+ 296 
+ 297   // --- Loading/Error/Empty states (same as ChatPanel) ---
+ 298 
+ 299   if (!hasAgent) {
+ 300     if (isLoading) {
+ 301       return (
+ 302         &lt;div
+ 303           className=&quot;h-full flex flex-col items-center justify-center bg-background p-8&quot;
+ 304           style={{ fontFamily: 'var(--font-sans)' }}
+ 305         &gt;
+ 306           &lt;Loader2 className=&quot;w-8 h-8 text-accent animate-spin mb-4&quot; /&gt;
+ 307           &lt;h2 className=&quot;text-lg font-medium text-foreground mb-1&quot;&gt;{t('loading_agent')}&lt;/h2&gt;
+ 308           &lt;p className=&quot;text-muted text-sm&quot;&gt;{agentName || t('connecting_to_runtime')}&lt;/p&gt;
+ 309         &lt;/div&gt;
+ 310       );
+ 311     }
+ 312 
+ 313     if (error) {
+ 314       return (
+ 315         &lt;div
+ 316           className=&quot;h-full flex flex-col items-center justify-center bg-background p-8&quot;
+ 317           style={{ fontFamily: 'var(--font-sans)' }}
+ 318         &gt;
+ 319           &lt;div className=&quot;w-16 h-16 rounded-2xl bg-error-subtle flex items-center justify-center mb-6&quot;&gt;
+ 320             &lt;AlertCircle className=&quot;w-8 h-8 text-error&quot; /&gt;
+ 321           &lt;/div&gt;
+ 322           &lt;h2 className=&quot;text-xl font-semibold text-foreground mb-2&quot;&gt;
+ 323             {t('failed_to_load_agent')}
+ 324           &lt;/h2&gt;
+ 325           &lt;p className=&quot;text-muted text-center max-w-md text-sm leading-relaxed mb-4&quot;&gt;{error}&lt;/p&gt;
+ 326           &lt;button
+ 327             onClick={() =&gt; {
+ 328               useSessionStore.getState().setError(null);
+ 329             }}
+ 330             className=&quot;px-4 py-2 text-sm bg-accent text-accent-foreground rounded-lg hover:opacity-90 transition-default&quot;
+ 331           &gt;
+ 332             {t('dismiss')}
+ 333           &lt;/button&gt;
+ 334         &lt;/div&gt;
+ 335       );
+ 336     }
+ 337 
+ 338     return (
+ 339       &lt;div
+ 340         className=&quot;h-full flex flex-col items-center justify-center bg-background p-8&quot;
+ 341         style={{ fontFamily: 'var(--font-sans)' }}
+ 342       &gt;
+ 343         &lt;div className=&quot;w-16 h-16 rounded-2xl bg-accent-subtle flex items-center justify-center mb-6&quot;&gt;
+ 344           &lt;MessageSquare className=&quot;w-8 h-8 text-accent&quot; /&gt;
+ 345         &lt;/div&gt;
+ 346         &lt;h2 className=&quot;text-xl font-semibold text-foreground mb-2&quot;&gt;
+ 347           {agentName ? t('chat_with_agent', { agentName }) : t('start_conversation')}
+ 348         &lt;/h2&gt;
+ 349         &lt;p className=&quot;text-muted text-center max-w-md text-sm leading-relaxed&quot;&gt;
+ 350           {t.rich('empty_hint', {
+ 351             b: (chunks) =&gt; &lt;strong&gt;{chunks}&lt;/strong&gt;,
+ 352           })}
+ 353         &lt;/p&gt;
+ 354       &lt;/div&gt;
+ 355     );
+ 356   }
+ 357 
+ 358   // --- Main chat panel ---
+ 359 
+ 360   return (
+ 361     &lt;div className=&quot;h-full flex flex-col bg-background bg-noise animate-fade-in&quot;&gt;
+ 362       &lt;StudioChatHeader
+ 363         agent={agent}
+ 364         onBackToAgent={projectId &amp;&amp; agentName ? handleBackToAgent : undefined}
+ 365         onToggleDebug={onToggleDebug}
+ 366         debugPanelOpen={debugPanelOpen}</pre
+          >
+        </div>
+      </section>
+
+      <section id="sdk-traces" class="card" data-shot="sdk-traces">
+        <div class="eyebrow">Implementation Slice</div>
+        <h2>SDK Activity And Trace Readability</h2>
+        <p>
+          Channel-level activity suppression is now honored in the React widget, handoff cards are
+          compact and customizable, and trace details collapse behind a summary-first footer.
+        </p>
+
+        <div class="snippet">
+          <div class="path">packages/web-sdk/src/react/components/ChatWidget.tsx</div>
+          <pre>
+  44   onViewTrace,
+  45   onAction,
+  46 }: ChatWidgetProps): React.ReactElement {
+  47   const {
+  48     chat,
+  49     messages,
+  50     isTyping,
+  51     sendMessage,
+  52     isConnected,
+  53     streamingContent,
+  54     isStreaming,
+  55     showActivityUpdates,
+  56   } = useChat();
+  57 
+  58   const handleSend = useCallback(
+  59     (text: string, attachmentIds?: string[]) =&gt; {
+  60       // sendMessage returns a Promise; fire-and-forget — errors surface via AgentProvider.
+  61       void sendMessage(text, attachmentIds ? { attachmentIds } : undefined);
+  62     },
+  63     [sendMessage],
+  64   );
+  65 
+  66   const handleAction = useMemo(() =&gt; onAction ?? createActionHandler(chat), [chat, onAction]);
+  67 
+  68   const content = React.createElement(
+  69     'div',
+  70     { style: styles.chatContainer, 'data-testid': 'chat-widget' },
+  71     React.createElement(MessageList, {
+  72       messages,
+  73       streamingContent,
+  74       isStreaming,
+  75       showActivityUpdates,
+  76       onAction: handleAction,
+  77       onViewTrace,
+  78     }),
+  79     isTyping ? React.createElement(TypingIndicator, null) : null,</pre
+          >
+        </div>
+
+        <div class="snippet">
+          <div class="path">packages/web-sdk/src/react/components/MessageList.tsx</div>
+          <pre>
+  26   streamingContent?: string;
+  27   /** Whether a response is currently streaming */
+  28   isStreaming?: boolean;
+  29   /** Whether channel/session activity updates should be shown */
+  30   showActivityUpdates?: boolean;
+  31   /** Callback when an action button/select/input is triggered */
+  32   onAction?: (actionId: string, value?: string) =&gt; void;
+  33   /** Callback when &quot;View trace&quot; is clicked on a thought card */
+  34   onViewTrace?: (metadata: MessageMetadata) =&gt; void;
+  35   /** Custom thought card renderer (overrides default ThoughtCard) */
+  36   renderThoughtCard?: (message: Message) =&gt; React.ReactNode;
+  37 }
+  38 
+  39 /**
+  40  * Tracks expanded state for thought cards by message ID.
+  41  * Uses a bounded Map via the message list length.
+  42  */
+  43 function useExpandedMap() {
+  44   const [expandedIds, setExpandedIds] = useState&lt;Record&lt;string, boolean&gt;&gt;({});
+  45 
+  46   const toggle = useCallback((id: string) =&gt; {
+  47     setExpandedIds((prev) =&gt; ({ ...prev, [id]: !prev[id] }));
+  48   }, []);
+  49 
+  50   const isExpanded = useCallback((id: string) =&gt; expandedIds[id] === true, [expandedIds]);
+  51 
+  52   return { toggle, isExpanded };
+  53 }
+  54 
+  55 export function MessageList({
+  56   messages,
+  57   streamingContent,
+  58   isStreaming,
+  59   showActivityUpdates = true,
+  60   onAction,
+  61   onViewTrace,
+  62   renderThoughtCard,
+  63 }: MessageListProps): React.ReactElement {
+  64   const containerRef = useRef&lt;HTMLDivElement&gt;(null);
+  65   const { toggle, isExpanded } = useExpandedMap();
+  66 
+  67   // Auto-scroll to bottom on new messages or streaming
+  68   useEffect(() =&gt; {
+  69     const el = containerRef.current;
+  70     if (el) {
+  71       el.scrollTop = el.scrollHeight;
+  72     }
+  73   }, [messages.length, streamingContent]);
+  74 
+  75   const renderMessage = (msg: Message): React.ReactNode =&gt; {
+  76     // Thought role → ThoughtCard
+  77     if (msg.role === 'thought') {
+  78       if (!showActivityUpdates) {
+  79         return null;
+  80       }
+  81       if (renderThoughtCard) return renderThoughtCard(msg);
+  82       return React.createElement(ThoughtCard, {
+  83         key: msg.id,
+  84         content: msg.content,
+  85         toolLabel: msg.metadata?.toolName,
+  86         isExpanded: isExpanded(msg.id),
+  87         onToggle: () =&gt; toggle(msg.id),
+  88         onViewTrace,
+  89         metadata: msg.metadata,
+  90       });
+  91     }
+  92 
+  93     // System role — check for error
+  94     if (msg.role === 'system') {
+  95       if (msg.metadata?.errorCode || msg.metadata?.severity) {
+  96         return React.createElement(ErrorMessage, {
+  97           key: msg.id,
+  98           content: msg.content,
+  99           severity: msg.metadata?.severity ?? 'error',
+ 100         });
+ 101       }
+ 102 
+ 103       // Handoff message
+ 104       if (msg.metadata?.handoffFrom || msg.metadata?.handoffTo) {
+ 105         if (!showActivityUpdates) {
+ 106           return null;
+ 107         }
+ 108         return React.createElement(HandoffMessage, {
+ 109           key: msg.id,
+ 110           fromAgent: msg.metadata?.handoffFrom as string | undefined,
+ 111           toAgent: msg.metadata?.handoffTo as string | undefined,
+ 112         });
+ 113       }</pre
+          >
+        </div>
+
+        <div class="snippet">
+          <div class="path">packages/web-sdk/src/react/components/HandoffMessage.tsx</div>
+          <pre>
+  19 }
+  20 
+  21 export function HandoffMessage({ fromAgent, toAgent }: HandoffMessageProps): React.ReactElement {
+  22   const strings = useStrings();
+  23   const [expanded, setExpanded] = useState(false);
+  24 
+  25   const text = strings.handoffMessage
+  26     .replace('{from}', fromAgent ?? '?')
+  27     .replace('{to}', toAgent ?? '?');
+  28 
+  29   const summary = strings.handoffSummary
+  30     .replace('{from}', fromAgent ?? '?')
+  31     .replace('{to}', toAgent ?? '?');
+  32 
+  33   return React.createElement(
+  34     'div',
+  35     { style: styles.handoffMessage, 'data-testid': 'handoff-message' },
+  36     React.createElement(
+  37       'button',
+  38       {
+  39         type: 'button',
+  40         style: styles.handoffMessageButton,
+  41         onClick: () =&gt; setExpanded((current) =&gt; !current),
+  42         'aria-expanded': expanded,
+  43       },
+  44       React.createElement(HandoffIcon, null),
+  45       React.createElement('span', null, summary),
+  46       React.createElement(
+  47         'span',
+  48         { style: styles.handoffMessageChevron },
+  49         expanded ? strings.handoffHideDetails : strings.handoffShowDetails,
+  50       ),
+  51     ),
+  52     expanded ? React.createElement('div', { style: styles.handoffMessageDetail }, text) : null,
+  53   );
+  54 }
+  55 </pre
+          >
+        </div>
+
+        <div class="snippet">
+          <div class="path">packages/web-sdk/src/react/strings/types.ts</div>
+          <pre>
+  19   errorTitle: string;
+  20   /** Warning title */
+  21   warningTitle: string;
+  22   /** Handoff message template (use {from} and {to} placeholders) */
+  23   handoffMessage: string;
+  24   /** Collapsed handoff summary template (use {from} and {to} placeholders) */
+  25   handoffSummary: string;
+  26   /** Collapsed handoff affordance label */
+  27   handoffShowDetails: string;
+  28   /** Expanded handoff affordance label */
+  29   handoffHideDetails: string;
+  30   /** Attach file button label */
+  31   attachFile: string;</pre
+          >
+        </div>
+
+        <div class="snippet">
+          <div class="path">apps/studio/src/components/analytics/TracesExplorerTab.tsx</div>
+          <pre>
+ 978   const eventType = getSummaryEventType(summary);
+ 979   const eventTypeLabel = formatTraceTypeLabel(eventType);
+ 980   const eventColors = getEventColors(eventType);
+ 981   const [expanded, setExpanded] = useState(false);
+ 982 
+ 983   return (
+ 984     &lt;div className=&quot;border-t border-default bg-background-subtle px-4 py-3&quot;&gt;
+ 985       &lt;button
+ 986         type=&quot;button&quot;
+ 987         onClick={() =&gt; setExpanded((current) =&gt; !current)}
+ 988         className=&quot;flex w-full items-start justify-between gap-4 text-left&quot;
+ 989         aria-expanded={expanded}
+ 990       &gt;
+ 991         &lt;div className=&quot;min-w-0&quot;&gt;
+ 992           &lt;div className=&quot;flex flex-wrap items-center gap-2&quot;&gt;
+ 993             &lt;h4 className=&quot;text-sm font-semibold text-foreground&quot;&gt;{span.name}&lt;/h4&gt;
+ 994             {eventTypeLabel !== span.name &amp;&amp; (
+ 995               &lt;span
+ 996                 className={clsx(
+ 997                   'rounded-full px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide',
+ 998                   eventColors.bgColor,
+ 999                   eventColors.textColor,
+1000                 )}
+1001               &gt;
+1002                 {eventTypeLabel}
+1003               &lt;/span&gt;
+1004             )}
+1005           &lt;/div&gt;
+1006           &lt;div className=&quot;mt-1 flex flex-wrap items-center gap-2 text-xs text-muted&quot;&gt;
+1007             &lt;span&gt;{getSummarySubtitle(summary)}&lt;/span&gt;
+1008             &lt;span className=&quot;font-mono&quot;&gt;{span.spanId}&lt;/span&gt;
+1009             &lt;span&gt;{formatDuration(durationMs)}&lt;/span&gt;
+1010             {summary.totalTokens !== undefined &amp;&amp; &lt;span&gt;{formatTokens(summary.totalTokens)}&lt;/span&gt;}
+1011             {summary.cost !== undefined &amp;&amp; &lt;span&gt;{formatCost(summary.cost)}&lt;/span&gt;}
+1012           &lt;/div&gt;
+1013         &lt;/div&gt;
+1014 
+1015         &lt;span className=&quot;shrink-0 text-xs font-medium text-accent&quot;&gt;
+1016           {expanded ? 'Hide details' : 'Show details'}
+1017         &lt;/span&gt;
+1018       &lt;/button&gt;
+1019 
+1020       {expanded ? (
+1021         &lt;div className=&quot;mt-3 grid gap-2 sm:grid-cols-2 xl:grid-cols-4&quot;&gt;
+1022           &lt;ExplorerWaterfallDetailField label=&quot;Started&quot; value={formatTimestamp(span.startTime)} /&gt;
+1023           &lt;ExplorerWaterfallDetailField
+1024             label=&quot;Ended&quot;
+1025             value={span.endTime ? formatTimestamp(span.endTime) : 'In progress'}
+1026           /&gt;
+1027           &lt;ExplorerWaterfallDetailField label=&quot;Offset&quot; value={formatDuration(offsetMs)} /&gt;
+1028           &lt;ExplorerWaterfallDetailField label=&quot;Status&quot; value={formatTraceTypeLabel(span.status)} /&gt;
+1029           &lt;ExplorerWaterfallDetailField label=&quot;Span ID&quot; value={span.spanId} mono /&gt;
+1030           &lt;ExplorerWaterfallDetailField label=&quot;Trace ID&quot; value={span.traceId} mono /&gt;
+1031           &lt;ExplorerWaterfallDetailField
+1032             label=&quot;Parent Span&quot;</pre
+          >
+        </div>
+      </section>
+
+      <section id="verification" class="card" data-shot="verification">
+        <div class="eyebrow">Implementation Slice</div>
+        <h2>Verification And Test Locks</h2>
+        <p>
+          The fixes are locked with focused regression coverage across runtime, project import, SDK
+          rendering, and Studio component behavior, plus a shared observer-mock hardening for future
+          Radix tests.
+        </p>
+        <ul>
+          <li>
+            Scoped build: @agent-platform/project-io, @agent-platform/web-sdk,
+            @agent-platform/runtime, @agent-platform/studio
+          </li>
+          <li>Runtime regression: 59 tests passed</li>
+          <li>Project import regressions: 29 tests passed</li>
+          <li>Web SDK regressions: 35 tests passed</li>
+          <li>Studio component bundle: 557 tests passed / 106 todo / 1 skipped</li>
+        </ul>
+
+        <div class="snippet">
+          <div class="path">apps/studio/src/__tests__/setup.tsx</div>
+          <pre>
+ 276   getTranslations: async (namespace?: string) =&gt; {
+ 277     const nsObj = namespace ? (getNestedValue(allMessages, namespace) ?? {}) : allMessages;
+ 278     const resolve = (key: string): string | undefined =&gt; {
+ 279       if (typeof nsObj === 'object' &amp;&amp; nsObj !== null) {
+ 280         const val = getNestedValue(nsObj, key);
+ 281         return typeof val === 'string' ? val : undefined;
+ 282       }
+ 283       return undefined;
+ 284     };
+ 285     const t = (key: string, params?: Record&lt;string, any&gt;) =&gt; {
+ 286       const val = resolve(key);
+ 287       if (val === undefined) {
+ 288         if (params?.defaultValue) return String(params.defaultValue);
+ 289         if (params?.defaultMessage) return String(params.defaultMessage);
+ 290         return namespace ? `${namespace}.${key}` : key;
+ 291       }
+ 292       if (params) {
+ 293         return formatICU(val, params);
+ 294       }
+ 295       return val;
+ 296     };
+ 297     t.rich = (key: string, params?: Record&lt;string, any&gt;) =&gt; t(key, params);</pre
+          >
+        </div>
+
+        <div class="snippet">
+          <div class="path">apps/studio/src/__tests__/components/model-management.test.tsx</div>
+          <pre>
+ 871 
+ 872     render(&lt;AgentModelTab projectId=&quot;proj-1&quot; agentName=&quot;test-agent&quot; /&gt;);
+ 873 
+ 874     await waitFor(() =&gt; {
+ 875       expect(screen.getByText('Save')).toBeInTheDocument();
+ 876     });
+ 877 
+ 878     // Change default model to trigger isDirty via the real Radix select flow
+ 879     fireEvent.click(screen.getByRole('combobox'));
+ 880     fireEvent.click(screen.getByRole('option', { name: 'GPT-4o (gpt-4o)' }));
+ 881 
+ 882     // Save without enabling overrides
+ 883     fireEvent.click(screen.getByText('Save'));
+ 884 
+ 885     await waitFor(() =&gt; {
+ 886       const putCall = mockApiFetch.mock.calls.find(
+ 887         (call: unknown[]) =&gt; (call[1] as { method?: string })?.method === 'PUT',
+ 888       );
+ 889       expect(putCall).toBeTruthy();
+ 890       const body = JSON.parse((putCall![1] as { body: string }).body);
+ 891       expect(body.temperature).toBeNull();
+ 892       expect(body.maxTokens).toBeNull();
+ 893     });
+ 894   });
+ 895 
+ 896   test('save button enables after changing the selected model', async () =&gt; {
+ 897     mockApiFetch.mockImplementation((url: string, options?: { method?: string; body?: string }) =&gt; {
+ 898       if (url.includes('/api/models'))
+ 899         return mockJsonResponse({
+ 900           models: [
+ 901             {
+ 902               id: 'mc-1',
+ 903               name: 'GPT-4o',
+ 904               modelId: 'gpt-4o',
+ 905               provider: 'openai',
+ 906               isDefault: true,
+ 907               temperature: 0.7,
+ 908               maxTokens: 4096,
+ 909             },
+ 910             {
+ 911               id: 'mc-2',
+ 912               name: 'Claude Sonnet',
+ 913               modelId: 'claude-sonnet-4-6',
+ 914               provider: 'anthropic',
+ 915               isDefault: false,
+ 916               temperature: 0.5,
+ 917               maxTokens: 8192,
+ 918             },
+ 919           ],
+ 920         });
+ 921       if (url.includes('/model-config') &amp;&amp; options?.method !== 'PUT')
+ 922         return mockJsonResponse({
+ 923           config: {
+ 924             defaultModel: null,
+ 925             operationModels: {},
+ 926             temperature: null,
+ 927             maxTokens: null,
+ 928             hyperParameters: null,
+ 929             useResponsesApi: null,
+ 930             useStreaming: null,
+ 931           },
+ 932         });
+ 933       if (url.includes('/api/model-capabilities'))
+ 934         return mockJsonResponse({
+ 935           hyperParameters: [],
+ 936           supportsResponsesApi: false,
+ 937           supportsStreaming: false,
+ 938         });
+ 939       return mockJsonResponse({});
+ 940     });
+ 941 
+ 942     render(&lt;AgentModelTab projectId=&quot;proj-1&quot; agentName=&quot;test-agent&quot; /&gt;);
+ 943 
+ 944     const saveButton = await screen.findByRole('button', { name: 'Save' });
+ 945     expect(saveButton).toBeDisabled();
+ 946 
+ 947     fireEvent.click(screen.getByRole('combobox'));
+ 948     fireEvent.click(screen.getByRole('option', { name: 'Claude Sonnet (claude-sonnet-4-6)' }));
+ 949 
+ 950     await waitFor(() =&gt; {
+ 951       expect(saveButton).not.toBeDisabled();
+ 952     });
+ 953   });
+ 954 
+ 955   test('embedded mode uses the provided override label and description', async () =&gt; {</pre
+          >
+        </div>
+
+        <div class="snippet">
+          <div class="path">packages/web-sdk/src/__tests__/react-components.test.tsx</div>
+          <pre>
+ 471 
+ 472 // ---------------------------------------------------------------------------
+ 473 // HandoffMessage
+ 474 // ---------------------------------------------------------------------------
+ 475 describe('HandoffMessage', () =&gt; {
+ 476   test('renders a collapsed handoff summary and expands with customizable strings', async () =&gt; {
+ 477     const { HandoffMessage } = await import('../react/components/HandoffMessage.js');
+ 478     await act(async () =&gt; {
+ 479       root.render(
+ 480         withStrings(
+ 481           React.createElement(HandoffMessage, {
+ 482             fromAgent: 'AgentA',
+ 483             toAgent: 'AgentB',
+ 484           }),
+ 485           {
+ 486             handoffSummary: 'Transfer from {from} to {to}',
+ 487             handoffShowDetails: 'Expand handoff',
+ 488             handoffHideDetails: 'Collapse handoff',
+ 489           },
+ 490         ),
+ 491       );
+ 492       await Promise.resolve();
+ 493     });
+ 494     const el = container.querySelector('[data-testid=&quot;handoff-message&quot;]');
+ 495     expect(el).toBeTruthy();
+ 496     expect(container.textContent).toContain('Transfer from AgentA to AgentB');
+ 497     expect(container.textContent).toContain('Expand handoff');
+ 498     expect(container.textContent).not.toContain('Routing from AgentA to AgentB');
+ 499 
+ 500     const button = container.querySelector('button');
+ 501     await act(async () =&gt; {
+ 502       button?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+ 503       await Promise.resolve();
+ 504     });
+ 505 </pre
+          >
+        </div>
+      </section>
+    </div>
+  </body>
+</html>

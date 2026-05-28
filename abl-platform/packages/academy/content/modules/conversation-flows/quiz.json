@@ -1,0 +1,85 @@
+{
+  "moduleId": "conversation-flows",
+  "passThreshold": 0.8,
+  "questions": [
+    {
+      "id": "cf-q1",
+      "type": "mcq",
+      "stem": "A hotel booking flow has a step where the user selects a hotel by number. The developer wants to validate the input, set a variable if valid, and re-prompt if invalid. Which flow construct provides this conditional branching on user input?",
+      "options": [
+        {
+          "id": "a",
+          "text": "ON_SUCCESS / ON_FAIL -- they branch based on whether a tool call succeeded"
+        },
+        {
+          "id": "b",
+          "text": "ON_INPUT with IF/ELSE branches -- it provides conditional branching based on what the user enters",
+          "correct": true
+        },
+        {
+          "id": "c",
+          "text": "GATHER with type validation -- it automatically validates and re-prompts without needing branching"
+        }
+      ],
+      "explanation": "ON_INPUT provides conditional branching based on user input within a flow step. Branches use IF conditions with optional SET (variable assignments), RESPOND (messages), and THEN (transitions). ON_SUCCESS/ON_FAIL handle tool call results, not user input validation. GATHER validates field types but does not provide the conditional SET and branching logic needed here."
+    },
+    {
+      "id": "cf-q2",
+      "type": "fill-blank",
+      "stem": "In a FLOW step, the keyword THEN: ________ ends the session and exits the flow entirely.",
+      "answer": "COMPLETE",
+      "acceptAlternatives": ["complete", "Complete"],
+      "explanation": "THEN: COMPLETE is the transition that ends the session. Without a THEN directive, a step ends the flow. Steps can also transition to named steps (e.g., THEN: get_dates) to continue the flow. COMPLETE is also used in the agent-level COMPLETE block to define when the agent considers its task finished."
+    },
+    {
+      "id": "cf-q3",
+      "type": "mcq",
+      "stem": "A travel advisor agent has a flow with 4 steps: collect_preferences (REASONING: false), research_options (REASONING: true), present_plan (REASONING: false), and confirm (REASONING: false). What happens during the research_options step?",
+      "options": [
+        {
+          "id": "a",
+          "text": "The step collects data from the user using GATHER fields in a deterministic sequence"
+        },
+        {
+          "id": "b",
+          "text": "The LLM autonomously calls tools from AVAILABLE_TOOLS, reasons about results, and builds a response until EXIT_WHEN is satisfied or MAX_TURNS is reached",
+          "correct": true
+        },
+        {
+          "id": "c",
+          "text": "The step sends a fixed RESPOND message and transitions to the next step without any LLM involvement"
+        }
+      ],
+      "explanation": "When REASONING: true is set on a flow step, the LLM gets full autonomy for that step. It can call tools listed in AVAILABLE_TOOLS, reason about the results, and continue iterating until the EXIT_WHEN condition is met or MAX_TURNS caps the iterations. The step can also have its own GOAL and STEP_CONSTRAINTS to focus the reasoning."
+    },
+    {
+      "id": "cf-q4",
+      "type": "mcq",
+      "stem": "A flow step calls search_hotels() and needs to display results if the call succeeds or redirect the user to re-enter dates if it fails. Which pair of constructs handles these two outcomes?",
+      "options": [
+        {
+          "id": "a",
+          "text": "IF/ELSE branches inside ON_INPUT"
+        },
+        {
+          "id": "b",
+          "text": "ON_SUCCESS and ON_FAIL after a CALL directive",
+          "correct": true
+        },
+        {
+          "id": "c",
+          "text": "GATHER with required fields and MAX_ATTEMPTS"
+        }
+      ],
+      "explanation": "After a CALL directive in a flow step, ON_SUCCESS handles returned data (e.g., display hotel results and transition to the next step) and ON_FAIL handles failures (e.g., show an error message and transition back to an earlier step). Both support RESPOND messages, SET assignments, and THEN transitions."
+    },
+    {
+      "id": "cf-q5",
+      "type": "fill-blank",
+      "stem": "The ________ construct within a flow step collects typed information from users with prompts and validation, such as destination, dates, and guest count.",
+      "answer": "GATHER",
+      "acceptAlternatives": ["gather", "Gather"],
+      "explanation": "GATHER is ABL's data collection construct for flow steps. Each GATHER field specifies a name, type (string, date, number, email, etc.), prompt, and whether it is required. When a step has multiple GATHER fields, the Runtime collects them in a natural conversational flow, validating input types and re-prompting if invalid."
+    }
+  ]
+}

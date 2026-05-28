@@ -1,0 +1,78 @@
+id: agent-transfer
+title: Agent-to-Agent Transfer
+enforcement: blocking
+severity_default: high
+rubric_concern: 4
+
+scope:
+  globs:
+    - apps/runtime/src/**/*.ts
+    - packages/compiler/src/**/*.ts
+    - packages/agent-transfer/src/**/*.ts
+  exclude:
+    - '**/__tests__/**'
+    - '**/*.test.ts'
+
+references:
+  docs:
+    - CLAUDE.md#key-rules
+    - packages/agent-transfer/agents.md
+  related_concerns:
+    - session-identity
+    - message-metadata
+    - session-context
+
+detectors:
+  - id: handoff-validation-order
+    kind: model-review
+    severity: high
+    guidance_ref: ../../prompts/handoff-validation-lens.md
+    output_schema:
+      rule_id: handoff-validation-order
+      severity: high | critical
+      location:
+        file: string
+        line: number
+      claim: string
+      reality: string
+      options:
+        A: reorder validation to self-handoff → cycle → registry → allowed-targets
+        B: confirm the existing order is safe (cite reasoning)
+    message: |
+      Handoff validation must run in this order:
+        1. self-handoff check
+        2. cycle detection
+        3. registry lookup
+        4. allowed-targets check
+      Out-of-order checks produce misleading errors and can mask cycles.
+    fix_hint: |
+      See the HandoffExecutor reference implementation; mirror the same order.
+
+  - id: history-forwarding-typed
+    kind: grep
+    severity: high
+    pattern: "forwardedMetadata\\[['\"]history['\"]\\]"
+    message: |
+      History during agent transfer must travel on the typed handoff channel,
+      not through generic forwardedMetadata.
+    fix_hint: |
+      Move history to handoff.history. Regression guard: add a test in
+      apps/runtime/src/__tests__ covering the full A2A round trip.
+
+  - id: transfer-session-type-match
+    kind: grep
+    severity: medium
+    pattern: 'TransferSessionData\s+.*\bTransferSessionRecord'
+    message: |
+      TransferSessionData and TransferSessionRecord are not interchangeable.
+      See apps/runtime/src/services/agent-transfer/index.ts:96 — there is a
+      pre-existing type mismatch here that should be fixed, not copied.
+    fix_hint: |
+      Convert via the record → data mapper helper, or extend the mapper if
+      you need new fields.
+
+stage_hooks:
+  - stage: implementation
+    inject_checklist: true
+  - stage: oracle-analysis
+    as_review_lens: true

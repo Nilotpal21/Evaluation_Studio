@@ -1,0 +1,124 @@
+# generated: 2026-03-13
+# project: abl-platform
+# project_key: NOKEY
+# tracking_system: file-system
+# story_location: /Users/Bharat.Rekha/kore/rewrite/testandintegrate/abl-platform/docs/searchai/stories/implementation-artifacts
+
+# STATUS DEFINITIONS:
+# ==================
+# Epic Status:
+#   - backlog: Epic not yet started
+#   - in-progress: Epic actively being worked on
+#   - done: All stories in epic completed
+#
+# Epic Status Transitions:
+#   - backlog → in-progress: Automatically when first story is created (via create-story)
+#   - in-progress → done: Manually when all stories reach 'done' status
+#
+# Story Status:
+#   - backlog: Story only exists in epic file
+#   - ready-for-dev: Story file created in stories folder
+#   - in-progress: Developer actively working on implementation
+#   - review: Ready for code review (via Dev's code-review workflow)
+#   - done: Story completed
+#
+# Retrospective Status:
+#   - optional: Can be completed but not required
+#   - done: Retrospective has been completed
+#
+# WORKFLOW NOTES:
+# ===============
+# - Epic transitions to 'in-progress' automatically when first story is created
+# - Stories can be worked in parallel if team capacity allows
+# - SM typically creates next story after previous one is 'done' to incorporate learnings
+# - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
+
+generated: 2026-03-13
+project: abl-platform
+project_key: NOKEY
+tracking_system: file-system
+story_location: /Users/Bharat.Rekha/kore/rewrite/testandintegrate/abl-platform/docs/searchai/stories/implementation-artifacts
+
+development_status:
+  epic-1: done
+  1-1-schema-discovery-service-foundation: done
+  1-2-sharepoint-api-schema-discovery: done
+  1-3-google-sheets-api-schema-discovery: done
+  1-4-json-document-schema-inference: done
+  1-5-csv-file-schema-parsing: done
+  1-6-connector-type-template-enum-patterns: done
+  1-7-store-discovered-schema-in-mongodb: done
+  1-8-schema-discovery-worker-bullmq: done
+  1-9-schema-discovery-api-endpoint: done
+  epic-1-retrospective: done
+
+  epic-2: done
+  # Wave 1 (parallel — 3 agents) ✓
+  2-1-rule-based-field-mapping-service: done # Wave 1a
+  2-2-extend-mappingsuggestionservice-for-enum-hints: done # Wave 1b
+  2-4-fieldmapping-crud-api: done # Wave 1c (combines old 2.4+2.5+2.6)
+  # Wave 2 (parallel — 3 agents, after Wave 1) ✓
+  2-3-confidence-scoring-and-auto-apply-logic: done
+  2-7-mapping-source-tracking-for-analytics: done
+  2-8-error-handling-with-circuit-breaker: done
+  # Wave 3 (sequential — after Wave 2)
+  2-9-fieldmappingsuggestionworker-orchestration: done
+  epic-2-retrospective: done
+
+  epic-3: done
+  # NOTE: FieldsTab.tsx (770 lines) and mapping API routes already exist.
+  # Stories are ENHANCEMENTS to existing code, not greenfield.
+  # Wave 1 (parallel — 2 agents)
+  3-8-fieldstab-api-routes: done # Wave 1a (backend — search-ai)
+  3-1-fieldstab-tabbed-layout-and-my-fields: done # Wave 1b (combined 3.1+3.2 — studio)
+  # Wave 2 (parallel — 2 agents, after Wave 1)
+  3-3-suggested-mappings-with-bulk-actions: done # Wave 2a (combined 3.3+3.7 — studio)
+  3-4-unmapped-fields-with-manual-mapping: done # Wave 2b (studio)
+  # Wave 3 (parallel — 2 agents, after Wave 2)
+  3-5-edit-alias-name-modal: done # Wave 3a (studio)
+  3-6-edit-enum-mappings-modal: done # Wave 3b (studio)
+  epic-3-retrospective: done
+
+  epic-4: done
+  # Wave 1 (parallel — 3 agents)
+  4-1-query-log-analysis-for-term-candidates: done # Wave 1a (backend service)
+  4-2-document-content-sampling-for-enum-discovery: done # Wave 1b (backend service)
+  4-6-vocabulary-api-endpoints: done # Wave 1c (backend API)
+  # Wave 2 (parallel — 2 agents, after Wave 1)
+  4-3-llm-based-vocabulary-enrichment-service: done # Wave 2a (depends on 4.1+4.2)
+  4-5-vocabulary-review-ui-in-fieldstab: done # Wave 2b (depends on 4.6)
+  # Wave 3 (sequential — after Wave 2)
+  4-4-vocabulary-generation-worker-bullmq: done # Wave 3 (orchestrates 4.1+4.2+4.3)
+  epic-4-retrospective: done
+
+  epic-5: done
+  # NOTE: Stories 5.1–5.4 were already implemented before epic planning.
+  # AliasResolver, VocabularyResolver, DynamicVocabularyResolver, and QueryPipeline Stage 2.5
+  # all exist in search-ai-runtime. No new code was needed.
+  5-1-aliasresolver-service-foundation: done # alias-resolver.ts (LRU + Redis pub/sub)
+  5-2-query-parser-with-alias-to-storage-translation: done # query-pipeline.ts Stage 2.5
+  5-3-enum-value-resolution-in-query-filters: done # alias-resolver.ts resolve()
+  5-4-vocabulary-expansion-in-query-rewriter: done # vocabulary-resolver.ts + dynamic-vocabulary-resolver.ts
+  5-5-alias-resolver-integration-tests: backlog # optional — coverage gap
+  5-6-aliasresolver-monitoring-and-metrics: backlog # optional — partial (hit/miss exists)
+  epic-5-retrospective: optional
+
+  epic-6: backlog
+  6-1-token-usage-tracking-in-workerllmclient: backlog
+  6-2-tenant-usage-quota-enforcement: backlog
+  6-3-use-case-cost-analysis-dashboard: backlog
+  6-4-intelligent-batching-for-mapping-suggestions: backlog
+  6-5-caching-for-repeated-mapping-patterns: backlog
+  6-6-usage-alerts-and-quota-notifications: backlog
+  6-7-cost-optimization-recommendations: backlog
+  6-8-usage-analytics-api-endpoints: backlog
+  epic-6-retrospective: optional
+
+  epic-7: backlog
+  7-1-field-mapping-diagnostic-api: backlog
+  7-2-query-trace-with-alias-resolution-details: backlog
+  7-3-mapping-validation-report: backlog
+  7-4-manual-synonym-override: backlog
+  7-5-enum-conflict-resolution-ui: backlog
+  7-6-rollback-field-mapping-changes: backlog
+  epic-7-retrospective: optional

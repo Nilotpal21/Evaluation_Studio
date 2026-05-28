@@ -1,0 +1,283 @@
+# Human-owned HELIX repo contract for abl-platform.
+# This file tells HELIX how to understand and operate the repo safely.
+# Generated runtime state belongs under .helix/ and must not be committed.
+
+version: 1
+
+repo:
+  id: abl-platform
+  displayName: ABL Platform
+  kind: monorepo
+  packageManager: pnpm
+  taskRunner: turbo
+  defaultBranch: main
+  engines:
+    node: '>=24.0.0 <25.0.0'
+    pnpm: '>=8.0.0'
+
+  canonicalCommands:
+    install: pnpm install
+    build: pnpm build
+    buildLowMem: pnpm build:low-mem
+    test: pnpm test
+    testFast: pnpm test:report:fast
+    testReport: pnpm test:report
+    typecheck: pnpm typecheck
+    lint: pnpm lint
+    formatWrite: npx prettier --write
+    formatCheck: npx prettier --check
+    infraStart: pnpm infra
+    infraStop: pnpm infra:stop
+    platformStart: pnpm platform:start
+    platformStop: pnpm platform:stop
+    health: pnpm health
+
+  operationalRules:
+    buildBeforeTest: true
+    preferScopedCommands: true
+    requireFormatWriteBeforeCommit: true
+    neverReadSecretsFromRealDotEnvByDefault: true
+
+  instructionFiles:
+    required:
+      - AGENTS.md
+      - CLAUDE.md
+    scopedPatterns:
+      - apps/*/agents.md
+      - packages/*/agents.md
+      - services/*/agents.md
+
+  discovery:
+    roots:
+      - apps
+      - packages
+      - services
+      - docs
+    ignorePaths:
+      - .git
+      - .turbo
+      - .helix
+      - .apdas
+      - node_modules
+      - dist
+      - build
+      - coverage
+      - docs/sdlc-logs
+      - uploads
+    sourceExtensions:
+      - .ts
+      - .tsx
+      - .js
+      - .jsx
+      - .mjs
+      - .cjs
+      - .py
+      - .go
+      - .md
+
+  environment:
+    policy:
+      preferExamplesOrSchemas: true
+      requireExampleOrSchemaPerRunnableApp: true
+      allowDoctorToInspectSecretNamesOnly: true
+    root:
+      examples:
+        - .env.example
+      requiredKeys:
+        - ENCRYPTION_MASTER_KEY
+      optionalKeys:
+        - REDIS_PASSWORD
+        - OPENSEARCH_ADMIN_PASSWORD
+        - JWT_SECRET
+    applications:
+      - id: runtime
+        path: apps/runtime
+        examples:
+          - apps/runtime/.env.example
+          - apps/runtime/.env.template
+        requiredKeys:
+          - JWT_SECRET
+          - AUTH_SDK_SESSION_SIGNING_SECRET
+          - AUTH_SDK_BOOTSTRAP_SIGNING_SECRET
+        anyOf:
+          - description: Anthropic
+            keys:
+              - ANTHROPIC_API_KEY
+          - description: OpenAI
+            keys:
+              - OPENAI_API_KEY
+          - description: Google AI
+            keys:
+              - GOOGLE_AI_API_KEY
+          - description: Azure OpenAI
+            keys:
+              - AZURE_OPENAI_API_KEY
+              - AZURE_OPENAI_ENDPOINT
+          - description: AWS Bedrock
+            keys:
+              - AWS_BEDROCK_REGION
+      - id: studio
+        path: apps/studio
+        examples:
+          - apps/studio/.env.example
+          - apps/studio/.env.template
+        requiredKeys:
+          - NEXT_PUBLIC_RUNTIME_URL
+          - NEXT_PUBLIC_APP_URL
+          - JWT_SECRET
+          - NEXTAUTH_SECRET
+          - AUTH_SDK_BOOTSTRAP_SIGNING_SECRET
+      - id: admin
+        path: apps/admin
+        examples:
+          - apps/admin/.env.example
+      - id: search-ai
+        path: apps/search-ai
+        examples:
+          - apps/search-ai/.env.example
+      - id: search-ai-runtime
+        path: apps/search-ai-runtime
+        examples:
+          - apps/search-ai-runtime/.env.example
+      - id: docs-internal
+        path: apps/docs-internal
+        examples:
+          - apps/docs-internal/.env.example
+      - id: crawler-go-worker
+        path: apps/crawler-go-worker
+        examples:
+          - apps/crawler-go-worker/.env.example
+      - id: crawler-mcp-server
+        path: apps/crawler-mcp-server
+        examples:
+          - apps/crawler-mcp-server/.env.example
+      - id: preprocessing-service
+        path: services/preprocessing-service
+        examples:
+          - services/preprocessing-service/.env.example
+
+  serviceMap:
+    - id: runtime
+      path: apps/runtime
+      kind: node-api
+      devCommand: pnpm --filter @agent-platform/runtime dev
+      ports:
+        http: 3112
+    - id: studio
+      path: apps/studio
+      kind: nextjs-web
+      devCommand: pnpm --filter @agent-platform/studio dev
+      ports:
+        http: 5173
+    - id: admin
+      path: apps/admin
+      kind: nextjs-web
+      devCommand: pnpm --filter @agent-platform/admin dev
+      ports:
+        http: 3003
+    - id: search-ai
+      path: apps/search-ai
+      kind: node-api
+      devCommand: pnpm --filter @agent-platform/search-ai dev
+      ports:
+        http: 3113
+    - id: search-ai-runtime
+      path: apps/search-ai-runtime
+      kind: node-api
+      devCommand: pnpm --filter @agent-platform/search-ai-runtime dev
+      ports:
+        http: 3114
+    - id: docling-service
+      path: services/docling-service
+      kind: python-service
+      containerManaged: true
+      startHint: docker compose up -d docling-service
+      ports:
+        http: 8080
+    - id: bge-m3-service
+      path: services/bge-m3-service
+      kind: python-service
+      containerManaged: true
+      startHint: docker compose up -d bge-m3-embeddings
+      ports:
+        http: 8000
+    - id: preprocessing-service
+      path: services/preprocessing-service
+      kind: python-service
+      containerManaged: true
+      startHint: docker compose up -d preprocessing-service
+      ports:
+        http: 8003
+
+  doctor:
+    outputPath: .helix/readiness-report.json
+    checklistCategories:
+      - bootstrap
+      - environment
+      - commands
+      - topology
+      - verification
+      - health
+      - autonomy
+    failOn:
+      - missing-canonical-build-command
+      - missing-canonical-test-command
+      - missing-format-write-command
+      - missing-root-env-example
+      - missing-root-instruction-file
+    warnOn:
+      - missing-runnable-app-env-example
+      - missing-service-start-hint
+      - no-module-verification-policy
+      - only-repo-wide-regression-suite
+
+  autonomy:
+    defaultLevel: L2
+    levels:
+      L0: audit-only
+      L1: manual-checkpoint
+      L2: targeted-autonomy
+      L3: high-confidence-autonomy
+
+  runtime:
+    stageModelPolicy:
+      stages:
+        deep-scan:
+          preferredEngine: codex-cli
+        implementation:
+          preferredEngine: codex-cli
+        testing:
+          preferredEngine: codex-cli
+        reproduce:
+          preferredEngine: codex-cli
+        root-cause:
+          preferredEngine: codex-cli
+        oracle-analysis:
+          preferredEngine: claude-code
+        plan-generation:
+          preferredEngine: claude-code
+        manifest-compilation:
+          preferredEngine: claude-code
+        user-checkpoint:
+          preferredEngine: claude-code
+        review:
+          preferredEngine: claude-code
+        bulk-review:
+          preferredEngine: claude-code
+        regression:
+          preferredEngine: codex-cli
+          defaultPrimary:
+            engine: codex-cli
+            model: gpt-5.4
+        doc-sync:
+          preferredEngine: claude-code
+      architectureReview:
+        preferredEngine: claude-code
+        defaultPrimary:
+          engine: claude-code
+          model: claude-opus-4-6
+      modelReview:
+        preferredEngine: claude-code
+        defaultPrimary:
+          engine: claude-code
+          model: claude-opus-4-6

@@ -1,0 +1,475 @@
+// =============================================================================
+// Hotel Booking Agent - Consolidated flow pattern example
+// Demonstrates: FLOW steps, GATHER, CONSTRAINTS, SET, CLEAR, CALL WITH/AS,
+//   ON_INPUT, ON_RESULT, ON_SUCCESS/ON_FAIL, TRANSFORM, DIGRESSIONS,
+//   SUB_INTENTS, CORRECTIONS, DELEGATE, STORE, FORMATS, VOICE
+// =============================================================================
+
+AGENT: Hotel_Booking
+GOAL: "Guide users through hotel booking with conditional paths, constraints, and navigation"
+
+PERSONA: |
+  Professional hotel booking assistant with natural conversation style.
+  Allows users to go back, change options, provide multiple pieces of information at once,
+  and handles different booking paths. Supports corrections and out-of-scope requests.
+
+EXECUTION:
+  model: gpt-4.1
+  temperature: 0.5
+  max_tokens: 2000
+  max_iterations: 15
+  max_flow_iterations: 100
+
+LIMITATIONS:
+  - Cannot book hotels with more than 10 guests
+  - Cannot process bookings exceeding $5000 without manager approval
+
+// =============================================================================
+// CONSTRAINTS - Enforced at runtime
+// =============================================================================
+
+CONSTRAINTS:
+  - REQUIRE num_guests <= 10
+    ON_FAIL: RESPOND "Sorry, we cannot accommodate more than 10 guests per booking. Please contact our group booking team."
+  - REQUIRE destination != ""
+    ON_FAIL: RESPOND "Please provide a destination first."
+  - REQUIRE estimated_total <= 5000
+    ON_FAIL: ESCALATE "Booking exceeds $5000 limit - requires manager approval"
+
+// =============================================================================
+// TOOLS
+// =============================================================================
+
+TOOLS:
+  search_hotels(destination: string, checkin: date, checkout: date, guests: number) -> {hotels: array}
+    description: "Search for available hotels"
+
+  check_availability(hotel_id: string, dates: object) -> {available: boolean, rooms: array}
+    description: "Check room availability for selected hotel"
+
+  apply_promo_code(code: string) -> {valid: boolean, discount: number}
+    description: "Validate and apply promotional code"
+
+  create_booking(hotel_id: string, room_type: string, guest_info: object, payment: object) -> {booking_id: string}
+    description: "Create final booking"
+
+  get_weather(location: string) -> {forecast: string, temp: number}
+    description: "Get weather forecast for a location"
+
+// =============================================================================
+// DELEGATE - Sub-agent for price calculation
+// =============================================================================
+
+DELEGATE:
+  - AGENT: Price_Calculator
+    WHEN: selected_hotel != null AND need_price_quote == true
+    PURPOSE: "Calculate final price with discounts"
+    INPUT:
+      hotel: selected_hotel
+      nights: num_nights
+      guests: num_guests
+    RETURNS:
+      final_price: estimated_total
+      discounts: applied_discounts
+    USE_RESULT: "pricing_result"
+    TIMEOUT: "10s"
+    ON_FAILURE: RESPOND "Unable to calculate pricing. Please try again."
+
+// =============================================================================
+// FLOW
+// =============================================================================
+
+FLOW:
+  steps:
+    - welcome
+    - get_destination
+    - get_dates
+    - get_guests
+    - search_and_show
+    - select_hotel
+    - select_room
+    - promo_check
+    - guest_details
+    - payment_method
+    - review_booking
+    - confirm
+
+  # Global digressions available in all steps
+  global_digressions:
+    REASONING: false
+    - INTENT: "cancel"
+      RESPOND: "Booking cancelled. Would you like to start over?"
+      GOTO: welcome
+    - INTENT: "help"
+      RESPOND: |
+        I can help you:
+        - Find hotels in any city
+        - Check availability and prices
+        - Make a booking
+
+        Just tell me where and when you'd like to stay!
+        At any step, say "back" to go to previous step or "start over" to restart.
+      RESUME: true
+
+  welcome:
+    REASONING: false
+    RESPOND: |
+      Welcome to Hotel Booking!
+
+      I'll help you find and book the perfect hotel.
+      At any step, you can say:
+      - "back" to go to previous step
+      - "start over" to restart
+      - "change [field]" to modify something
+
+      You can give me all your trip info at once, or one step at a time.
+      Let's begin!
+      FORMATS:
+        MARKDOWN: |
+          # Welcome to Hotel Booking!
+
+          I'll help you find and book the perfect hotel.
+
+          **Navigation:** say *back*, *start over*, or *change [field]* at any step.
+      VOICE:
+        INSTRUCTIONS: "Use an enthusiastic, welcoming tone."
+    THEN: get_destination
+
+  get_destination:
+    REASONING: false
+    GATHER:
+      - destination: required
+        prompt: "Where would you like to stay?"
+    CORRECTIONS: true
+    ON_INPUT:
+      - IF: input == "back"
+        RESPOND: "You're at the first step. Let's continue."
+        THEN: get_destination
+      - IF: input == "start over"
+        THEN: welcome
+      - ELSE:
+        THEN: get_dates
+
+  get_dates:
+    REASONING: false
+    GATHER:
+      - checkin_date: required
+        type: date
+        prompt: "Check-in date?"
+      - checkout_date: required
+        type: date
+        prompt: "Check-out date?"
+    CORRECTIONS: true
+    SUB_INTENTS:
+      - INTENT: "change destination"
+        CLEAR: [destination]
+        RESPOND: "Sure, what's the new destination?"
+        GOTO: get_destination
+    ON_INPUT:
+      - IF: input == "back"
+        THEN: get_destination
+      - IF: input contains "change destination"
+        CLEAR: [destination]
+        THEN: get_destination
+      - ELSE:
+        THEN: get_guests
+
+  get_guests:
+    REASONING: false
+    GATHER:
+      - num_guests: required
+        type: number
+        prompt: "How many guests?"
+      - num_rooms: required
+        type: number
+        prompt: "How many rooms?"
+    CHECK: num_guests <= 10 AND destination != ""
+    ON_FAIL: get_destination
+    DIGRESSIONS:
+      - INTENT: "weather"
+        CALL: get_weather(destination)
+        RESPOND: "Weather in {{destination}}: {{forecast}}, {{temp}}F"
+        RESUME: true
+    ON_INPUT:
+      - IF: input == "back"
+        THEN: get_dates
+      - IF: input contains "change date"
+        CLEAR: [checkin_date, checkout_date]
+        THEN: get_dates
+      - IF: input contains "change destination"
+        CLEAR: [destination]
+        THEN: get_destination
+      - ELSE:
+        THEN: search_and_show
+
+  search_and_show:
+    REASONING: false
+    CALL: search_hotels(destination, checkin_date, checkout_date, num_guests)
+    ON_SUCCESS:
+      RESPOND: |
+        Found {{hotels.length}} hotels in {{destination}}:
+
+        {{#each hotels}}
+        {{add @index 1}}. {{name}}
+           Rating: {{rating}}/5 | ${{price}}/night | {{location}}
+        {{/each}}
+
+        Enter hotel number to select, or:
+        - "filter by [price/rating/location]" to narrow results
+        - "back" to change search criteria
+        FORMATS:
+          MARKDOWN: |
+            ## Available Hotels in {{destination}}
+
+            {{#each hotels}}
+            {{add @index 1}}. **{{name}}** - {{rating}}/5 | ${{price}}/night | {{location}}
+            {{/each}}
+
+            Enter hotel number to select.
+      THEN: select_hotel
+    ON_FAIL:
+      RESPOND: "No hotels found. Would you like to try different dates or destination?"
+      THEN: get_destination
+
+  select_hotel:
+    REASONING: false
+    GATHER:
+      - selected_hotel: required
+        prompt: "Enter hotel number (1-{{hotels.length}}):"
+    CORRECTIONS: true
+    DIGRESSIONS:
+      - INTENT: "change search"
+        RESPOND: "Let's update your search criteria."
+        GOTO: get_destination
+      - INTENT: "more details"
+        RESPOND: "Hotel details coming soon..."
+        RESUME: true
+    SUB_INTENTS:
+      - INTENT: "filter by price"
+        RESPOND: "Filtering by price..."
+      - INTENT: "sort by rating"
+        RESPOND: "Sorting by rating..."
+    ON_INPUT:
+      - IF: input == "back"
+        THEN: get_guests
+      - IF: input contains "filter"
+        THEN: search_and_show
+      - IF: input is_number AND input >= 1 AND input <= hotels.length
+        SET: selected_hotel = hotels[input - 1]
+        SET: need_price_quote = true
+        CALL: check_availability(hotels[input-1].id, {checkin: checkin_date, checkout: checkout_date})
+        THEN: select_room
+      - ELSE:
+        RESPOND: "Please enter a valid hotel number (1-{{hotels.length}})"
+        THEN: select_hotel
+
+  select_room:
+    REASONING: false
+    GATHER:
+      - room_type: required
+    ON_INPUT:
+      - IF: input == "back"
+        THEN: select_hotel
+      - IF: input contains "different hotel"
+        THEN: select_hotel
+      - ELSE:
+        THEN: promo_check
+
+  promo_check:
+    REASONING: false
+    PROMPT: |
+      Room selected: {{room_type}} at {{selected_hotel.name}}
+
+      Do you have a promo code?
+      - Enter code to apply
+      - "skip" to continue without code
+      - "back" to change room
+    ON_INPUT:
+      - IF: input == "back"
+        THEN: select_room
+      - IF: input == "skip" OR input == "no"
+        SET: discount = 0
+        THEN: guest_details
+      - ELSE:
+        CALL: apply_promo_code(input)
+        ON_SUCCESS:
+          SET: discount = call_result.discount
+          RESPOND: "Promo code applied! {{discount}}% discount."
+          THEN: guest_details
+        ON_FAIL:
+          RESPOND: "Invalid promo code. Try again or say 'skip'."
+          THEN: promo_check
+
+  guest_details:
+    REASONING: false
+    GATHER:
+      - guest_name: required
+        prompt: "Primary guest name (as on ID):"
+      - guest_email: required
+        type: email
+        prompt: "Email address for confirmation:"
+      - guest_phone: required
+        type: phone
+        prompt: "Phone number:"
+      STRATEGY: llm
+    CORRECTIONS: true
+    COMPLETE_WHEN: guest_name AND guest_email
+    ON_INPUT:
+      - IF: input == "back"
+        THEN: promo_check
+      - IF: input contains "change room"
+        THEN: select_room
+      - IF: input contains "change hotel"
+        THEN: select_hotel
+      - ELSE:
+        THEN: payment_method
+
+  payment_method:
+    REASONING: false
+    GATHER:
+      - payment_type: required
+    ON_INPUT:
+      - IF: input == "back"
+        THEN: guest_details
+      - IF: input == "1" OR input contains "credit"
+        SET: payment_type = "credit_card"
+        GATHER:
+          - card_number: required
+          - expiry: required
+          - cvv: required
+        THEN: review_booking
+      - IF: input == "2" OR input contains "hotel"
+        SET: payment_type = "pay_at_hotel"
+        THEN: review_booking
+      - IF: input == "3" OR input contains "paypal"
+        SET: payment_type = "paypal"
+        THEN: review_booking
+      - ELSE:
+        RESPOND: "Please select 1 (Credit Card), 2 (Pay at Hotel), or 3 (PayPal)"
+        THEN: payment_method
+
+  review_booking:
+    REASONING: false
+    PRESENT: |
+      BOOKING SUMMARY
+      ===============================
+
+      Hotel: {{selected_hotel.name}}
+      Location: {{destination}}
+      Dates: {{checkin_date}} to {{checkout_date}}
+      Room: {{room_type}}
+      Guests: {{num_guests}}
+
+      PRICING
+      -------------------------------
+      Room Rate: ${{room_price}}/night x {{nights}} nights
+      {{#if discount}}
+      Discount: -{{discount}}%
+      {{/if}}
+      Total: ${{total_price}}
+
+      Payment: {{payment_type}}
+
+      ===============================
+
+      Type "confirm" to complete booking
+      Or: "back", "change [field]", "cancel"
+      FORMATS:
+        MARKDOWN: |
+          ## Booking Summary
+
+          | Detail | Value |
+          |--------|-------|
+          | **Hotel** | {{selected_hotel.name}} |
+          | **Location** | {{destination}} |
+          | **Dates** | {{checkin_date}} to {{checkout_date}} |
+          | **Room** | {{room_type}} |
+          | **Guests** | {{num_guests}} |
+          | **Total** | ${{total_price}} |
+          | **Payment** | {{payment_type}} |
+
+          Type **confirm** to complete booking.
+    DIGRESSIONS:
+      - INTENT: "change hotel"
+        GOTO: select_hotel
+      - INTENT: "change dates"
+        CLEAR: [checkin_date, checkout_date]
+        GOTO: get_dates
+      - INTENT: "change guest"
+        GOTO: guest_details
+    THEN: confirm
+
+  confirm:
+    REASONING: false
+    GATHER:
+      - confirmation: required
+        prompt: "Type 'confirm' to complete booking or 'cancel' to start over."
+    SUB_INTENTS:
+      - INTENT: "confirm yes"
+        SET: confirmation = "confirmed"
+    ON_INPUT:
+      - IF: input == "confirm" OR input == "yes"
+        CALL: create_booking(selected_hotel.id, room_type, guest_info, payment)
+        ON_SUCCESS:
+          SET: booking_confirmed = true
+          SET: confirmation_number = call_result.booking_id
+          RESPOND: |
+            BOOKING CONFIRMED!
+
+            Confirmation #: {{booking_id}}
+
+            A confirmation email has been sent to {{guest_email}}.
+
+            Thank you for booking with us!
+            FORMATS:
+              MARKDOWN: |
+                ## Booking Confirmed!
+
+                | Detail | Value |
+                |--------|-------|
+                | **Confirmation** | `{{booking_id}}` |
+                | **Hotel** | {{selected_hotel.name}} |
+                | **Guest** | {{guest_name}} |
+
+                A confirmation email has been sent to {{guest_email}}.
+              VOICE:
+                INSTRUCTIONS: "Use an excited, congratulatory tone. Read the confirmation number slowly and clearly."
+          THEN: COMPLETE
+        ON_FAIL:
+          RESPOND: "Booking failed. Please try again."
+          THEN: review_booking
+      - IF: input == "back"
+        THEN: payment_method
+      - IF: input == "cancel"
+        RESPOND: "Booking cancelled. Would you like to start a new search?"
+        THEN: welcome
+      - IF: input contains "change destination"
+        CLEAR: [destination]
+        THEN: get_destination
+      - IF: input contains "change date"
+        CLEAR: [checkin_date, checkout_date]
+        THEN: get_dates
+      - IF: input contains "change hotel"
+        THEN: select_hotel
+      - IF: input contains "change room"
+        THEN: select_room
+      - IF: input contains "change guest"
+        THEN: guest_details
+      - IF: input contains "change payment"
+        THEN: payment_method
+      - ELSE:
+        RESPOND: "Please type 'confirm' to complete or 'back'/'cancel' to make changes."
+        THEN: confirm
+
+// =============================================================================
+// COMPLETE - With STORE for persistence
+// =============================================================================
+
+COMPLETE:
+  - WHEN: booking_confirmed == true
+    RESPOND: "Your booking is complete!"
+      FORMATS:
+        MARKDOWN: "**Your booking is complete!** Have a wonderful trip!"
+      VOICE:
+        INSTRUCTIONS: "Sound warm and celebratory."
+    STORE: completed_bookings

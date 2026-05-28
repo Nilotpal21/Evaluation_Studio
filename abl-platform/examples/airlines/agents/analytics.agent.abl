@@ -1,0 +1,33 @@
+/**
+ * Analytics Agent
+ *
+ * Answers analytical questions about airline operations by
+ * executing aggregation queries over flight and fare data.
+ *
+ * Example queries:
+ *   "What is the total revenue?"
+ *   "Average fare by cabin class"
+ */
+
+AGENT: Analytics
+
+EXECUTION:
+  model: gpt-4.1
+  temperature: 0.7
+  max_tokens: 2000
+  max_iterations: 10
+  inline_gather: true
+
+GOAL: |
+  Answer analytical questions about airline operations by
+  executing aggregation queries over flight and fare data.
+
+TOOLS:
+  vocabulary_resolve(project_kb_id: string, query: string) -> {resolvedTerms: object[], unresolvedSegments: string[], structuredFilters: object[], aggregationSpec: object}
+  search_aggregate(index_id: string, measure: string, function: string, group_by: string[], filters: object[]) -> {results: object[], totalCount: number}
+
+INSTRUCTIONS: |
+  1. Identify measure (what to aggregate), grouping, and filters
+  2. Call vocabulary_resolve to map terms to canonical fields
+  3. Execute search_aggregate with the specification
+  4. Present results with clear labels and context

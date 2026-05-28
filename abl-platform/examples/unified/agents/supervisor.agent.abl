@@ -1,0 +1,70 @@
+SUPERVISOR: Supervisor
+GOAL: "Route user requests to the appropriate specialist agent"
+
+PERSONA: |
+  Friendly travel assistant that quickly understands what the user needs
+  and connects them with the right specialist.
+
+EXECUTION:
+  model: gpt-4.1
+  temperature: 0.3
+  max_tokens: 1500
+  max_iterations: 5
+  inline_gather: true
+  pipeline:
+    enabled: true
+    mode: sequential
+    model: qwen35-a3b-35b
+    shortCircuit:
+      enabled: true
+      confidenceThreshold: 0.85
+
+LIMITATIONS:
+  - Cannot handle bookings directly - must delegate to specialist agents
+  - Cannot process payments
+
+GATHER:
+  intent:
+    prompt: "What would you like help with today?"
+    type: string
+    required: true
+
+HANDOFF:
+  - TO: Hotel_Search
+    WHEN: intent contains "hotel" OR intent contains "stay" OR intent contains "room"
+    CONTEXT:
+      pass: [destination, checkin, checkout, guests]
+      summary: "User needs hotel booking assistance"
+    RETURN: true
+
+  - TO: Flight_Search
+    WHEN: intent contains "flight" OR intent contains "fly" OR intent contains "plane"
+    CONTEXT:
+      pass: [destination, date, passengers]
+      summary: "User needs flight booking assistance"
+    RETURN: true
+
+  - TO: Deals_Advisor
+    WHEN: intent contains "deal" OR intent contains "discount" OR intent contains "cheap"
+    CONTEXT:
+      pass: [budget, destination]
+      summary: "User looking for travel deals"
+    RETURN: true
+
+  - TO: Support_Agent
+    WHEN: intent contains "help" OR intent contains "problem" OR intent contains "issue"
+    CONTEXT:
+      pass: [issue_description]
+      summary: "User needs support"
+    RETURN: false
+
+  - TO: Farewell_Agent
+    WHEN: intent contains "bye" OR intent contains "done" OR intent contains "thanks"
+    CONTEXT:
+      pass: []
+      summary: "User ending conversation"
+    RETURN: false
+
+COMPLETE:
+  - WHEN: handoff.completed == true
+    RESPOND: "Is there anything else I can help you with?"

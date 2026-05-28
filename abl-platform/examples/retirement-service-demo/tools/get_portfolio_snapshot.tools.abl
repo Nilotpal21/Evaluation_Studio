@@ -1,0 +1,70 @@
+get_portfolio_snapshot(account_id: string) -> {accountId: string, accountName: string, accountType: string, balanceDisplay: string, topPositionsText: string, allocationNote: string, nextStep: string}
+  description: "Return the demo position snapshot for the selected account"
+  type: sandbox
+  confirm: never
+  runtime: "javascript"
+  timeout: 5000
+  memory_mb: 128
+  params:
+    account_id:
+      description: "Account id for the position lookup"
+  code: |
+    function formatCurrency(value) {
+      return new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: 'USD',
+        maximumFractionDigits: 0
+      }).format(Number(value || 0));
+    }
+
+    const snapshots = {
+      'ira-roth-001': {
+        accountId: 'ira-roth-001',
+        accountName: 'Roth IRA',
+        accountType: 'roth_ira',
+        balance: 128450,
+        topPositionsText: 'VTI 45%, VXUS 25%, BND 20%',
+        allocationNote: 'This demo IRA pairs broad-market equity exposure with core bond ballast, which makes it a clean fit for long-term retirement accumulation.',
+        nextStep: 'You could review 2026 contribution room or schedule a contribution into this IRA.'
+      },
+      'ira-trad-001': {
+        accountId: 'ira-trad-001',
+        accountName: 'Traditional IRA',
+        accountType: 'traditional_ira',
+        balance: 214380,
+        topPositionsText: 'VFIAX 38%, VTV 24%, BNDX 18%',
+        allocationNote: 'This demo traditional IRA leans toward diversified U.S. equity with some international bond exposure for stability.',
+        nextStep: 'You could compare contribution options or ask about rollover consolidation into this account.'
+      },
+      '401k-001': {
+        accountId: '401k-001',
+        accountName: 'Former Employer 401(k)',
+        accountType: '401k',
+        balance: 182760,
+        topPositionsText: 'Target Retirement 2035 54%, U.S. Equity Index 26%, Stable Value 12%',
+        allocationNote: 'This former-employer plan already looks diversified, but it also creates a natural rollover conversation if the user wants to consolidate.',
+        nextStep: 'A rollover specialist can package the next step for moving this plan into an IRA.'
+      },
+      'brokerage-001': {
+        accountId: 'brokerage-001',
+        accountName: 'Joint Brokerage',
+        accountType: 'brokerage',
+        balance: 96420,
+        topPositionsText: 'VOO 42%, VTEB 18%, cash reserve 16%',
+        allocationNote: 'This taxable account keeps a bigger liquidity sleeve, which is useful for near-term flexibility but distinct from retirement contribution planning.',
+        nextStep: 'If the user wants retirement-specific actions, move them back to the IRA workflow for contributions or deadline guidance.'
+      }
+    };
+
+    const requestedId = String(typeof $account_id !== 'undefined' ? $account_id : 'ira-roth-001') || 'ira-roth-001';
+    const snapshot = snapshots[requestedId] || snapshots['ira-roth-001'];
+
+    return JSON.stringify({
+      accountId: snapshot.accountId,
+      accountName: snapshot.accountName,
+      accountType: snapshot.accountType,
+      balanceDisplay: formatCurrency(snapshot.balance),
+      topPositionsText: snapshot.topPositionsText,
+      allocationNote: snapshot.allocationNote,
+      nextStep: snapshot.nextStep
+    });

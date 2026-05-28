@@ -1,0 +1,225 @@
+{
+  "name": "@abl/compiler",
+  "version": "1.0.0",
+  "description": "Agent ABL compiler — IR generation, construct executors, and tool integration",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./platform": {
+      "types": "./dist/platform/index.d.ts",
+      "import": "./dist/platform/index.js"
+    },
+    "./platform/*": {
+      "types": "./dist/platform/*.d.ts",
+      "import": "./dist/platform/*.js"
+    },
+    "./platform/*.js": {
+      "types": "./dist/platform/*.d.ts",
+      "import": "./dist/platform/*.js"
+    },
+    "./platform/constructs": {
+      "types": "./dist/platform/constructs/index.d.ts",
+      "import": "./dist/platform/constructs/index.js"
+    },
+    "./platform/constructs/types": {
+      "types": "./dist/platform/constructs/types.d.ts",
+      "import": "./dist/platform/constructs/types.js"
+    },
+    "./platform/contracts": {
+      "types": "./dist/platform/contracts/index.d.ts",
+      "import": "./dist/platform/contracts/index.js"
+    },
+    "./platform/contracts/knowledge/catalog.generated.js": {
+      "types": "./dist/platform/contracts/knowledge/catalog.generated.d.ts",
+      "import": "./dist/platform/contracts/knowledge/catalog.generated.js"
+    },
+    "./platform/contracts/knowledge/types.js": {
+      "types": "./dist/platform/contracts/knowledge/types.d.ts",
+      "import": "./dist/platform/contracts/knowledge/types.js"
+    },
+    "./platform/core/types": {
+      "types": "./dist/platform/core/types.d.ts",
+      "import": "./dist/platform/core/types.js"
+    },
+    "./platform/stores": {
+      "types": "./dist/platform/stores/index.d.ts",
+      "import": "./dist/platform/stores/index.js"
+    },
+    "./platform/stores/conversation-store.js": {
+      "types": "./dist/platform/stores/conversation-store.d.ts",
+      "import": "./dist/platform/stores/conversation-store.js"
+    },
+    "./platform/stores/message-store.js": {
+      "types": "./dist/platform/stores/message-store.d.ts",
+      "import": "./dist/platform/stores/message-store.js"
+    },
+    "./platform/stores/metrics-store.js": {
+      "types": "./dist/platform/stores/metrics-store.d.ts",
+      "import": "./dist/platform/stores/metrics-store.js"
+    },
+    "./platform/stores/agent-registry.js": {
+      "types": "./dist/platform/stores/agent-registry.d.ts",
+      "import": "./dist/platform/stores/agent-registry.js"
+    },
+    "./platform/stores/audit-pipeline.js": {
+      "types": "./dist/platform/stores/audit-pipeline.d.ts",
+      "import": "./dist/platform/stores/audit-pipeline.js"
+    },
+    "./platform/stores/audit-store.js": {
+      "types": "./dist/platform/stores/audit-store.d.ts",
+      "import": "./dist/platform/stores/audit-store.js"
+    },
+    "./platform/stores/contact-store.js": {
+      "types": "./dist/platform/stores/contact-store.d.ts",
+      "import": "./dist/platform/stores/contact-store.js"
+    },
+    "./platform/stores/workflow-definition-store.js": {
+      "types": "./dist/platform/stores/workflow-definition-store.d.ts",
+      "import": "./dist/platform/stores/workflow-definition-store.js"
+    },
+    "./platform/stores/fact-store.js": {
+      "types": "./dist/platform/stores/fact-store.d.ts",
+      "import": "./dist/platform/stores/fact-store.js"
+    },
+    "./platform/stores/trace-store.js": {
+      "types": "./dist/platform/stores/trace-store.d.ts",
+      "import": "./dist/platform/stores/trace-store.js"
+    },
+    "./platform/constructs/evaluator.js": {
+      "types": "./dist/platform/constructs/evaluator.d.ts",
+      "import": "./dist/platform/constructs/evaluator.js"
+    },
+    "./platform/ir": {
+      "types": "./dist/platform/ir/index.d.ts",
+      "import": "./dist/platform/ir/index.js"
+    },
+    "./platform/constructs/utils.js": {
+      "types": "./dist/platform/constructs/utils.d.ts",
+      "import": "./dist/platform/constructs/utils.js"
+    },
+    "./platform/constructs/model-selector.js": {
+      "types": "./dist/platform/constructs/model-selector.d.ts",
+      "import": "./dist/platform/constructs/model-selector.js"
+    },
+    "./platform/constructs/semantic-hints.js": {
+      "types": "./dist/platform/constructs/semantic-hints.d.ts",
+      "import": "./dist/platform/constructs/semantic-hints.js"
+    },
+    "./platform/ir/compiler.js": {
+      "types": "./dist/platform/ir/compiler.d.ts",
+      "import": "./dist/platform/ir/compiler.js"
+    },
+    "./platform/llm": {
+      "types": "./dist/platform/llm/index.d.ts",
+      "import": "./dist/platform/llm/index.js"
+    },
+    "./platform/llm/types": {
+      "types": "./dist/platform/llm/types.d.ts",
+      "import": "./dist/platform/llm/types.js"
+    },
+    "./platform/llm/providers/index.js": {
+      "types": "./dist/platform/llm/providers/index.d.ts",
+      "import": "./dist/platform/llm/providers/index.js"
+    },
+    "./platform/llm/provider.js": {
+      "types": "./dist/platform/llm/provider.d.ts",
+      "import": "./dist/platform/llm/provider.js"
+    },
+    "./platform/llm/types.js": {
+      "types": "./dist/platform/llm/types.d.ts",
+      "import": "./dist/platform/llm/types.js"
+    },
+    "./platform/llm/realtime/index.js": {
+      "types": "./dist/platform/llm/realtime/index.d.ts",
+      "import": "./dist/platform/llm/realtime/index.js"
+    },
+    "./platform/llm/realtime/types.js": {
+      "types": "./dist/platform/llm/realtime/types.d.ts",
+      "import": "./dist/platform/llm/realtime/types.js"
+    },
+    "./platform/llm/model-registry.js": {
+      "types": "./dist/platform/llm/model-registry.d.ts",
+      "import": "./dist/platform/llm/model-registry.js"
+    },
+    "./platform/llm/model-capabilities.js": {
+      "types": "./dist/platform/llm/model-capabilities.d.ts",
+      "import": "./dist/platform/llm/model-capabilities.js"
+    },
+    "./platform/observability": {
+      "types": "./dist/platform/observability/index.d.ts",
+      "import": "./dist/platform/observability/index.js"
+    },
+    "./platform/security": {
+      "types": "./dist/platform/security/index.d.ts",
+      "import": "./dist/platform/security/index.js"
+    },
+    "./platform/security/pii-vault.js": {
+      "types": "./dist/platform/security/pii-vault.d.ts",
+      "import": "./dist/platform/security/pii-vault.js"
+    },
+    "./platform/security/pii-audit.js": {
+      "types": "./dist/platform/security/pii-audit.d.ts",
+      "import": "./dist/platform/security/pii-audit.js"
+    },
+    "./platform/guardrails/builtin-templates": {
+      "types": "./dist/platform/guardrails/builtin-templates.d.ts",
+      "import": "./dist/platform/guardrails/builtin-templates.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build:knowledge": "tsx scripts/build-knowledge-catalog.ts",
+    "build": "tsc -b",
+    "dev": "tsc --watch",
+    "clean:shadow-artifacts": "node ./scripts/prune-source-artifacts.mjs",
+    "test": "pnpm run clean:shadow-artifacts && vitest run",
+    "test:knowledge-drift": "vitest run src/__tests__/knowledge-drift.test.ts",
+    "test:fast": "pnpm run clean:shadow-artifacts && vitest run",
+    "test:repro": "pnpm run clean:shadow-artifacts && vitest run --config vitest.repro.config.ts --passWithNoTests",
+    "test:watch": "pnpm run clean:shadow-artifacts && vitest",
+    "test:coverage": "vitest run --coverage",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist tsconfig.tsbuildinfo"
+  },
+  "dependencies": {
+    "@abl/analyzer": "workspace:*",
+    "@abl/core": "workspace:*",
+    "@agent-platform/auth-enterprise": "workspace:*",
+    "@agent-platform/config": "workspace:*",
+    "@agent-platform/i18n": "workspace:^",
+    "@agent-platform/shared": "workspace:*",
+    "@agent-platform/shared-kernel": "workspace:*",
+    "@agent-platform/shared-observability": "workspace:*",
+    "@anthropic-ai/sdk": "^0.72.1",
+    "@aws-sdk/client-lambda": "^3.998.0",
+    "@marcbachmann/cel-js": "^7.5.1",
+    "aws4": "^1.13.2",
+    "chrono-node": "^2.9.0",
+    "fast-xml-parser": ">=5.5.6",
+    "libphonenumber-js": "^1.12.38",
+    "pino": "^9.6.0",
+    "undici": "^7.24.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "@vitest/coverage-v8": "^4.1.4",
+    "dotenv": "^17.3.1",
+    "typescript": "^5.3.0",
+    "vitest": "^4.1.4"
+  },
+  "overrides": {
+    "brace-expansion": "5.0.5",
+    "fast-xml-builder": "1.1.7",
+    "esbuild": "0.25.0",
+    "postcss": "8.5.10",
+    "rollup": "4.59.0",
+    "vite": "8.0.5"
+  }
+}

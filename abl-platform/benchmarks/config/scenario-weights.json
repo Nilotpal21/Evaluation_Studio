@@ -1,0 +1,29 @@
+{
+  "runtime": {
+    "single_turn": 0.5,
+    "multi_turn": 0.25,
+    "tool_calling": 0.15,
+    "concurrent": 0.1
+  },
+  "search-ai": {
+    "kb_operations": 0.4,
+    "document_ops": 0.4,
+    "crawl_submit": 0.2
+  },
+  "bge-m3": {
+    "single_embed": 0.3,
+    "batch_embed": 0.4,
+    "concurrent_embed": 0.3
+  },
+  "search-ai-runtime": {
+    "doc_listing": 0.2,
+    "chunk_reads": 0.3,
+    "kb_reads": 0.2,
+    "concurrent": 0.3
+  },
+  "studio": {
+    "page_load": 0.4,
+    "api_crud": 0.35,
+    "concurrent_developers": 0.25
+  }
+}

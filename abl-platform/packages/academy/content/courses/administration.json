@@ -1,0 +1,14 @@
+{
+  "id": "administration",
+  "title": "Administration & Team Management",
+  "description": "Manage workspaces, teams, security settings, AI models, billing, and channel deployments.",
+  "level": "intermediate",
+  "estimatedMinutes": 66,
+  "prerequisites": ["studio-mastery"],
+  "modules": ["workspace-team", "platform-config", "operations-deployment"],
+  "certification": {
+    "required": true,
+    "passCriteria": "all-modules-passed",
+    "badge": "course-admin"
+  }
+}

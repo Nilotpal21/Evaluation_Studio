@@ -1,0 +1,60 @@
+{
+  "name": "@agent-platform/shared-kernel",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Zero-dependency shared kernel: types, errors, constants, and pure utilities",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./types": {
+      "import": "./dist/types/index.js",
+      "types": "./dist/types/index.d.ts"
+    },
+    "./errors": {
+      "import": "./dist/errors.js",
+      "types": "./dist/errors.d.ts"
+    },
+    "./model-pricing": {
+      "import": "./dist/model-pricing.js",
+      "types": "./dist/model-pricing.d.ts"
+    },
+    "./model-routing": {
+      "import": "./dist/model-routing.js",
+      "types": "./dist/model-routing.d.ts"
+    },
+    "./llm-provider-identity": {
+      "import": "./dist/llm-provider-identity.js",
+      "types": "./dist/llm-provider-identity.d.ts"
+    },
+    "./propagation-fixtures": {
+      "import": "./dist/propagation-fixtures.js",
+      "types": "./dist/propagation-fixtures.d.ts"
+    },
+    "./security": {
+      "import": "./dist/security/index.js",
+      "types": "./dist/security/index.d.ts"
+    },
+    "./security/safe-fetch": {
+      "import": "./dist/security/safe-fetch.js",
+      "types": "./dist/security/safe-fetch.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "typecheck": "tsc --noEmit",
+    "clean:shadow-artifacts": "node ./scripts/prune-source-artifacts.mjs",
+    "test": "pnpm run clean:shadow-artifacts && vitest run --passWithNoTests",
+    "test:fast": "pnpm run clean:shadow-artifacts && vitest run --passWithNoTests",
+    "test:watch": "pnpm run clean:shadow-artifacts && vitest"
+  },
+  "devDependencies": {
+    "@types/node": "^25.4.0",
+    "typescript": "^5.3.0",
+    "vitest": "^4.1.4"
+  }
+}

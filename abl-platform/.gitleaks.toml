@@ -1,0 +1,10 @@
+title = "ABL Platform Gitleaks Config"
+
+[allowlist]
+  description = "Known false positives"
+  # Development-only secrets in example files
+  paths = [
+    '''\.env\.example$''',
+    '''seed.*\.ts$''',
+    '''docker-compose\.yml$''',
+  ]

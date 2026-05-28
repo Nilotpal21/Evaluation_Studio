@@ -1,0 +1,52 @@
+{
+  "organizationName": "Walmart",
+  "industry": "Retail",
+  "keyTerms": [
+    "retail store",
+    "grocery",
+    "online shopping",
+    "pickup and delivery",
+    "supply chain",
+    "private label",
+    "everyday low price",
+    "inventory management",
+    "customer service",
+    "pharmacy",
+    "electronics",
+    "home goods",
+    "marketplace"
+  ],
+  "acronyms": {
+    "EDLP": "Everyday Low Price",
+    "SKU": "Stock Keeping Unit",
+    "POS": "Point of Sale",
+    "OGP": "Online Grocery Pickup",
+    "DC": "Distribution Center",
+    "FC": "Fulfillment Center",
+    "WFS": "Walmart Fulfillment Services",
+    "ROI": "Return on Investment"
+  },
+  "departmentBoundaries": [
+    {
+      "product1": "in-store-shopping",
+      "product2": "online-shopping",
+      "reasoning": "In-store is physical retail while online is e-commerce; customers use both channels (omnichannel) and expect consistent pricing and inventory"
+    },
+    {
+      "product1": "walmart-products",
+      "product2": "marketplace-products",
+      "reasoning": "Walmart products are sold/fulfilled by Walmart while marketplace products are third-party sellers; return policies, shipping, and support differ"
+    },
+    {
+      "product1": "grocery",
+      "product2": "general-merchandise",
+      "reasoning": "Grocery is consumables with high turnover while general merchandise is durable goods; different shopping patterns, margins, and supply chains"
+    }
+  ],
+  "productSpecificNames": {
+    "store-formats": ["Supercenter", "Neighborhood Market", "Discount Store"],
+    "services": ["Walmart+", "Pickup", "Delivery", "Walmart Pay", "Auto Care Center"],
+    "brands": ["Great Value", "Equate", "Mainstays", "Time and Tru", "George"],
+    "online": ["Walmart.com", "Walmart Marketplace", "Walmart Grocery App"]
+  }
+}

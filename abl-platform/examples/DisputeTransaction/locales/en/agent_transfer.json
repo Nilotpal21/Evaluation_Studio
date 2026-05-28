@@ -1,0 +1,12 @@
+{
+  "agent": "Agent_Transfer",
+  "locale": "en",
+  "strings": {
+    "start": "I'll connect you with one of our representatives.",
+    "collect_context": "Let me gather some information to route you to the right specialist.",
+    "agents_available": "Great! Agents are available.",
+    "agents_busy": "Our agents are currently busy. I'll create a callback request and someone will reach out to you within 2 hours.",
+    "transfer_complete": "Transfer in progress. Please hold for the next available agent.",
+    "thank_you": "Thank you for your patience."
+  }
+}

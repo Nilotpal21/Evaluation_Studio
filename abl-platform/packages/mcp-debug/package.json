@@ -1,0 +1,60 @@
+{
+  "name": "@koredotcom/agents-mcp-tools",
+  "version": "1.0.0",
+  "description": "Arch MCP tools for Kore.ai Agent Platform (build, evaluate, optimize, debug, analyze)",
+  "type": "module",
+  "license": "UNLICENSED",
+  "main": "./dist/src/index.js",
+  "types": "./dist/src/index.d.ts",
+  "bin": {
+    "agents-mcp-tools": "./dist/bin/mcp-debug.js"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/src/index.d.ts",
+      "import": "./dist/src/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "!dist/src/__tests__"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Koredotcom/agents-mcp-tools.git"
+  },
+  "keywords": [
+    "mcp",
+    "claude-code",
+    "agent-platform",
+    "debugging",
+    "model-context-protocol"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "start": "node dist/bin/mcp-debug.js",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist tsconfig.tsbuildinfo",
+    "test": "vitest run",
+    "test:fast": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "prepublishOnly": "pnpm run clean && pnpm run build && pnpm run test"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "ws": "^8.16.0",
+    "zod": "^3.22.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "@types/ws": "^8.5.10",
+    "@vitest/coverage-v8": "^4.1.4",
+    "typescript": "^5.3.0",
+    "vitest": "^4.1.4"
+  }
+}

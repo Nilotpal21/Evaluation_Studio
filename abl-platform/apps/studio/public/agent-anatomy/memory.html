@@ -1,0 +1,1706 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MEMORY — Deep Dive</title>
+    <style>
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      :root {
+        --bg: #0c0c0c;
+        --bg2: #141414;
+        --bg3: #1c1c1c;
+        --bg4: #252525;
+        --fg: #e8e8e8;
+        --fg2: #aaa;
+        --fg3: #777;
+        --fg4: #555;
+        --border: #1e1e1e;
+        --border2: #2a2a2a;
+        --mono: 'Berkeley Mono', 'JetBrains Mono', 'SF Mono', 'Fira Code', monospace;
+        --sans: 'Inter', -apple-system, sans-serif;
+      }
+      body {
+        font-family: var(--sans);
+        background: var(--bg);
+        color: var(--fg);
+        line-height: 1.65;
+        -webkit-font-smoothing: antialiased;
+      }
+      a {
+        color: #7090c0;
+        text-decoration: none;
+      }
+      a:hover {
+        text-decoration: underline;
+      }
+      header {
+        padding: 40px 32px 36px;
+        border-bottom: 1px solid var(--border);
+      }
+      header .back {
+        font-size: 0.78rem;
+        color: var(--fg4);
+        margin-bottom: 8px;
+        display: block;
+      }
+      header h1 {
+        font-size: 1.6rem;
+        font-weight: 600;
+        letter-spacing: -0.02em;
+      }
+      header .sub {
+        font-size: 0.92rem;
+        color: var(--fg3);
+        margin-top: 4px;
+      }
+      .quick-stats {
+        display: flex;
+        gap: 24px;
+        margin-top: 16px;
+        flex-wrap: wrap;
+      }
+      .qs {
+        padding: 8px 14px;
+        background: var(--bg2);
+        border: 1px solid var(--border);
+        border-radius: 5px;
+        font-size: 0.78rem;
+      }
+      .qs .n {
+        font-weight: 600;
+        color: var(--fg);
+      }
+      .qs .l {
+        color: var(--fg3);
+        margin-left: 4px;
+      }
+      .container {
+        max-width: 820px;
+        margin: 0 auto;
+        padding: 32px 24px 80px;
+      }
+      .section {
+        margin-bottom: 44px;
+      }
+      .section-title {
+        font-size: 0.74rem;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: var(--fg4);
+        margin-bottom: 14px;
+        padding-bottom: 8px;
+        border-bottom: 1px solid var(--border);
+      }
+      .card {
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        margin-bottom: 8px;
+        background: var(--bg2);
+        overflow: hidden;
+      }
+      .card-head {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 16px;
+        cursor: pointer;
+        user-select: none;
+      }
+      .card-head .label {
+        font-family: var(--mono);
+        font-size: 0.88rem;
+        font-weight: 600;
+        color: var(--fg);
+      }
+      .card-head .meta {
+        font-size: 0.8rem;
+        color: var(--fg3);
+        margin-left: auto;
+      }
+      .card-head .arrow {
+        color: var(--fg4);
+        font-size: 0.85rem;
+        transition: transform 0.2s;
+        flex-shrink: 0;
+        margin-left: 8px;
+      }
+      .card-body {
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.35s ease;
+      }
+      .card.open .card-body {
+        max-height: 6000px;
+      }
+      .card.open .arrow {
+        transform: rotate(90deg);
+      }
+      .card-inner {
+        padding: 2px 16px 16px;
+        border-top: 1px solid var(--border);
+      }
+      pre.y {
+        background: var(--bg);
+        border: 1px solid var(--border);
+        border-radius: 5px;
+        padding: 14px 16px;
+        font-family: var(--mono);
+        font-size: 0.78rem;
+        line-height: 1.7;
+        overflow-x: auto;
+        color: var(--fg3);
+        margin: 10px 0;
+        white-space: pre;
+      }
+      .k {
+        color: #8a8aff;
+        font-weight: 500;
+      }
+      .s {
+        color: #b8a070;
+      }
+      .t {
+        color: #70b080;
+      }
+      .c {
+        color: #444;
+        font-style: italic;
+      }
+      .n {
+        color: #7090c0;
+      }
+      .v {
+        color: #a080a0;
+      }
+      .tbl {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.78rem;
+        margin: 10px 0;
+      }
+      .tbl th {
+        text-align: left;
+        padding: 6px 10px;
+        border-bottom: 1px solid var(--border2);
+        color: var(--fg4);
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 0.66rem;
+        letter-spacing: 0.06em;
+      }
+      .tbl td {
+        padding: 5px 10px;
+        border-bottom: 1px solid var(--border);
+        color: var(--fg3);
+        vertical-align: top;
+      }
+      .tbl td:first-child {
+        font-family: var(--mono);
+        color: var(--fg2);
+        font-size: 0.76rem;
+      }
+      .tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px;
+        margin: 8px 0;
+      }
+      .tag {
+        font-size: 0.68rem;
+        padding: 3px 8px;
+        border-radius: 3px;
+        font-weight: 500;
+        background: var(--bg3);
+        border: 1px solid var(--border2);
+        color: var(--fg3);
+      }
+      .box {
+        border-radius: 5px;
+        padding: 10px 14px;
+        font-size: 0.78rem;
+        color: var(--fg3);
+        margin: 8px 0;
+        border: 1px solid var(--border);
+        line-height: 1.55;
+      }
+      .box.rt {
+        border-left: 2px solid #506040;
+      }
+      .box.rt::before {
+        content: 'Runtime  ';
+        font-weight: 600;
+        color: #7a9a6a;
+      }
+      .box.vl {
+        border-left: 2px solid #805050;
+      }
+      .box.vl::before {
+        content: 'Validation  ';
+        font-weight: 600;
+        color: #b07070;
+      }
+      .box.ed {
+        border-left: 2px solid #506080;
+      }
+      .box.ed::before {
+        content: 'Editor  ';
+        font-weight: 600;
+        color: #7090b0;
+      }
+      .box.tip {
+        border-left: 2px solid #806040;
+      }
+      .box.tip::before {
+        content: 'Tip  ';
+        font-weight: 600;
+        color: #b09060;
+      }
+      .box.key {
+        border-left: 2px solid #605080;
+      }
+      .box.key::before {
+        content: 'Key Concept  ';
+        font-weight: 600;
+        color: #9080b0;
+      }
+      .sub {
+        font-size: 0.72rem;
+        font-weight: 600;
+        color: var(--fg4);
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        margin: 14px 0 6px;
+      }
+      .compare {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+        margin: 10px 0;
+      }
+      .compare-item {
+        background: var(--bg3);
+        border: 1px solid var(--border2);
+        border-radius: 5px;
+        padding: 12px 14px;
+      }
+      .compare-item h4 {
+        font-size: 0.78rem;
+        font-weight: 600;
+        margin-bottom: 6px;
+        color: var(--fg2);
+      }
+      .compare-item p {
+        font-size: 0.74rem;
+        color: var(--fg3);
+        line-height: 1.5;
+      }
+      .flow-diagram {
+        background: var(--bg3);
+        border: 1px solid var(--border2);
+        border-radius: 6px;
+        padding: 20px;
+        margin: 12px 0;
+        overflow-x: auto;
+      }
+      .flow-row {
+        display: flex;
+        align-items: center;
+        gap: 0;
+        flex-wrap: nowrap;
+        min-width: max-content;
+      }
+      .flow-step {
+        padding: 7px 14px;
+        border-radius: 5px;
+        font-size: 0.72rem;
+        font-weight: 500;
+        white-space: nowrap;
+        border: 1px solid var(--border2);
+        background: var(--bg4);
+        color: var(--fg2);
+      }
+      .flow-arrow {
+        color: var(--fg4);
+        padding: 0 4px;
+        font-size: 0.78rem;
+        flex-shrink: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <nav
+      style="
+        position: sticky;
+        top: 0;
+        z-index: 50;
+        background: var(--bg);
+        border-bottom: 1px solid var(--border);
+        padding: 6px 16px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        overflow-x: auto;
+        flex-wrap: nowrap;
+      "
+    >
+      <a
+        href="index.html"
+        style="
+          font-size: 0.72rem;
+          color: var(--fg3);
+          text-decoration: none;
+          padding: 4px 8px;
+          border-radius: 4px;
+          white-space: nowrap;
+        "
+        >Overview</a
+      >
+      <a
+        href="tools.html"
+        style="
+          font-size: 0.68rem;
+          color: var(--fg3);
+          text-decoration: none;
+          padding: 4px 8px;
+          border-radius: 4px;
+          white-space: nowrap;
+        "
+        >Tools</a
+      >
+      <a
+        href="flow.html"
+        style="
+          font-size: 0.68rem;
+          color: var(--fg3);
+          text-decoration: none;
+          padding: 4px 8px;
+          border-radius: 4px;
+          white-space: nowrap;
+        "
+        >Flow</a
+      >
+      <a
+        href="guardrails.html"
+        style="
+          font-size: 0.68rem;
+          color: var(--fg3);
+          text-decoration: none;
+          padding: 4px 8px;
+          border-radius: 4px;
+          white-space: nowrap;
+        "
+        >Guardrails</a
+      >
+      <a
+        href="gather.html"
+        style="
+          font-size: 0.68rem;
+          color: var(--fg3);
+          text-decoration: none;
+          padding: 4px 8px;
+          border-radius: 4px;
+          white-space: nowrap;
+        "
+        >Gather</a
+      >
+      <a
+        href="templates.html"
+        style="
+          font-size: 0.68rem;
+          color: var(--fg3);
+          text-decoration: none;
+          padding: 4px 8px;
+          border-radius: 4px;
+          white-space: nowrap;
+        "
+        >Templates</a
+      >
+      <a
+        href="memory.html"
+        style="
+          font-size: 0.68rem;
+          font-weight: 600;
+          color: var(--fg);
+          text-decoration: none;
+          padding: 4px 10px;
+          border-radius: 4px;
+          white-space: nowrap;
+          background: var(--bg3);
+          border: 1px solid var(--border2);
+        "
+        >Memory</a
+      >
+      <a
+        href="coordination.html"
+        style="
+          font-size: 0.68rem;
+          color: var(--fg3);
+          text-decoration: none;
+          padding: 4px 8px;
+          border-radius: 4px;
+          white-space: nowrap;
+        "
+        >Coordination</a
+      >
+      <a
+        href="lifecycle.html"
+        style="
+          font-size: 0.68rem;
+          color: var(--fg3);
+          text-decoration: none;
+          padding: 4px 8px;
+          border-radius: 4px;
+          white-space: nowrap;
+        "
+        >Lifecycle</a
+      >
+      <a
+        href="output.html"
+        style="
+          font-size: 0.68rem;
+          color: var(--fg3);
+          text-decoration: none;
+          padding: 4px 8px;
+          border-radius: 4px;
+          white-space: nowrap;
+        "
+        >Output</a
+      >
+      <a
+        href="execution.html"
+        style="
+          font-size: 0.68rem;
+          color: var(--fg3);
+          text-decoration: none;
+          padding: 4px 8px;
+          border-radius: 4px;
+          white-space: nowrap;
+        "
+        >Execution</a
+      >
+      <a
+        href="advanced.html"
+        style="
+          font-size: 0.68rem;
+          color: var(--fg3);
+          text-decoration: none;
+          padding: 4px 8px;
+          border-radius: 4px;
+          white-space: nowrap;
+        "
+        >Advanced</a
+      >
+      <span style="color: var(--border2); margin: 0 2px">|</span>
+      <a
+        href="workflows.html"
+        style="
+          font-size: 0.68rem;
+          color: var(--fg3);
+          text-decoration: none;
+          padding: 4px 8px;
+          border-radius: 4px;
+          white-space: nowrap;
+        "
+        >Workflows</a
+      >
+      <a
+        href="monaco-editor-wireframe.html"
+        style="
+          font-size: 0.68rem;
+          color: var(--fg3);
+          text-decoration: none;
+          padding: 4px 8px;
+          border-radius: 4px;
+          white-space: nowrap;
+        "
+        >Editor</a
+      >
+      <a
+        href="rich-text-fields.html"
+        style="
+          font-size: 0.68rem;
+          color: var(--fg3);
+          text-decoration: none;
+          padding: 4px 8px;
+          border-radius: 4px;
+          white-space: nowrap;
+        "
+        >Rich Text + AI</a
+      >
+    </nav>
+
+    <style id="theme-auto">
+      @media (prefers-color-scheme: light) {
+        :root {
+          --bg: #fafafa !important;
+          --bg2: #f4f4f5 !important;
+          --bg3: #e4e4e7 !important;
+          --bg4: #d4d4d8 !important;
+          --fg: #18181b !important;
+          --fg2: #52525b !important;
+          --fg3: #71717a !important;
+          --fg4: #a1a1aa !important;
+          --border: #e4e4e7 !important;
+          --border2: #d4d4d8 !important;
+        }
+        pre,
+        pre.y,
+        pre.pc,
+        .code-block,
+        pre.preview-code {
+          background: #f4f4f5 !important;
+          border-color: #e4e4e7 !important;
+        }
+        .kw,
+        .k {
+          color: #6366f1 !important;
+        }
+        .str,
+        .s {
+          color: #b45309 !important;
+        }
+        .typ,
+        .t,
+        .type {
+          color: #059669 !important;
+        }
+        .num,
+        .n {
+          color: #2563eb !important;
+        }
+        .vr,
+        .v,
+        .var {
+          color: #9333ea !important;
+        }
+        .cmt,
+        .c,
+        .comment {
+          color: #a1a1aa !important;
+        }
+        nav {
+          background: #fafafa !important;
+          border-bottom-color: #e4e4e7 !important;
+        }
+        nav a {
+          color: #52525b !important;
+        }
+      }
+    </style>
+
+    <nav
+      style="
+        position: sticky;
+        top: 0;
+        z-index: 50;
+        background: #0c0c0c;
+        border-bottom: 1px solid #1e1e1e;
+        padding: 6px 16px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        overflow-x: auto;
+        flex-wrap: nowrap;
+      "
+    >
+      <a
+        href="index.html"
+        style="
+          font-size: 0.72rem;
+          font-weight: 600;
+          color: #aaa;
+          text-decoration: none;
+          padding: 4px 10px;
+          border-radius: 4px;
+          white-space: nowrap;
+        "
+        >Overview</a
+      >
+      <a
+        href="tools.html"
+        style="
+          font-size: 0.68rem;
+          color: #aaa;
+          text-decoration: none;
+          padding: 4px 8px;
+          border-radius: 4px;
+          white-space: nowrap;
+        "
+        onmouseover="this.style.background = '#1c1c1c'"
+        onmouseout="this.style.background = ''"
+        >Tools</a
+      >
+      <a
+        href="flow.html"
+        style="
+          font-size: 0.68rem;
+          color: #aaa;
+          text-decoration: none;
+          padding: 4px 8px;
+          border-radius: 4px;
+          white-space: nowrap;
+        "
+        onmouseover="this.style.background = '#1c1c1c'"
+        onmouseout="this.style.background = ''"
+        >Flow</a
+      >
+      <a
+        href="guardrails.html"
+        style="
+          font-size: 0.68rem;
+          color: #aaa;
+          text-decoration: none;
+          padding: 4px 8px;
+          border-radius: 4px;
+          white-space: nowrap;
+        "
+        onmouseover="this.style.background = '#1c1c1c'"
+        onmouseout="this.style.background = ''"
+        >Guardrails</a
+      >
+      <a
+        href="gather.html"
+        style="
+          font-size: 0.68rem;
+          color: #aaa;
+          text-decoration: none;
+          padding: 4px 8px;
+          border-radius: 4px;
+          white-space: nowrap;
+        "
+        onmouseover="this.style.background = '#1c1c1c'"
+        onmouseout="this.style.background = ''"
+        >Gather</a
+      >
+      <a
+        href="templates.html"
+        style="
+          font-size: 0.68rem;
+          color: #aaa;
+          text-decoration: none;
+          padding: 4px 8px;
+          border-radius: 4px;
+          white-space: nowrap;
+        "
+        onmouseover="this.style.background = '#1c1c1c'"
+        onmouseout="this.style.background = ''"
+        >Templates</a
+      >
+      <a
+        href="memory.html"
+        style="
+          font-size: 0.68rem;
+          color: #e8e8e8;
+          background: #1c1c1c;
+          border: 1px solid #2a2a2a;
+          text-decoration: none;
+          padding: 4px 8px;
+          border-radius: 4px;
+          white-space: nowrap;
+        "
+        onmouseover="this.style.background = '#1c1c1c'"
+        onmouseout="this.style.background = ''"
+        >Memory</a
+      >
+      <a
+        href="coordination.html"
+        style="
+          font-size: 0.68rem;
+          color: #aaa;
+          text-decoration: none;
+          padding: 4px 8px;
+          border-radius: 4px;
+          white-space: nowrap;
+        "
+        onmouseover="this.style.background = '#1c1c1c'"
+        onmouseout="this.style.background = ''"
+        >Coordination</a
+      >
+      <a
+        href="lifecycle.html"
+        style="
+          font-size: 0.68rem;
+          color: #aaa;
+          text-decoration: none;
+          padding: 4px 8px;
+          border-radius: 4px;
+          white-space: nowrap;
+        "
+        onmouseover="this.style.background = '#1c1c1c'"
+        onmouseout="this.style.background = ''"
+        >Lifecycle</a
+      >
+      <a
+        href="output.html"
+        style="
+          font-size: 0.68rem;
+          color: #aaa;
+          text-decoration: none;
+          padding: 4px 8px;
+          border-radius: 4px;
+          white-space: nowrap;
+        "
+        onmouseover="this.style.background = '#1c1c1c'"
+        onmouseout="this.style.background = ''"
+        >Output</a
+      >
+      <a
+        href="execution.html"
+        style="
+          font-size: 0.68rem;
+          color: #aaa;
+          text-decoration: none;
+          padding: 4px 8px;
+          border-radius: 4px;
+          white-space: nowrap;
+        "
+        onmouseover="this.style.background = '#1c1c1c'"
+        onmouseout="this.style.background = ''"
+        >Execution</a
+      >
+      <a
+        href="advanced.html"
+        style="
+          font-size: 0.68rem;
+          color: #aaa;
+          text-decoration: none;
+          padding: 4px 8px;
+          border-radius: 4px;
+          white-space: nowrap;
+        "
+        onmouseover="this.style.background = '#1c1c1c'"
+        onmouseout="this.style.background = ''"
+        >Advanced</a
+      >
+      <span style="color: #2a2a2a; margin: 0 2px">|</span>
+      <a
+        href="workflows.html"
+        style="
+          font-size: 0.68rem;
+          color: #aaa;
+          text-decoration: none;
+          padding: 4px 8px;
+          border-radius: 4px;
+          white-space: nowrap;
+        "
+        onmouseover="this.style.background = '#1c1c1c'"
+        onmouseout="this.style.background = ''"
+        >Workflows</a
+      >
+      <a
+        href="monaco-editor-wireframe.html"
+        style="
+          font-size: 0.68rem;
+          color: #7090c0;
+          text-decoration: none;
+          padding: 4px 8px;
+          border-radius: 4px;
+          white-space: nowrap;
+        "
+        onmouseover="this.style.background = '#1c1c1c'"
+        onmouseout="this.style.background = ''"
+        >Editor</a
+      >
+    </nav>
+
+    <header>
+      <a class="back" href="#">&larr; Back to Agent Anatomy</a>
+      <h1>MEMORY</h1>
+      <div class="sub">
+        Session-scoped variables, cross-session persistence, event-driven recall, and automatic
+        remembering. The agent's short-term and long-term memory system.
+      </div>
+      <div class="quick-stats">
+        <div class="qs"><span class="n">4</span><span class="l">Sub-systems</span></div>
+        <div class="qs">
+          <span class="n">2</span><span class="l">Scopes (session + persistent)</span>
+        </div>
+        <div class="qs"><span class="n">12+</span><span class="l">Built-in Context Vars</span></div>
+        <div class="qs"><span class="n">3</span><span class="l">Recall Action Types</span></div>
+      </div>
+    </header>
+
+    <div class="container">
+      <!-- HOW MEMORY WORKS -->
+      <div class="section">
+        <div class="section-title">How Memory Works</div>
+
+        <div class="box key">
+          MEMORY defines what the agent remembers within a session and across sessions. SESSION
+          holds ephemeral variables for the current conversation. PERSISTENT stores facts in a
+          cross-session FactStore. REMEMBER auto-triggers writes to persistent memory. RECALL loads
+          relevant memory at key moments.
+        </div>
+
+        <div class="flow-diagram">
+          <div style="font-size: 0.66rem; color: var(--fg4); margin-bottom: 12px">
+            Memory Lifecycle — from session start to session end
+          </div>
+          <div class="flow-row">
+            <div class="flow-step">Session Start</div>
+            <div class="flow-arrow">&rarr;</div>
+            <div class="flow-step">
+              Load Persistent<br /><span style="font-size: 0.6rem">FactStore getMany()</span>
+            </div>
+            <div class="flow-arrow">&rarr;</div>
+            <div class="flow-step">
+              Init Session Vars<br /><span style="font-size: 0.6rem">defaults + resets</span>
+            </div>
+            <div class="flow-arrow">&rarr;</div>
+            <div class="flow-step">
+              Extract<br /><span style="font-size: 0.6rem">from conversation</span>
+            </div>
+            <div class="flow-arrow">&rarr;</div>
+            <div class="flow-step">
+              Remember<br /><span style="font-size: 0.6rem">WHEN triggers</span>
+            </div>
+            <div class="flow-arrow">&rarr;</div>
+            <div class="flow-step">
+              Recall<br /><span style="font-size: 0.6rem">ON event hooks</span>
+            </div>
+            <div class="flow-arrow">&rarr;</div>
+            <div class="flow-step">
+              Session End<br /><span style="font-size: 0.6rem">persist + cleanup</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="compare">
+          <div class="compare-item">
+            <h4>Session Memory</h4>
+            <p>
+              Ephemeral variables that live for one conversation. Reset per-session or per-step.
+              Used for tracking state, counters, collected data. Stored in
+              <code>session.data.values</code>.
+            </p>
+          </div>
+          <div class="compare-item">
+            <h4>Persistent Memory</h4>
+            <p>
+              Facts that survive across sessions. Scoped to user or project. Loaded on session
+              start, written on REMEMBER triggers. Stored in <strong>FactStore</strong> keyed by
+              (tenantId, userId, projectId).
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- SESSION -->
+      <div class="section">
+        <div class="section-title">4 Sub-systems</div>
+
+        <div class="card open">
+          <div class="card-head" onclick="toggle(this)">
+            <span class="label">SESSION</span>
+            <span class="meta">Ephemeral per-conversation variables</span>
+            <span class="arrow">&rsaquo;</span>
+          </div>
+          <div class="card-body">
+            <div class="card-inner">
+              <pre class="y"><span class="k">MEMORY:</span>
+  <span class="k">SESSION:</span>
+    - <span class="t">claim_status</span>: <span class="t">string</span> = <span class="s">"pending"</span>
+    - <span class="t">attempts</span>: <span class="t">number</span> = <span class="n">0</span>
+    - <span class="t">selected_policy</span>: <span class="t">object</span>
+      reset: <span class="v">per_step</span>   <span class="c"># reset when flow moves to new step</span></pre>
+
+              <table class="tbl">
+                <tr>
+                  <th>Field</th>
+                  <th>Type</th>
+                  <th>Default</th>
+                  <th>Purpose</th>
+                </tr>
+                <tr>
+                  <td>name</td>
+                  <td>string</td>
+                  <td>&mdash;</td>
+                  <td>Variable identifier, used in templates and conditions</td>
+                </tr>
+                <tr>
+                  <td>type</td>
+                  <td>enum</td>
+                  <td>string</td>
+                  <td>string | number | boolean | date | array | object</td>
+                </tr>
+                <tr>
+                  <td>initial_value</td>
+                  <td>any</td>
+                  <td>&mdash;</td>
+                  <td>Value assigned at session start (after <code>=</code> sign)</td>
+                </tr>
+                <tr>
+                  <td>description</td>
+                  <td>string</td>
+                  <td>&mdash;</td>
+                  <td>Human-readable explanation of what this variable tracks</td>
+                </tr>
+                <tr>
+                  <td>reset</td>
+                  <td>enum</td>
+                  <td>per_session</td>
+                  <td>per_session | per_step | never</td>
+                </tr>
+              </table>
+
+              <div class="sub">Reset Modes</div>
+              <table class="tbl">
+                <tr>
+                  <th>Mode</th>
+                  <th>Behavior</th>
+                </tr>
+                <tr>
+                  <td>per_session</td>
+                  <td>Initialized at session start, cleared when session ends. Default.</td>
+                </tr>
+                <tr>
+                  <td>per_step</td>
+                  <td>
+                    Reset to initial value when flow advances to a new step. Useful for step-local
+                    counters.
+                  </td>
+                </tr>
+                <tr>
+                  <td>never</td>
+                  <td>
+                    Survives across sessions if persisted. Requires matching PERSISTENT path or
+                    explicit persist logic.
+                  </td>
+                </tr>
+              </table>
+
+              <div class="box rt">
+                Stored in <code>session.data.values</code>. Updated via
+                <code>__set_context__</code> tool call or <code>SET</code> directive in flow steps.
+                Per-step reset triggers when the flow engine advances <code>currentStep</code>. All
+                session vars are available in template expressions as <code>{{var_name}}</code>.
+              </div>
+              <div class="box ed">
+                The <code>/memory-var</code> slash command inserts a session variable template with
+                a type picker dropdown and reset mode selector.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- PERSISTENT -->
+        <div class="card">
+          <div class="card-head" onclick="toggle(this)">
+            <span class="label">PERSISTENT</span>
+            <span class="meta">Cross-session FactStore</span>
+            <span class="arrow">&rsaquo;</span>
+          </div>
+          <div class="card-body">
+            <div class="card-inner">
+              <pre class="y"><span class="k">MEMORY:</span>
+  <span class="k">PERSISTENT:</span>
+    - <span class="t">user.preferred_language</span>
+      scope: <span class="v">user</span>
+      access: <span class="v">readwrite</span>
+      type: <span class="t">string</span>
+    - <span class="t">user.claim_history</span>
+      scope: <span class="v">user</span>
+      type: <span class="t">array</span>
+    - <span class="t">project.global_settings</span>
+      scope: <span class="v">project</span>
+      access: <span class="v">read</span>
+      defaultValue: <span class="n">{}</span></pre>
+
+              <table class="tbl">
+                <tr>
+                  <th>Field</th>
+                  <th>Type</th>
+                  <th>Default</th>
+                  <th>Purpose</th>
+                </tr>
+                <tr>
+                  <td>path</td>
+                  <td>string</td>
+                  <td>&mdash;</td>
+                  <td>Dot-notation key (e.g., <code>user.preferred_language</code>)</td>
+                </tr>
+                <tr>
+                  <td>scope</td>
+                  <td>enum</td>
+                  <td>user</td>
+                  <td>user | project</td>
+                </tr>
+                <tr>
+                  <td>access</td>
+                  <td>enum</td>
+                  <td>readwrite</td>
+                  <td>read | write | readwrite</td>
+                </tr>
+                <tr>
+                  <td>type</td>
+                  <td>enum</td>
+                  <td>string</td>
+                  <td>string | number | boolean | date | array | object</td>
+                </tr>
+                <tr>
+                  <td>unit</td>
+                  <td>string</td>
+                  <td>&mdash;</td>
+                  <td>Unit of measure (e.g., USD, days)</td>
+                </tr>
+                <tr>
+                  <td>defaultValue</td>
+                  <td>any</td>
+                  <td>&mdash;</td>
+                  <td>Value used when path has no stored fact</td>
+                </tr>
+                <tr>
+                  <td>description</td>
+                  <td>string</td>
+                  <td>&mdash;</td>
+                  <td>Human-readable explanation</td>
+                </tr>
+              </table>
+
+              <div class="sub">Scopes</div>
+              <div class="compare">
+                <div class="compare-item">
+                  <h4>user scope</h4>
+                  <p>
+                    Keyed by <code>(tenantId, userId)</code>. Each user has their own facts. "User
+                    prefers Spanish" is user-scoped. Loaded via
+                    <code>factStore.getMany(userId, paths)</code>.
+                  </p>
+                </div>
+                <div class="compare-item">
+                  <h4>project scope</h4>
+                  <p>
+                    Keyed by <code>(tenantId, projectId)</code>. Shared across all users in the
+                    project. "Business hours are 9-5" is project-scoped. Loaded via
+                    <code>projectFactStore.getMany(projectId, paths)</code>.
+                  </p>
+                </div>
+              </div>
+
+              <div class="box rt">
+                Batch-loaded on session start via <code>getMany()</code>. User-scoped facts use the
+                FactStore keyed by <code>(tenantId, userId)</code>. Project-scoped facts use a
+                separate <code>projectFactStore</code> keyed by <code>(tenantId, projectId)</code>.
+                Values are injected into session context and available as
+                <code>{{user.preferred_language}}</code> in templates.
+              </div>
+              <div class="box tip">
+                Use <code>access: read</code> for project-level config that agents should not
+                modify. Use <code>readwrite</code> for user preferences the agent can update via
+                REMEMBER triggers.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- REMEMBER -->
+        <div class="card">
+          <div class="card-head" onclick="toggle(this)">
+            <span class="label">REMEMBER</span>
+            <span class="meta">Event-driven writes to persistent memory</span>
+            <span class="arrow">&rsaquo;</span>
+          </div>
+          <div class="card-body">
+            <div class="card-inner">
+              <pre class="y"><span class="k">MEMORY:</span>
+  <span class="k">REMEMBER:</span>
+    - <span class="k">WHEN:</span> <span class="s">claim_type != null</span>
+      <span class="k">STORE:</span>
+        value: <span class="s">"{{claim_type}}"</span>
+        target: <span class="s">"user.last_claim_type"</span>
+      <span class="k">TTL:</span> <span class="s">"30d"</span>
+    - <span class="k">WHEN:</span> <span class="s">user_sentiment == "frustrated"</span>
+      <span class="k">STORE:</span>
+        value: <span class="s">"true"</span>
+        target: <span class="s">"user.had_frustrating_experience"</span>
+      <span class="k">TTL:</span> <span class="s">"90d"</span></pre>
+
+              <table class="tbl">
+                <tr>
+                  <th>Field</th>
+                  <th>Type</th>
+                  <th>Purpose</th>
+                </tr>
+                <tr>
+                  <td>WHEN</td>
+                  <td>string (CEL)</td>
+                  <td>Condition expression evaluated after state changes</td>
+                </tr>
+                <tr>
+                  <td>STORE.value</td>
+                  <td>string (template)</td>
+                  <td>Value to persist &mdash; supports <code>{{var}}</code> templates</td>
+                </tr>
+                <tr>
+                  <td>STORE.target</td>
+                  <td>string</td>
+                  <td>Persistent path to write to (must match a PERSISTENT entry)</td>
+                </tr>
+                <tr>
+                  <td>TTL</td>
+                  <td>string (duration)</td>
+                  <td>
+                    Auto-expiry: <code>30d</code>, <code>24h</code>, <code>90d</code>,
+                    <code>1y</code>
+                  </td>
+                </tr>
+              </table>
+
+              <div class="sub">Evaluation Triggers</div>
+              <div class="tags">
+                <span class="tag">state change</span>
+                <span class="tag">tool call complete</span>
+                <span class="tag">entity extraction</span>
+                <span class="tag">session variable SET</span>
+                <span class="tag">flow step transition</span>
+              </div>
+
+              <div class="box rt">
+                REMEMBER rules are evaluated after state changes, tool calls, and entity
+                extractions. When the WHEN condition matches, the STORE writes to the FactStore in a
+                fire-and-forget pattern (non-blocking). TTL sets an expiry on the fact &mdash;
+                expired facts are automatically pruned and return <code>null</code> on read.
+              </div>
+              <div class="box tip">
+                Always set a TTL. Facts without TTL persist forever and accumulate unbounded
+                storage. Use <code>30d</code> for transient preferences, <code>90d</code> for
+                behavioral patterns, <code>1y</code> for stable user attributes.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- RECALL -->
+        <div class="card">
+          <div class="card-head" onclick="toggle(this)">
+            <span class="label">RECALL</span>
+            <span class="meta">Event-driven memory loading + prompt injection</span>
+            <span class="arrow">&rsaquo;</span>
+          </div>
+          <div class="card-body">
+            <div class="card-inner">
+              <pre class="y"><span class="k">MEMORY:</span>
+  <span class="k">RECALL:</span>
+    - <span class="k">ON:</span> <span class="v">session:start</span>
+      <span class="k">INSTRUCTION:</span> <span class="s">"Check if user has previous claims and greet accordingly."</span>
+    - <span class="k">ON:</span> <span class="v">tool:fetch_policy:after</span>
+      <span class="k">INSTRUCTION:</span> <span class="s">"Note the policy details for personalized context."</span>
+      <span class="k">ACTION:</span>
+        type: <span class="v">inject_context</span>
+        paths: [<span class="s">"user.claim_history"</span>, <span class="s">"user.preferred_language"</span>]</pre>
+
+              <table class="tbl">
+                <tr>
+                  <th>Field</th>
+                  <th>Type</th>
+                  <th>Purpose</th>
+                </tr>
+                <tr>
+                  <td>ON</td>
+                  <td>string (event)</td>
+                  <td>Event that triggers the recall</td>
+                </tr>
+                <tr>
+                  <td>INSTRUCTION</td>
+                  <td>string</td>
+                  <td>Natural language guidance injected into system prompt</td>
+                </tr>
+                <tr>
+                  <td>ACTION.type</td>
+                  <td>enum</td>
+                  <td>inject_context | load_memory | prompt_llm</td>
+                </tr>
+                <tr>
+                  <td>ACTION.paths</td>
+                  <td>string[]</td>
+                  <td>Persistent paths to load (for inject_context / load_memory)</td>
+                </tr>
+              </table>
+
+              <div class="sub">Event Types</div>
+              <table class="tbl">
+                <tr>
+                  <th>Event</th>
+                  <th>Fires When</th>
+                </tr>
+                <tr>
+                  <td>session:start</td>
+                  <td>New session begins, after persistent memory is loaded</td>
+                </tr>
+                <tr>
+                  <td>session:end</td>
+                  <td>Session is closing (cleanup, final persist)</td>
+                </tr>
+                <tr>
+                  <td>tool:&lt;name&gt;:before</td>
+                  <td>Just before a specific tool executes</td>
+                </tr>
+                <tr>
+                  <td>tool:&lt;name&gt;:after</td>
+                  <td>After a specific tool returns its result</td>
+                </tr>
+                <tr>
+                  <td>step:&lt;name&gt;:enter</td>
+                  <td>Flow enters a named step</td>
+                </tr>
+                <tr>
+                  <td>step:&lt;name&gt;:exit</td>
+                  <td>Flow leaves a named step</td>
+                </tr>
+                <tr>
+                  <td>intent:&lt;name&gt;</td>
+                  <td>A specific intent is detected</td>
+                </tr>
+              </table>
+
+              <div class="sub">Action Types</div>
+              <div class="compare">
+                <div class="compare-item">
+                  <h4>inject_context</h4>
+                  <p>
+                    Loads persistent paths and injects their values into the current LLM context.
+                    The INSTRUCTION tells the LLM how to use this context. Most common action.
+                  </p>
+                </div>
+                <div class="compare-item">
+                  <h4>load_memory</h4>
+                  <p>
+                    Loads persistent paths into session variables without injecting into the prompt.
+                    Useful for data the agent needs for logic but not for conversation.
+                  </p>
+                </div>
+              </div>
+              <div class="compare">
+                <div class="compare-item">
+                  <h4>prompt_llm</h4>
+                  <p>
+                    Triggers an additional LLM call with the recalled context and instruction. Used
+                    for complex reasoning about recalled data before continuing the conversation.
+                  </p>
+                </div>
+                <div class="compare-item">
+                  <h4>(no action)</h4>
+                  <p>
+                    When only INSTRUCTION is provided without ACTION, the instruction text is
+                    injected into the system prompt's "Recalled Memory Instructions" section. No
+                    data is loaded.
+                  </p>
+                </div>
+              </div>
+
+              <div class="box rt">
+                RECALL instructions are injected as <code>_recallPrompts</code> into the system
+                prompt's "Recalled Memory Instructions" section. When ACTION includes
+                <code>paths</code>, those persistent values are fetched from the FactStore and made
+                available as context. Multiple RECALL entries can fire on the same event.
+              </div>
+              <div class="box ed">
+                The <code>/recall</code> slash command provides event autocomplete (session:start,
+                tool:*, step:*) and a path picker that lists all declared PERSISTENT paths.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- BUILT-IN CONTEXT VARIABLES -->
+      <div class="section">
+        <div class="section-title">Built-in Context Variables</div>
+
+        <div class="box key">
+          These variables are always available in templates, conditions, and expressions. They are
+          automatically populated by the runtime and do not need to be declared in SESSION.
+        </div>
+
+        <table class="tbl">
+          <tr>
+            <th>Variable</th>
+            <th>Type</th>
+            <th>Description</th>
+          </tr>
+          <tr>
+            <td>channel</td>
+            <td>string</td>
+            <td>Current channel: web, voice, sms, whatsapp, api</td>
+          </tr>
+          <tr>
+            <td>language</td>
+            <td>string</td>
+            <td>Detected or configured language code (en, es, fr)</td>
+          </tr>
+          <tr>
+            <td>locale</td>
+            <td>string</td>
+            <td>Full locale: en-US, de-DE, ja-JP</td>
+          </tr>
+          <tr>
+            <td>turn_count</td>
+            <td>number</td>
+            <td>Number of user messages in this session</td>
+          </tr>
+          <tr>
+            <td>session_id</td>
+            <td>string</td>
+            <td>Unique session identifier</td>
+          </tr>
+          <tr>
+            <td>tenant_id</td>
+            <td>string</td>
+            <td>Current tenant (for multi-tenant isolation)</td>
+          </tr>
+          <tr>
+            <td>customer_id</td>
+            <td>string</td>
+            <td>Authenticated user ID (null if anonymous)</td>
+          </tr>
+          <tr>
+            <td>input</td>
+            <td>string</td>
+            <td>Current user message text</td>
+          </tr>
+          <tr>
+            <td>last_input</td>
+            <td>string</td>
+            <td>Previous user message text</td>
+          </tr>
+          <tr>
+            <td>intent</td>
+            <td>string</td>
+            <td>Detected intent from current message</td>
+          </tr>
+          <tr>
+            <td>result</td>
+            <td>object</td>
+            <td>Last tool call result object</td>
+          </tr>
+          <tr>
+            <td>timestamp</td>
+            <td>date</td>
+            <td>Current server timestamp</td>
+          </tr>
+        </table>
+
+        <div class="box tip">
+          Use built-in variables in REMEMBER conditions:
+          <code>WHEN: turn_count > 5 AND intent == "escalate"</code>. Use in RECALL events:
+          <code>ON: session:start</code> fires once when <code>turn_count == 0</code>.
+        </div>
+      </div>
+
+      <!-- MEMORY VS GATHER VS CONSTRAINTS -->
+      <div class="section">
+        <div class="section-title">Memory vs Gather vs Constraints</div>
+
+        <div class="compare">
+          <div class="compare-item">
+            <h4>GATHER</h4>
+            <p>
+              Collects information <strong>from the user</strong> explicitly. Typed fields with
+              prompts, validation, and retry logic. The user provides the data.
+            </p>
+          </div>
+          <div class="compare-item">
+            <h4>MEMORY</h4>
+            <p>
+              Stores <strong>computed and derived</strong> values. Session state, persistent facts,
+              and auto-triggered writes. The system manages the data.
+            </p>
+          </div>
+        </div>
+        <div class="compare">
+          <div class="compare-item">
+            <h4>CONSTRAINTS</h4>
+            <p>
+              Checks values as <strong>business rules</strong>. Enforces boundaries on what the
+              agent can do. Does not store or collect &mdash; only validates.
+            </p>
+          </div>
+          <div class="compare-item">
+            <h4>When to Use Which</h4>
+            <p>
+              Need user input? <strong>GATHER</strong>. Need to track state?
+              <strong>SESSION</strong>. Need cross-session facts?
+              <strong>PERSISTENT + REMEMBER</strong>. Need to enforce rules?
+              <strong>CONSTRAINTS</strong>.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- COMMON PATTERNS -->
+      <div class="section">
+        <div class="section-title">Common Patterns</div>
+
+        <div class="card">
+          <div class="card-head" onclick="toggle(this)">
+            <span class="label">Session State Machine</span>
+            <span class="meta">Track conversation flow state</span>
+            <span class="arrow">&rsaquo;</span>
+          </div>
+          <div class="card-body">
+            <div class="card-inner">
+              <pre class="y"><span class="k">MEMORY:</span>
+  <span class="k">SESSION:</span>
+    - <span class="t">claim_status</span>: <span class="t">string</span> = <span class="s">"new"</span>
+      <span class="c"># transitions: new → collecting → reviewing → submitted → closed</span>
+    - <span class="t">validation_attempts</span>: <span class="t">number</span> = <span class="n">0</span>
+      reset: <span class="v">per_step</span>
+    - <span class="t">escalation_reason</span>: <span class="t">string</span>
+
+<span class="c"># In flow steps, use SET to advance state:</span>
+<span class="c"># SET claim_status = "collecting"</span>
+<span class="c"># SET validation_attempts = validation_attempts + 1</span></pre>
+              <div class="box tip">
+                Use session vars as a lightweight state machine. Track status, retry counts, and
+                intermediate results. Reset per-step counters automatically clean up when the flow
+                advances.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-head" onclick="toggle(this)">
+            <span class="label">User Preference Learning</span>
+            <span class="meta">Remember and apply user preferences</span>
+            <span class="arrow">&rsaquo;</span>
+          </div>
+          <div class="card-body">
+            <div class="card-inner">
+              <pre class="y"><span class="k">MEMORY:</span>
+  <span class="k">PERSISTENT:</span>
+    - <span class="t">user.preferred_language</span>
+      scope: <span class="v">user</span>
+      type: <span class="t">string</span>
+    - <span class="t">user.communication_style</span>
+      scope: <span class="v">user</span>
+      type: <span class="t">string</span>
+      <span class="c"># formal | casual | technical</span>
+
+  <span class="k">REMEMBER:</span>
+    - <span class="k">WHEN:</span> <span class="s">language != user.preferred_language AND turn_count > 3</span>
+      <span class="k">STORE:</span>
+        value: <span class="s">"{{language}}"</span>
+        target: <span class="s">"user.preferred_language"</span>
+      <span class="k">TTL:</span> <span class="s">"1y"</span>
+
+  <span class="k">RECALL:</span>
+    - <span class="k">ON:</span> <span class="v">session:start</span>
+      <span class="k">INSTRUCTION:</span> <span class="s">"Greet the user in their preferred language and match their communication style."</span>
+      <span class="k">ACTION:</span>
+        type: <span class="v">inject_context</span>
+        paths: [<span class="s">"user.preferred_language"</span>, <span class="s">"user.communication_style"</span>]</pre>
+              <div class="box rt">
+                On each session, the agent recalls the user's preferences and adapts. If the user
+                switches language mid-conversation and stays with it, REMEMBER updates the
+                preference for next time.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-head" onclick="toggle(this)">
+            <span class="label">Conversation Continuity</span>
+            <span class="meta">Resume where the user left off</span>
+            <span class="arrow">&rsaquo;</span>
+          </div>
+          <div class="card-body">
+            <div class="card-inner">
+              <pre class="y"><span class="k">MEMORY:</span>
+  <span class="k">PERSISTENT:</span>
+    - <span class="t">user.last_claim_id</span>
+      scope: <span class="v">user</span>
+      type: <span class="t">string</span>
+    - <span class="t">user.last_interaction_topic</span>
+      scope: <span class="v">user</span>
+      type: <span class="t">string</span>
+    - <span class="t">user.open_issues</span>
+      scope: <span class="v">user</span>
+      type: <span class="t">array</span>
+
+  <span class="k">REMEMBER:</span>
+    - <span class="k">WHEN:</span> <span class="s">result.claim_id != null</span>
+      <span class="k">STORE:</span>
+        value: <span class="s">"{{result.claim_id}}"</span>
+        target: <span class="s">"user.last_claim_id"</span>
+      <span class="k">TTL:</span> <span class="s">"90d"</span>
+
+  <span class="k">RECALL:</span>
+    - <span class="k">ON:</span> <span class="v">session:start</span>
+      <span class="k">INSTRUCTION:</span> <span class="s">"If user has an open claim, ask if they want to continue with it. Reference the claim ID."</span>
+      <span class="k">ACTION:</span>
+        type: <span class="v">inject_context</span>
+        paths: [<span class="s">"user.last_claim_id"</span>, <span class="s">"user.open_issues"</span>]</pre>
+              <div class="box tip">
+                Continuity creates a natural experience: "Welcome back! Last time we were working on
+                claim CLM-12345. Would you like to continue?" The user feels recognized without
+                repeating themselves.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ANTI-PATTERNS -->
+      <div class="section">
+        <div class="section-title">Anti-Patterns</div>
+        <div class="compare">
+          <div class="compare-item">
+            <h4 style="color: #b07070">Persistent paths without scope</h4>
+            <p>
+              Omitting <code>scope</code> defaults to user, but makes intent unclear. Always be
+              explicit: <code>scope: user</code> or <code>scope: project</code>. Reviewers and
+              future maintainers need to know the isolation boundary.
+            </p>
+          </div>
+          <div class="compare-item">
+            <h4 style="color: #b07070">REMEMBER without TTL</h4>
+            <p>
+              Facts without TTL persist forever in the FactStore. Over time this creates unbounded
+              storage growth. Always set a TTL &mdash; even <code>1y</code> for "permanent" facts
+              forces periodic review.
+            </p>
+          </div>
+          <div class="compare-item">
+            <h4 style="color: #b07070">Too many session variables</h4>
+            <p>
+              Declaring 20+ session vars makes the agent's state opaque and hard to debug. Keep
+              session vars under 10. Use PERSISTENT for anything that needs to survive the session,
+              and GATHER for user-provided data.
+            </p>
+          </div>
+          <div class="compare-item">
+            <h4 style="color: #b07070">RECALL without INSTRUCTION</h4>
+            <p>
+              Loading paths via <code>inject_context</code> without an INSTRUCTION means the LLM
+              gets raw data with no guidance on how to use it. Always pair ACTION with a clear
+              INSTRUCTION.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- VALIDATION RULES -->
+      <div class="section">
+        <div class="section-title">Validation Rules</div>
+
+        <table class="tbl">
+          <tr>
+            <th>Rule</th>
+            <th>Level</th>
+            <th>Source</th>
+          </tr>
+          <tr>
+            <td>REMEMBER target not in PERSISTENT</td>
+            <td style="color: #b07070">Error</td>
+            <td>Analyzer &mdash; STORE.target must reference a declared PERSISTENT path</td>
+          </tr>
+          <tr>
+            <td>RECALL paths not in PERSISTENT</td>
+            <td style="color: #b07070">Error</td>
+            <td>Analyzer &mdash; ACTION.paths must reference declared PERSISTENT paths</td>
+          </tr>
+          <tr>
+            <td>REMEMBER without TTL</td>
+            <td style="color: #b8a070">Warning</td>
+            <td>Language service &mdash; unbounded storage growth risk</td>
+          </tr>
+          <tr>
+            <td>Unused PERSISTENT path</td>
+            <td style="color: #7090c0">Info</td>
+            <td>Analyzer &mdash; declared but never referenced by REMEMBER or RECALL</td>
+          </tr>
+          <tr>
+            <td>Invalid reset mode</td>
+            <td style="color: #b07070">Error</td>
+            <td>Parser &mdash; must be per_session | per_step | never</td>
+          </tr>
+          <tr>
+            <td>Duplicate session var name</td>
+            <td style="color: #b07070">Error</td>
+            <td>Parser &mdash; session variable names must be unique</td>
+          </tr>
+          <tr>
+            <td>Invalid RECALL event</td>
+            <td style="color: #b07070">Error</td>
+            <td>
+              Parser &mdash; must match pattern: session:* | tool:*:before/after | step:*:enter/exit
+              | intent:*
+            </td>
+          </tr>
+        </table>
+      </div>
+
+      <!-- EDITOR PLAN -->
+      <div class="section">
+        <div class="section-title">Editor Assistance Plan</div>
+        <table class="tbl">
+          <tr>
+            <th>Feature</th>
+            <th>Implementation</th>
+          </tr>
+          <tr>
+            <td>/memory-var</td>
+            <td>Insert SESSION variable template with type picker and reset mode selector.</td>
+          </tr>
+          <tr>
+            <td>/persistent</td>
+            <td>
+              Insert PERSISTENT path template with scope picker (user/project) and access mode.
+            </td>
+          </tr>
+          <tr>
+            <td>/remember</td>
+            <td>
+              Insert REMEMBER rule with WHEN expression builder, target path autocomplete, and TTL
+              helper (preset durations).
+            </td>
+          </tr>
+          <tr>
+            <td>/recall</td>
+            <td>
+              Insert RECALL rule with event autocomplete (session:start, tool:*, step:*) and path
+              picker for ACTION.paths.
+            </td>
+          </tr>
+          <tr>
+            <td>Scope picker</td>
+            <td>Visual toggle: user | project. Shows isolation boundary explanation.</td>
+          </tr>
+          <tr>
+            <td>TTL helper</td>
+            <td>Preset buttons: 24h, 7d, 30d, 90d, 1y. Custom input with duration validation.</td>
+          </tr>
+          <tr>
+            <td>Event autocomplete</td>
+            <td>
+              For RECALL ON field: lists session:start/end, all declared tools as
+              tool:name:before/after, all flow steps as step:name:enter/exit.
+            </td>
+          </tr>
+          <tr>
+            <td>Path linker</td>
+            <td>
+              Autocomplete REMEMBER targets and RECALL paths against declared PERSISTENT entries.
+              Error squiggle if target does not exist.
+            </td>
+          </tr>
+        </table>
+      </div>
+    </div>
+
+    <script>
+      function toggle(h) {
+        h.parentElement.classList.toggle('open');
+      }
+    </script>
+  </body>
+</html>

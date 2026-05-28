@@ -1,0 +1,14 @@
+{
+  "id": "enterprise-security",
+  "title": "Enterprise Security & Compliance",
+  "description": "Architect security with identity verification, envelope encryption, KMS providers, guardrails, and compliance posture.",
+  "level": "advanced",
+  "estimatedMinutes": 82,
+  "prerequisites": ["platform-foundations"],
+  "modules": ["identity-authentication", "encryption-kms", "safety-compliance"],
+  "certification": {
+    "required": true,
+    "passCriteria": "all-modules-passed",
+    "badge": "course-security"
+  }
+}

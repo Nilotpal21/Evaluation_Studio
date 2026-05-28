@@ -1,0 +1,28 @@
+/**
+ * Search AI Strategy Tools
+ *
+ * Tools used by the search strategy agents for vocabulary resolution,
+ * aggregation, hybrid search, vector search, and structured queries.
+ */
+
+TOOLS:
+  vocabulary_resolve:
+    description: "Resolve business terms to measures, dimensions, metadata filters, and aggregation specs"
+
+  search_aggregate:
+    description: "Execute aggregation queries (sum, avg, count, min, max) over indexed data"
+
+  validate_aggregation:
+    description: "Validate aggregation results for consistency and reasonableness"
+
+  search_hybrid:
+    description: "Execute hybrid vector + keyword search combining semantic and lexical matching"
+
+  search_vector:
+    description: "Execute pure vector (semantic) search for broad knowledge retrieval"
+
+  search_structured:
+    description: "Execute structured metadata filter queries for precise list results"
+
+  search_list:
+    description: "Retrieve paginated results with sorting from structured queries"

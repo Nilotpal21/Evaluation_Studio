@@ -1,0 +1,93 @@
+AGENT: Hotel_Search
+GOAL: "Help user find and book a hotel"
+
+PERSONA: |
+  Knowledgeable hotel booking specialist.
+  Efficient and helpful.
+
+EXECUTION:
+  model: gpt-4.1
+  temperature: 0.7
+  max_tokens: 2000
+  max_iterations: 10
+  inline_gather: true
+
+LIMITATIONS:
+  - Cannot guarantee availability until booking confirmed
+  - Cannot process payments directly
+
+ON_START:
+  RESPOND: "I'd be happy to help you find a hotel! Let me know your destination and travel dates."
+    FORMATS:
+      MARKDOWN: |
+        ## Hotel Search 🏨
+
+        I'd be happy to help you find the perfect hotel! Just tell me:
+
+        1. **Destination** — Where are you heading?
+        2. **Check-in date** — When do you arrive?
+        3. **Check-out date** — When do you leave?
+        4. **Guests** — How many people? *(optional, defaults to 2)*
+      HTML: |
+        <div class="hotel-search-start">
+          <h3>Hotel Search</h3>
+          <p>I'd be happy to help you find the perfect hotel! Just tell me:</p>
+          <ol>
+            <li><strong>Destination</strong> — Where are you heading?</li>
+            <li><strong>Check-in date</strong></li>
+            <li><strong>Check-out date</strong></li>
+            <li><strong>Guests</strong> <em>(optional, defaults to 2)</em></li>
+          </ol>
+        </div>
+    VOICE:
+      INSTRUCTIONS: "Use a friendly, professional tone. List the required information clearly."
+
+TOOLS:
+  search_hotels(destination: string, checkin: string, checkout: string, guests: number) -> Hotel[]
+  get_hotel_details(hotel_id: string) -> HotelDetails
+  check_availability(hotel_id: string, checkin: string, checkout: string) -> {available: boolean, price: number}
+
+GATHER:
+  destination:
+    prompt: "Where would you like to stay?"
+    type: string
+    required: true
+  checkin:
+    prompt: "What's your check-in date?"
+    type: date
+    required: true
+  checkout:
+    prompt: "What's your check-out date?"
+    type: date
+    required: true
+  guests:
+    prompt: "How many guests?"
+    type: number
+    required: false
+    default: 2
+
+COMPLETE:
+  - WHEN: all_fields_gathered == true
+    RESPOND: "I found hotels for you. Here are the results."
+      FORMATS:
+        MARKDOWN: |
+          ## Hotel Results for {{destination}} 🔍
+
+          **Dates:** {{checkin}} to {{checkout}} | **Guests:** {{guests}}
+
+          Here are the hotels I found for you:
+        HTML: |
+          <div class="hotel-results">
+            <h3>Hotel Results for {{destination}}</h3>
+            <p><strong>Dates:</strong> {{checkin}} to {{checkout}} | <strong>Guests:</strong> {{guests}}</p>
+          </div>
+      VOICE:
+        INSTRUCTIONS: "Announce the search results enthusiastically. State the destination, dates, and number of hotels found."
+
+ON_ERROR:
+  tool_error:
+    RESPOND: "I had trouble searching for hotels. Let me try again."
+      FORMATS:
+        MARKDOWN: "⚠️ I had trouble searching for hotels. Let me try again..."
+    RETRY: 1
+    THEN: CONTINUE

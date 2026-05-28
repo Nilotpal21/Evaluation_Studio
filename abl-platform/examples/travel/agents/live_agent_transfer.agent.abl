@@ -1,0 +1,221 @@
+AGENT: Live_Agent_Transfer
+VERSION: "2.0"
+DESCRIPTION: "Transfers customers to human agents with full context, or schedules callbacks outside business hours"
+GOAL: "Connect customers with human agents smoothly — check availability, pass full conversation context, and offer callback scheduling when agents are unavailable"
+
+PERSONA: |
+  Professional and empathetic handoff specialist.
+  Ensures the customer knows exactly what's happening during the transfer.
+  Never makes promises about wait times it can't keep.
+  Always passes full context so the customer never repeats themselves.
+
+EXECUTION:
+  temperature: 0.7
+  max_tokens: 2000
+  max_iterations: 10
+  inline_gather: true
+
+LIMITATIONS:
+  - "Cannot resolve complex issues directly — that's why we're transferring"
+  - "Cannot guarantee specific wait times"
+  - "Cannot transfer to a specific named agent"
+
+TOOLS:
+  check_agent_availability(department: string, priority: string) -> {available: boolean, estimated_wait: number, queue_position: number}
+    description: "Check if human agents are available in a department and estimated wait"
+
+  get_business_hours(department: string) -> {is_open: boolean, hours: string, next_open: datetime, timezone: string}
+    description: "Check current business hours for a department"
+
+  create_transfer_ticket(user_id: string, reason: string, context: object, priority: string) -> {ticket_id: string, queue_position: number}
+    description: "Create a transfer ticket with full conversation context for the human agent"
+
+  initiate_transfer(ticket_id: string, department: string) -> {success: boolean, agent_name: string, estimated_wait: number}
+    description: "Initiate live transfer to a human agent"
+
+  schedule_callback(user_id: string, phone: string, preferred_time: datetime, reason: string, context: object) -> {callback_id: string, confirmed_time: datetime}
+    description: "Schedule a callback when agents are unavailable"
+
+MEMORY:
+  session:
+    - transfer_reason
+      TYPE: string
+      DESCRIPTION: "Why the customer needs to speak with a human agent"
+    - department
+      TYPE: string
+      DESCRIPTION: "Target department for the transfer (e.g., general_support)"
+    - ticket_id
+      TYPE: string
+      DESCRIPTION: "Transfer ticket ID with full conversation context for the human agent"
+    - callback_scheduled
+      TYPE: boolean
+      DESCRIPTION: "Whether a callback has been scheduled instead of live transfer"
+
+# ─────────────────────────────────────────────────────────────────────────────
+# FLOW — check hours → check availability → transfer or callback
+# ─────────────────────────────────────────────────────────────────────────────
+
+FLOW:
+  entry_point: collect_reason
+  steps:
+    - collect_reason
+    - check_hours
+    - check_availability
+    - create_ticket
+    - do_transfer
+    - transfer_success
+    - offer_callback
+    - schedule_callback_flow
+    - callback_confirmed
+    - no_agents
+
+  global_digressions:
+    REASONING: false
+    - INTENT: "cancel"
+      RESPOND: "No problem. You can reach us anytime at support@traveldesk.example.com."
+      GOTO: complete
+
+collect_reason:
+  REASONING: false
+  GATHER:
+    - transfer_reason: required
+  THEN: check_hours
+
+check_hours:
+  REASONING: false
+  CALL: get_business_hours("general_support")
+  ON_SUCCESS:
+    - IF: get_business_hours.is_open == true
+      THEN: check_availability
+    - ELSE:
+      RESPOND: |
+        Our support team is currently offline.
+        Business hours: {{get_business_hours.hours}} ({{get_business_hours.timezone}})
+        Next available: {{get_business_hours.next_open}}
+      THEN: offer_callback
+  ON_FAIL:
+    THEN: check_availability
+
+check_availability:
+  REASONING: false
+  CALL: check_agent_availability("general_support", "medium")
+  ON_SUCCESS:
+    - IF: check_agent_availability.available == true
+      RESPOND: "An agent is available. Estimated wait: ~{{check_agent_availability.estimated_wait}} minutes."
+      THEN: create_ticket
+    - ELSE:
+      RESPOND: "All agents are currently busy. Queue position: {{check_agent_availability.queue_position}}."
+      THEN: offer_callback
+  ON_FAIL:
+    RESPOND: "I'm having trouble checking availability. Let me try connecting you directly."
+    THEN: create_ticket
+
+create_ticket:
+  REASONING: false
+  CALL: create_transfer_ticket(user_id, transfer_reason, {conversation_history: conversation_history, booking_context: booking_context}, "medium")
+  ON_SUCCESS:
+    SET: ticket_id = create_transfer_ticket.ticket_id
+    RESPOND: "I've prepared your case (ticket: {{ticket_id}}) with all the details from our conversation. The agent will have full context — you won't need to repeat anything."
+    THEN: do_transfer
+  ON_FAIL:
+    RESPOND: "I couldn't create the transfer ticket. Let me try again."
+    THEN: create_ticket
+
+do_transfer:
+  REASONING: false
+  CALL: initiate_transfer(ticket_id, "general_support")
+  ON_SUCCESS:
+    - IF: initiate_transfer.success == true
+      THEN: transfer_success
+    - ELSE:
+      THEN: no_agents
+  ON_FAIL:
+    THEN: no_agents
+
+transfer_success:
+  REASONING: false
+  RESPOND: |
+    Connecting you with {{initiate_transfer.agent_name}} now.
+    Estimated wait: ~{{initiate_transfer.estimated_wait}} minutes.
+    They have your full conversation history and all relevant booking details.
+    Thank you for your patience!
+  THEN: complete
+
+offer_callback:
+  REASONING: false
+  GATHER:
+    - wants_callback: required
+  ON_INPUT:
+    - IF: input contains "yes" OR input contains "callback" OR input contains "call"
+      THEN: schedule_callback_flow
+    - IF: input contains "no" OR input contains "wait"
+      RESPOND: "I understand. You can also reach us by email at support@traveldesk.example.com or try again during business hours."
+      THEN: complete
+    - ELSE:
+      RESPOND: "Would you like us to call you back? (yes/no)"
+      THEN: offer_callback
+
+schedule_callback_flow:
+  REASONING: false
+  GATHER:
+    - callback_number: required
+      prompt: "What phone number should we call you on?"
+      type: phone
+    - callback_time: required
+      prompt: "When would be a good time? (e.g., 'tomorrow at 10am', 'Monday afternoon')"
+      type: datetime
+  COMPLETE_WHEN: callback_number AND callback_time
+  THEN: do_schedule_callback
+
+do_schedule_callback:
+  REASONING: false
+  CALL: schedule_callback(user_id, callback_number, callback_time, transfer_reason, {conversation_history: conversation_history})
+  ON_SUCCESS:
+    SET: callback_scheduled = true
+    THEN: callback_confirmed
+  ON_FAIL:
+    RESPOND: "I had trouble scheduling the callback. Let me try again."
+    THEN: schedule_callback_flow
+
+callback_confirmed:
+  REASONING: false
+  RESPOND: |
+    Your callback is confirmed!
+    We'll call you at **{{callback_number}}** on **{{schedule_callback.confirmed_time}}**.
+    Our agent will have your full conversation history so you won't need to repeat anything.
+    Reference: {{schedule_callback.callback_id}}
+  THEN: complete
+
+no_agents:
+  REASONING: false
+  RESPOND: "I wasn't able to connect you with a live agent right now."
+  THEN: offer_callback
+
+HANDOFF:
+  - TO: Fallback_Handler
+    WHEN: transfer_failed == true AND callback_declined == true
+    CONTEXT:
+      pass: [transfer_reason, conversation_context]
+      summary: "Transfer and callback both failed/declined"
+    RETURN: true
+
+COMPLETE:
+  - WHEN: initiate_transfer.success == true
+    RESPOND: "You're now connected. Have a great conversation!"
+
+  - WHEN: callback_scheduled == true
+    RESPOND: "Callback is set. We'll be in touch!"
+
+  - WHEN: user.cancelled == true
+    RESPOND: "Understood. Feel free to reach out anytime."
+
+ON_ERROR:
+  tool_timeout:
+    RESPOND: "The transfer system is slow. Let me try again..."
+    RETRY: 2
+    THEN: CONTINUE
+
+  tool_error:
+    RESPOND: "Something went wrong with the transfer. Let me offer you a callback instead."
+    RETRY: 0
+    THEN: offer_callback

@@ -1,0 +1,49 @@
+AGENT: Supervisor_Router
+
+GOAL: "Route user requests to the correct specialist agent"
+
+FLOW:
+  entry_point: detect
+  steps:
+    - detect
+
+detect:
+  GATHER:
+    - request: required
+  ON_INPUT:
+    - IF: input contains "book"
+      SET: intent = "booking"
+      THEN: COMPLETE
+    - IF: input contains "support"
+      SET: intent = "support"
+      THEN: COMPLETE
+    - IF: input contains "delegate"
+      SET: intent = "delegate"
+      THEN: COMPLETE
+    - ELSE:
+      SET: intent = "unknown"
+      THEN: COMPLETE
+
+HANDOFF:
+  - TO: Specialist_Booking
+    WHEN: intent == "booking"
+    CONTEXT:
+      pass: [intent, request]
+      summary: "User wants to book something"
+    RETURN: true
+    ON_RETURN:
+      ACTION: continue
+      MAP: { confirmation_id: booking_ref, total_price: price }
+
+  - TO: Specialist_Support
+    WHEN: intent == "support"
+    CONTEXT:
+      pass: [intent, request]
+      summary: "User needs support"
+    RETURN: false
+
+  - TO: Nonexistent_Agent
+    WHEN: intent == "delegate"
+    CONTEXT:
+      summary: "Delegate request"
+    RETURN: false

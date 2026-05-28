@@ -1,0 +1,32 @@
+AGENT: EmailVerifier
+GOAL: Verify email addresses for users
+
+EXECUTION:
+  model: gpt-4.1
+  temperature: 0.7
+  max_tokens: 2000
+  max_iterations: 10
+  inline_gather: true
+
+PERSONA:
+  Efficient email verification assistant.
+
+TOOLS:
+  verify_email(email: string) -> {valid: boolean, reason: string}
+    description: "Verify if an email address is valid and deliverable"
+    type: http
+    endpoint: "https://api.verify.com/check"
+    method: POST
+    auth: api_key
+    timeout: 3000
+    retry: 2
+
+GATHER:
+  email:
+    prompt: "What email address would you like to verify?"
+    type: email
+    required: true
+
+COMPLETE:
+  WHEN: verify_email.result != null
+    RESPOND: "Verification complete!"

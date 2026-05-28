@@ -1,0 +1,560 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>LLM Banner States — Wireframe</title>
+    <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        background: #0f1117;
+        color: #e1e4ea;
+        padding: 32px;
+      }
+      h1 {
+        font-size: 20px;
+        font-weight: 600;
+        margin-bottom: 8px;
+      }
+      .subtitle {
+        color: #8b8fa3;
+        font-size: 13px;
+        margin-bottom: 32px;
+      }
+      .section {
+        margin-bottom: 40px;
+      }
+      .section-title {
+        font-size: 13px;
+        font-weight: 600;
+        color: #8b8fa3;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 16px;
+        padding-bottom: 8px;
+        border-bottom: 1px solid #1e2030;
+      }
+      .tab-label {
+        display: inline-block;
+        font-size: 11px;
+        font-weight: 500;
+        color: #6e7191;
+        background: #1a1c2e;
+        padding: 3px 10px;
+        border-radius: 4px;
+        margin-bottom: 12px;
+      }
+
+      /* Banner base */
+      .banner {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 16px;
+        border-radius: 10px;
+        font-size: 14px;
+        margin-bottom: 16px;
+        transition: all 0.2s;
+      }
+
+      /* Connected (green) */
+      .banner-connected {
+        background: rgba(34, 197, 94, 0.08);
+        border: 1px solid rgba(34, 197, 94, 0.25);
+      }
+      .banner-connected .icon {
+        color: #22c55e;
+        flex-shrink: 0;
+      }
+      .banner-connected .text {
+        color: #e1e4ea;
+        flex: 1;
+      }
+
+      /* Warning (amber) */
+      .banner-warning {
+        background: rgba(245, 158, 11, 0.08);
+        border: 1px solid rgba(245, 158, 11, 0.25);
+      }
+      .banner-warning .icon {
+        color: #f59e0b;
+        flex-shrink: 0;
+      }
+      .banner-warning .text {
+        color: #e1e4ea;
+        flex: 1;
+      }
+
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 14px;
+        font-size: 13px;
+        font-weight: 500;
+        border-radius: 7px;
+        border: 1px solid #2e3148;
+        background: #1a1c2e;
+        color: #c4c7d4;
+        cursor: pointer;
+        white-space: nowrap;
+        transition: all 0.15s;
+      }
+      .btn:hover {
+        background: #252840;
+        border-color: #3d4163;
+      }
+
+      /* Model name highlight */
+      .model-name {
+        font-weight: 600;
+        color: #a5b4fc;
+      }
+
+      /* SVG icons */
+      .icon svg {
+        width: 20px;
+        height: 20px;
+      }
+
+      /* Scenario cards */
+      .scenario-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+        margin-top: 16px;
+      }
+      .scenario-card {
+        background: #14162b;
+        border: 1px solid #1e2030;
+        border-radius: 10px;
+        padding: 16px;
+      }
+      .scenario-card h4 {
+        font-size: 13px;
+        font-weight: 600;
+        margin-bottom: 4px;
+      }
+      .scenario-card p {
+        font-size: 12px;
+        color: #8b8fa3;
+        margin-bottom: 12px;
+      }
+      .scenario-card .result {
+        font-size: 12px;
+        color: #a5b4fc;
+        font-weight: 500;
+      }
+
+      /* Tier table */
+      .tier-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 13px;
+        margin-top: 12px;
+      }
+      .tier-table th {
+        text-align: left;
+        font-weight: 600;
+        color: #8b8fa3;
+        padding: 8px 12px;
+        border-bottom: 1px solid #1e2030;
+      }
+      .tier-table td {
+        padding: 8px 12px;
+        border-bottom: 1px solid #1a1c2e;
+        color: #c4c7d4;
+      }
+      .tier-table tr:last-child td {
+        border-bottom: none;
+      }
+      .tier-badge {
+        display: inline-block;
+        padding: 2px 8px;
+        border-radius: 4px;
+        font-size: 11px;
+        font-weight: 600;
+      }
+      .tier-fast {
+        background: rgba(99, 102, 241, 0.15);
+        color: #818cf8;
+      }
+      .tier-balanced {
+        background: rgba(34, 197, 94, 0.15);
+        color: #4ade80;
+      }
+      .tier-powerful {
+        background: rgba(245, 158, 11, 0.15);
+        color: #fbbf24;
+      }
+      .winner {
+        background: rgba(34, 197, 94, 0.06);
+      }
+      .winner td {
+        color: #4ade80;
+        font-weight: 600;
+      }
+
+      /* Arrow */
+      .arrow-container {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 8px 0;
+        color: #4b5075;
+      }
+
+      .toggle-row {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 20px;
+      }
+      .toggle-btn {
+        padding: 6px 16px;
+        font-size: 13px;
+        font-weight: 500;
+        border-radius: 7px;
+        border: 1px solid #2e3148;
+        background: #14162b;
+        color: #8b8fa3;
+        cursor: pointer;
+        transition: all 0.15s;
+      }
+      .toggle-btn.active {
+        background: #252840;
+        border-color: #6366f1;
+        color: #e1e4ea;
+      }
+      .toggle-btn:hover {
+        background: #1e2030;
+      }
+
+      .state-container {
+        display: none;
+      }
+      .state-container.visible {
+        display: block;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>LLM Connected Banner — States</h1>
+    <p class="subtitle">
+      Shows which model is active on Home tab and Search & Test tab. Picks the highest-tier model
+      from resolved config.
+    </p>
+
+    <!-- Interactive toggle -->
+    <div class="toggle-row">
+      <button class="toggle-btn active" onclick="showState('connected')">
+        ✅ Connected (gpt-4o)
+      </button>
+      <button class="toggle-btn" onclick="showState('connected-mini')">
+        ✅ Connected (gpt-4o-mini)
+      </button>
+      <button class="toggle-btn" onclick="showState('not-configured')">⚠️ Not Configured</button>
+    </div>
+
+    <!-- State: Connected with gpt-4o -->
+    <div id="state-connected" class="state-container visible">
+      <div class="section">
+        <div class="section-title">Home Tab — Setup Guide</div>
+        <div class="tab-label">Home</div>
+        <div class="banner banner-connected">
+          <div class="icon">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+              <polyline points="22 4 12 14.01 9 11.01" />
+            </svg>
+          </div>
+          <div class="text">
+            Connected to <span class="model-name">gpt-4o</span> — intelligent search is active.
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-title">Search & Test Tab</div>
+        <div class="tab-label">Search & Test</div>
+        <div class="banner banner-connected">
+          <div class="icon">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+              <polyline points="22 4 12 14.01 9 11.01" />
+            </svg>
+          </div>
+          <div class="text">
+            Connected to <span class="model-name">gpt-4o</span> — intelligent search is active.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- State: Connected with gpt-4o-mini -->
+    <div id="state-connected-mini" class="state-container">
+      <div class="section">
+        <div class="section-title">Home Tab — Setup Guide</div>
+        <div class="tab-label">Home</div>
+        <div class="banner banner-connected">
+          <div class="icon">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+              <polyline points="22 4 12 14.01 9 11.01" />
+            </svg>
+          </div>
+          <div class="text">
+            Connected to <span class="model-name">gpt-4o-mini</span> — intelligent search is active.
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-title">Search & Test Tab</div>
+        <div class="tab-label">Search & Test</div>
+        <div class="banner banner-connected">
+          <div class="icon">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+              <polyline points="22 4 12 14.01 9 11.01" />
+            </svg>
+          </div>
+          <div class="text">
+            Connected to <span class="model-name">gpt-4o-mini</span> — intelligent search is active.
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-title">When does this happen?</div>
+        <p style="font-size: 13px; color: #8b8fa3; margin-bottom: 8px">
+          Only if ALL use cases are overridden to
+          <code style="background: #1a1c2e; padding: 2px 6px; border-radius: 4px; color: #818cf8"
+            >fast</code
+          >
+          tier. Not the default.
+        </p>
+      </div>
+    </div>
+
+    <!-- State: Not Configured -->
+    <div id="state-not-configured" class="state-container">
+      <div class="section">
+        <div class="section-title">Home Tab — Setup Guide</div>
+        <div class="tab-label">Home</div>
+        <div class="banner banner-warning">
+          <div class="icon">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path
+                d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"
+              />
+              <line x1="12" y1="9" x2="12" y2="13" />
+              <line x1="12" y1="17" x2="12.01" y2="17" />
+            </svg>
+          </div>
+          <div class="text">
+            Search will use keyword matching only. Configure an LLM model for intelligent search
+            with natural language understanding.
+          </div>
+          <button class="btn">Configure LLM</button>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-title">Search & Test Tab</div>
+        <div class="tab-label">Search & Test</div>
+        <div class="banner banner-warning">
+          <div class="icon">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path
+                d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"
+              />
+              <line x1="12" y1="9" x2="12" y2="13" />
+              <line x1="12" y1="17" x2="12.01" y2="17" />
+            </svg>
+          </div>
+          <div class="text">
+            LLM not configured — search results may be limited. Configure in the Intelligence tab.
+          </div>
+          <button class="btn">Configure LLM</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- How tier selection works -->
+    <div class="section" style="margin-top: 20px">
+      <div class="section-title">How Model Selection Works</div>
+      <p style="font-size: 13px; color: #8b8fa3; margin-bottom: 4px">
+        Banner displays the <strong style="color: #e1e4ea">highest-tier</strong> model from resolved
+        config. Default OpenAI setup:
+      </p>
+
+      <table class="tier-table">
+        <thead>
+          <tr>
+            <th>Use Case</th>
+            <th>Default Tier</th>
+            <th>Resolved Model</th>
+            <th>Priority</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>progressiveSummarization</td>
+            <td><span class="tier-badge tier-fast">fast</span></td>
+            <td>gpt-4o-mini</td>
+            <td>1</td>
+          </tr>
+          <tr>
+            <td>questionSynthesis</td>
+            <td><span class="tier-badge tier-fast">fast</span></td>
+            <td>gpt-4o-mini</td>
+            <td>1</td>
+          </tr>
+          <tr>
+            <td>knowledgeGraph</td>
+            <td><span class="tier-badge tier-fast">fast</span></td>
+            <td>gpt-4o-mini</td>
+            <td>1</td>
+          </tr>
+          <tr class="winner">
+            <td>vision ✅</td>
+            <td><span class="tier-badge tier-balanced">balanced</span></td>
+            <td>gpt-4o</td>
+            <td>2 ← winner</td>
+          </tr>
+          <tr class="winner">
+            <td>multimodal</td>
+            <td><span class="tier-badge tier-balanced">balanced</span></td>
+            <td>gpt-4o</td>
+            <td>2</td>
+          </tr>
+          <tr class="winner">
+            <td>textToSql</td>
+            <td><span class="tier-badge tier-balanced">balanced</span></td>
+            <td>gpt-4o</td>
+            <td>2</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="arrow-container">
+        <svg
+          width="24"
+          height="24"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <path d="M12 5v14M19 12l-7 7-7-7" />
+        </svg>
+      </div>
+
+      <div class="banner banner-connected" style="max-width: 500px">
+        <div class="icon">
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+            <polyline points="22 4 12 14.01 9 11.01" />
+          </svg>
+        </div>
+        <div class="text">
+          Connected to <span class="model-name">gpt-4o</span> — intelligent search is active.
+        </div>
+      </div>
+    </div>
+
+    <!-- Scenarios -->
+    <div class="section">
+      <div class="section-title">Scenarios</div>
+      <div class="scenario-grid">
+        <div class="scenario-card">
+          <h4>Standard OpenAI Setup</h4>
+          <p>Customer adds OpenAI API key, uses all defaults</p>
+          <div class="result">→ Banner: "Connected to gpt-4o"</div>
+        </div>
+        <div class="scenario-card">
+          <h4>Anthropic Provider</h4>
+          <p>Customer adds Anthropic API key, uses all defaults</p>
+          <div class="result">
+            → Banner: "Connected to claude-sonnet-4-20250514" (or highest tier)
+          </div>
+        </div>
+        <div class="scenario-card">
+          <h4>All Fast Tier Override</h4>
+          <p>Customer overrides every use case to fast tier</p>
+          <div class="result">→ Banner: "Connected to gpt-4o-mini"</div>
+        </div>
+        <div class="scenario-card">
+          <h4>No LLM Configured</h4>
+          <p>New KB, no provider credentials set</p>
+          <div class="result">→ Banner: "⚠️ Search will use keyword matching only..."</div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      function showState(state) {
+        document
+          .querySelectorAll('.state-container')
+          .forEach((el) => el.classList.remove('visible'));
+        document.querySelectorAll('.toggle-btn').forEach((el) => el.classList.remove('active'));
+        document.getElementById('state-' + state).classList.add('visible');
+        event.target.classList.add('active');
+      }
+    </script>
+  </body>
+</html>

@@ -1,0 +1,304 @@
+{
+  "metadata": {
+    "version": "1.0.0",
+    "total_queries": 2000,
+    "categories": {
+      "simple_keywords": 100,
+      "structured_queries": 100,
+      "sql_queries": 100,
+      "technical_terms": 200,
+      "queries_with_typos": 200,
+      "multilingual": 200,
+      "entity_heavy": 200,
+      "proper_nouns": 200,
+      "complex_semantic": 200,
+      "mixed_edge_cases": 500
+    },
+    "purpose": "Benchmark adaptive preprocessing features (Phase 3.5-3.7)"
+  },
+  "queries": [
+    {
+      "id": "simple_001",
+      "category": "simple_keywords",
+      "query": "user",
+      "expected_complexity": "low",
+      "expected_strategy": "skip",
+      "ground_truth": {
+        "needs_spell_correction": false,
+        "needs_synonyms": false,
+        "needs_entities": false,
+        "optimal_config": "skip"
+      }
+    },
+    {
+      "id": "simple_002",
+      "category": "simple_keywords",
+      "query": "users",
+      "expected_complexity": "low",
+      "expected_strategy": "skip",
+      "ground_truth": {
+        "needs_spell_correction": false,
+        "needs_synonyms": false,
+        "needs_entities": false,
+        "optimal_config": "skip"
+      }
+    },
+    {
+      "id": "simple_003",
+      "category": "simple_keywords",
+      "query": "login",
+      "expected_complexity": "low",
+      "expected_strategy": "skip",
+      "ground_truth": {
+        "needs_spell_correction": false,
+        "needs_synonyms": false,
+        "needs_entities": false,
+        "optimal_config": "skip"
+      }
+    },
+    {
+      "id": "structured_001",
+      "category": "structured_queries",
+      "query": "status:active",
+      "expected_complexity": "low",
+      "expected_strategy": "skip",
+      "ground_truth": {
+        "needs_spell_correction": false,
+        "needs_synonyms": false,
+        "needs_entities": false,
+        "optimal_config": "skip"
+      }
+    },
+    {
+      "id": "structured_002",
+      "category": "structured_queries",
+      "query": "user_id:12345",
+      "expected_complexity": "low",
+      "expected_strategy": "skip",
+      "ground_truth": {
+        "needs_spell_correction": false,
+        "needs_synonyms": false,
+        "needs_entities": false,
+        "optimal_config": "skip"
+      }
+    },
+    {
+      "id": "structured_003",
+      "category": "structured_queries",
+      "query": "created_at:2024-01-15",
+      "expected_complexity": "low",
+      "expected_strategy": "skip",
+      "ground_truth": {
+        "needs_spell_correction": false,
+        "needs_synonyms": false,
+        "needs_entities": false,
+        "optimal_config": "skip"
+      }
+    },
+    {
+      "id": "sql_001",
+      "category": "sql_queries",
+      "query": "SELECT * FROM users",
+      "expected_complexity": "low",
+      "expected_strategy": "skip",
+      "ground_truth": {
+        "needs_spell_correction": false,
+        "needs_synonyms": false,
+        "needs_entities": false,
+        "optimal_config": "skip"
+      }
+    },
+    {
+      "id": "sql_002",
+      "category": "sql_queries",
+      "query": "SELECT id, name FROM users WHERE status = 'active'",
+      "expected_complexity": "low",
+      "expected_strategy": "skip",
+      "ground_truth": {
+        "needs_spell_correction": false,
+        "needs_synonyms": false,
+        "needs_entities": false,
+        "optimal_config": "skip"
+      }
+    },
+    {
+      "id": "technical_001",
+      "category": "technical_terms",
+      "query": "kubernetes deployment configuration",
+      "expected_complexity": "medium",
+      "expected_strategy": "minimal",
+      "ground_truth": {
+        "needs_spell_correction": false,
+        "needs_synonyms": false,
+        "needs_entities": false,
+        "optimal_config": "minimal"
+      }
+    },
+    {
+      "id": "technical_002",
+      "category": "technical_terms",
+      "query": "postgresql database connection pool",
+      "expected_complexity": "medium",
+      "expected_strategy": "minimal",
+      "ground_truth": {
+        "needs_spell_correction": false,
+        "needs_synonyms": false,
+        "needs_entities": false,
+        "optimal_config": "minimal"
+      }
+    },
+    {
+      "id": "technical_003",
+      "category": "technical_terms",
+      "query": "terraform aws vpc configuration",
+      "expected_complexity": "medium",
+      "expected_strategy": "minimal",
+      "ground_truth": {
+        "needs_spell_correction": false,
+        "needs_synonyms": false,
+        "needs_entities": false,
+        "optimal_config": "minimal"
+      }
+    },
+    {
+      "id": "typo_001",
+      "category": "queries_with_typos",
+      "query": "show me docuemnts about kuberntes",
+      "expected_complexity": "high",
+      "expected_strategy": "thorough",
+      "ground_truth": {
+        "needs_spell_correction": true,
+        "needs_synonyms": true,
+        "needs_entities": false,
+        "optimal_config": "thorough",
+        "expected_corrections": ["docuemnts -> documents", "kuberntes -> kubernetes"]
+      }
+    },
+    {
+      "id": "typo_002",
+      "category": "queries_with_typos",
+      "query": "deployemnt confgiuration for prodction",
+      "expected_complexity": "high",
+      "expected_strategy": "thorough",
+      "ground_truth": {
+        "needs_spell_correction": true,
+        "needs_synonyms": false,
+        "needs_entities": false,
+        "optimal_config": "thorough",
+        "expected_corrections": [
+          "deployemnt -> deployment",
+          "confgiuration -> configuration",
+          "prodction -> production"
+        ]
+      }
+    },
+    {
+      "id": "multilingual_001",
+      "category": "multilingual",
+      "query": "mostrar documentos sobre kubernetes",
+      "expected_complexity": "medium",
+      "expected_strategy": "balanced",
+      "ground_truth": {
+        "needs_spell_correction": false,
+        "needs_synonyms": true,
+        "needs_entities": false,
+        "optimal_config": "balanced",
+        "expected_language": "es"
+      }
+    },
+    {
+      "id": "multilingual_002",
+      "category": "multilingual",
+      "query": "afficher les utilisateurs actifs",
+      "expected_complexity": "medium",
+      "expected_strategy": "balanced",
+      "ground_truth": {
+        "needs_spell_correction": false,
+        "needs_synonyms": true,
+        "needs_entities": false,
+        "optimal_config": "balanced",
+        "expected_language": "fr"
+      }
+    },
+    {
+      "id": "entity_001",
+      "category": "entity_heavy",
+      "query": "orders from 2024-01-15 to 2024-02-15 with amount >= 1000",
+      "expected_complexity": "high",
+      "expected_strategy": "thorough",
+      "ground_truth": {
+        "needs_spell_correction": false,
+        "needs_synonyms": false,
+        "needs_entities": true,
+        "optimal_config": "thorough",
+        "expected_entities": ["2024-01-15", "2024-02-15", "1000"]
+      }
+    },
+    {
+      "id": "entity_002",
+      "category": "entity_heavy",
+      "query": "send invoice to john@example.com for $500",
+      "expected_complexity": "high",
+      "expected_strategy": "thorough",
+      "ground_truth": {
+        "needs_spell_correction": false,
+        "needs_synonyms": false,
+        "needs_entities": true,
+        "optimal_config": "thorough",
+        "expected_entities": ["john@example.com", "$500"]
+      }
+    },
+    {
+      "id": "proper_noun_001",
+      "category": "proper_nouns",
+      "query": "Amazon AWS S3 bucket configuration",
+      "expected_complexity": "medium",
+      "expected_strategy": "minimal",
+      "ground_truth": {
+        "needs_spell_correction": false,
+        "needs_synonyms": false,
+        "needs_entities": false,
+        "optimal_config": "minimal"
+      }
+    },
+    {
+      "id": "proper_noun_002",
+      "category": "proper_nouns",
+      "query": "Google Cloud Platform Kubernetes Engine",
+      "expected_complexity": "medium",
+      "expected_strategy": "minimal",
+      "ground_truth": {
+        "needs_spell_correction": false,
+        "needs_synonyms": false,
+        "needs_entities": false,
+        "optimal_config": "minimal"
+      }
+    },
+    {
+      "id": "complex_001",
+      "category": "complex_semantic",
+      "query": "how do I configure high availability deployment with automatic failover",
+      "expected_complexity": "high",
+      "expected_strategy": "thorough",
+      "ground_truth": {
+        "needs_spell_correction": false,
+        "needs_synonyms": true,
+        "needs_entities": false,
+        "optimal_config": "thorough"
+      }
+    },
+    {
+      "id": "complex_002",
+      "category": "complex_semantic",
+      "query": "what are the best practices for securing microservices communication",
+      "expected_complexity": "high",
+      "expected_strategy": "thorough",
+      "ground_truth": {
+        "needs_spell_correction": false,
+        "needs_synonyms": true,
+        "needs_entities": false,
+        "optimal_config": "thorough"
+      }
+    }
+  ]
+}

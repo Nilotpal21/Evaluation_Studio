@@ -1,0 +1,17 @@
+{
+  "agent": "Live_Agent_Transfer",
+  "locale": "en",
+  "strings": {
+    "cancel_message": "No problem. You can reach us anytime at support@traveldesk.example.com.",
+    "agents_available": "An agent is available.",
+    "agents_busy": "All agents are currently busy.",
+    "ticket_created": "I've prepared your case with all the details from our conversation. The agent will have full context — you won't need to repeat anything.",
+    "transfer_success": "Connecting you now. They have your full conversation history and all relevant booking details. Thank you for your patience!",
+    "offer_callback_prompt": "Would you like us to call you back? (yes/no)",
+    "callback_confirmed": "Your callback is confirmed!",
+    "no_agents": "I wasn't able to connect you with a live agent right now.",
+    "connected": "You're now connected. Have a great conversation!",
+    "callback_set": "Callback is set. We'll be in touch!",
+    "cancelled": "Understood. Feel free to reach out anytime."
+  }
+}

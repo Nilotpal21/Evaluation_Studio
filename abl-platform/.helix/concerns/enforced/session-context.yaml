@@ -1,0 +1,65 @@
+id: session-context
+title: Session Execution Context
+enforcement: blocking
+severity_default: high
+rubric_concern: 2
+
+scope:
+  globs:
+    - apps/runtime/src/**/*.ts
+    - packages/compiler/src/**/*.ts
+    - packages/helix/src/**/*.ts
+  exclude:
+    - '**/__tests__/**'
+    - '**/*.test.ts'
+
+references:
+  docs:
+    - CLAUDE.md#model-resolution-contract
+  related_concerns:
+    - session-identity
+    - cross-pod
+
+detectors:
+  - id: no-ambient-global-tenant
+    kind: grep
+    severity: critical
+    pattern: 'global\.(tenantId|projectId|userId)'
+    message: |
+      Tenant, project, and user identity must travel on ExecutionContext,
+      never on global/process state. Ambient globals break cross-pod
+      execution and concurrent request handling.
+    fix_hint: |
+      Pass ExecutionContext explicitly. If you need ALS, use
+      createUnifiedAuthMiddleware which sets up a request-scoped context.
+
+  - id: context-propagation-missing-fields
+    kind: model-review
+    severity: high
+    guidance_ref: ../../prompts/context-propagation-lens.md
+    output_schema:
+      rule_id: context-propagation-missing-fields
+      severity: high | medium
+      location:
+        file: string
+        line: number
+      claim: string
+      reality: string
+      options:
+        A: add the missing field to ExecutionContext + propagate
+        B: confirm this construct is identity-agnostic (cite reason)
+    message: |
+      ExecutionContext must carry: tenantId, projectId, userId (or machine
+      principal id), sessionId, and contactId (when identified). Constructs
+      that receive ExecutionContext without these fields will create
+      orphaned traces and broken retention cascades.
+    fix_hint: |
+      Extend ExecutionContext at the boundary where identity is established,
+      not at each construct. Use discriminated unions if context shape varies
+      by channel.
+
+stage_hooks:
+  - stage: implementation
+    inject_checklist: true
+  - stage: oracle-analysis
+    as_review_lens: true

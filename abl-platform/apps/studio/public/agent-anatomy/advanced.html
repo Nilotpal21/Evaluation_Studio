@@ -1,0 +1,1751 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ADVANCED — Deep Dive</title>
+    <style>
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      :root {
+        --bg: #0c0c0c;
+        --bg2: #141414;
+        --bg3: #1c1c1c;
+        --bg4: #252525;
+        --fg: #e8e8e8;
+        --fg2: #aaa;
+        --fg3: #777;
+        --fg4: #555;
+        --border: #1e1e1e;
+        --border2: #2a2a2a;
+        --mono: 'Berkeley Mono', 'JetBrains Mono', 'SF Mono', 'Fira Code', monospace;
+        --sans: 'Inter', -apple-system, sans-serif;
+      }
+      body {
+        font-family: var(--sans);
+        background: var(--bg);
+        color: var(--fg);
+        line-height: 1.65;
+        -webkit-font-smoothing: antialiased;
+      }
+      a {
+        color: #7090c0;
+        text-decoration: none;
+      }
+      a:hover {
+        text-decoration: underline;
+      }
+      header {
+        padding: 40px 32px 36px;
+        border-bottom: 1px solid var(--border);
+      }
+      header .back {
+        font-size: 0.78rem;
+        color: var(--fg4);
+        margin-bottom: 8px;
+        display: block;
+      }
+      header h1 {
+        font-size: 1.6rem;
+        font-weight: 600;
+        letter-spacing: -0.02em;
+      }
+      header .sub {
+        font-size: 0.92rem;
+        color: var(--fg3);
+        margin-top: 4px;
+      }
+      .quick-stats {
+        display: flex;
+        gap: 24px;
+        margin-top: 16px;
+        flex-wrap: wrap;
+      }
+      .qs {
+        padding: 8px 14px;
+        background: var(--bg2);
+        border: 1px solid var(--border);
+        border-radius: 5px;
+        font-size: 0.78rem;
+      }
+      .qs .n {
+        font-weight: 600;
+        color: var(--fg);
+      }
+      .qs .l {
+        color: var(--fg3);
+        margin-left: 4px;
+      }
+      .container {
+        max-width: 820px;
+        margin: 0 auto;
+        padding: 32px 24px 80px;
+      }
+      .section {
+        margin-bottom: 44px;
+      }
+      .section-title {
+        font-size: 0.74rem;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: var(--fg4);
+        margin-bottom: 14px;
+        padding-bottom: 8px;
+        border-bottom: 1px solid var(--border);
+      }
+      .card {
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        margin-bottom: 8px;
+        background: var(--bg2);
+        overflow: hidden;
+      }
+      .card-head {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 16px;
+        cursor: pointer;
+        user-select: none;
+      }
+      .card-head .label {
+        font-family: var(--mono);
+        font-size: 0.88rem;
+        font-weight: 600;
+        color: var(--fg);
+      }
+      .card-head .meta {
+        font-size: 0.8rem;
+        color: var(--fg3);
+        margin-left: auto;
+      }
+      .card-head .arrow {
+        color: var(--fg4);
+        font-size: 0.85rem;
+        transition: transform 0.2s;
+        flex-shrink: 0;
+        margin-left: 8px;
+      }
+      .card-body {
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.35s ease;
+      }
+      .card.open .card-body {
+        max-height: 6000px;
+      }
+      .card.open .arrow {
+        transform: rotate(90deg);
+      }
+      .card-inner {
+        padding: 2px 16px 16px;
+        border-top: 1px solid var(--border);
+      }
+      pre.y {
+        background: var(--bg);
+        border: 1px solid var(--border);
+        border-radius: 5px;
+        padding: 14px 16px;
+        font-family: var(--mono);
+        font-size: 0.78rem;
+        line-height: 1.7;
+        overflow-x: auto;
+        color: var(--fg3);
+        margin: 10px 0;
+        white-space: pre;
+      }
+      .k {
+        color: #8a8aff;
+        font-weight: 500;
+      }
+      .s {
+        color: #b8a070;
+      }
+      .t {
+        color: #70b080;
+      }
+      .c {
+        color: #444;
+        font-style: italic;
+      }
+      .n {
+        color: #7090c0;
+      }
+      .v {
+        color: #a080a0;
+      }
+      .tbl {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.78rem;
+        margin: 10px 0;
+      }
+      .tbl th {
+        text-align: left;
+        padding: 6px 10px;
+        border-bottom: 1px solid var(--border2);
+        color: var(--fg4);
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 0.66rem;
+        letter-spacing: 0.06em;
+      }
+      .tbl td {
+        padding: 5px 10px;
+        border-bottom: 1px solid var(--border);
+        color: var(--fg3);
+        vertical-align: top;
+      }
+      .tbl td:first-child {
+        font-family: var(--mono);
+        color: var(--fg2);
+        font-size: 0.76rem;
+      }
+      .tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px;
+        margin: 8px 0;
+      }
+      .tag {
+        font-size: 0.68rem;
+        padding: 3px 8px;
+        border-radius: 3px;
+        font-weight: 500;
+        background: var(--bg3);
+        border: 1px solid var(--border2);
+        color: var(--fg3);
+      }
+      .box {
+        border-radius: 5px;
+        padding: 10px 14px;
+        font-size: 0.78rem;
+        color: var(--fg3);
+        margin: 8px 0;
+        border: 1px solid var(--border);
+        line-height: 1.55;
+      }
+      .box.rt {
+        border-left: 2px solid #506040;
+      }
+      .box.rt::before {
+        content: 'Runtime  ';
+        font-weight: 600;
+        color: #7a9a6a;
+      }
+      .box.vl {
+        border-left: 2px solid #805050;
+      }
+      .box.vl::before {
+        content: 'Validation  ';
+        font-weight: 600;
+        color: #b07070;
+      }
+      .box.ed {
+        border-left: 2px solid #506080;
+      }
+      .box.ed::before {
+        content: 'Editor  ';
+        font-weight: 600;
+        color: #7090b0;
+      }
+      .box.tip {
+        border-left: 2px solid #806040;
+      }
+      .box.tip::before {
+        content: 'Tip  ';
+        font-weight: 600;
+        color: #b09060;
+      }
+      .box.key {
+        border-left: 2px solid #605080;
+      }
+      .box.key::before {
+        content: 'Key Concept  ';
+        font-weight: 600;
+        color: #9080b0;
+      }
+      .box.warn {
+        border-left: 2px solid #805040;
+      }
+      .box.warn::before {
+        content: 'Warning  ';
+        font-weight: 600;
+        color: #c07050;
+      }
+      .sub {
+        font-size: 0.72rem;
+        font-weight: 600;
+        color: var(--fg4);
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        margin: 14px 0 6px;
+      }
+      .compare {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+        margin: 10px 0;
+      }
+      .compare-item {
+        background: var(--bg3);
+        border: 1px solid var(--border2);
+        border-radius: 5px;
+        padding: 12px 14px;
+      }
+      .compare-item h4 {
+        font-size: 0.78rem;
+        font-weight: 600;
+        margin-bottom: 6px;
+        color: var(--fg2);
+      }
+      .compare-item p {
+        font-size: 0.74rem;
+        color: var(--fg3);
+        line-height: 1.5;
+      }
+      .flow-diagram {
+        background: var(--bg3);
+        border: 1px solid var(--border2);
+        border-radius: 6px;
+        padding: 20px;
+        margin: 12px 0;
+        overflow-x: auto;
+      }
+      .flow-row {
+        display: flex;
+        align-items: center;
+        gap: 0;
+        flex-wrap: nowrap;
+        min-width: max-content;
+      }
+      .flow-step {
+        padding: 7px 14px;
+        border-radius: 5px;
+        font-size: 0.72rem;
+        font-weight: 500;
+        white-space: nowrap;
+        border: 1px solid var(--border2);
+        background: var(--bg4);
+        color: var(--fg2);
+      }
+      .flow-arrow {
+        color: var(--fg4);
+        padding: 0 4px;
+        font-size: 0.78rem;
+        flex-shrink: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <nav
+      style="
+        position: sticky;
+        top: 0;
+        z-index: 50;
+        background: var(--bg);
+        border-bottom: 1px solid var(--border);
+        padding: 6px 16px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        overflow-x: auto;
+        flex-wrap: nowrap;
+      "
+    >
+      <a
+        href="index.html"
+        style="
+          font-size: 0.72rem;
+          color: var(--fg3);
+          text-decoration: none;
+          padding: 4px 8px;
+          border-radius: 4px;
+          white-space: nowrap;
+        "
+        >Overview</a
+      >
+      <a
+        href="tools.html"
+        style="
+          font-size: 0.68rem;
+          color: var(--fg3);
+          text-decoration: none;
+          padding: 4px 8px;
+          border-radius: 4px;
+          white-space: nowrap;
+        "
+        >Tools</a
+      >
+      <a
+        href="flow.html"
+        style="
+          font-size: 0.68rem;
+          color: var(--fg3);
+          text-decoration: none;
+          padding: 4px 8px;
+          border-radius: 4px;
+          white-space: nowrap;
+        "
+        >Flow</a
+      >
+      <a
+        href="guardrails.html"
+        style="
+          font-size: 0.68rem;
+          color: var(--fg3);
+          text-decoration: none;
+          padding: 4px 8px;
+          border-radius: 4px;
+          white-space: nowrap;
+        "
+        >Guardrails</a
+      >
+      <a
+        href="gather.html"
+        style="
+          font-size: 0.68rem;
+          color: var(--fg3);
+          text-decoration: none;
+          padding: 4px 8px;
+          border-radius: 4px;
+          white-space: nowrap;
+        "
+        >Gather</a
+      >
+      <a
+        href="templates.html"
+        style="
+          font-size: 0.68rem;
+          color: var(--fg3);
+          text-decoration: none;
+          padding: 4px 8px;
+          border-radius: 4px;
+          white-space: nowrap;
+        "
+        >Templates</a
+      >
+      <a
+        href="memory.html"
+        style="
+          font-size: 0.68rem;
+          color: var(--fg3);
+          text-decoration: none;
+          padding: 4px 8px;
+          border-radius: 4px;
+          white-space: nowrap;
+        "
+        >Memory</a
+      >
+      <a
+        href="coordination.html"
+        style="
+          font-size: 0.68rem;
+          color: var(--fg3);
+          text-decoration: none;
+          padding: 4px 8px;
+          border-radius: 4px;
+          white-space: nowrap;
+        "
+        >Coordination</a
+      >
+      <a
+        href="lifecycle.html"
+        style="
+          font-size: 0.68rem;
+          color: var(--fg3);
+          text-decoration: none;
+          padding: 4px 8px;
+          border-radius: 4px;
+          white-space: nowrap;
+        "
+        >Lifecycle</a
+      >
+      <a
+        href="output.html"
+        style="
+          font-size: 0.68rem;
+          color: var(--fg3);
+          text-decoration: none;
+          padding: 4px 8px;
+          border-radius: 4px;
+          white-space: nowrap;
+        "
+        >Output</a
+      >
+      <a
+        href="execution.html"
+        style="
+          font-size: 0.68rem;
+          color: var(--fg3);
+          text-decoration: none;
+          padding: 4px 8px;
+          border-radius: 4px;
+          white-space: nowrap;
+        "
+        >Execution</a
+      >
+      <a
+        href="advanced.html"
+        style="
+          font-size: 0.68rem;
+          font-weight: 600;
+          color: var(--fg);
+          text-decoration: none;
+          padding: 4px 10px;
+          border-radius: 4px;
+          white-space: nowrap;
+          background: var(--bg3);
+          border: 1px solid var(--border2);
+        "
+        >Advanced</a
+      >
+      <span style="color: var(--border2); margin: 0 2px">|</span>
+      <a
+        href="workflows.html"
+        style="
+          font-size: 0.68rem;
+          color: var(--fg3);
+          text-decoration: none;
+          padding: 4px 8px;
+          border-radius: 4px;
+          white-space: nowrap;
+        "
+        >Workflows</a
+      >
+      <a
+        href="monaco-editor-wireframe.html"
+        style="
+          font-size: 0.68rem;
+          color: var(--fg3);
+          text-decoration: none;
+          padding: 4px 8px;
+          border-radius: 4px;
+          white-space: nowrap;
+        "
+        >Editor</a
+      >
+      <a
+        href="rich-text-fields.html"
+        style="
+          font-size: 0.68rem;
+          color: var(--fg3);
+          text-decoration: none;
+          padding: 4px 8px;
+          border-radius: 4px;
+          white-space: nowrap;
+        "
+        >Rich Text + AI</a
+      >
+    </nav>
+
+    <style id="theme-auto">
+      @media (prefers-color-scheme: light) {
+        :root {
+          --bg: #fafafa !important;
+          --bg2: #f4f4f5 !important;
+          --bg3: #e4e4e7 !important;
+          --bg4: #d4d4d8 !important;
+          --fg: #18181b !important;
+          --fg2: #52525b !important;
+          --fg3: #71717a !important;
+          --fg4: #a1a1aa !important;
+          --border: #e4e4e7 !important;
+          --border2: #d4d4d8 !important;
+        }
+        pre,
+        pre.y,
+        pre.pc,
+        .code-block,
+        pre.preview-code {
+          background: #f4f4f5 !important;
+          border-color: #e4e4e7 !important;
+        }
+        .kw,
+        .k {
+          color: #6366f1 !important;
+        }
+        .str,
+        .s {
+          color: #b45309 !important;
+        }
+        .typ,
+        .t,
+        .type {
+          color: #059669 !important;
+        }
+        .num,
+        .n {
+          color: #2563eb !important;
+        }
+        .vr,
+        .v,
+        .var {
+          color: #9333ea !important;
+        }
+        .cmt,
+        .c,
+        .comment {
+          color: #a1a1aa !important;
+        }
+        nav {
+          background: #fafafa !important;
+          border-bottom-color: #e4e4e7 !important;
+        }
+        nav a {
+          color: #52525b !important;
+        }
+      }
+    </style>
+
+    <nav
+      style="
+        position: sticky;
+        top: 0;
+        z-index: 50;
+        background: #0c0c0c;
+        border-bottom: 1px solid #1e1e1e;
+        padding: 6px 16px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        overflow-x: auto;
+        flex-wrap: nowrap;
+      "
+    >
+      <a
+        href="index.html"
+        style="
+          font-size: 0.72rem;
+          font-weight: 600;
+          color: #aaa;
+          text-decoration: none;
+          padding: 4px 10px;
+          border-radius: 4px;
+          white-space: nowrap;
+        "
+        >Overview</a
+      >
+      <a
+        href="tools.html"
+        style="
+          font-size: 0.68rem;
+          color: #aaa;
+          text-decoration: none;
+          padding: 4px 8px;
+          border-radius: 4px;
+          white-space: nowrap;
+        "
+        onmouseover="this.style.background = '#1c1c1c'"
+        onmouseout="this.style.background = ''"
+        >Tools</a
+      >
+      <a
+        href="flow.html"
+        style="
+          font-size: 0.68rem;
+          color: #aaa;
+          text-decoration: none;
+          padding: 4px 8px;
+          border-radius: 4px;
+          white-space: nowrap;
+        "
+        onmouseover="this.style.background = '#1c1c1c'"
+        onmouseout="this.style.background = ''"
+        >Flow</a
+      >
+      <a
+        href="guardrails.html"
+        style="
+          font-size: 0.68rem;
+          color: #aaa;
+          text-decoration: none;
+          padding: 4px 8px;
+          border-radius: 4px;
+          white-space: nowrap;
+        "
+        onmouseover="this.style.background = '#1c1c1c'"
+        onmouseout="this.style.background = ''"
+        >Guardrails</a
+      >
+      <a
+        href="gather.html"
+        style="
+          font-size: 0.68rem;
+          color: #aaa;
+          text-decoration: none;
+          padding: 4px 8px;
+          border-radius: 4px;
+          white-space: nowrap;
+        "
+        onmouseover="this.style.background = '#1c1c1c'"
+        onmouseout="this.style.background = ''"
+        >Gather</a
+      >
+      <a
+        href="templates.html"
+        style="
+          font-size: 0.68rem;
+          color: #aaa;
+          text-decoration: none;
+          padding: 4px 8px;
+          border-radius: 4px;
+          white-space: nowrap;
+        "
+        onmouseover="this.style.background = '#1c1c1c'"
+        onmouseout="this.style.background = ''"
+        >Templates</a
+      >
+      <a
+        href="memory.html"
+        style="
+          font-size: 0.68rem;
+          color: #aaa;
+          text-decoration: none;
+          padding: 4px 8px;
+          border-radius: 4px;
+          white-space: nowrap;
+        "
+        onmouseover="this.style.background = '#1c1c1c'"
+        onmouseout="this.style.background = ''"
+        >Memory</a
+      >
+      <a
+        href="coordination.html"
+        style="
+          font-size: 0.68rem;
+          color: #aaa;
+          text-decoration: none;
+          padding: 4px 8px;
+          border-radius: 4px;
+          white-space: nowrap;
+        "
+        onmouseover="this.style.background = '#1c1c1c'"
+        onmouseout="this.style.background = ''"
+        >Coordination</a
+      >
+      <a
+        href="lifecycle.html"
+        style="
+          font-size: 0.68rem;
+          color: #aaa;
+          text-decoration: none;
+          padding: 4px 8px;
+          border-radius: 4px;
+          white-space: nowrap;
+        "
+        onmouseover="this.style.background = '#1c1c1c'"
+        onmouseout="this.style.background = ''"
+        >Lifecycle</a
+      >
+      <a
+        href="output.html"
+        style="
+          font-size: 0.68rem;
+          color: #aaa;
+          text-decoration: none;
+          padding: 4px 8px;
+          border-radius: 4px;
+          white-space: nowrap;
+        "
+        onmouseover="this.style.background = '#1c1c1c'"
+        onmouseout="this.style.background = ''"
+        >Output</a
+      >
+      <a
+        href="execution.html"
+        style="
+          font-size: 0.68rem;
+          color: #aaa;
+          text-decoration: none;
+          padding: 4px 8px;
+          border-radius: 4px;
+          white-space: nowrap;
+        "
+        onmouseover="this.style.background = '#1c1c1c'"
+        onmouseout="this.style.background = ''"
+        >Execution</a
+      >
+      <a
+        href="advanced.html"
+        style="
+          font-size: 0.68rem;
+          color: #e8e8e8;
+          background: #1c1c1c;
+          border: 1px solid #2a2a2a;
+          text-decoration: none;
+          padding: 4px 8px;
+          border-radius: 4px;
+          white-space: nowrap;
+        "
+        onmouseover="this.style.background = '#1c1c1c'"
+        onmouseout="this.style.background = ''"
+        >Advanced</a
+      >
+      <span style="color: #2a2a2a; margin: 0 2px">|</span>
+      <a
+        href="workflows.html"
+        style="
+          font-size: 0.68rem;
+          color: #aaa;
+          text-decoration: none;
+          padding: 4px 8px;
+          border-radius: 4px;
+          white-space: nowrap;
+        "
+        onmouseover="this.style.background = '#1c1c1c'"
+        onmouseout="this.style.background = ''"
+        >Workflows</a
+      >
+      <a
+        href="monaco-editor-wireframe.html"
+        style="
+          font-size: 0.68rem;
+          color: #7090c0;
+          text-decoration: none;
+          padding: 4px 8px;
+          border-radius: 4px;
+          white-space: nowrap;
+        "
+        onmouseover="this.style.background = '#1c1c1c'"
+        onmouseout="this.style.background = ''"
+        >Editor</a
+      >
+    </nav>
+
+    <header>
+      <a class="back" href="#">&larr; Back to Agent Anatomy</a>
+      <h1>ADVANCED</h1>
+      <div class="sub">
+        NLU configuration, behavior profiles, lookup tables, multi-intent handling. Power features
+        for production agents.
+      </div>
+      <div class="quick-stats">
+        <div class="qs"><span class="n">4</span><span class="l">Advanced Blocks</span></div>
+        <div class="qs"><span class="n">5</span><span class="l">Multi-Intent Strategies</span></div>
+        <div class="qs"><span class="n">3</span><span class="l">Lookup Sources</span></div>
+        <div class="qs">
+          <span class="n">6</span><span class="l">Profile Override Sections</span>
+        </div>
+      </div>
+    </header>
+
+    <div class="container">
+      <!-- NLU -->
+      <div class="section">
+        <div class="section-title">NLU &mdash; Natural Language Understanding</div>
+
+        <div class="box key">
+          NLU defines how the agent understands user input: languages, intents with patterns, typed
+          entities, categories, and optional embedding-based semantic matching. NLU runs before the
+          LLM reasoning loop to classify intent and extract structured data.
+        </div>
+
+        <div class="flow-diagram">
+          <div style="font-size: 0.66rem; color: var(--fg4); margin-bottom: 12px">
+            NLU Pipeline &mdash; runs on every user message
+          </div>
+          <div class="flow-row">
+            <div class="flow-step">User Message</div>
+            <div class="flow-arrow">&rarr;</div>
+            <div class="flow-step">
+              Language Detection<br /><span style="font-size: 0.6rem"
+                >defaultLanguage fallback</span
+              >
+            </div>
+            <div class="flow-arrow">&rarr;</div>
+            <div class="flow-step">
+              Intent Matching<br /><span style="font-size: 0.6rem">patterns + embeddings</span>
+            </div>
+            <div class="flow-arrow">&rarr;</div>
+            <div class="flow-step">
+              Entity Extraction<br /><span style="font-size: 0.6rem">enum / pattern / LLM</span>
+            </div>
+            <div class="flow-arrow">&rarr;</div>
+            <div class="flow-step">
+              Category Classification<br /><span style="font-size: 0.6rem"
+                >urgency, topic, etc.</span
+              >
+            </div>
+            <div class="flow-arrow">&rarr;</div>
+            <div class="flow-step">NLU Result</div>
+          </div>
+        </div>
+
+        <div class="card open">
+          <div class="card-head" onclick="toggle(this)">
+            <span class="label">Full NLU Configuration</span>
+            <span class="meta">Languages, intents, entities, embeddings</span>
+            <span class="arrow">&rsaquo;</span>
+          </div>
+          <div class="card-body">
+            <div class="card-inner">
+              <pre class="y"><span class="k">NLU:</span>
+  languages: [<span class="s">"en"</span>, <span class="s">"es"</span>]
+  defaultLanguage: <span class="s">"en"</span>
+  intents:
+    - name: <span class="s">"file_claim"</span>
+      patterns: [<span class="s">"file a claim"</span>, <span class="s">"submit claim"</span>, <span class="s">"new claim"</span>, <span class="s">"report damage"</span>]
+      examples: [<span class="s">"I need to file a claim for my car accident"</span>]
+      entities: [<span class="s">"claim_type"</span>]
+    - name: <span class="s">"check_status"</span>
+      patterns: [<span class="s">"claim status"</span>, <span class="s">"where is my claim"</span>, <span class="s">"check on claim"</span>]
+  entities:
+    - name: <span class="s">"claim_type"</span>
+      type: <span class="v">enum</span>
+      values: [<span class="s">"auto"</span>, <span class="s">"home"</span>, <span class="s">"health"</span>, <span class="s">"life"</span>]
+      synonyms:
+        auto: [<span class="s">"car"</span>, <span class="s">"vehicle"</span>, <span class="s">"automobile"</span>]
+        home: [<span class="s">"house"</span>, <span class="s">"property"</span>, <span class="s">"dwelling"</span>]
+    - name: <span class="s">"policy_id"</span>
+      type: <span class="v">pattern</span>
+      pattern: <span class="s">"POL-[0-9]{6}"</span>
+  categories:
+    - name: <span class="s">"urgency"</span>
+      values: [<span class="s">"low"</span>, <span class="s">"medium"</span>, <span class="s">"high"</span>, <span class="s">"critical"</span>]
+  embeddings:
+    enabled: <span class="n">true</span>
+    provider: <span class="s">"openai"</span>
+    model: <span class="s">"text-embedding-3-small"</span>
+    threshold: <span class="n">0.75</span>
+    cacheTtl: <span class="n">3600</span></pre>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-head" onclick="toggle(this)">
+            <span class="label">Intents</span>
+            <span class="meta">Pattern-based intent classification</span>
+            <span class="arrow">&rsaquo;</span>
+          </div>
+          <div class="card-body">
+            <div class="card-inner">
+              <table class="tbl">
+                <tr>
+                  <th>Field</th>
+                  <th>Type</th>
+                  <th>Purpose</th>
+                </tr>
+                <tr>
+                  <td>name</td>
+                  <td>string</td>
+                  <td>Intent identifier, referenced in FLOW transitions and conditions</td>
+                </tr>
+                <tr>
+                  <td>patterns</td>
+                  <td>string[]</td>
+                  <td>Short phrases that trigger this intent (keyword matching)</td>
+                </tr>
+                <tr>
+                  <td>examples</td>
+                  <td>string[]</td>
+                  <td>Full example utterances for embedding-based matching</td>
+                </tr>
+                <tr>
+                  <td>entities</td>
+                  <td>string[]</td>
+                  <td>Entities to extract when this intent is detected</td>
+                </tr>
+              </table>
+              <div class="box rt">
+                Patterns use keyword/phrase matching (fast, zero cost). Examples use embedding
+                similarity when <code>embeddings.enabled: true</code> (slower, more accurate). Both
+                can be combined &mdash; patterns run first, embeddings as fallback.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-head" onclick="toggle(this)">
+            <span class="label">Entities</span>
+            <span class="meta">Typed entity extraction</span>
+            <span class="arrow">&rsaquo;</span>
+          </div>
+          <div class="card-body">
+            <div class="card-inner">
+              <table class="tbl">
+                <tr>
+                  <th>Field</th>
+                  <th>Type</th>
+                  <th>Purpose</th>
+                </tr>
+                <tr>
+                  <td>name</td>
+                  <td>string</td>
+                  <td>Entity identifier, maps to GATHER fields</td>
+                </tr>
+                <tr>
+                  <td>type</td>
+                  <td>enum | pattern</td>
+                  <td>
+                    <code>enum</code>: predefined values with synonyms. <code>pattern</code>: regex
+                    extraction.
+                  </td>
+                </tr>
+                <tr>
+                  <td>values</td>
+                  <td>string[]</td>
+                  <td>Valid values for enum type</td>
+                </tr>
+                <tr>
+                  <td>synonyms</td>
+                  <td>object</td>
+                  <td>Map of value &rarr; alternative phrases (enum only)</td>
+                </tr>
+                <tr>
+                  <td>pattern</td>
+                  <td>string</td>
+                  <td>Regex for pattern type extraction</td>
+                </tr>
+              </table>
+              <pre
+                class="y"
+              ><span class="c"># Enum entity — maps synonyms to canonical values</span>
+<span class="c"># "car accident" → claim_type: "auto"</span>
+<span class="c"># "house fire" → claim_type: "home"</span>
+
+<span class="c"># Pattern entity — regex extraction</span>
+<span class="c"># "My policy is POL-123456" → policy_id: "POL-123456"</span></pre>
+              <div class="box rt">
+                Enum entities map user language to canonical values via synonyms. Pattern entities
+                use regex for structured data like IDs, codes, and phone numbers. Entities feed into
+                GATHER fields with the same name.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-head" onclick="toggle(this)">
+            <span class="label">Categories &amp; Embeddings</span>
+            <span class="meta">Classification and semantic matching</span>
+            <span class="arrow">&rsaquo;</span>
+          </div>
+          <div class="card-body">
+            <div class="card-inner">
+              <pre class="y"><span class="k">categories:</span>
+  - name: <span class="s">"urgency"</span>
+    values: [<span class="s">"low"</span>, <span class="s">"medium"</span>, <span class="s">"high"</span>, <span class="s">"critical"</span>]
+  - name: <span class="s">"topic"</span>
+    values: [<span class="s">"billing"</span>, <span class="s">"technical"</span>, <span class="s">"account"</span>, <span class="s">"general"</span>]
+
+<span class="k">embeddings:</span>
+  enabled: <span class="n">true</span>
+  provider: <span class="s">"openai"</span>            <span class="c"># embedding provider</span>
+  model: <span class="s">"text-embedding-3-small"</span> <span class="c"># embedding model</span>
+  threshold: <span class="n">0.75</span>              <span class="c"># min similarity score (0-1)</span>
+  cacheTtl: <span class="n">3600</span>              <span class="c"># cache embeddings for 1 hour</span></pre>
+              <div class="box rt">
+                Categories classify each message into predefined buckets (urgency, topic, etc.).
+                Used for routing and analytics. Embeddings enable semantic intent matching &mdash;
+                more robust than keyword patterns but slower and costlier. Cache reduces repeated
+                embedding calls.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- BEHAVIOR_PROFILES -->
+      <div class="section">
+        <div class="section-title">BEHAVIOR_PROFILES &mdash; Contextual Overrides</div>
+
+        <div class="box key">
+          Behavior profiles override agent behavior based on runtime conditions (channel, time, user
+          segment). They modify instructions, tools, voice settings, response limits, gather
+          behavior, and flow steps. Multiple profiles can activate simultaneously &mdash; higher
+          PRIORITY wins on conflicts.
+        </div>
+
+        <div class="card open">
+          <div class="card-head" onclick="toggle(this)">
+            <span class="label">Voice Channel Profile</span>
+            <span class="meta">Full example with 6 override sections</span>
+            <span class="arrow">&rsaquo;</span>
+          </div>
+          <div class="card-body">
+            <div class="card-inner">
+              <pre
+                class="y"
+              ><span class="k">BEHAVIOR_PROFILE:</span> <span class="t">Voice_Channel</span>
+<span class="k">PRIORITY:</span> <span class="n">10</span>
+<span class="k">WHEN:</span> channel == <span class="s">"voice"</span>
+
+<span class="t">instructions</span>: <span class="s">"Keep responses short. Use simple language."</span>
+
+<span class="t">tools</span>:
+  hide: [<span class="s">"generate_pdf"</span>, <span class="s">"show_chart"</span>]
+  add:
+    - speak_slowly(text: <span class="t">string</span>) -> <span class="t">object</span>
+      description: <span class="s">"Speak text slowly for clarity"</span>
+<span class="t">voice</span>:
+  instructions: <span class="s">"Speak clearly at a moderate pace"</span>
+<span class="t">response</span>:
+  max_response_length: <span class="n">100</span>
+  fallback_format: <span class="s">"text"</span>
+<span class="t">gather</span>:
+  validation_style: <span class="s">"lenient"</span>
+  confirmation: <span class="s">"always"</span>
+<span class="t">flow</span>:
+  skip: [<span class="s">"show_images"</span>, <span class="s">"display_chart"</span>]
+  overrides:
+    welcome:
+      respond: <span class="s">"Hi there! How can I help you today?"</span>
+      voice:
+        ssml: <span class="s">"&lt;speak&gt;Hi there! &lt;break time='300ms'/&gt; How can I help?&lt;/speak&gt;"</span></pre>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-head" onclick="toggle(this)">
+            <span class="label">6 Override Sections</span>
+            <span class="meta">What profiles can change</span>
+            <span class="arrow">&rsaquo;</span>
+          </div>
+          <div class="card-body">
+            <div class="card-inner">
+              <table class="tbl">
+                <tr>
+                  <th>Section</th>
+                  <th>Purpose</th>
+                  <th>Example</th>
+                </tr>
+                <tr>
+                  <td>instructions</td>
+                  <td>Additional instructions merged into system prompt</td>
+                  <td>"Keep responses under 50 words for voice."</td>
+                </tr>
+                <tr>
+                  <td>tools</td>
+                  <td>Hide tools, add channel-specific tools</td>
+                  <td>Hide PDF generation on voice, add TTS tools</td>
+                </tr>
+                <tr>
+                  <td>voice</td>
+                  <td>Voice-specific settings (SSML, pace, tone)</td>
+                  <td>"Speak clearly at a moderate pace"</td>
+                </tr>
+                <tr>
+                  <td>response</td>
+                  <td>Response length limits, format fallback</td>
+                  <td>max_response_length: 100 for voice</td>
+                </tr>
+                <tr>
+                  <td>gather</td>
+                  <td>Validation style, confirmation behavior</td>
+                  <td>Lenient validation on voice (no spelling)</td>
+                </tr>
+                <tr>
+                  <td>flow</td>
+                  <td>Skip steps, override step responses</td>
+                  <td>Skip image display steps on voice channel</td>
+                </tr>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-head" onclick="toggle(this)">
+            <span class="label">Multiple Profiles</span>
+            <span class="meta">Priority-based conflict resolution</span>
+            <span class="arrow">&rsaquo;</span>
+          </div>
+          <div class="card-body">
+            <div class="card-inner">
+              <pre
+                class="y"
+              ><span class="k">BEHAVIOR_PROFILE:</span> <span class="t">Voice_Channel</span>
+<span class="k">PRIORITY:</span> <span class="n">10</span>
+<span class="k">WHEN:</span> channel == <span class="s">"voice"</span>
+<span class="t">instructions</span>: <span class="s">"Keep responses short."</span>
+
+<span class="k">BEHAVIOR_PROFILE:</span> <span class="t">After_Hours</span>
+<span class="k">PRIORITY:</span> <span class="n">20</span>
+<span class="k">WHEN:</span> time.hour &lt; <span class="n">9</span> OR time.hour &gt; <span class="n">17</span>
+<span class="t">instructions</span>: <span class="s">"Inform user that live agents are unavailable."</span>
+<span class="t">tools</span>:
+  hide: [<span class="s">"escalate_to_human"</span>]
+
+<span class="c"># If voice call at 8pm:</span>
+<span class="c"># Both profiles activate.</span>
+<span class="c"># After_Hours (priority 20) wins on conflicts.</span>
+<span class="c"># Non-conflicting settings merge (both instructions apply).</span></pre>
+              <div class="box rt">
+                When multiple profiles activate, non-conflicting settings merge. On conflicts (same
+                field), higher PRIORITY wins. Instructions from all active profiles are
+                concatenated. Tool hide/add lists are merged (union).
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- LOOKUP_TABLES -->
+      <div class="section">
+        <div class="section-title">LOOKUP_TABLES &mdash; External Validation Data</div>
+
+        <div class="box key">
+          Lookup tables provide reference data for entity validation and gather field checking.
+          Three sources: inline (hardcoded values), collection (MongoDB), and API (external HTTP).
+          Referenced from GATHER fields via <code>semantics.lookup</code> and from NLU entities.
+        </div>
+
+        <div class="card open">
+          <div class="card-head" onclick="toggle(this)">
+            <span class="label">3 Lookup Sources</span>
+            <span class="meta">Inline, Collection, API</span>
+            <span class="arrow">&rsaquo;</span>
+          </div>
+          <div class="card-body">
+            <div class="card-inner">
+              <pre class="y"><span class="k">LOOKUP_TABLES:</span>
+  <span class="t">valid_states</span>:
+    source: <span class="v">inline</span>
+    values: [<span class="s">"CA"</span>, <span class="s">"NY"</span>, <span class="s">"TX"</span>, <span class="s">"FL"</span>, <span class="s">"WA"</span>]
+    caseSensitive: <span class="n">false</span>
+    fuzzyMatch: <span class="n">true</span>
+    fuzzyThreshold: <span class="n">0.85</span>
+
+  <span class="t">product_catalog</span>:
+    source: <span class="v">collection</span>
+    tableName: <span class="s">"products"</span>
+    field: <span class="s">"name"</span>
+    timeoutMs: <span class="n">5000</span>
+
+  <span class="t">currency_codes</span>:
+    source: <span class="v">api</span>
+    endpoint: <span class="s">"https://api.exchangerate.host/list"</span>
+    field: <span class="s">"currencies"</span>
+    timeoutMs: <span class="n">3000</span></pre>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-head" onclick="toggle(this)">
+            <span class="label">Source Details</span>
+            <span class="meta">Configuration per source type</span>
+            <span class="arrow">&rsaquo;</span>
+          </div>
+          <div class="card-body">
+            <div class="card-inner">
+              <table class="tbl">
+                <tr>
+                  <th>Source</th>
+                  <th>Fields</th>
+                  <th>Best For</th>
+                </tr>
+                <tr>
+                  <td>inline</td>
+                  <td><code>values</code> (string array)</td>
+                  <td>
+                    Small, static lists (states, categories, statuses). No external dependency.
+                  </td>
+                </tr>
+                <tr>
+                  <td>collection</td>
+                  <td><code>tableName</code>, <code>field</code>, <code>timeoutMs</code></td>
+                  <td>Dynamic data from MongoDB (products, customers). Refreshed per query.</td>
+                </tr>
+                <tr>
+                  <td>api</td>
+                  <td><code>endpoint</code>, <code>field</code>, <code>timeoutMs</code></td>
+                  <td>External reference data (currencies, zip codes). Cached per session.</td>
+                </tr>
+              </table>
+
+              <table class="tbl">
+                <tr>
+                  <th>Option</th>
+                  <th>Type</th>
+                  <th>Default</th>
+                  <th>Purpose</th>
+                </tr>
+                <tr>
+                  <td>caseSensitive</td>
+                  <td>boolean</td>
+                  <td>false</td>
+                  <td>Whether matching is case-sensitive</td>
+                </tr>
+                <tr>
+                  <td>fuzzyMatch</td>
+                  <td>boolean</td>
+                  <td>false</td>
+                  <td>Enable fuzzy string matching (Levenshtein distance)</td>
+                </tr>
+                <tr>
+                  <td>fuzzyThreshold</td>
+                  <td>number</td>
+                  <td>0.85</td>
+                  <td>Minimum similarity score for fuzzy match (0&ndash;1)</td>
+                </tr>
+                <tr>
+                  <td>timeoutMs</td>
+                  <td>number</td>
+                  <td>5000</td>
+                  <td>Timeout for collection/API lookups</td>
+                </tr>
+              </table>
+              <div class="box rt">
+                Inline tables are loaded at agent compile time. Collection tables query MongoDB at
+                runtime. API tables fetch on first use and cache for the session. Fuzzy matching
+                handles typos: "Caifornia" matches "California" at threshold 0.85.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-head" onclick="toggle(this)">
+            <span class="label">Referencing Lookup Tables</span>
+            <span class="meta">From GATHER and NLU</span>
+            <span class="arrow">&rsaquo;</span>
+          </div>
+          <div class="card-body">
+            <div class="card-inner">
+              <pre class="y"><span class="c"># In GATHER — validate field against lookup</span>
+<span class="k">GATHER:</span>
+  <span class="t">state</span>:
+    prompt: <span class="s">"Which state?"</span>
+    type: <span class="t">string</span>
+    semantics:
+      lookup: <span class="s">"valid_states"</span>     <span class="c"># references LOOKUP_TABLES.valid_states</span>
+
+  <span class="t">product</span>:
+    prompt: <span class="s">"Which product?"</span>
+    type: <span class="t">string</span>
+    semantics:
+      lookup: <span class="s">"product_catalog"</span>  <span class="c"># references LOOKUP_TABLES.product_catalog</span>
+
+<span class="c"># In NLU — entity values from lookup</span>
+<span class="k">NLU:</span>
+  entities:
+    - name: <span class="s">"currency"</span>
+      type: <span class="v">enum</span>
+      valuesFrom: <span class="s">"currency_codes"</span>  <span class="c"># dynamic values from API lookup</span></pre>
+              <div class="box tip">
+                Use <code>semantics.lookup</code> in GATHER for validation. Use
+                <code>valuesFrom</code> in NLU entities for dynamic enum values. Both reference the
+                same LOOKUP_TABLES by name.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- MULTI_INTENT -->
+      <div class="section">
+        <div class="section-title">MULTI_INTENT &mdash; Handling Multiple User Intents</div>
+
+        <div class="box key">
+          Users often express multiple intents in a single message: "Check my claim status and also
+          update my address." MULTI_INTENT controls how the agent handles these compound requests
+          &mdash; process them sequentially, in parallel, or ask for clarification.
+        </div>
+
+        <div class="card open">
+          <div class="card-head" onclick="toggle(this)">
+            <span class="label">Configuration</span>
+            <span class="meta">Strategy, limits, thresholds</span>
+            <span class="arrow">&rsaquo;</span>
+          </div>
+          <div class="card-body">
+            <div class="card-inner">
+              <pre class="y"><span class="k">MULTI_INTENT:</span>
+  strategy: <span class="v">sequential</span>
+  max_intents: <span class="n">3</span>
+  confidence_threshold: <span class="n">0.6</span>
+  queue_max_age_ms: <span class="n">600000</span>
+  enabled: <span class="n">true</span></pre>
+
+              <table class="tbl">
+                <tr>
+                  <th>Field</th>
+                  <th>Type</th>
+                  <th>Default</th>
+                  <th>Purpose</th>
+                </tr>
+                <tr>
+                  <td>enabled</td>
+                  <td>boolean</td>
+                  <td>true</td>
+                  <td>Enable multi-intent detection and handling</td>
+                </tr>
+                <tr>
+                  <td>strategy</td>
+                  <td>enum</td>
+                  <td>sequential</td>
+                  <td>How to process detected intents (see strategies below)</td>
+                </tr>
+                <tr>
+                  <td>max_intents</td>
+                  <td>number</td>
+                  <td>3</td>
+                  <td>Maximum intents to detect per message</td>
+                </tr>
+                <tr>
+                  <td>confidence_threshold</td>
+                  <td>number</td>
+                  <td>0.6</td>
+                  <td>Minimum confidence to accept a detected intent (0&ndash;1)</td>
+                </tr>
+                <tr>
+                  <td>queue_max_age_ms</td>
+                  <td>number</td>
+                  <td>600000</td>
+                  <td>Max age for queued intents before they expire (10 minutes)</td>
+                </tr>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-head" onclick="toggle(this)">
+            <span class="label">5 Strategies</span>
+            <span class="meta">sequential, parallel, primary_queue, disambiguate, auto</span>
+            <span class="arrow">&rsaquo;</span>
+          </div>
+          <div class="card-body">
+            <div class="card-inner">
+              <table class="tbl">
+                <tr>
+                  <th>Strategy</th>
+                  <th>Behavior</th>
+                  <th>Best For</th>
+                </tr>
+                <tr>
+                  <td>sequential</td>
+                  <td>
+                    Process intents one at a time, in order detected. Complete first before starting
+                    second.
+                  </td>
+                  <td>Form-based flows where each intent needs full data collection.</td>
+                </tr>
+                <tr>
+                  <td>parallel</td>
+                  <td>Process all intents simultaneously. Merge results into a single response.</td>
+                  <td>Simple lookups: "Check balance and show recent transactions."</td>
+                </tr>
+                <tr>
+                  <td>primary_queue</td>
+                  <td>
+                    Process the highest-confidence intent immediately. Queue others for later.
+                  </td>
+                  <td>
+                    Complex agents where one intent dominates but user also mentions side requests.
+                  </td>
+                </tr>
+                <tr>
+                  <td>disambiguate</td>
+                  <td>Ask the user which intent to handle first before proceeding.</td>
+                  <td>
+                    Ambiguous inputs where intent priority matters: "Cancel or modify my order?"
+                  </td>
+                </tr>
+                <tr>
+                  <td>auto</td>
+                  <td>
+                    Runtime picks the best strategy based on intent complexity and agent type.
+                  </td>
+                  <td>General-purpose agents. The runtime uses heuristics to choose.</td>
+                </tr>
+              </table>
+
+              <pre
+                class="y"
+              ><span class="c"># User: "Check my claim status and update my address"</span>
+
+<span class="c"># sequential → handle check_status first, then update_address</span>
+<span class="c"># parallel → run both lookups simultaneously</span>
+<span class="c"># primary_queue → handle highest-confidence intent, queue the other</span>
+<span class="c"># disambiguate → "Would you like to check status or update address first?"</span>
+<span class="c"># auto → runtime decides (probably sequential for these intents)</span></pre>
+
+              <div class="box rt">
+                The runtime detects multiple intents using NLU (patterns + embeddings). Intents
+                below <code>confidence_threshold</code> are discarded. Remaining intents are
+                processed according to the strategy. Queued intents expire after
+                <code>queue_max_age_ms</code>.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RUNTIME -->
+      <div class="section">
+        <div class="section-title">Runtime Behavior</div>
+
+        <div class="box rt">
+          NLU runs as a pre-pass before the LLM reasoning loop. Intent classification and entity
+          extraction results are injected into the LLM context, helping it understand user intent
+          without re-analyzing from scratch.
+        </div>
+
+        <div class="box rt">
+          Behavior profiles are evaluated at the start of each turn. The runtime checks all WHEN
+          conditions against the current session context (channel, time, user attributes). Active
+          profiles are merged by priority and applied to the agent configuration for that turn.
+        </div>
+
+        <div class="box rt">
+          Lookup tables with <code>source: collection</code> query MongoDB at runtime with the
+          configured timeout. API lookups are cached per session. If a lookup times out, the field
+          validation falls back to LLM-based validation (if available) or accepts the value with a
+          warning.
+        </div>
+
+        <div class="box rt">
+          Multi-intent detection runs after NLU intent classification. If multiple intents are
+          detected above <code>confidence_threshold</code>, the runtime applies the configured
+          strategy. Queued intents persist in session state and are presented to the user when the
+          current intent completes.
+        </div>
+      </div>
+
+      <!-- PATTERNS -->
+      <div class="section">
+        <div class="section-title">Common Patterns</div>
+
+        <div class="card">
+          <div class="card-head" onclick="toggle(this)">
+            <span class="label">Multilingual Agent</span>
+            <span class="meta">NLU with language detection</span>
+            <span class="arrow">&rsaquo;</span>
+          </div>
+          <div class="card-body">
+            <div class="card-inner">
+              <pre class="y"><span class="k">NLU:</span>
+  languages: [<span class="s">"en"</span>, <span class="s">"es"</span>, <span class="s">"fr"</span>]
+  defaultLanguage: <span class="s">"en"</span>
+  intents:
+    - name: <span class="s">"greeting"</span>
+      patterns: [<span class="s">"hello"</span>, <span class="s">"hola"</span>, <span class="s">"bonjour"</span>, <span class="s">"hi"</span>, <span class="s">"hey"</span>]
+    - name: <span class="s">"file_claim"</span>
+      patterns: [<span class="s">"file claim"</span>, <span class="s">"presentar reclamacion"</span>, <span class="s">"deposer reclamation"</span>]</pre>
+              <div class="box tip">
+                Include patterns in all supported languages. The NLU pipeline detects the language
+                first, then matches against patterns in that language. The agent responds in the
+                detected language.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-head" onclick="toggle(this)">
+            <span class="label">Channel-Adaptive Agent</span>
+            <span class="meta">Behavior profiles per channel</span>
+            <span class="arrow">&rsaquo;</span>
+          </div>
+          <div class="card-body">
+            <div class="card-inner">
+              <pre
+                class="y"
+              ><span class="k">BEHAVIOR_PROFILE:</span> <span class="t">Voice_Channel</span>
+<span class="k">PRIORITY:</span> <span class="n">10</span>
+<span class="k">WHEN:</span> channel == <span class="s">"voice"</span>
+<span class="t">response</span>: { max_response_length: <span class="n">100</span> }
+<span class="t">tools</span>: { hide: [<span class="s">"show_chart"</span>, <span class="s">"generate_pdf"</span>] }
+
+<span class="k">BEHAVIOR_PROFILE:</span> <span class="t">Slack_Channel</span>
+<span class="k">PRIORITY:</span> <span class="n">10</span>
+<span class="k">WHEN:</span> channel == <span class="s">"slack"</span>
+<span class="t">response</span>: { fallback_format: <span class="s">"slack"</span> }
+
+<span class="k">BEHAVIOR_PROFILE:</span> <span class="t">Web_Chat</span>
+<span class="k">PRIORITY:</span> <span class="n">10</span>
+<span class="k">WHEN:</span> channel == <span class="s">"web"</span>
+<span class="t">response</span>: { fallback_format: <span class="s">"markdown"</span> }</pre>
+              <div class="box tip">
+                Define one behavior profile per channel. The WHEN condition matches the active
+                channel. Non-applicable tools are hidden, response formats adapt, and gather
+                validation adjusts for the input modality.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-head" onclick="toggle(this)">
+            <span class="label">Dynamic Validation with Lookups</span>
+            <span class="meta">External data for field validation</span>
+            <span class="arrow">&rsaquo;</span>
+          </div>
+          <div class="card-body">
+            <div class="card-inner">
+              <pre class="y"><span class="k">LOOKUP_TABLES:</span>
+  <span class="t">valid_zip_codes</span>:
+    source: <span class="v">api</span>
+    endpoint: <span class="s">"https://api.zippopotam.us/us"</span>
+    field: <span class="s">"post code"</span>
+    timeoutMs: <span class="n">3000</span>
+
+<span class="k">GATHER:</span>
+  <span class="t">zip_code</span>:
+    prompt: <span class="s">"What's your zip code?"</span>
+    type: <span class="t">string</span>
+    validate: <span class="s">"matches(value, '^[0-9]{5}$')"</span>
+    semantics:
+      lookup: <span class="s">"valid_zip_codes"</span>
+    retryPrompt: <span class="s">"Please enter a valid 5-digit US zip code."</span></pre>
+              <div class="box tip">
+                Combine regex validation (format check) with lookup validation (existence check).
+                The regex runs first (free, instant), then the lookup confirms the value exists in
+                the external source.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ANTI-PATTERNS -->
+      <div class="section">
+        <div class="section-title">Anti-Patterns</div>
+        <div class="compare">
+          <div class="compare-item">
+            <h4 style="color: #b07070">Too many NLU intents</h4>
+            <p>
+              Defining 50+ intents with overlapping patterns. Intent classification becomes
+              unreliable. Group related intents and let the LLM handle sub-classification.
+            </p>
+          </div>
+          <div class="compare-item">
+            <h4 style="color: #b07070">Behavior profiles without PRIORITY</h4>
+            <p>
+              Multiple profiles with the same default priority. Conflict resolution becomes
+              unpredictable. Always set explicit PRIORITY values.
+            </p>
+          </div>
+          <div class="compare-item">
+            <h4 style="color: #b07070">API lookups without timeout</h4>
+            <p>
+              External API lookups with no <code>timeoutMs</code>. A slow API blocks the entire
+              conversation. Always set timeouts and handle failures gracefully.
+            </p>
+          </div>
+          <div class="compare-item">
+            <h4 style="color: #b07070">Parallel multi-intent on complex flows</h4>
+            <p>
+              Using <code>strategy: parallel</code> when intents require GATHER data collection.
+              Parallel collection of overlapping fields causes confusion. Use
+              <code>sequential</code> for complex flows.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- VALIDATION RULES -->
+      <div class="section">
+        <div class="section-title">Validation Rules</div>
+
+        <table class="tbl">
+          <tr>
+            <th>Rule</th>
+            <th>Level</th>
+            <th>Source</th>
+          </tr>
+          <tr>
+            <td>Duplicate intent name</td>
+            <td style="color: #b07070">Error</td>
+            <td>Parser &mdash; intent names must be unique</td>
+          </tr>
+          <tr>
+            <td>Entity referenced but not defined</td>
+            <td style="color: #b07070">Error</td>
+            <td>Analyzer &mdash; intent references entity not in NLU.entities</td>
+          </tr>
+          <tr>
+            <td>Overlapping patterns</td>
+            <td style="color: #b8a070">Warning</td>
+            <td>Language service &mdash; two intents share identical patterns</td>
+          </tr>
+          <tr>
+            <td>Lookup table unreferenced</td>
+            <td style="color: #7090c0">Info</td>
+            <td>Analyzer &mdash; table defined but not used in GATHER or NLU</td>
+          </tr>
+          <tr>
+            <td>Missing PRIORITY on profile</td>
+            <td style="color: #b8a070">Warning</td>
+            <td>Language service &mdash; behavior profile without explicit priority</td>
+          </tr>
+          <tr>
+            <td>API lookup without timeout</td>
+            <td style="color: #b8a070">Warning</td>
+            <td>Analyzer &mdash; external lookup with no timeoutMs</td>
+          </tr>
+        </table>
+      </div>
+
+      <!-- EDITOR PLAN -->
+      <div class="section">
+        <div class="section-title">Editor Assistance Plan</div>
+        <table class="tbl">
+          <tr>
+            <th>Feature</th>
+            <th>Implementation</th>
+          </tr>
+          <tr>
+            <td>NLU intent builder</td>
+            <td>
+              Visual form: intent name, pattern list editor, example utterance input, entity
+              linkage.
+            </td>
+          </tr>
+          <tr>
+            <td>Entity type picker</td>
+            <td>
+              Dropdown: enum (with values + synonyms editor) or pattern (with regex input + tester).
+            </td>
+          </tr>
+          <tr>
+            <td>Behavior profile templates</td>
+            <td>
+              Pre-built templates: Voice Channel, After Hours, Slack, Premium User. One-click
+              insert.
+            </td>
+          </tr>
+          <tr>
+            <td>WHEN expression builder</td>
+            <td>
+              Autocomplete for context variables: channel, time.hour, user.segment,
+              session.language.
+            </td>
+          </tr>
+          <tr>
+            <td>Lookup source selector</td>
+            <td>
+              Radio buttons: inline (values editor), collection (table picker), API (endpoint +
+              field).
+            </td>
+          </tr>
+          <tr>
+            <td>Multi-intent strategy picker</td>
+            <td>Dropdown with visual explanation of each strategy's behavior.</td>
+          </tr>
+          <tr>
+            <td>Pattern overlap detector</td>
+            <td>Highlight intents with overlapping patterns in the NLU section.</td>
+          </tr>
+        </table>
+      </div>
+    </div>
+
+    <script>
+      function toggle(h) {
+        h.parentElement.classList.toggle('open');
+      }
+    </script>
+  </body>
+</html>

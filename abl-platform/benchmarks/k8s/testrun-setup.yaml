@@ -1,0 +1,29 @@
+apiVersion: k6.io/v1alpha1
+kind: TestRun
+metadata:
+  name: benchmark-setup
+  namespace: abl-benchmarks
+  labels:
+    benchmark-type: setup
+spec:
+  parallelism: 1
+  script:
+    configMap:
+      name: benchmark-setup-script
+      file: bootstrap.ts
+  arguments: >-
+    --env STUDIO_URL=http://studio.abl-platform.svc.cluster.local:5173
+    --env RUNTIME_URL=http://runtime.abl-platform.svc.cluster.local:3112
+    --env SEARCH_AI_URL=http://search-ai.abl-platform.svc.cluster.local:3113
+    --env OPENSEARCH_URL=https://opensearch.abl-platform.svc.cluster.local:9200
+    --env QDRANT_URL=http://qdrant.abl-platform.svc.cluster.local:6333
+    --iterations 1
+    --vus 1
+  runner:
+    resources:
+      requests:
+        cpu: 250m
+        memory: 256Mi
+      limits:
+        cpu: 500m
+        memory: 512Mi

@@ -1,0 +1,16 @@
+SUPERVISOR: FanOut_Coordinator
+
+GOAL: "Coordinate parallel specialist execution"
+
+HANDOFF:
+  - TO: Flight_Specialist
+    WHEN: intent contains "flight"
+    CONTEXT:
+      summary: "Flight request"
+    RETURN: false
+
+  - TO: Hotel_Specialist
+    WHEN: intent contains "hotel"
+    CONTEXT:
+      summary: "Hotel request"
+    RETURN: false

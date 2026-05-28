@@ -1,0 +1,59 @@
+{
+  "format_version": "2.0",
+  "name": "Apple Care Support",
+  "slug": "apple-care-support",
+  "description": "Multi-agent Apple customer care system for device support, account help, repairs, warranty, and subscription management",
+  "abl_version": "1.0",
+  "exported_at": "2026-03-12T00:00:00.000Z",
+  "dsl_format": "legacy",
+  "layers_included": ["core"],
+  "entry_agent": "Apple_Care_Supervisor",
+  "agents": {
+    "Apple_Care_Supervisor": {
+      "path": "agents/apple_care_supervisor.agent.abl",
+      "description": "Multi-agent Apple customer care supervisor for device support, account help, repairs, and subscriptions",
+      "type": "supervisor"
+    },
+    "Device_Support": {
+      "path": "agents/device_support.agent.abl",
+      "description": "Diagnoses and resolves issues with iPhone, iPad, Mac, Apple Watch, and AirPods through guided troubleshooting"
+    },
+    "Account_Support": {
+      "path": "agents/account_support.agent.abl",
+      "description": "Helps with Apple ID, iCloud, two-factor authentication, and account security"
+    },
+    "Repair_And_Warranty": {
+      "path": "agents/repair_and_warranty.agent.abl",
+      "description": "Scripted agent for warranty checks, repair estimates, in-store service scheduling, and mail-in repairs"
+    },
+    "Subscription_Support": {
+      "path": "agents/subscription_support.agent.abl",
+      "description": "Manages Apple subscriptions including Apple One, Music, TV+, Arcade, iCloud+, News+, Fitness+"
+    },
+    "Live_Agent": {
+      "path": "agents/live_agent.agent.abl",
+      "description": "Transfers to Apple Support specialist with full conversation context and device details"
+    }
+  },
+  "tools": {
+    "device_diagnostics": {
+      "path": "tools/device_diagnostics.tools.abl"
+    },
+    "account_management": {
+      "path": "tools/account_management.tools.abl"
+    },
+    "repair_and_warranty": {
+      "path": "tools/repair_and_warranty.tools.abl"
+    },
+    "subscription_management": {
+      "path": "tools/subscription_management.tools.abl"
+    }
+  },
+  "metadata": {
+    "entity_counts": {
+      "agents": 6,
+      "tools": 4
+    },
+    "required_env_vars": []
+  }
+}

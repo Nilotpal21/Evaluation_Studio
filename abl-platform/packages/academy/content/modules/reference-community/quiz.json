@@ -1,0 +1,85 @@
+{
+  "moduleId": "reference-community",
+  "passThreshold": 0.8,
+  "questions": [
+    {
+      "id": "rc-q1",
+      "type": "mcq",
+      "stem": "A new developer joins the team and needs to quickly understand what HANDOFF, DELEGATE, GATHER, and CONTEXT mean in ABL. Which resource should they consult first?",
+      "options": [
+        {
+          "id": "a",
+          "text": "The ABL source code examples folder in the repository"
+        },
+        {
+          "id": "b",
+          "text": "The ABL Glossary, which provides canonical definitions of all platform-specific terms with cross-references to detailed documentation",
+          "correct": true
+        },
+        {
+          "id": "c",
+          "text": "The API reference for the Runtime REST endpoints"
+        }
+      ],
+      "explanation": "The ABL Glossary is the canonical reference for all platform-specific terminology. It defines keywords like HANDOFF (transfers conversation to another agent), DELEGATE (dispatches a subtask and waits for result), GATHER (collects user input), and CONTEXT (provides background information to the LLM). Each glossary entry cross-references the relevant detailed documentation."
+    },
+    {
+      "id": "rc-q2",
+      "type": "fill-blank",
+      "stem": "In ABL terminology, a ________ is a multi-agent construct that dispatches a subtask to another agent and waits for the result, unlike a handoff which transfers the full conversation.",
+      "answer": "DELEGATE",
+      "acceptAlternatives": ["delegate", "Delegate", "delegation"],
+      "explanation": "DELEGATE dispatches a subtask to another agent and pauses execution until the sub-agent returns its result. This differs from HANDOFF, which transfers the full conversational context to the target agent. With delegation, the parent agent seamlessly incorporates the sub-agent's work into its own response."
+    },
+    {
+      "id": "rc-q3",
+      "type": "mcq",
+      "stem": "A developer wants to understand how the ABL compilation pipeline transforms agent definitions into executable code. Which documentation section covers this end-to-end process?",
+      "options": [
+        {
+          "id": "a",
+          "text": "The Studio UI guide, which shows the visual editor for agent configuration"
+        },
+        {
+          "id": "b",
+          "text": "The Architecture Overview, which documents how ABL source is parsed, validated, compiled to IR, and executed by the Runtime",
+          "correct": true
+        },
+        {
+          "id": "c",
+          "text": "The Deployment guide, which covers Docker and Kubernetes configurations"
+        }
+      ],
+      "explanation": "The Architecture Overview documents the full compilation pipeline: ABL source text is parsed into an AST, validated for correctness, compiled into an Intermediate Representation (IR), and then executed by the Runtime engine. Understanding this pipeline is essential for debugging agent behavior and optimizing performance."
+    },
+    {
+      "id": "rc-q4",
+      "type": "mcq",
+      "stem": "According to the glossary, what is the relationship between 'workspace' and 'tenant' in the Agent Platform?",
+      "options": [
+        {
+          "id": "a",
+          "text": "A workspace contains multiple tenants under a single billing boundary"
+        },
+        {
+          "id": "b",
+          "text": "They are synonyms -- both refer to the same isolated environment containing projects, members, and configuration",
+          "correct": true
+        },
+        {
+          "id": "c",
+          "text": "A tenant is the top-level entity while a workspace is a project-level subdivision within it"
+        }
+      ],
+      "explanation": "According to the glossary, 'workspace' and 'tenant' are used interchangeably in different parts of the platform. Both refer to the same isolated environment that contains projects, members, and configuration. An organization is the optional higher-level entity that groups one or more tenants."
+    },
+    {
+      "id": "rc-q5",
+      "type": "fill-blank",
+      "stem": "In the ABL glossary, the term ________ refers to the JSON-based compiled output that the Runtime engine executes, produced by the ABL compiler from agent source definitions.",
+      "answer": "IR",
+      "acceptAlternatives": ["Intermediate Representation", "intermediate representation", "ir"],
+      "explanation": "The Intermediate Representation (IR) is the JSON-based compiled output produced by the ABL compiler. The Runtime engine executes this IR rather than interpreting ABL source directly. This separation allows the compiler to optimize and validate agent definitions before execution."
+    }
+  ]
+}

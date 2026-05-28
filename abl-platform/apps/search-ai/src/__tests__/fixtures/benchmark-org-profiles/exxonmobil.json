@@ -1,0 +1,52 @@
+{
+  "organizationName": "ExxonMobil",
+  "industry": "Energy",
+  "keyTerms": [
+    "oil and gas",
+    "upstream exploration",
+    "downstream refining",
+    "petrochemicals",
+    "natural gas",
+    "LNG",
+    "drilling operations",
+    "production facilities",
+    "refinery",
+    "distribution network",
+    "energy efficiency",
+    "carbon capture",
+    "renewable energy"
+  ],
+  "acronyms": {
+    "LNG": "Liquefied Natural Gas",
+    "E&P": "Exploration and Production",
+    "HSE": "Health, Safety, and Environment",
+    "FPSO": "Floating Production Storage and Offloading",
+    "BTU": "British Thermal Unit",
+    "API": "American Petroleum Institute",
+    "GHG": "Greenhouse Gas",
+    "CCS": "Carbon Capture and Storage"
+  },
+  "departmentBoundaries": [
+    {
+      "product1": "upstream",
+      "product2": "downstream",
+      "reasoning": "Upstream explores and produces crude oil/gas while downstream refines and distributes products; different assets, operations, and market dynamics"
+    },
+    {
+      "product1": "conventional-oil-gas",
+      "product2": "unconventional-resources",
+      "reasoning": "Conventional uses traditional drilling while unconventional includes shale, tight oil, and offshore deep water; different extraction technologies and economics"
+    },
+    {
+      "product1": "fuels",
+      "product2": "petrochemicals",
+      "reasoning": "Fuels are gasoline, diesel, jet fuel for energy while petrochemicals are building blocks for plastics, lubricants; different end markets and value chains"
+    }
+  ],
+  "productSpecificNames": {
+    "upstream": ["Exploration", "Production", "Offshore Operations", "Onshore Operations"],
+    "downstream": ["Refining", "Fuels Marketing", "Lubricants", "Chemicals"],
+    "brands": ["Exxon", "Mobil", "Esso", "Synergy Fuel", "Mobil 1"],
+    "low-carbon": ["Carbon Capture", "Hydrogen", "Biofuels", "Advanced Recycling"]
+  }
+}

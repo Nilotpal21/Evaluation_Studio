@@ -1,0 +1,29 @@
+/**
+ * Saludsa Zendesk Tools
+ * MCP tools for creating, updating, and closing Zendesk support tickets.
+ */
+
+TOOLS:
+  auth: api_key
+  timeout: 45000
+  auth_config:
+    header_name: "Authorization"
+    api_key: "{{env.SALUDSA_MCP_AUTH}}"
+
+  create_zendesk_ticket(usecase: string = "new", channel: string = "web", botSessionId: string = "", botUserId: string = "", subject: string = "Nuevo Ticket", comment: string = "", tags: string = "", note: string = "", sessionId: string) -> {success: boolean, ticketId: string}
+    type: http
+    endpoint: "{{env.SALUDSA_MCP_ENDPOINT}}/create-zendesk-ticket"
+    method: POST
+    description: "Create Zendesk ticket. usecase enum: new, transer_sac, transfer_sales, transfer_vitality, transfer_authorization, tranfer_emergency, transfer_online_medical."
+
+  update_zendesk_ticket(usecase: string, channel: string = "", transfer_type: string = "", transfer_reason: string = "", lpd_accept: boolean = true, requerimientos_samy: string = "", region: string = "", subject: string = "", note: string = "", publicNote: string = "", status: string = "", client_id: string = "", client_name: string = "", client_email: string = "", client_phone: string = "", requester_name: string = "", requester_email: string = "", new_ticket: string = "", sessionId: string) -> {success: boolean}
+    type: http
+    endpoint: "{{env.SALUDSA_MCP_ENDPOINT}}/update-zendesk-ticket"
+    method: POST
+    description: "Update existing Zendesk ticket. usecase enum: user_details, lpd, refund, contract_status, transfer_sac, transfer_sales, transfer_vitality, transfer_authorization, transfer_emergency, transfer_online_medical, transfer_doctor_home, transfer_funeral, transfer_dental, transfer_travel, transfer_pca, refund_status, sending_contract, otp_code, password_reset, pending_payment_amounts, issuance_of_coverage, auth_fail, auth_fail_client, broker_client."
+
+  close_zendesk_ticket(closing_reason: string = "", note: string = "", tags: string = "", sessionId: string) -> {success: boolean}
+    type: http
+    endpoint: "{{env.SALUDSA_MCP_ENDPOINT}}/close-zendesk-ticket"
+    method: POST
+    description: "Close Zendesk ticket. closing_reason: self_service, abandonment, transfer_completed, after_hours, error, external_transfer."

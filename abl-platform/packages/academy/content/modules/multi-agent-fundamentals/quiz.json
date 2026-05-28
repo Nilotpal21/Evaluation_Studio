@@ -1,0 +1,98 @@
+{
+  "moduleId": "multi-agent-fundamentals",
+  "passThreshold": 0.8,
+  "questions": [
+    {
+      "id": "maf-q1",
+      "type": "mcq",
+      "stem": "In the retail customer support tutorial, the Order_Tracker agent defines a HANDOFF to the Returns_Agent with `RETURN: false`. What does `RETURN: false` mean in this context?",
+      "options": [
+        {
+          "id": "a",
+          "text": "The conversation stays with the Returns_Agent permanently; the Order_Tracker does not regain control",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "The Returns_Agent cannot send any response back to the user"
+        },
+        {
+          "id": "c",
+          "text": "The handoff is retried if the Returns_Agent fails to respond within the timeout"
+        }
+      ],
+      "explanation": "RETURN: false means the handoff is a one-way transfer. The calling agent's session ends and the target agent takes over the conversation entirely. RETURN: true would cause control to return to the calling agent after the target completes."
+    },
+    {
+      "id": "maf-q2",
+      "type": "mcq",
+      "stem": "A supervisor has a search_hybrid knowledge tool and also has HANDOFF rules to specialist agents. A user asks 'What are your store hours?' which matches the FAQ knowledge base. According to the tutorial's pattern, what should the supervisor do?",
+      "options": [
+        {
+          "id": "a",
+          "text": "Always route to a specialist agent first, then fall back to the knowledge base"
+        },
+        {
+          "id": "b",
+          "text": "Search the knowledge base and answer directly, avoiding an unnecessary handoff to a specialist",
+          "correct": true
+        },
+        {
+          "id": "c",
+          "text": "Create a new child agent session dedicated to FAQ handling"
+        }
+      ],
+      "explanation": "The tutorial shows that a supervisor equipped with a knowledge base tool should answer simple FAQ questions directly from the knowledge base, reserving specialist handoffs for domain-specific requests. This reduces handoffs and improves response time."
+    },
+    {
+      "id": "maf-q3",
+      "type": "fill-blank",
+      "stem": "In ABL, the top-level orchestrator that routes user messages to child agents is declared using the ________ keyword instead of the AGENT keyword.",
+      "answer": "SUPERVISOR",
+      "explanation": "The SUPERVISOR: keyword declares a top-level orchestrator. Unlike AGENT:, a supervisor's primary role is to classify intent and route messages to the appropriate child agent, not to handle domain-specific tasks directly.",
+      "acceptAlternatives": ["SUPERVISOR", "SUPERVISOR:"]
+    },
+    {
+      "id": "maf-q4",
+      "type": "mcq",
+      "stem": "You are building a multi-agent system where the Product_Advisor needs to answer both 'What laptops do you have under $1000?' and 'Does the ProBook support USB-C charging?' in the same conversation. Which approach from the tutorial achieves this?",
+      "options": [
+        {
+          "id": "a",
+          "text": "Create two separate agents: one for catalog queries and one for documentation queries"
+        },
+        {
+          "id": "b",
+          "text": "Give the Product_Advisor both catalog tools (search_products, compare_products) and a knowledge base tool (search_hybrid) in the same TOOLS block",
+          "correct": true
+        },
+        {
+          "id": "c",
+          "text": "Have the supervisor intercept documentation questions and answer them before routing to Product_Advisor"
+        }
+      ],
+      "explanation": "The tutorial demonstrates updating the Product_Advisor to include both catalog tools (search_products, get_product_details, compare_products) and the knowledge base search tool (search_hybrid) in its TOOLS block. This lets a single agent handle both product catalog lookups and product documentation searches."
+    },
+    {
+      "id": "maf-q5",
+      "type": "mcq",
+      "stem": "In the tutorial's supervisor, the ESCALATE block triggers when `handoff_count >= 3`. What is the purpose of this trigger?",
+      "options": [
+        {
+          "id": "a",
+          "text": "To automatically restart the conversation from the beginning"
+        },
+        {
+          "id": "b",
+          "text": "To detect when a customer has been bounced between too many agents and escalate to a human",
+          "correct": true
+        },
+        {
+          "id": "c",
+          "text": "To log a routing failure metric without interrupting the conversation"
+        }
+      ],
+      "explanation": "The ESCALATE trigger with `handoff_count >= 3` detects a UX failure pattern where the customer is being bounced between agents without resolution. It escalates to a human agent with high priority and the tag [ux_failure], providing the human with customer_id, conversation_history, routing_history, and last_intent."
+    }
+  ]
+}

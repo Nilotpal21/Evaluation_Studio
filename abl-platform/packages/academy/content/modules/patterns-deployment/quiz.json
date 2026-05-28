@@ -1,0 +1,98 @@
+{
+  "moduleId": "patterns-deployment",
+  "passThreshold": 0.8,
+  "questions": [
+    {
+      "id": "patterns-q1",
+      "type": "mcq",
+      "stem": "You are designing a document processing workflow where each stage (intake, validation, processing, confirmation) must complete before the next begins. Which orchestration pattern is most appropriate?",
+      "options": [
+        {
+          "id": "a",
+          "text": "Router/Dispatcher pattern with intent-based routing to specialist agents"
+        },
+        {
+          "id": "b",
+          "text": "Sequential Pipeline (A -> B -> C) pattern where the supervisor routes through each stage in order",
+          "correct": true
+        },
+        {
+          "id": "c",
+          "text": "Fan-out pattern using multiple DELEGATE directives to process stages in parallel"
+        }
+      ],
+      "explanation": "The Sequential Pipeline pattern (A -> B -> C) is designed for multi-stage processing pipelines where each stage depends on the previous stage's output. It is used for document review, data enrichment, approval chains, and similar workflows. The supervisor manages the pipeline by routing through each stage in sequence. A Router/Dispatcher is for intent-based routing, and fan-out is for parallel processing -- neither fits the strict sequential dependency requirement."
+    },
+    {
+      "id": "patterns-q2",
+      "type": "mcq",
+      "stem": "The Jupiter banking example uses 12 specialist agents orchestrated by a single supervisor. When a user reports a potential fraud, the supervisor routes to Fraud_Claims at priority P2. What does the 'P0' priority designation on Live_Agent_Transfer indicate?",
+      "options": [
+        {
+          "id": "a",
+          "text": "It is the last resort agent that handles conversations no other agent can process"
+        },
+        {
+          "id": "b",
+          "text": "It is the human escalation agent with the highest priority, checked before all specialist agents",
+          "correct": true
+        },
+        {
+          "id": "c",
+          "text": "It is disabled (priority 0 means inactive) and must be manually activated by an admin"
+        }
+      ],
+      "explanation": "In the Jupiter banking architecture, Live_Agent_Transfer has priority P0, designating it as the human escalation agent. P0 is the highest priority in the routing hierarchy, meaning the supervisor checks for human escalation triggers before routing to any specialist agent. The priority hierarchy goes: P0 (human escalation) through P14 (Fallback_Handler). This ensures that critical situations requiring human intervention are caught first."
+    },
+    {
+      "id": "patterns-q3",
+      "type": "fill-blank",
+      "stem": "When deploying the Agent Platform on-premises, the two required infrastructure dependencies are MongoDB (7.0+ with replica set) and ________.",
+      "answer": "Redis",
+      "acceptAlternatives": ["redis", "REDIS", "Redis 7+"],
+      "explanation": "For self-hosted deployment, MongoDB (7.0+, replica set required for change streams and transactions) and Redis (7+, persistence enabled) are the two required infrastructure dependencies. ClickHouse is optional (for analytics dashboards), and Kafka is optional (for event streaming). Additionally, there are optional Python services for document parsing, embeddings, and text preprocessing."
+    },
+    {
+      "id": "patterns-q4",
+      "type": "mcq",
+      "stem": "A telecom company wants to deploy the Agent Platform on their own infrastructure for data residency requirements. What are the minimum infrastructure dependencies they must provision?",
+      "options": [
+        {
+          "id": "a",
+          "text": "MongoDB, Redis, ClickHouse, and Kafka"
+        },
+        {
+          "id": "b",
+          "text": "MongoDB and Redis only -- ClickHouse and Kafka are optional",
+          "correct": true
+        },
+        {
+          "id": "c",
+          "text": "MongoDB only -- Redis, ClickHouse, and Kafka are all optional"
+        }
+      ],
+      "explanation": "For self-hosted deployment, MongoDB (7.0+, replica set required for change streams and transactions) and Redis (7+, persistence enabled) are the two required infrastructure dependencies. ClickHouse is optional (for analytics and metrics dashboards), and Kafka is optional (for event streaming in analytics pipelines). Additionally, there are optional Python services for document parsing (Docling), embeddings (BGE-M3), and text preprocessing."
+    },
+    {
+      "id": "patterns-q5",
+      "type": "mcq",
+      "stem": "A healthcare company on the Professional plan is approaching their monthly token budget. They notice one agent has unusually high per-session token counts. According to the billing documentation, which cost optimization strategy directly addresses this?",
+      "options": [
+        {
+          "id": "a",
+          "text": "Enable conversation sliding windows to limit conversation history sent to the LLM, reducing input token costs",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "Switch from Professional to Enterprise plan, which has unlimited tokens"
+        },
+        {
+          "id": "c",
+          "text": "Disable audit logging to reduce token overhead from trace data"
+        }
+      ],
+      "explanation": "The billing documentation lists several cost optimization tips. For agents with high per-session token counts, enabling conversation sliding windows limits the conversation history sent to the LLM, directly reducing input token costs. Other tips include using the right model tier for the job (Fast for simple classification), setting daily token budgets, reviewing agent-level usage monthly, and archiving inactive projects. Audit logging does not consume LLM tokens."
+    }
+  ]
+}

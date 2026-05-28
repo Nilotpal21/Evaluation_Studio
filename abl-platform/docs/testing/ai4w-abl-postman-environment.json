@@ -1,0 +1,82 @@
+{
+  "id": "ai4w-abl-ablp-420-env",
+  "name": "AI4W-ABL (ABLP-420) — local dev",
+  "values": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3112",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "serviceToken",
+      "value": "",
+      "type": "secret",
+      "enabled": true,
+      "description": "AI4W_SERVICE_TOKEN env var on the runtime process"
+    },
+    {
+      "key": "jwt",
+      "value": "",
+      "type": "secret",
+      "enabled": true,
+      "description": "Short-lived AI4W JWT. Mint outside Postman: jose.SignJWT({ email, accountId, scope, product }).setProtectedHeader({alg:'RS256',kid}).setIssuer(AI4W_JWT_ISSUER).setAudience(AI4W_JWT_AUDIENCE).setExpirationTime('5m')"
+    },
+    {
+      "key": "tenantId",
+      "value": "",
+      "type": "default",
+      "enabled": true,
+      "description": "Set manually or auto-populated by the 'tenants/by-membership' request"
+    },
+    {
+      "key": "projectId",
+      "value": "",
+      "type": "default",
+      "enabled": true,
+      "description": "Set manually or auto-populated by the 'projects/discoverable' request"
+    },
+    {
+      "key": "userEmail",
+      "value": "ajay.gummalla@kore.com",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "agentContextId",
+      "value": "postman-ctx-1",
+      "type": "default",
+      "enabled": true,
+      "description": "Opaque conversation-thread ID (from AI4W). Same ID → same session."
+    },
+    {
+      "key": "connectionId",
+      "value": "",
+      "type": "default",
+      "enabled": true,
+      "description": "Auto-populated by the 'Provision Connection' request"
+    },
+    {
+      "key": "connectionSecret",
+      "value": "",
+      "type": "secret",
+      "enabled": true,
+      "description": "Auto-populated by 'Provision Connection' (shown once, never retrievable)"
+    },
+    {
+      "key": "nextCursor",
+      "value": "",
+      "type": "default",
+      "enabled": true,
+      "description": "Auto-populated by 'projects/discoverable' when more pages exist"
+    },
+    {
+      "key": "replayRequestId",
+      "value": "",
+      "type": "default",
+      "enabled": true,
+      "description": "Pinned UUID used by the 'replay → 409' test"
+    }
+  ],
+  "_postman_variable_scope": "environment"
+}

@@ -1,0 +1,42 @@
+{
+  "name": "@agent-platform/connector-sharepoint",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "SharePoint connector for enterprise Search AI platform",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./webhooks/webhook-manager": {
+      "import": "./dist/webhooks/webhook-manager.js",
+      "types": "./dist/webhooks/webhook-manager.d.ts"
+    },
+    "./client/graph-client": {
+      "import": "./dist/client/graph-client.js",
+      "types": "./dist/client/graph-client.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsc --project tsconfig.json",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run --passWithNoTests",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage --passWithNoTests"
+  },
+  "dependencies": {
+    "@agent-platform/connectors-base": "workspace:^",
+    "@agent-platform/database": "workspace:^",
+    "@agent-platform/search-ai-internal": "workspace:^",
+    "@agent-platform/shared": "workspace:^"
+  },
+  "devDependencies": {
+    "@vitest/coverage-v8": "^4.1.4",
+    "nock": "^13.5.0",
+    "typescript": "^5.3.0",
+    "vitest": "^4.1.4"
+  }
+}

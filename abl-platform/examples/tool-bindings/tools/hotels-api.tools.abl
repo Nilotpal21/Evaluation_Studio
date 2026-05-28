@@ -1,0 +1,23 @@
+TOOLS:
+  base_url: "https://api.hotels.com/v1"
+  auth: bearer
+  timeout: 5000
+  retry: 3
+
+  search_hotels(destination: string, checkin: date, checkout: date) -> Hotel[]
+    type: http
+    endpoint: "/search"
+    method: POST
+    description: "Search available hotels"
+
+  get_hotel(hotel_id: string) -> Hotel
+    type: http
+    endpoint: "/hotels/{hotel_id}"
+    method: GET
+    description: "Get hotel details by ID"
+
+  get_hotel_reviews(hotel_id: string, limit: number = 10) -> Review[]
+    type: http
+    endpoint: "/hotels/{hotel_id}/reviews"
+    method: GET
+    description: "Get reviews for a hotel"

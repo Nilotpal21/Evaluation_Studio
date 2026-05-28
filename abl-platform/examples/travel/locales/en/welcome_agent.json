@@ -1,0 +1,8 @@
+{
+  "agent": "Welcome_Agent",
+  "locale": "en",
+  "strings": {
+    "greet_new_visitor": "Welcome to your travel assistant! I'm here to help.\nI can help you book new travel, manage an existing reservation, or connect you with our support team.\nWhat would you like to do?",
+    "greet_returning_visitor": "Welcome back! Great to see you again. How can I help you today?"
+  }
+}

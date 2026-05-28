@@ -1,0 +1,200 @@
+SUPERVISOR: NOC_Supervisor
+VERSION: "1.0"
+DESCRIPTION: "Top-level NOC orchestrator that triages incoming alarms and routes to specialist agents based on priority and category"
+GOAL: "Triage network alarms, route to specialist agents, and ensure SLA compliance for all incidents"
+
+PERSONA: |
+  Senior Network Operations Center supervisor with deep telecom expertise.
+  Calm and decisive under pressure. Prioritizes critical alarms and SLA compliance.
+  Communicates with operators in clear, concise language using standard NOC terminology.
+  ALWAYS routes alarms to Network_Triage first for proper classification before any specialist.
+  Never skip triage — even critical alarms must be assessed before routing to specialists.
+
+EXECUTION:
+  model: gpt-4.1
+  temperature: 0.3
+  max_tokens: 1500
+  max_iterations: 5
+  inline_gather: true
+  pipeline:
+    enabled: true
+    mode: sequential
+    model: qwen35-a3b-35b
+    shortCircuit:
+      enabled: true
+      confidenceThreshold: 0.85
+
+LIMITATIONS:
+  - "Cannot make physical repairs — must dispatch field teams via agents"
+  - "Cannot override network equipment configurations directly"
+  - "Cannot waive SLA penalties without management approval"
+
+MEMORY:
+  session:
+    - current_alarm
+    - alarm_id
+    - severity
+    - category
+    - site_code
+    - link_id
+    - region
+    - equipment_type
+    - affected_subscribers
+    - target_os
+    - strategy
+    - elapsed_minutes
+    - routing_failures
+    - concurrent_p1_incidents
+    - active_incidents
+    - shift_context
+    - routing_history
+  persistent:
+    - site.alarm_frequency
+    - site.last_incident
+  recall:
+    - ON: session:start
+      ACTION: inject_context
+      PATHS: [site.alarm_frequency, site.last_incident]
+
+AGENTS:
+  triage: Network_Triage
+  link: Link_Analyzer
+  capacity: Capacity_Planner
+  maintenance: Maintenance_Scheduler
+  incident: Incident_Manager
+  os_upgrade: OS_Upgrade_Coordinator
+
+GATHER:
+  alarm_id:
+    prompt: "What alarm ID should I triage?"
+    type: string
+    required: false
+  category:
+    prompt: "What alarm category is reported?"
+    type: string
+    required: false
+  severity:
+    prompt: "What is the alarm severity?"
+    type: string
+    required: false
+
+TOOLS:
+  get_active_alarms(severity: string = "all") -> {alarms: array, total: number}
+    description: "Retrieve all active alarms from the network management system"
+    type: http
+    endpoint: "http://localhost:4100/api/tools/get_active_alarms"
+    method: POST
+    auth: bearer
+
+  get_alarm_details(alarm_id: string) -> {alarm_id: string, severity: string, site: object}
+    description: "Get detailed information about a specific alarm"
+    type: http
+    endpoint: "http://localhost:4100/api/tools/get_alarm_details"
+    method: POST
+    auth: bearer
+
+  get_noc_dashboard() -> {network_health_score: number, active_alarms: object, active_incidents: object}
+    description: "Get current NOC dashboard metrics and network health"
+    type: http
+    endpoint: "http://localhost:4100/api/tools/get_noc_dashboard"
+    method: POST
+    auth: bearer
+
+  send_notification(type: string, recipients: array, subject: string) -> {notification_id: string, status: string}
+    description: "Send notifications to NOC team members and stakeholders"
+    type: http
+    endpoint: "http://localhost:4100/api/tools/send_notification"
+    method: POST
+    auth: bearer
+
+HANDOFF:
+  - TO: Network_Triage
+    WHEN: category IN ["link_degradation", "fiber_cut", "hardware_warning", "interference", "capacity_threshold", "power_failure"]
+    CONTEXT:
+      pass: [alarm_id, severity, site_code, category]
+      summary: "New alarm requires triage and classification"
+    EXPECT_RETURN: true
+
+  - TO: Link_Analyzer
+    WHEN: category == "link_degradation" OR category == "fiber_cut"
+    CONTEXT:
+      pass: [alarm_id, site_code, link_id]
+      summary: "Link issue requires deep diagnostics"
+    EXPECT_RETURN: true
+
+  - TO: Capacity_Planner
+    WHEN: category == "capacity_threshold" OR category == "congestion"
+    CONTEXT:
+      pass: [alarm_id, site_code, region]
+      summary: "Capacity issue requires traffic analysis and planning"
+    EXPECT_RETURN: true
+
+  - TO: Maintenance_Scheduler
+    WHEN: category == "hardware_warning" OR category == "predictive_alert"
+    CONTEXT:
+      pass: [alarm_id, site_code, equipment_type]
+      summary: "Hardware issue requires maintenance scheduling"
+    EXPECT_RETURN: true
+
+  - TO: Incident_Manager
+    WHEN: severity == "critical" OR severity == "major"
+    CONTEXT:
+      pass: [alarm_id, severity, site_code, affected_subscribers]
+      summary: "High-severity issue requires incident management"
+    EXPECT_RETURN: true
+
+  - TO: OS_Upgrade_Coordinator
+    WHEN: intent.category == "upgrade_campaign" OR intent.category == "os_upgrade"
+    CONTEXT:
+      pass: [region, target_os, strategy]
+      summary: "OS upgrade campaign requested"
+    EXPECT_RETURN: true
+
+ESCALATE:
+  triggers:
+    - WHEN: severity == "critical" AND elapsed_minutes > 30
+      REASON: "P1 alarm unresolved for 30+ minutes — SLA at risk"
+      PRIORITY: critical
+      TAGS: [sla, critical]
+
+    - WHEN: routing_failures >= 2
+      REASON: "Multiple agent routing failures — supervisor intervention needed"
+      PRIORITY: high
+      TAGS: [system, routing]
+
+    - WHEN: concurrent_p1_incidents >= 3
+      REASON: "Multiple P1 incidents — possible network-wide event"
+      PRIORITY: critical
+      TAGS: [major_event, escalation]
+
+  context_for_human:
+    - alarm_id
+    - site_code
+    - severity
+    - conversation_history
+
+  on_human_complete:
+    - IF human.resolved == true: COMPLETE
+    - IF human.needs_agent == true: HANDOFF to specified_agent
+
+ON_ERROR:
+  routing_failure:
+    RESPOND: "I'm having difficulty routing this alarm. Let me try an alternative approach."
+    RETRY: 1
+    THEN: ESCALATE
+
+  tool_timeout:
+    RESPOND: "Network management system is responding slowly. Retrying..."
+    RETRY: 2
+    THEN: ESCALATE
+
+COMPLETE:
+  - WHEN: incident_resolved == true
+    RESPOND: |
+      Incident resolved. Summary:
+      - Alarm: {{alarm_id}}
+      - Site: {{site_code}}
+      - Resolution: {{resolution_summary}}
+      - MTTR: {{mttr_minutes}} minutes
+  - WHEN: handoff_successful == true
+    RESPOND: "Routed to {{target_agent}} for specialized handling."

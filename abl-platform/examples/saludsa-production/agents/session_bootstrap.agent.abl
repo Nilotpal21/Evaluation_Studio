@@ -1,0 +1,116 @@
+AGENT: Session_Bootstrap
+VERSION: "1.0"
+DESCRIPTION: "One-shot MCP session bootstrap — calls validate_user to associate the customer's idCard with the session on the MCP server. Required before any service API call on Web/App channels where the Gateway is skipped."
+
+GOAL: |
+  Call validate_user with the customer's idCard (from session) to register the session
+  on the Saludsa MCP server. Store the returned identity data and set the
+  mcpSessionValidated flag so this is never called twice.
+
+PERSONA: |
+  Silent bootstrap agent. No user-facing output.
+
+EXECUTION:
+
+  temperature: 0.1
+  top_p: 0.5
+  max_tokens: 4096
+  max_iterations: 5
+  inline_gather: true
+
+LIMITATIONS:
+  - "Must not produce any user-facing output — silent execution only"
+  - "Must not call validate_user if mcpSessionValidated is already true"
+
+# ─────────────────────────────────────────────────────────────────────────────
+# TOOLS — signature-only (resolved from shared tool files)
+# ─────────────────────────────────────────────────────────────────────────────
+
+TOOLS:
+  validate_user() -> {success: boolean, role: string, contractId: string, ticketId: string, customerName: string, needs_consent: boolean, apiError: boolean, priorityTransfer: string, isXPRExist: boolean, isPCAExist: boolean, isDRSExist: boolean, isTRKExist: boolean, customerDetails: object}
+    description: "Validate user by cedula/ID card number. All fields read from session — no parameters needed."
+
+  noop() -> {success: boolean}
+    description: "No-op passthrough for deterministic branching."
+
+# ─────────────────────────────────────────────────────────────────────────────
+# MEMORY — session variables
+# ─────────────────────────────────────────────────────────────────────────────
+
+MEMORY:
+  session:
+    - mcpSessionValidated
+      TYPE: boolean
+      DESCRIPTION: "Flag indicating validate_user has been called for this session"
+    - userRole
+      TYPE: string
+      DESCRIPTION: "Validated user role (Holder, Beneficiary, Payer, Non Client)"
+    - priorityTransfer
+      TYPE: string
+      DESCRIPTION: "Priority product flag (XPR, PCA, SAC, or NA)"
+    - ticketId
+      TYPE: string
+      DESCRIPTION: "Active Zendesk ticket ID"
+    - contractNumber
+      TYPE: string
+      DESCRIPTION: "Active contract number"
+    - customerName
+      TYPE: string
+      DESCRIPTION: "Customer display name"
+    - customerDetails
+      TYPE: object
+      DESCRIPTION: "Customer details object"
+
+# ─────────────────────────────────────────────────────────────────────────────
+# FLOW — single-step validate_user call
+# ─────────────────────────────────────────────────────────────────────────────
+
+FLOW:
+  entry_point: validate_session
+
+  steps:
+    - validate_session
+    - bootstrap_done
+    - bootstrap_failed
+
+  validate_session:
+    REASONING: false
+    CALL: validate_user()
+    ON_SUCCESS:
+      - IF: validate_user.success == true
+        SET: mcpSessionValidated = true
+        SET: userValidation = true
+        SET: userRole = validate_user.role
+        SET: priorityTransfer = validate_user.priorityTransfer
+        SET: contractNumber = validate_user.contractId
+        SET: customerName = validate_user.customerName
+        SET: ticketId = validate_user.ticketId
+        SET: customerDetails = validate_user.customerDetails
+        THEN: bootstrap_done
+      - IF: validate_user.apiError == true
+        SET: mcpSessionValidated = false
+        THEN: bootstrap_failed
+      - ELSE:
+        SET: mcpSessionValidated = false
+        THEN: bootstrap_failed
+    ON_FAIL:
+      SET: mcpSessionValidated = false
+      THEN: bootstrap_failed
+
+  bootstrap_done:
+    REASONING: false
+    THEN: COMPLETE
+
+  bootstrap_failed:
+    REASONING: false
+    THEN: COMPLETE
+
+# ─────────────────────────────────────────────────────────────────────────────
+# COMPLETION — silent return to supervisor
+# ─────────────────────────────────────────────────────────────────────────────
+
+COMPLETE:
+  - WHEN: mcpSessionValidated == true
+    RESPOND: ""
+  - WHEN: mcpSessionValidated != true
+    RESPOND: ""

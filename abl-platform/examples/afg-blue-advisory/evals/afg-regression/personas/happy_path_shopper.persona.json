@@ -1,0 +1,11 @@
+{
+  "name": "Happy Path Shopper",
+  "description": "A typical customer with clear shopping intent, provides details readily, follows the expected conversation flow",
+  "communicationStyle": "casual",
+  "domainKnowledge": "intermediate",
+  "behaviorTraits": ["provides_details_upfront", "follows_agent_guidance", "asks_follow_ups"],
+  "goals": "Find products efficiently, get good deals, understand store policies when needed",
+  "constraints": "Stays within supported domains (retail, automotive, offers)",
+  "source": "custom",
+  "isAdversarial": false
+}

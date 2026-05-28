@@ -1,0 +1,98 @@
+{
+  "moduleId": "agent-patterns",
+  "passThreshold": 0.8,
+  "questions": [
+    {
+      "id": "uc-q1",
+      "type": "mcq",
+      "stem": "A retail company wants an AI agent to guide customers through a multi-step returns process that must collect item photos, verify purchase history, and calculate refund amounts in a fixed order. Which agent pattern is the best fit?",
+      "options": [
+        {
+          "id": "a",
+          "text": "A reasoning agent that dynamically decides the next step"
+        },
+        {
+          "id": "b",
+          "text": "A scripted agent with a FLOW section defining each step in sequence",
+          "correct": true
+        },
+        {
+          "id": "c",
+          "text": "A supervisor that routes each step to a different child agent"
+        }
+      ],
+      "explanation": "When the conversation must follow a predictable, mandatory sequence (collect photo, verify purchase, calculate refund), a scripted agent with a FLOW section enforces that order. Reasoning agents decide steps dynamically, which risks skipping required steps. A supervisor routes between agents but is overkill for a single linear process."
+    },
+    {
+      "id": "uc-q2",
+      "type": "mcq",
+      "stem": "Jupiter Bank uses a 12-agent supervisor architecture. What is the primary business advantage of assigning priority numbers (P1 through P14) to its agent routing rules?",
+      "options": [
+        {
+          "id": "a",
+          "text": "It reduces LLM token costs by limiting which agents can respond"
+        },
+        {
+          "id": "b",
+          "text": "It ensures time-sensitive and safety-critical requests (like fraud claims and escalations) are routed before general inquiries",
+          "correct": true
+        },
+        {
+          "id": "c",
+          "text": "It allows agents to process requests in parallel rather than sequentially"
+        }
+      ],
+      "explanation": "Jupiter Bank assigns P0 to human escalation and P2 to fraud claims so these time-sensitive, high-impact requests are always evaluated first. Routing rules are evaluated top-to-bottom; placing critical routes first ensures they match before general inquiries like account maintenance (P8) or advisory services (P10-P12)."
+    },
+    {
+      "id": "uc-q3",
+      "type": "fill-blank",
+      "stem": "In the Agent Platform, a ___ agent uses LLM intelligence to decide what to do at each turn without following a fixed flow graph, making it ideal for open-ended advisory and Q&A conversations.",
+      "answer": "reasoning",
+      "acceptAlternatives": ["Reasoning", "REASONING", "simple"],
+      "explanation": "A reasoning (or simple) agent relies on the LLM to interpret user intent, pick tools, and formulate responses dynamically. This pattern is best for open-ended conversations like product advisory or exploratory Q&A where the user's path cannot be predicted in advance."
+    },
+    {
+      "id": "uc-q4",
+      "type": "mcq",
+      "stem": "A telecom company wants to build an AI agent system that handles billing disputes, technical support, plan upgrades, and account changes. Different teams own each domain. What is the most important factor favoring a supervisor-based multi-agent architecture over a single large agent?",
+      "options": [
+        {
+          "id": "a",
+          "text": "A single agent would be cheaper to run since it uses only one LLM call per message"
+        },
+        {
+          "id": "b",
+          "text": "Separate specialist agents can be developed, tested, and updated independently by different teams without affecting each other",
+          "correct": true
+        },
+        {
+          "id": "c",
+          "text": "Multi-agent systems always provide faster response times than single agents"
+        }
+      ],
+      "explanation": "The key business advantage of a supervisor architecture is organizational: each team can independently develop, test, and deploy their specialist agent (billing, technical support, upgrades) without risking regressions in other domains. The supervisor handles routing, giving users a single entry point while preserving team autonomy."
+    },
+    {
+      "id": "uc-q5",
+      "type": "mcq",
+      "stem": "A healthcare company is evaluating ROI for their patient intake agent. The agent uses a scripted flow to collect symptoms, insurance details, and schedule appointments. Which metric combination best demonstrates business value?",
+      "options": [
+        {
+          "id": "a",
+          "text": "Number of LLM tokens consumed and average model latency"
+        },
+        {
+          "id": "b",
+          "text": "Containment rate (sessions resolved without human escalation) and average session duration compared to manual intake time",
+          "correct": true
+        },
+        {
+          "id": "c",
+          "text": "Number of agents deployed and total knowledge base documents indexed"
+        }
+      ],
+      "explanation": "Business ROI for an intake agent is best measured by containment rate (what percentage of patients complete the process without needing a human) and time savings (how much faster is AI intake vs. manual). Token consumption and latency are operational metrics, not direct business value indicators."
+    }
+  ]
+}

@@ -1,0 +1,209 @@
+SUPERVISOR: BankNexus_Supervisor
+VERSION: "2.0"
+DESCRIPTION: "Top-level orchestrator for the BankNexus digital banking assistant"
+GOAL: |
+  Route customers to the right banking specialist — balance inquiry, fund transfer,
+  or transaction history — with full context preservation.
+  Bootstrap authenticated customer context once at session start and preserve it
+  across specialist handoffs.
+
+EXECUTION:
+  model: gpt-4.1
+  temperature: 0.3
+  max_tokens: 1500
+  max_iterations: 5
+  inline_gather: true
+  pipeline:
+    enabled: true
+    mode: sequential
+    model: qwen35-a3b-35b
+    shortCircuit:
+      enabled: true
+      confidenceThreshold: 0.85
+
+PERSONA: |
+  Professional digital banking assistant for BankNexus.
+  Friendly, secure, and efficient. Takes data privacy seriously.
+  Recognizes returning customers and adapts to their preferences.
+  Routes requests to the right specialist quickly and transparently.
+
+LIMITATIONS:
+  - "Cannot access or modify account details directly"
+  - "Cannot process transactions directly — must route to specialist agents"
+  - "Cannot override security policies or bypass authentication"
+  - "Must not share personal financial information about other customers"
+  - "Cannot provide investment advice or financial recommendations"
+
+MEMORY:
+  session:
+    - current_intent
+    - routing_history
+    - session_context
+    - handoff_count
+    - customer_id
+    - customer_name
+    - default_account_id
+  persistent:
+    - user.preferred_language
+    - user.last_verified_at
+    - user.name
+    - user.customer_id
+    - PATH: workflow.customer_id
+      SCOPE: execution_tree
+      ACCESS: readwrite
+      TYPE: string
+    - PATH: workflow.customer_name
+      SCOPE: execution_tree
+      ACCESS: readwrite
+      TYPE: string
+    - PATH: workflow.default_account_id
+      SCOPE: execution_tree
+      ACCESS: readwrite
+      TYPE: string
+  recall:
+    - ON: session:start
+      ACTION: inject_context
+      PATHS: [user.preferred_language, user.last_verified_at, user.name, user.customer_id]
+
+AGENTS:
+  balance: Get_Balance
+  transfer: Fund_Transfer
+  history: Transaction_History
+
+ON_START:
+  - SET: customer_id = COALESCE(customer_id, user.customer_id, user_id)
+  - SET: customer_name = COALESCE(customer_name, user.name, "BankNexus customer")
+  - SET: session_context = COALESCE(session_context, "Authenticated digital banking session")
+  - SET: workflow.customer_id = COALESCE(workflow.customer_id, customer_id, user.customer_id, user_id)
+  - SET: workflow.customer_name = COALESCE(workflow.customer_name, customer_name, user.name)
+  - SET: workflow.default_account_id = COALESCE(workflow.default_account_id, default_account_id)
+  - RESPOND: "Welcome to BankNexus. I can help with balances, transfers, and transaction history."
+
+RETURN_HANDLERS:
+  await_next_request:
+    RESPOND: "What else can I help you with today?"
+    CONTINUE: true
+
+  reclassify_intent:
+    CLEAR: [current_intent]
+    RESUME_INTENT: true
+
+# ─────────────────────────────────────────────────────────────────────────────
+# ROUTING — ordered by priority (highest first)
+# ─────────────────────────────────────────────────────────────────────────────
+
+HANDOFF:
+  # P1 — Account balance inquiry
+  - TO: Get_Balance
+    WHEN: intent.category == "check_balance" OR intent.category == "account_inquiry"
+    CONTEXT:
+      pass: [customer_id, customer_name, session_context, default_account_id]
+      summary: "Customer wants to check account balance"
+      history: summary_only
+      memory_grants:
+        - path: workflow.customer_id
+          access: read
+        - path: workflow.customer_name
+          access: read
+        - path: workflow.default_account_id
+          access: readwrite
+    EXPECT_RETURN: true
+    ON_RETURN:
+      handler: await_next_request
+  # P2 — Fund transfer
+  - TO: Fund_Transfer
+    WHEN: intent.category == "transfer" OR intent.category == "send_money"
+    CONTEXT:
+      pass: [customer_id, customer_name, session_context, default_account_id]
+      summary: "Customer wants to transfer funds"
+      history: summary_only
+      memory_grants:
+        - path: workflow.customer_id
+          access: read
+        - path: workflow.customer_name
+          access: read
+        - path: workflow.default_account_id
+          access: readwrite
+    EXPECT_RETURN: true
+    ON_RETURN:
+      handler: await_next_request
+  # P3 — Transaction history
+  - TO: Transaction_History
+    WHEN: intent.category == "transaction_history" OR intent.category == "view_transactions"
+    CONTEXT:
+      pass: [customer_id, customer_name, session_context, default_account_id]
+      summary: "Customer wants to view transaction history"
+      history: summary_only
+      memory_grants:
+        - path: workflow.customer_id
+          access: read
+        - path: workflow.customer_name
+          access: read
+        - path: workflow.default_account_id
+          access: readwrite
+    EXPECT_RETURN: true
+    ON_RETURN:
+      handler: await_next_request
+# ─────────────────────────────────────────────────────────────────────────────
+# ESCALATION — system-level triggers
+# ─────────────────────────────────────────────────────────────────────────────
+
+ESCALATE:
+  triggers:
+    - WHEN: intent.category == "escalation" OR user.requests_human == true OR user.wants_human_agent == true
+      REASON: "User explicitly requested human assistance"
+      PRIORITY: high
+      TAGS: [human_request]
+
+    - WHEN: routing_failures >= 3
+      REASON: "Multiple routing failures — system issue"
+      PRIORITY: high
+
+    - WHEN: user.frustration_detected == true
+      REASON: "User showing signs of frustration"
+      PRIORITY: high
+      TAGS: [sentiment, retention]
+
+    - WHEN: handoff_count >= 4
+      REASON: "Customer bounced between too many agents"
+      PRIORITY: high
+      TAGS: [ux_failure]
+
+  context_for_human:
+    - user_id
+    - customer_id
+    - customer_name
+    - session_context
+    - routing_history
+    - last_input
+
+  on_human_complete:
+    - IF human.resolved == true: COMPLETE
+    - IF human.needs_agent == true: HANDOFF to specified_agent
+
+# ─────────────────────────────────────────────────────────────────────────────
+# ERROR HANDLING
+# ─────────────────────────────────────────────────────────────────────────────
+
+ON_ERROR:
+  routing_failure:
+    RESPOND: "I'm having trouble understanding your request. Let me connect you with someone who can help."
+    RETRY: 1
+    THEN: ESCALATE
+
+  agent_unavailable:
+    RESPOND: "That service is temporarily unavailable. Let me try an alternative."
+    RETRY: 2
+    THEN: ESCALATE
+
+  timeout:
+    RESPOND: "I apologize for the delay. Let me try again."
+    RETRY: 1
+    THEN: CONTINUE
+
+COMPLETE:
+  - WHEN: handoff_successful == true
+    RESPOND: "I've connected you with the right specialist."
+
+  - WHEN: user.session_ended == true
+    RESPOND: "Thank you for banking with BankNexus. Have a great day!"

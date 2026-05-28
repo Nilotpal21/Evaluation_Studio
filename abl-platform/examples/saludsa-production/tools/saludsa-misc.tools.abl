@@ -1,0 +1,12 @@
+/**
+ * Saludsa Miscellaneous Tools
+ * Reserved for tools that don't fit other registries.
+ * Currently empty — all 30 MCP tools are in the other 7 registry files.
+ */
+
+TOOLS:
+  auth: api_key
+  timeout: 45000
+  auth_config:
+    header_name: "Authorization"
+    api_key: "{{env.SALUDSA_MCP_AUTH}}"

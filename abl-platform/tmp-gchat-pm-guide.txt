@@ -1,0 +1,232 @@
+*PRODUCT MANAGER'S GUIDE TO THE SDLC PIPELINE*
+
+• *How to Use This Pipeline — By Scenario*
+
+This guide tells you exactly what to do depending on whether you're dealing with an existing feature, a gap, an enhancement, or a brand-new feature.
+
+
+• *1. Existing Features — Audit & Baseline*
+
+Every existing feature should already have documentation artifacts. If it doesn't, that's your first action.
+
+*What to check:*
+• Does docs/features/<feature>.md exist? (Feature spec)
+• Does docs/testing/<feature>.md exist? (Test spec)
+• Does docs/specs/<feature>.hld.md exist? (Architecture doc)
+• What is the feature's status? (PLANNED / ALPHA / BETA / STABLE)
+
+*What to do:*
+• If all docs exist and the feature is STABLE — nothing needed. It's fully covered.
+• If docs exist but the feature is ALPHA or BETA — check the gaps table in *section 16* of the feature spec. Those gaps are your backlog. Prioritize CRITICAL and HIGH gaps for the next sprint.
+• If docs are missing — run /post-impl-sync <feature> to generate them retroactively from the existing code. This creates the baseline documentation so future work has a foundation.
+• Review the testing coverage matrix in docs/testing/<feature>.md. Red cells are untested scenarios — these are risks.
+
+*Your deliverable:* A prioritized list of existing features ranked by documentation completeness and test coverage. Features with missing docs or ALPHA status need attention first.
+
+
+• *2. Gaps in Existing Features — Targeted Fixes*
+
+Gaps are known deficiencies documented in a feature's spec (section 16: "Known Gaps & Limitations"). They represent things that were intentionally deferred or discovered after implementation.
+
+*How to find gaps:*
+• Open docs/features/<feature>.md and scroll to section 16
+• Each gap has a severity (*CRITICAL* / *HIGH* / *MEDIUM* / *LOW*) and a status
+• CRITICAL and HIGH gaps block the feature from reaching BETA or STABLE status
+
+*What to do for each gap:*
+
+*Small gaps (1-2 files, isolated fix):*
+• Write a clear problem statement describing the gap
+• Engineering runs the fix directly — no full SDLC cycle needed
+• After the fix, run /post-impl-sync <feature> to update the gap status in the docs
+
+*Medium gaps (touches 3+ files, crosses service boundaries):*
+• Update the existing feature spec — add or modify the relevant functional requirements to cover the gap
+• Run /test-spec <feature> to update the test scenarios for the new requirements
+• Engineering picks it up from there (LLD → implement → doc sync)
+
+*Large gaps (new subsystem, significant architecture change):*
+• Treat it as an enhancement (see section 3 below)
+
+*Your deliverable:* For each gap, a one-liner problem statement and a severity classification. Engineering uses the severity to determine the SDLC entry point.
+
+
+• *3. Enhancements to Existing Features — Extend the Spec*
+
+An enhancement adds capability to something that already works. The key difference from a new feature: the feature spec, test spec, and HLD *already exist* — you're extending them, not creating from scratch.
+
+*Step 1 — Update the Feature Spec*
+• Open the existing docs/features/<feature>.md
+• Add new user stories to *section 5*
+• Add new functional requirements to *section 6*
+• Add new non-functional requirements to *section 7* if the enhancement changes performance, scale, or security characteristics
+• Mark the new additions clearly (e.g., "Added in v2" or a date tag)
+• Run /feature-spec <feature> if you want the pipeline to help you draft the additions with clarifying questions
+
+*Step 2 — Update the Test Spec*
+• Run /test-spec <feature> — it reads the updated feature spec and generates new E2E and integration scenarios for the additions
+• Review the new scenarios — they should cover the new user stories and requirements
+
+*Step 3 — Hand to Engineering*
+• If the enhancement changes the architecture: engineering runs /hld <feature> to update the design doc
+• Engineering runs /lld <feature> to create the implementation plan for the enhancement
+• Implementation follows the standard pipeline from there
+
+*What NOT to do:*
+• Don't create a separate feature spec for an enhancement to an existing feature. One feature = one spec. Append to it.
+• Don't skip the test spec update. If you add requirements without test scenarios, the coverage matrix will show gaps immediately.
+
+*Your deliverable:* Updated feature spec with new user stories and requirements clearly marked.
+
+
+• *4. New Features — Full Pipeline from Scratch*
+
+A new feature goes through all 6 phases. This is where the pipeline delivers the most value — it prevents the "build first, design later" pattern that leads to rework.
+
+*Step 1 — Write the Feature Spec (your primary responsibility)*
+• Start a conversation with Claude Code and run /feature-spec <feature-name>
+• The pipeline will ask you 3-5 clarifying questions per section. *Answer them.* This is the most important part — your answers shape everything downstream.
+• *Sections you own:*
+    • Problem statement — what user pain does this solve?
+    • Target users — who specifically benefits?
+    • User stories — "As a [role], I want [action] so that [outcome]"
+    • Functional requirements — what must the system do?
+    • Success metrics — how do we know it worked?
+    • Out of scope — what are we explicitly NOT building?
+• *Sections the pipeline fills from your input:*
+    • Non-functional requirements (performance, security, scale)
+    • Dependencies and risks
+    • Gaps table (initially empty)
+• The spec is committed to docs/features/<feature>.md
+
+*Step 2 — Review the Test Spec (collaborative)*
+• Engineering runs /test-spec <feature>
+• Review the generated E2E scenarios — do they cover the user stories you wrote?
+• Flag any missing scenarios. Minimum *5 E2E + 5 integration* scenarios required.
+
+*Step 3 — Review the HLD (collaborative)*
+• Engineering runs /hld <feature>
+• Review the architecture at a high level — does the data model make sense? Are the API endpoints what you expected? Are there dependencies on other teams?
+• You don't need to review the 12 architectural concerns in detail — that's engineering's domain. Focus on: *does this design deliver what the spec describes?*
+
+*Steps 4-6 — Engineering Owns*
+• LLD, Implementation, and Post-Impl Sync are engineering-driven
+• You're consulted only when the product-oracle escalates *AMBIGUOUS* questions — typically 3-5 per feature
+• After implementation, review the updated feature spec to confirm what was built matches what was specified
+
+*Your deliverable:* A complete feature spec. Everything else flows from it.
+
+
+• *Quick Reference — Entry Points by Scenario*
+
+*Existing feature, fully documented* → Review gaps table → No SDLC phase needed → All artifacts exist
+*Existing feature, missing docs* → Request /post-impl-sync → Phase 6 → Generates retroactively
+*Small gap (1-2 files)* → Write problem statement → Direct fix + Phase 6 → Updated feature spec
+*Medium gap (3+ files)* → Update feature spec sections 5-7 → Phase 2 (test spec) → Updated spec + test spec
+*Large gap / enhancement* → Update feature spec fully → Phase 2 or 3 → Updated spec + test spec + possibly HLD
+*New feature* → Write feature spec from scratch → Phase 1 (full pipeline) → All 6 artifacts created
+
+
+• *What the Pipeline Gives You Back*
+
+• *Feature spec* — living document that reflects what was actually built, not just what was planned
+• *Test coverage matrix* — visual map of what's tested and what isn't, updated automatically
+• *Gap tracking* — CRITICAL/HIGH/MEDIUM/LOW gaps documented with status, so nothing falls through the cracks
+• *Status lifecycle* — clear *PLANNED → ALPHA → BETA → STABLE* progression with objective criteria at each gate
+• *Audit trail* — every decision logged in docs/sdlc-logs/<feature>/, so you can trace why something was built a certain way
+
+The pipeline is designed so that *your primary input is the feature spec* — everything else cascades from it. The better your spec, the less rework downstream.
+
+
+• *5. Undocumented Gaps — PM Discovers Something Missing*
+
+Sometimes you know about a gap that isn't in any spec — a customer reported it, you saw it in a demo, or you realized the current behavior doesn't match the product vision. The gap exists in the product but not in the documentation.
+
+*Step 1 — Check if a feature spec exists*
+• If docs/features/<feature>.md exists → go to Step 2
+• If it doesn't exist → run /post-impl-sync <feature> first to generate baseline docs from existing code, then go to Step 2
+
+*Step 2 — Document the gap*
+• Open docs/features/<feature>.md, go to *section 16* (Known Gaps & Limitations)
+• Add a new row to the gaps table with:
+    • *Gap ID* — next sequential number (e.g., GAP-007)
+    • *Description* — one clear sentence describing what's missing or broken
+    • *Severity* — CRITICAL (blocks users), HIGH (painful workaround), MEDIUM (nice to have), LOW (cosmetic)
+    • *Status* — OPEN
+    • *Notes* — context on how you discovered it, who's affected, any workaround
+
+*Step 3 — Decide the fix path*
+• Use the same sizing logic from section 2:
+    • Small (1-2 files) → problem statement to engineering → direct fix
+    • Medium (3+ files) → update functional requirements in section 6 → run /test-spec
+    • Large (new subsystem) → treat as enhancement (section 3) or new feature (section 4)
+
+*Example:*
+You discover that the guardrails feature doesn't handle streaming responses with model-based providers. This is undocumented.
+• Open docs/features/guardrails.md → section 16
+• Add: GAP-012 | Model-based guardrail providers are not invoked during streaming responses | *CRITICAL* | OPEN | Discovered during demo; affects all streaming conversations using OpenAI moderation
+• Since this crosses the streaming engine and guardrail middleware → medium gap → update functional requirements → run /test-spec guardrails
+
+
+• *6. Changing Requirements — PM Needs to Modify What Was Agreed*
+
+Requirements change. A customer conversation shifts priorities, a competitor launches something, or you realize the original spec missed the mark. Here's how to handle it without breaking the pipeline.
+
+*Before implementation has started (feature is PLANNED):*
+This is the easy case — the spec is the only artifact that exists.
+• Edit docs/features/<feature>.md directly
+• Modify user stories (section 5), functional requirements (section 6), or scope (section 4) as needed
+• If test spec or HLD already exist, flag engineering to re-run /test-spec and /hld so they pick up the changes
+• Everything downstream regenerates cleanly
+
+*During implementation (feature is ALPHA):*
+Code already exists. Changes here have a blast radius.
+• *Do NOT* just edit the feature spec silently — engineering is actively building against it
+• Communicate the change to engineering first
+• Then update the feature spec with the new/modified requirements, clearly marked (e.g., "CHANGED 2026-03-22: was X, now Y" or "ADDED 2026-03-22")
+• Engineering assesses the impact:
+    • If the change is additive (new requirement, doesn't break existing) → update spec → continue implementation
+    • If the change modifies existing requirements → may need to update the LLD → engineering runs /lld <feature> to replan affected phases
+    • If the change removes requirements → mark them as "REMOVED" in the spec (don't delete — keep the history) → engineering removes the code in the next implementation phase
+
+*After implementation (feature is BETA or STABLE):*
+This is a requirement change to a shipped feature — treat it as an enhancement.
+• Follow section 3 (Enhancements) — update feature spec → update test spec → engineering replans
+• If the change is breaking (removes or changes existing behavior), document the migration path in the feature spec
+
+*What to include in every requirement change:*
+• *What changed* — the specific section and requirement number
+• *Why it changed* — customer feedback, competitive pressure, technical constraint, etc.
+• *Impact assessment* — does this change the API? The data model? The UI? Other features that depend on this one?
+• *Priority* — is this blocking the current sprint or can it be scheduled?
+
+*Common scenarios:*
+
+*"We need to add a field to the API"*
+→ Update FR in section 6 → flag engineering → they update LLD + implement
+
+*"This feature now needs to support multi-tenant isolation"*
+→ This is a *CRITICAL* gap, not a simple change. Add to section 16 as CRITICAL → update NFRs in section 7 → engineering may need to update HLD (architecture change)
+
+*"Customer doesn't want feature X anymore, they want feature Y instead"*
+→ If X and Y are fundamentally different → mark X as REMOVED in the spec, create a new feature spec for Y via /feature-spec
+→ If Y is a pivot of X (same problem, different solution) → rewrite sections 5-6 of the existing spec, keep the same feature slug
+
+*"The deadline moved up, we need to cut scope"*
+→ Move requirements from section 6 to section 10 (Out of Scope) with a note: "Deferred to v2 — timeline constraint"
+→ Add corresponding entries to section 16 (Gaps) as MEDIUM or LOW
+→ Flag engineering to update the LLD — some phases may be removed
+
+
+• *Quick Reference — Updated Entry Points*
+
+*Existing feature, fully documented* → Review gaps table → No SDLC phase needed
+*Existing feature, missing docs* → Request /post-impl-sync → Phase 6
+*Small gap (documented)* → Write problem statement → Direct fix + Phase 6
+*Small gap (undocumented)* → Document in section 16 first → then direct fix + Phase 6
+*Medium gap* → Update feature spec sections 5-7 → Phase 2 (test spec)
+*Large gap / enhancement* → Update feature spec fully → Phase 2 or 3
+*New feature* → Write feature spec from scratch → Phase 1 (full pipeline)
+*Requirement change (pre-impl)* → Edit feature spec → re-run downstream phases
+*Requirement change (during impl)* → Communicate to eng → edit spec → eng replans
+*Requirement change (post-impl)* → Treat as enhancement → section 3 flow

@@ -1,0 +1,1471 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Add Field — Smart Suggest Prototype</title>
+    <style>
+      /* ─── Design System Tokens (matches Studio dark theme) ─── */
+      :root {
+        --bg: #0f1117;
+        --bg-subtle: #161821;
+        --bg-elevated: #1c1e2a;
+        --bg-muted: #232536;
+        --surface: #1c1e2a;
+        --surface-secondary: #232536;
+        --border: #2e3044;
+        --border-focus: #6366f1;
+        --text: #e2e4ef;
+        --text-muted: #8b8fa3;
+        --text-subtle: #636680;
+        --accent: #818cf8;
+        --accent-subtle: rgba(129, 140, 248, 0.1);
+        --success: #34d399;
+        --success-subtle: rgba(52, 211, 153, 0.1);
+        --warning: #fbbf24;
+        --warning-subtle: rgba(251, 191, 36, 0.1);
+        --error: #f87171;
+        --radius: 8px;
+        --radius-lg: 12px;
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+        min-height: 100vh;
+        padding: 40px 20px;
+      }
+
+      /* ─── Overlay + Dialog ─── */
+      .overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.6);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 100;
+      }
+
+      .dialog {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-lg);
+        width: 480px;
+        max-height: 90vh;
+        overflow-y: auto;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+      }
+
+      .dialog-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 16px 20px;
+        border-bottom: 1px solid var(--border);
+      }
+
+      .dialog-header h2 {
+        font-size: 16px;
+        font-weight: 600;
+      }
+
+      .dialog-close {
+        background: none;
+        border: none;
+        color: var(--text-muted);
+        cursor: pointer;
+        font-size: 18px;
+        padding: 4px;
+        border-radius: 6px;
+        transition: all 0.15s;
+      }
+      .dialog-close:hover {
+        color: var(--text);
+        background: var(--bg-muted);
+      }
+
+      .dialog-body {
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+
+      /* ─── Form Fields ─── */
+      .form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+
+      label {
+        font-size: 13px;
+        font-weight: 500;
+        color: var(--text);
+      }
+
+      input[type='text'],
+      select,
+      textarea {
+        width: 100%;
+        padding: 8px 12px;
+        font-size: 13px;
+        background: var(--bg-subtle);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        color: var(--text);
+        outline: none;
+        transition: border-color 0.15s;
+      }
+      input[type='text']:focus,
+      select:focus,
+      textarea:focus {
+        border-color: var(--border-focus);
+        box-shadow: 0 0 0 1px var(--border-focus);
+      }
+      input::placeholder,
+      textarea::placeholder {
+        color: var(--text-subtle);
+      }
+
+      select {
+        cursor: pointer;
+        appearance: none;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238b8fa3' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 10px center;
+        padding-right: 30px;
+      }
+
+      textarea {
+        resize: vertical;
+        min-height: 40px;
+      }
+
+      /* ─── Searchable Dropdown ─── */
+      .dropdown-wrapper {
+        position: relative;
+      }
+
+      .dropdown-input {
+        width: 100%;
+        padding: 8px 32px 8px 12px;
+        font-size: 12px;
+        font-family: 'SF Mono', 'Fira Code', monospace;
+        background: var(--bg-subtle);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        color: var(--text);
+        outline: none;
+        cursor: pointer;
+        transition: border-color 0.15s;
+      }
+      .dropdown-input:focus {
+        border-color: var(--border-focus);
+        box-shadow: 0 0 0 1px var(--border-focus);
+      }
+      .dropdown-input::placeholder {
+        color: var(--text-subtle);
+      }
+
+      .dropdown-chevron {
+        position: absolute;
+        right: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        pointer-events: none;
+        color: var(--text-muted);
+        transition: transform 0.15s;
+      }
+      .dropdown-wrapper.open .dropdown-chevron {
+        transform: translateY(-50%) rotate(180deg);
+      }
+
+      .dropdown-list {
+        position: absolute;
+        top: calc(100% + 4px);
+        left: 0;
+        right: 0;
+        background: var(--bg-elevated);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        max-height: 280px;
+        overflow-y: auto;
+        z-index: 20;
+        box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
+        display: none;
+      }
+      .dropdown-wrapper.open .dropdown-list {
+        display: block;
+      }
+
+      .dropdown-search {
+        position: sticky;
+        top: 0;
+        padding: 8px;
+        background: var(--bg-elevated);
+        border-bottom: 1px solid var(--border);
+        z-index: 1;
+      }
+      .dropdown-search input {
+        width: 100%;
+        padding: 6px 10px;
+        font-size: 12px;
+        background: var(--bg-subtle);
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        color: var(--text);
+        outline: none;
+      }
+      .dropdown-search input:focus {
+        border-color: var(--border-focus);
+      }
+      .dropdown-search input::placeholder {
+        color: var(--text-subtle);
+      }
+
+      .dropdown-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 12px;
+        cursor: pointer;
+        transition: background 0.1s;
+        border-bottom: 1px solid rgba(46, 48, 68, 0.5);
+      }
+      .dropdown-item:last-child {
+        border-bottom: none;
+      }
+      .dropdown-item:hover {
+        background: var(--accent-subtle);
+      }
+      .dropdown-item.active {
+        background: var(--accent-subtle);
+      }
+      .dropdown-item.auto-match {
+        background: rgba(52, 211, 153, 0.06);
+        border-left: 2px solid var(--success);
+      }
+      .dropdown-item.auto-match:hover {
+        background: rgba(52, 211, 153, 0.12);
+      }
+
+      .dropdown-item-label {
+        font-size: 13px;
+        font-weight: 500;
+        color: var(--text);
+        flex: 1;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .dropdown-item-label .highlight {
+        color: var(--accent);
+        font-weight: 600;
+      }
+
+      .dropdown-item-type {
+        font-size: 10px;
+        padding: 2px 6px;
+        border-radius: 3px;
+        background: var(--bg-muted);
+        color: var(--text-muted);
+        white-space: nowrap;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+      }
+
+      .dropdown-item-values {
+        font-size: 10px;
+        color: var(--text-subtle);
+      }
+
+      .dropdown-hint {
+        padding: 6px 12px;
+        font-size: 11px;
+        color: var(--text-subtle);
+        background: var(--surface-secondary);
+        border-bottom: 1px solid var(--border);
+      }
+
+      .dropdown-empty {
+        padding: 16px 12px;
+        font-size: 12px;
+        color: var(--text-subtle);
+        text-align: center;
+      }
+
+      .dropdown-count {
+        padding: 5px 12px;
+        font-size: 10px;
+        color: var(--text-subtle);
+        text-align: center;
+        background: var(--surface-secondary);
+        border-top: 1px solid var(--border);
+        position: sticky;
+        bottom: 0;
+      }
+
+      /* ─── Auto-fill indicator ─── */
+      .auto-filled {
+        position: relative;
+      }
+      .auto-filled::after {
+        content: 'auto';
+        position: absolute;
+        right: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 10px;
+        color: var(--accent);
+        background: var(--accent-subtle);
+        padding: 1px 6px;
+        border-radius: 3px;
+        pointer-events: none;
+      }
+      .auto-filled input,
+      .auto-filled select,
+      .auto-filled textarea {
+        padding-right: 50px;
+      }
+
+      /* ─── Auto-suggest badge on Field Name ─── */
+      .auto-suggested-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        font-size: 10px;
+        color: var(--success);
+        margin-left: 6px;
+      }
+
+      /* ─── Source Badge ─── */
+      .source-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        font-size: 11px;
+        color: var(--text-muted);
+        background: var(--bg-muted);
+        padding: 3px 8px;
+        border-radius: 4px;
+        margin-top: 4px;
+      }
+      .source-badge .path {
+        font-family: 'SF Mono', 'Fira Code', monospace;
+        color: var(--text-subtle);
+      }
+
+      /* ─── Toggle ─── */
+      .toggles {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .toggle-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .toggle-switch {
+        width: 36px;
+        height: 20px;
+        background: var(--border);
+        border-radius: 10px;
+        position: relative;
+        cursor: pointer;
+        transition: background 0.2s;
+        flex-shrink: 0;
+      }
+      .toggle-switch.on {
+        background: var(--success);
+      }
+      .toggle-switch::after {
+        content: '';
+        width: 16px;
+        height: 16px;
+        background: white;
+        border-radius: 50%;
+        position: absolute;
+        top: 2px;
+        left: 2px;
+        transition: transform 0.2s;
+      }
+      .toggle-switch.on::after {
+        transform: translateX(16px);
+      }
+
+      .toggle-label {
+        font-size: 13px;
+        color: var(--text);
+      }
+
+      /* ─── Enum Values ─── */
+      .enum-section {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .enum-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .enum-header label span {
+        font-weight: 400;
+        color: var(--text-muted);
+      }
+
+      .enum-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr 28px;
+        gap: 8px;
+        align-items: center;
+      }
+
+      .enum-grid-header {
+        display: grid;
+        grid-template-columns: 1fr 1fr 28px;
+        gap: 8px;
+        font-size: 11px;
+        color: var(--text-muted);
+      }
+
+      .enum-remove {
+        background: none;
+        border: none;
+        color: var(--text-muted);
+        cursor: pointer;
+        font-size: 16px;
+        padding: 4px;
+        border-radius: 4px;
+        transition: all 0.15s;
+      }
+      .enum-remove:hover {
+        color: var(--error);
+        background: rgba(248, 113, 113, 0.1);
+      }
+
+      /* ─── Buttons ─── */
+      .btn-row {
+        display: flex;
+        gap: 12px;
+        padding-top: 8px;
+      }
+
+      .btn {
+        flex: 1;
+        padding: 9px 16px;
+        font-size: 13px;
+        font-weight: 500;
+        border-radius: var(--radius);
+        cursor: pointer;
+        transition: all 0.15s;
+        border: 1px solid transparent;
+      }
+
+      .btn-secondary {
+        background: var(--bg-subtle);
+        border-color: var(--border);
+        color: var(--text);
+      }
+      .btn-secondary:hover {
+        background: var(--bg-muted);
+      }
+
+      .btn-primary {
+        background: var(--accent);
+        color: white;
+      }
+      .btn-primary:hover {
+        opacity: 0.9;
+      }
+
+      .btn-sm {
+        padding: 4px 10px;
+        font-size: 12px;
+        border-radius: 6px;
+        background: var(--bg-subtle);
+        border: 1px solid var(--border);
+        color: var(--text-muted);
+        cursor: pointer;
+        transition: all 0.15s;
+      }
+      .btn-sm:hover {
+        color: var(--text);
+        background: var(--bg-muted);
+      }
+
+      /* ─── Background page (simulated) ─── */
+      .page-bg {
+        width: 100%;
+        max-width: 900px;
+        padding: 24px;
+      }
+      .page-bg h1 {
+        font-size: 20px;
+        font-weight: 600;
+        margin-bottom: 16px;
+        color: var(--text-muted);
+      }
+      .page-bg .tab-bar {
+        display: flex;
+        gap: 24px;
+        border-bottom: 1px solid var(--border);
+        margin-bottom: 20px;
+      }
+      .page-bg .tab {
+        padding: 8px 0;
+        font-size: 13px;
+        color: var(--text-muted);
+        cursor: pointer;
+        border-bottom: 2px solid transparent;
+        transition: all 0.15s;
+      }
+      .page-bg .tab.active {
+        color: var(--text);
+        border-bottom-color: var(--accent);
+      }
+      .page-bg .tab:hover {
+        color: var(--text);
+      }
+
+      .open-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 14px;
+        font-size: 13px;
+        font-weight: 500;
+        background: var(--accent);
+        color: white;
+        border: none;
+        border-radius: var(--radius);
+        cursor: pointer;
+        transition: opacity 0.15s;
+      }
+      .open-btn:hover {
+        opacity: 0.9;
+      }
+
+      /* ─── Info panel ─── */
+      .info-panel {
+        margin-top: 24px;
+        padding: 16px;
+        background: var(--surface-secondary);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-lg);
+        font-size: 12px;
+        color: var(--text-muted);
+        line-height: 1.6;
+      }
+      .info-panel h3 {
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--text);
+        margin-bottom: 8px;
+      }
+      .info-panel code {
+        background: var(--bg-muted);
+        padding: 1px 5px;
+        border-radius: 3px;
+        font-size: 11px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page-bg">
+      <h1>Intelligence / Fields</h1>
+      <div class="tab-bar">
+        <div class="tab active">My Fields <span style="opacity: 0.5">4</span></div>
+        <div class="tab">Suggested <span style="opacity: 0.5">12</span></div>
+        <div class="tab">Unmapped <span style="opacity: 0.5">78</span></div>
+      </div>
+
+      <button class="open-btn" onclick="openDialog()">
+        <svg
+          width="14"
+          height="14"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2.5"
+        >
+          <line x1="12" y1="5" x2="12" y2="19" />
+          <line x1="5" y1="12" x2="19" y2="12" />
+        </svg>
+        Add Field
+      </button>
+
+      <div class="info-panel">
+        <h3>How this prototype works</h3>
+        <p>
+          <strong>1. Display Name</strong> (top) — type what you want to call the field, e.g.
+          <code>Urgency</code>, <code>Priority</code>
+        </p>
+        <p style="margin-top: 6px">
+          <strong>2. Auto-suggest</strong> — as you type Display Name, Field Name
+          <strong>automatically fills</strong> with the best matching connector field (green chip).
+          Type, Description, and Values auto-fill too.
+        </p>
+        <p style="margin-top: 6px">
+          <strong>3. Not satisfied?</strong> — click the <strong>&times;</strong> on the green chip
+          to clear it, then click Field Name dropdown to browse/search all 78 fields and pick a
+          different one.
+        </p>
+        <p style="margin-top: 6px">
+          <strong>4. Type filter</strong> — select a Type first (e.g., Number), then the dropdown
+          only shows fields of that type.
+        </p>
+        <p style="margin-top: 8px">
+          Try: type <code>Urgency</code> → auto-suggests "Urgency" field. Type <code>Prior</code> →
+          auto-suggests "Priority". Type <code>xyz</code> → no match, pick manually from dropdown.
+        </p>
+      </div>
+    </div>
+
+    <!-- ─── Dialog ─── -->
+    <div
+      class="overlay"
+      id="overlay"
+      style="display: none"
+      onclick="if (event.target === this) closeDialog();"
+    >
+      <div class="dialog">
+        <div class="dialog-header">
+          <h2>Add Field</h2>
+          <button class="dialog-close" onclick="closeDialog()">&times;</button>
+        </div>
+        <div class="dialog-body">
+          <!-- 1. Display Name (free text, user types whatever) -->
+          <div class="form-group" id="displayNameGroup">
+            <label for="displayName">Display Name</label>
+            <input
+              type="text"
+              id="displayName"
+              placeholder="e.g., Urgency, Priority Level, Status"
+              autocomplete="off"
+              oninput="onDisplayNameInput(this.value)"
+            />
+          </div>
+
+          <!-- 2. Field Name (searchable dropdown of 78 unmapped fields) -->
+          <div class="form-group" id="fieldNameGroup">
+            <label>
+              Field Name
+              <span id="autoSuggestBadge" class="auto-suggested-badge" style="display: none">
+                <svg
+                  width="10"
+                  height="10"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="3"
+                >
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+                auto-suggested
+              </span>
+            </label>
+            <div class="dropdown-wrapper" id="fieldNameDropdown">
+              <input
+                type="text"
+                class="dropdown-input"
+                id="fieldNameInput"
+                placeholder="Select a connector schema field..."
+                autocomplete="off"
+                readonly
+                onclick="toggleDropdown()"
+              />
+              <span class="dropdown-chevron">
+                <svg
+                  width="12"
+                  height="12"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path d="M6 9l6 6 6-6" />
+                </svg>
+              </span>
+              <div class="dropdown-list" id="dropdownList">
+                <div class="dropdown-search">
+                  <input
+                    type="text"
+                    id="dropdownSearch"
+                    placeholder="Search fields..."
+                    oninput="onDropdownSearch(this.value)"
+                    onkeydown="onDropdownKeydown(event)"
+                  />
+                </div>
+                <div id="dropdownItems"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 3. Type -->
+          <div class="form-group" id="typeGroup">
+            <label for="fieldType">Type</label>
+            <select id="fieldType" onchange="onTypeChange()">
+              <option value="">Any type</option>
+              <option value="string">Text</option>
+              <option value="number">Number</option>
+              <option value="date">Date</option>
+              <option value="boolean">Boolean</option>
+              <option value="array">List</option>
+            </select>
+          </div>
+
+          <!-- 4. Description -->
+          <div class="form-group" id="descGroup">
+            <label for="fieldDesc">Description</label>
+            <textarea
+              id="fieldDesc"
+              placeholder="Helps the AI understand what this field means"
+              rows="2"
+            ></textarea>
+          </div>
+
+          <!-- Source indicator -->
+          <div id="sourceIndicator" style="display: none">
+            <div class="source-badge">
+              <span>Connector path:</span>
+              <span class="path" id="sourcePath"></span>
+            </div>
+          </div>
+
+          <!-- Capabilities -->
+          <div class="form-group">
+            <label>Capabilities</label>
+            <div class="toggles">
+              <div class="toggle-row">
+                <div class="toggle-switch on" id="toggleFilter" onclick="toggleSwitch(this)"></div>
+                <span class="toggle-label">Can be used as filter</span>
+              </div>
+              <div class="toggle-row">
+                <div class="toggle-switch" id="toggleSort" onclick="toggleSwitch(this)"></div>
+                <span class="toggle-label">Can be used for sorting</span>
+              </div>
+              <div class="toggle-row">
+                <div class="toggle-switch" id="toggleGroup" onclick="toggleSwitch(this)"></div>
+                <span class="toggle-label">Can be used for grouping</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Values -->
+          <div class="enum-section" id="enumSection">
+            <div class="enum-header">
+              <label>Values <span>(optional)</span></label>
+              <button class="btn-sm" onclick="addEnumRow()">+ Add value</button>
+            </div>
+            <div id="enumRows"></div>
+          </div>
+
+          <!-- Buttons -->
+          <div class="btn-row">
+            <button class="btn btn-secondary" onclick="closeDialog()">Cancel</button>
+            <button class="btn btn-primary" onclick="submitField()">Add Field</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // ─── 78 Unmapped Connector Fields ──────────────────────────────────────
+      const UNMAPPED_FIELDS = [
+        {
+          path: 'fields.priority.name',
+          label: 'Priority',
+          type: 'string',
+          enumValues: ['Highest', 'High', 'Medium', 'Low', 'Lowest'],
+        },
+        { path: 'fields.priority.id', label: 'Priority ID', type: 'number' },
+        {
+          path: 'fields.status.name',
+          label: 'Status',
+          type: 'string',
+          enumValues: ['To Do', 'In Progress', 'Done', 'Blocked'],
+        },
+        {
+          path: 'fields.status.statusCategory.name',
+          label: 'Status Category',
+          type: 'string',
+          enumValues: ['To Do', 'In Progress', 'Done'],
+        },
+        {
+          path: 'fields.issuetype.name',
+          label: 'Issue Type',
+          type: 'string',
+          enumValues: ['Bug', 'Story', 'Task', 'Epic', 'Sub-task'],
+        },
+        { path: 'fields.assignee.displayName', label: 'Assignee', type: 'string' },
+        { path: 'fields.assignee.emailAddress', label: 'Assignee Email', type: 'string' },
+        { path: 'fields.reporter.displayName', label: 'Reporter', type: 'string' },
+        { path: 'fields.created', label: 'Created Date', type: 'date' },
+        { path: 'fields.updated', label: 'Updated Date', type: 'date' },
+        { path: 'fields.duedate', label: 'Due Date', type: 'date' },
+        { path: 'fields.resolutiondate', label: 'Resolution Date', type: 'date' },
+        { path: 'fields.summary', label: 'Summary', type: 'string' },
+        { path: 'fields.description', label: 'Description', type: 'text' },
+        { path: 'fields.labels', label: 'Labels', type: 'array' },
+        { path: 'fields.components', label: 'Components', type: 'array' },
+        { path: 'fields.fixVersions', label: 'Fix Versions', type: 'array' },
+        {
+          path: 'fields.resolution.name',
+          label: 'Resolution',
+          type: 'string',
+          enumValues: ['Fixed', "Won't Fix", 'Duplicate', 'Cannot Reproduce'],
+        },
+        { path: 'fields.project.name', label: 'Project Name', type: 'string' },
+        { path: 'fields.project.key', label: 'Project Key', type: 'string' },
+        { path: 'fields.sprint.name', label: 'Sprint Name', type: 'string' },
+        {
+          path: 'fields.sprint.state',
+          label: 'Sprint State',
+          type: 'string',
+          enumValues: ['active', 'closed', 'future'],
+        },
+        { path: 'fields.story_points', label: 'Story Points', type: 'number' },
+        { path: 'fields.timeoriginalestimate', label: 'Original Estimate', type: 'number' },
+        { path: 'fields.timespent', label: 'Time Spent', type: 'number' },
+        {
+          path: 'fields.customfield_urgency',
+          label: 'Urgency',
+          type: 'string',
+          enumValues: ['Critical', 'High', 'Medium', 'Low'],
+        },
+        {
+          path: 'fields.customfield_severity',
+          label: 'Severity',
+          type: 'string',
+          enumValues: ['S1 - Critical', 'S2 - Major', 'S3 - Minor', 'S4 - Trivial'],
+        },
+        {
+          path: 'fields.customfield_impact',
+          label: 'Impact',
+          type: 'string',
+          enumValues: ['High', 'Medium', 'Low'],
+        },
+        { path: 'fields.customfield_team', label: 'Team', type: 'string' },
+        {
+          path: 'fields.customfield_category',
+          label: 'Category',
+          type: 'string',
+          enumValues: ['Frontend', 'Backend', 'Infrastructure', 'Design', 'DevOps'],
+        },
+        {
+          path: 'fields.customfield_environment',
+          label: 'Environment',
+          type: 'string',
+          enumValues: ['Production', 'Staging', 'Development'],
+        },
+        { path: 'fields.customfield_customer', label: 'Customer', type: 'string' },
+        { path: 'fields.customfield_rootcause', label: 'Root Cause', type: 'string' },
+        { path: 'fields.customfield_department', label: 'Department', type: 'string' },
+        { path: 'fields.customfield_region', label: 'Region', type: 'string' },
+        { path: 'fields.customfield_sla_breach', label: 'SLA Breach', type: 'boolean' },
+        { path: 'fields.customfield_escalated', label: 'Escalated', type: 'boolean' },
+        {
+          path: 'fields.customfield_risk_level',
+          label: 'Risk Level',
+          type: 'string',
+          enumValues: ['High', 'Medium', 'Low'],
+        },
+        { path: 'fields.customfield_cost_center', label: 'Cost Center', type: 'string' },
+        { path: 'fields.customfield_release_date', label: 'Release Date', type: 'date' },
+        { path: 'fields.customfield_review_date', label: 'Review Date', type: 'date' },
+        {
+          path: 'fields.customfield_approval_status',
+          label: 'Approval Status',
+          type: 'string',
+          enumValues: ['Pending', 'Approved', 'Rejected'],
+        },
+        { path: 'fields.customfield_source_system', label: 'Source System', type: 'string' },
+        { path: 'fields.customfield_business_unit', label: 'Business Unit', type: 'string' },
+        { path: 'fields.customfield_title', label: 'Title', type: 'string' },
+        { path: 'fields.customfield_owner', label: 'Owner', type: 'string' },
+        { path: 'fields.customfield_reviewer', label: 'Reviewer', type: 'string' },
+        { path: 'fields.customfield_due_date_internal', label: 'Internal Due Date', type: 'date' },
+        { path: 'fields.customfield_confidence_score', label: 'Confidence Score', type: 'number' },
+        { path: 'fields.customfield_completion_pct', label: 'Completion %', type: 'number' },
+        { path: 'metadata.contentType', label: 'Content Type', type: 'string' },
+        { path: 'metadata.fileSize', label: 'File Size', type: 'number' },
+        { path: 'metadata.author', label: 'Author', type: 'string' },
+        { path: 'metadata.lastModified', label: 'Last Modified', type: 'date' },
+        { path: 'metadata.language', label: 'Language', type: 'string' },
+        { path: 'metadata.pageCount', label: 'Page Count', type: 'number' },
+        { path: 'metadata.tags', label: 'Tags', type: 'array' },
+        { path: 'metadata.source_url', label: 'Source URL', type: 'string' },
+        { path: 'metadata.version', label: 'Version', type: 'string' },
+        {
+          path: 'metadata.classification',
+          label: 'Classification',
+          type: 'string',
+          enumValues: ['Public', 'Internal', 'Confidential', 'Restricted'],
+        },
+        { path: 'metadata.retention_period', label: 'Retention Period', type: 'string' },
+        { path: 'metadata.created_by', label: 'Created By', type: 'string' },
+        { path: 'metadata.modified_by', label: 'Modified By', type: 'string' },
+        {
+          path: 'metadata.document_status',
+          label: 'Document Status',
+          type: 'string',
+          enumValues: ['Draft', 'In Review', 'Published', 'Archived'],
+        },
+        { path: 'metadata.expiry_date', label: 'Expiry Date', type: 'date' },
+        { path: 'metadata.site_name', label: 'Site Name', type: 'string' },
+        { path: 'metadata.library_name', label: 'Library Name', type: 'string' },
+        { path: 'metadata.folder_path', label: 'Folder Path', type: 'string' },
+        { path: 'metadata.permissions_level', label: 'Permissions Level', type: 'string' },
+        { path: 'metadata.checkedOutTo', label: 'Checked Out To', type: 'string' },
+        {
+          path: 'metadata.workflow_status',
+          label: 'Workflow Status',
+          type: 'string',
+          enumValues: ['Not Started', 'In Progress', 'Completed', 'Cancelled'],
+        },
+        { path: 'metadata.approval_required', label: 'Approval Required', type: 'boolean' },
+        { path: 'metadata.priority_score', label: 'Priority Score', type: 'number' },
+        {
+          path: 'metadata.sentiment',
+          label: 'Sentiment',
+          type: 'string',
+          enumValues: ['Positive', 'Neutral', 'Negative'],
+        },
+        { path: 'metadata.word_count', label: 'Word Count', type: 'number' },
+        { path: 'metadata.embedding_model', label: 'Embedding Model', type: 'string' },
+        { path: 'metadata.chunk_index', label: 'Chunk Index', type: 'number' },
+        { path: 'metadata.parent_document_id', label: 'Parent Document ID', type: 'string' },
+        { path: 'metadata.is_latest', label: 'Is Latest Version', type: 'boolean' },
+      ];
+
+      const TYPE_MAP = {
+        string: 'string',
+        keyword: 'string',
+        text: 'string',
+        number: 'number',
+        float: 'number',
+        integer: 'number',
+        date: 'date',
+        boolean: 'boolean',
+        array: 'array',
+      };
+
+      const TYPE_DISPLAY = {
+        string: 'Text',
+        number: 'Number',
+        date: 'Date',
+        boolean: 'Boolean',
+        array: 'List',
+        text: 'Text',
+      };
+
+      const TYPE_FILTER_MAP = {
+        string: ['string', 'keyword', 'text'],
+        number: ['number', 'float', 'integer'],
+        date: ['date'],
+        boolean: ['boolean'],
+        array: ['array'],
+      };
+
+      // ─── State ─────────────────────────────────────────────────────────────
+
+      let selectedField = null; // the picked unmapped field
+      let dropdownOpen = false;
+      let activeItemIndex = -1;
+      let currentFilteredFields = [];
+      let autoMatchIndex = -1; // index of auto-matched field in filtered list
+
+      // ─── Dialog Open/Close ─────────────────────────────────────────────────
+
+      function openDialog() {
+        document.getElementById('overlay').style.display = 'flex';
+        resetForm();
+        setTimeout(() => document.getElementById('displayName').focus(), 100);
+      }
+
+      function closeDialog() {
+        document.getElementById('overlay').style.display = 'none';
+        closeDropdown();
+        resetForm();
+      }
+
+      function resetForm() {
+        document.getElementById('displayName').value = '';
+        document.getElementById('fieldNameInput').value = '';
+        document.getElementById('fieldType').value = '';
+        document.getElementById('fieldDesc').value = '';
+        document.getElementById('enumRows').innerHTML = '';
+        document.getElementById('sourceIndicator').style.display = 'none';
+        document.getElementById('autoSuggestBadge').style.display = 'none';
+        clearAutoFillIndicators();
+        selectedField = null;
+        autoMatchIndex = -1;
+        // Reset toggles
+        document.getElementById('toggleFilter').classList.add('on');
+        document.getElementById('toggleSort').classList.remove('on');
+        document.getElementById('toggleGroup').classList.remove('on');
+      }
+
+      // ─── Fuzzy Match ───────────────────────────────────────────────────────
+
+      function fuzzyMatch(query, text) {
+        if (!query || !text) return { match: false, score: 0 };
+        const q = query.toLowerCase();
+        const t = text.toLowerCase();
+        if (t === q) return { match: true, score: 3 }; // exact
+        if (t.startsWith(q)) return { match: true, score: 2.5 }; // starts-with
+        if (t.includes(q)) return { match: true, score: 2 }; // substring
+        const words = t.split(/[\s_.\-/]+/);
+        for (const w of words) {
+          if (w.startsWith(q)) return { match: true, score: 1.5 };
+        }
+        return { match: false, score: 0 };
+      }
+
+      // ─── Get filtered + scored fields ──────────────────────────────────────
+
+      function getFilteredFields(searchQuery) {
+        const selectedType = document.getElementById('fieldType').value;
+        const allowedTypes = selectedType ? TYPE_FILTER_MAP[selectedType] || null : null;
+        const displayName = document.getElementById('displayName').value.trim();
+        const q = (searchQuery || '').toLowerCase();
+
+        let fields = UNMAPPED_FIELDS.map((f) => {
+          const shortName = f.path.split('.').pop() || '';
+          return { ...f, shortName };
+        });
+
+        // Filter by type if selected
+        if (allowedTypes) {
+          fields = fields.filter((f) => allowedTypes.includes(f.type));
+        }
+
+        // If there's a search query in the dropdown search box, filter by it
+        if (q.length >= 1) {
+          fields = fields.filter((f) => {
+            const labelMatch = fuzzyMatch(q, f.label);
+            const nameMatch = fuzzyMatch(q, f.shortName);
+            const pathMatch = fuzzyMatch(q, f.path);
+            return labelMatch.match || nameMatch.match || pathMatch.match;
+          });
+        }
+
+        // Score by display name match (for auto-suggest ordering)
+        if (displayName.length >= 2) {
+          const dq = displayName.toLowerCase();
+          fields = fields.map((f) => {
+            const labelScore = fuzzyMatch(dq, f.label).score;
+            const nameScore = fuzzyMatch(dq, f.shortName).score;
+            const best = Math.max(labelScore * 1.5, nameScore);
+            return { ...f, autoScore: best };
+          });
+          // Sort: auto-matches first (highest score), then alphabetical
+          fields.sort((a, b) => {
+            if (b.autoScore !== a.autoScore) return b.autoScore - a.autoScore;
+            return a.label.localeCompare(b.label);
+          });
+        } else {
+          fields = fields.map((f) => ({ ...f, autoScore: 0 }));
+          fields.sort((a, b) => a.label.localeCompare(b.label));
+        }
+
+        return fields;
+      }
+
+      // ─── Render Dropdown Items ─────────────────────────────────────────────
+
+      function renderDropdownItems(searchQuery) {
+        const container = document.getElementById('dropdownItems');
+        const fields = getFilteredFields(searchQuery);
+        currentFilteredFields = fields;
+        activeItemIndex = -1;
+
+        if (fields.length === 0) {
+          container.innerHTML = '<div class="dropdown-empty">No fields match your criteria</div>';
+          return;
+        }
+
+        const displayName = document.getElementById('displayName').value.trim();
+        const hasAutoMatches = displayName.length >= 2 && fields.some((f) => f.autoScore > 0);
+
+        let html = '';
+
+        if (hasAutoMatches) {
+          html +=
+            '<div class="dropdown-hint">Best matches for "' + escapeHtml(displayName) + '"</div>';
+        }
+
+        let passedAutoSection = false;
+        const sq = (searchQuery || '').toLowerCase();
+
+        fields.forEach((field, i) => {
+          // Separator between auto-matched and rest
+          if (hasAutoMatches && !passedAutoSection && field.autoScore === 0) {
+            passedAutoSection = true;
+            html += '<div class="dropdown-hint">All fields</div>';
+          }
+
+          const displayType = TYPE_DISPLAY[field.type] || field.type;
+          const isAutoMatch = field.autoScore > 0;
+          const hasEnum = field.enumValues && field.enumValues.length > 0;
+
+          // Highlight search query in path and label
+          let pathHtml = escapeHtml(field.path);
+          let labelSmall = escapeHtml(field.label);
+          if (sq.length >= 1) {
+            pathHtml = highlightMatch(field.path, sq);
+            labelSmall = highlightMatch(field.label, sq);
+          }
+
+          html += `
+      <div class="dropdown-item ${isAutoMatch ? 'auto-match' : ''}"
+           data-index="${i}"
+           onclick="pickField(${i})"
+           onmouseenter="activeItemIndex=${i};updateActiveItem()">
+        <div class="dropdown-item-label" style="display:flex;flex-direction:column;gap:1px;">
+          <span style="font-family:'SF Mono','Fira Code',monospace;font-size:12px;">${pathHtml}</span>
+          <span style="font-size:11px;color:var(--text-muted);font-weight:400;">${labelSmall}${hasEnum ? ' &middot; ' + field.enumValues.length + ' values' : ''}</span>
+        </div>
+        <span class="dropdown-item-type">${displayType}</span>
+      </div>
+    `;
+        });
+
+        html += `<div class="dropdown-count">${fields.length} of ${UNMAPPED_FIELDS.length} fields</div>`;
+        container.innerHTML = html;
+      }
+
+      function escapeHtml(text) {
+        const d = document.createElement('div');
+        d.textContent = text;
+        return d.innerHTML;
+      }
+
+      function highlightMatch(text, query) {
+        const idx = text.toLowerCase().indexOf(query.toLowerCase());
+        if (idx === -1) return escapeHtml(text);
+        return (
+          escapeHtml(text.slice(0, idx)) +
+          '<span class="highlight">' +
+          escapeHtml(text.slice(idx, idx + query.length)) +
+          '</span>' +
+          escapeHtml(text.slice(idx + query.length))
+        );
+      }
+
+      function updateActiveItem() {
+        const items = document.querySelectorAll('.dropdown-item');
+        items.forEach((el, i) => {
+          el.classList.toggle('active', i === activeItemIndex);
+          if (i === activeItemIndex) el.scrollIntoView({ block: 'nearest' });
+        });
+      }
+
+      // ─── Dropdown Open/Close ───────────────────────────────────────────────
+
+      function toggleDropdown() {
+        if (dropdownOpen) {
+          closeDropdown();
+        } else {
+          openDropdown();
+        }
+      }
+
+      function openDropdown() {
+        const wrapper = document.getElementById('fieldNameDropdown');
+        wrapper.classList.add('open');
+        dropdownOpen = true;
+        document.getElementById('dropdownSearch').value = '';
+        renderDropdownItems('');
+        setTimeout(() => document.getElementById('dropdownSearch').focus(), 50);
+      }
+
+      function closeDropdown() {
+        const wrapper = document.getElementById('fieldNameDropdown');
+        wrapper.classList.remove('open');
+        dropdownOpen = false;
+        activeItemIndex = -1;
+      }
+
+      // ─── Pick a Field ──────────────────────────────────────────────────────
+
+      function pickField(index) {
+        const field = currentFilteredFields[index];
+        if (!field) return;
+
+        field._autoSuggested = false; // manual pick — don't let auto-suggest override
+        selectField(field, false);
+        closeDropdown();
+      }
+
+      // Shared: set field into the Field Name input (works for both auto and manual pick)
+      function selectField(field, isAuto) {
+        selectedField = field;
+
+        // Show the schema path as the value in the input
+        const input = document.getElementById('fieldNameInput');
+        input.value = field.path;
+
+        // Badge
+        document.getElementById('autoSuggestBadge').style.display = isAuto ? 'inline-flex' : 'none';
+
+        // Auto-fill Type
+        const mappedType = TYPE_MAP[field.type] || 'string';
+        document.getElementById('fieldType').value = mappedType;
+        markAutoFilled('typeGroup');
+
+        // Auto-fill Description
+        document.getElementById('fieldDesc').value = field.label + ' field from connector data';
+        markAutoFilled('descGroup');
+
+        // Show source path
+        document.getElementById('sourcePath').textContent = field.path;
+        document.getElementById('sourceIndicator').style.display = 'block';
+
+        // Auto-fill enum values
+        const enumRows = document.getElementById('enumRows');
+        enumRows.innerHTML = '';
+        if (field.enumValues && field.enumValues.length > 0) {
+          field.enumValues.forEach((val) => {
+            addEnumRow(val, val.toLowerCase().replace(/\s+/g, '_'));
+          });
+        }
+
+        // Smart capability defaults
+        if (field.enumValues && field.enumValues.length > 0) {
+          document.getElementById('toggleFilter').classList.add('on');
+          document.getElementById('toggleGroup').classList.add('on');
+        }
+        if (field.type === 'number') {
+          document.getElementById('toggleSort').classList.add('on');
+        }
+        if (field.type === 'date') {
+          document.getElementById('toggleSort').classList.add('on');
+          document.getElementById('toggleFilter').classList.add('on');
+        }
+      }
+
+      function clearFieldSelection(e) {
+        if (e) e.stopPropagation();
+        selectedField = null;
+        document.getElementById('fieldNameInput').value = '';
+        document.getElementById('autoSuggestBadge').style.display = 'none';
+        document.getElementById('sourceIndicator').style.display = 'none';
+        // Reset auto-filled fields
+        document.getElementById('fieldType').value = '';
+        document.getElementById('fieldDesc').value = '';
+        document.getElementById('enumRows').innerHTML = '';
+        document.getElementById('toggleFilter').classList.add('on');
+        document.getElementById('toggleSort').classList.remove('on');
+        document.getElementById('toggleGroup').classList.remove('on');
+        clearAutoFillIndicators();
+      }
+
+      // ─── Auto-fill indicators ──────────────────────────────────────────────
+
+      function markAutoFilled(groupId) {
+        document.getElementById(groupId).classList.add('auto-filled');
+      }
+
+      function clearAutoFillIndicators() {
+        ['typeGroup', 'descGroup'].forEach((id) => {
+          document.getElementById(id).classList.remove('auto-filled');
+        });
+      }
+
+      // ─── Event Handlers ────────────────────────────────────────────────────
+
+      function onDisplayNameInput(value) {
+        // If dropdown is open, re-render to update auto-match ordering
+        if (dropdownOpen) {
+          renderDropdownItems(document.getElementById('dropdownSearch').value);
+        }
+
+        // Auto-suggest: find best matching field and auto-select it
+        const trimmed = value.trim();
+        if (trimmed.length >= 2) {
+          const fields = getFilteredFields('');
+          const bestMatch = fields.length > 0 && fields[0].autoScore > 0 ? fields[0] : null;
+
+          if (bestMatch) {
+            // Auto-select this field (user can change via dropdown)
+            autoPickField(bestMatch);
+          } else if (selectedField && selectedField._autoSuggested) {
+            // No match anymore — clear the auto-suggested selection
+            clearFieldSelection();
+          }
+        } else if (selectedField && selectedField._autoSuggested) {
+          // User cleared Display Name — remove auto-suggestion
+          clearFieldSelection();
+        }
+      }
+
+      // Auto-pick without closing dropdown (used by display name auto-suggest)
+      function autoPickField(field) {
+        // Don't replace a manual selection with auto-suggestion
+        if (selectedField && !selectedField._autoSuggested) return;
+
+        field._autoSuggested = true;
+        selectField(field, true);
+      }
+
+      function onTypeChange() {
+        // If dropdown is open, re-render to filter by new type
+        if (dropdownOpen) {
+          renderDropdownItems(document.getElementById('dropdownSearch').value);
+        }
+        // Clear auto-fill indicator since user changed type manually
+        document.getElementById('typeGroup').classList.remove('auto-filled');
+        // If a field was selected and its type doesn't match the new filter, clear it
+        if (selectedField) {
+          const selectedType = document.getElementById('fieldType').value;
+          if (selectedType) {
+            const allowedTypes = TYPE_FILTER_MAP[selectedType] || [];
+            if (!allowedTypes.includes(selectedField.type)) {
+              clearFieldSelection();
+            }
+          }
+        }
+      }
+
+      function onDropdownSearch(value) {
+        renderDropdownItems(value);
+      }
+
+      function onDropdownKeydown(e) {
+        if (!currentFilteredFields || currentFilteredFields.length === 0) return;
+
+        if (e.key === 'ArrowDown') {
+          e.preventDefault();
+          activeItemIndex = Math.min(activeItemIndex + 1, currentFilteredFields.length - 1);
+          updateActiveItem();
+        } else if (e.key === 'ArrowUp') {
+          e.preventDefault();
+          activeItemIndex = Math.max(activeItemIndex - 1, 0);
+          updateActiveItem();
+        } else if (e.key === 'Enter' && activeItemIndex >= 0) {
+          e.preventDefault();
+          pickField(activeItemIndex);
+        } else if (e.key === 'Escape') {
+          closeDropdown();
+          document.getElementById('fieldNameInput').focus();
+        }
+      }
+
+      // Close dropdown when clicking outside
+      document.addEventListener('click', (e) => {
+        if (dropdownOpen && !e.target.closest('#fieldNameDropdown')) {
+          closeDropdown();
+        }
+      });
+
+      // ─── Toggle ────────────────────────────────────────────────────────────
+
+      function toggleSwitch(el) {
+        el.classList.toggle('on');
+      }
+
+      // ─── Enum Values ───────────────────────────────────────────────────────
+
+      function addEnumRow(display, stored) {
+        const container = document.getElementById('enumRows');
+        const isFirst = container.children.length === 0;
+
+        if (isFirst) {
+          const header = document.createElement('div');
+          header.className = 'enum-grid-header';
+          header.innerHTML = '<span>Display Name</span><span>Stored Value</span><span></span>';
+          container.appendChild(header);
+        }
+
+        const row = document.createElement('div');
+        row.className = 'enum-row';
+        row.innerHTML = `
+    <input type="text" placeholder="High" value="${display || ''}" />
+    <input type="text" placeholder="high" value="${stored || ''}" />
+    <button class="enum-remove" onclick="removeEnumRow(this)">&times;</button>
+  `;
+        container.appendChild(row);
+      }
+
+      function removeEnumRow(btn) {
+        const row = btn.parentElement;
+        const container = row.parentElement;
+        row.remove();
+        if (container.querySelectorAll('.enum-row').length === 0) {
+          container.innerHTML = '';
+        }
+      }
+
+      // ─── Submit ────────────────────────────────────────────────────────────
+
+      function submitField() {
+        const displayName = document.getElementById('displayName').value.trim();
+        const type = document.getElementById('fieldType').value;
+        const desc = document.getElementById('fieldDesc').value.trim();
+
+        if (!displayName) {
+          alert('Display Name is required');
+          return;
+        }
+        if (!selectedField) {
+          alert('Please select a Field Name from the dropdown');
+          return;
+        }
+
+        const data = {
+          displayName,
+          fieldName: selectedField.shortName || selectedField.path.split('.').pop(),
+          fieldPath: selectedField.path,
+          fieldLabel: selectedField.label,
+          type: type || TYPE_MAP[selectedField.type] || 'string',
+          description: desc,
+          filterable: document.getElementById('toggleFilter').classList.contains('on'),
+          sortable: document.getElementById('toggleSort').classList.contains('on'),
+          aggregatable: document.getElementById('toggleGroup').classList.contains('on'),
+        };
+
+        // Collect enum values
+        const enumRows = document.querySelectorAll('#enumRows .enum-row');
+        if (enumRows.length > 0) {
+          data.enumValues = {};
+          enumRows.forEach((row) => {
+            const inputs = row.querySelectorAll('input');
+            if (inputs[0].value && inputs[1].value) {
+              data.enumValues[inputs[0].value] = inputs[1].value;
+            }
+          });
+        }
+
+        console.log('Field created:', data);
+        alert(
+          `Field created!\n\n` +
+            `Display: "${displayName}"\n` +
+            `Mapped to: ${selectedField.label} (${selectedField.path})\n` +
+            `Type: ${TYPE_DISPLAY[data.type] || data.type}\n\n` +
+            `Check console for full data.`,
+        );
+        closeDialog();
+      }
+    </script>
+  </body>
+</html>

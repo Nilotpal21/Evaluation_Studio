@@ -1,0 +1,562 @@
+{
+  "environment": "local-dev",
+  "capturedAt": "2026-04-15",
+  "purpose": "Machine-readable detailed attribution companion for local /api/v1/chat/agent datastore baseline.",
+  "companionFiles": {
+    "mathSnapshot": "local-chat-agent-datastore-baseline.json",
+    "humanReadableDoc": "local-chat-agent-datastore-baseline.md"
+  },
+  "endpoint": {
+    "method": "POST",
+    "path": "/api/v1/chat/agent",
+    "studioUrl": "http://localhost:5173",
+    "runtimeUrl": "http://localhost:3112"
+  },
+  "scenario": {
+    "projectName": "chat-agent-qps-baseline",
+    "projectId": "019d9005-af19-7f21-9bca-2df019e8ff97",
+    "agentName": "benchmark_agent",
+    "tenantId": "tenant-dev-001",
+    "modelId": "mock-model",
+    "credentialName": "bench-mock-cred",
+    "sessionShape": {
+      "sessionCreateRequests": 1,
+      "followUpTurns": 15,
+      "totalRequests": 16
+    },
+    "requestShape": {
+      "shared": {
+        "authenticatedDevLoginJwt": true,
+        "agentIdExplicitlySet": true,
+        "attachments": 0,
+        "deploymentId": null,
+        "environment": null,
+        "metadata": null,
+        "toolPayloads": false,
+        "kbSpecificPromptContent": false,
+        "mockLlmEnabled": true
+      },
+      "firstTurnBody": {
+        "projectId": "019d9005-af19-7f21-9bca-2df019e8ff97",
+        "agentId": "benchmark_agent",
+        "message": "Start the session with a short hello."
+      },
+      "followUpBodyTemplate": {
+        "projectId": "019d9005-af19-7f21-9bca-2df019e8ff97",
+        "agentId": "benchmark_agent",
+        "sessionId": "<same session id for all 15 follow-up turns>",
+        "message": "Turn N: respond briefly."
+      }
+    },
+    "captureWindow": {
+      "postResponseDrainMs": 1500,
+      "interRequestPauseMs": 200
+    }
+  },
+  "measurementRuns": {
+    "baselineCountRun": {
+      "purpose": "Primary run used for theoretical math inputs.",
+      "sessionId": "d7aa6336-2f40-4283-b8bc-355986a3d449",
+      "method": {
+        "mongodb": {
+          "database": "abl_platform",
+          "method": "system.profile",
+          "profileLevel": 2,
+          "slowms": 0
+        },
+        "redis": {
+          "method": "MONITOR",
+          "classification": {
+            "reads": "direct read commands only",
+            "writes": "direct mutating commands only",
+            "scripts": "EVAL and EVALSHA separated"
+          }
+        }
+      },
+      "firstTurn": {
+        "durationMs": 1061,
+        "mongodb": {
+          "reads": 27,
+          "writes": 6,
+          "other": 0,
+          "total": 33
+        },
+        "redis": {
+          "reads": 49,
+          "writes": 71,
+          "scripts": 11,
+          "other": 0,
+          "total": 131
+        }
+      },
+      "followUpAverage": {
+        "durationMs": 1043.73,
+        "mongodb": {
+          "reads": 15.73,
+          "writes": 4.13,
+          "other": 0,
+          "total": 19.87
+        },
+        "redis": {
+          "reads": 48.4,
+          "writes": 84.27,
+          "scripts": 12.6,
+          "other": 0,
+          "total": 145.27
+        }
+      },
+      "overallAverage": {
+        "durationMs": 1044.81,
+        "mongodb": {
+          "reads": 16.44,
+          "writes": 4.25,
+          "other": 0,
+          "total": 20.69
+        },
+        "redis": {
+          "reads": 48.44,
+          "writes": 83.44,
+          "scripts": 12.5,
+          "other": 0,
+          "total": 144.38
+        }
+      }
+    },
+    "redisCommandAttributionRun": {
+      "purpose": "Separate run used to attribute Redis totals to concrete command families.",
+      "firstTurn": {
+        "reads": {
+          "get": 13,
+          "hmget": 8,
+          "hget": 6,
+          "zcard": 5,
+          "llen": 4,
+          "zrangebyscore": 4,
+          "zrange": 3,
+          "hgetall": 2,
+          "exists": 1,
+          "lrange": 1,
+          "scard": 1,
+          "zrevrange": 1
+        },
+        "writes": {
+          "expire": 12,
+          "del": 7,
+          "set": 7,
+          "hmset": 6,
+          "zadd": 6,
+          "xadd": 5,
+          "hincrby": 4,
+          "rpoplpush": 4,
+          "rpush": 3,
+          "zpopmin": 3,
+          "zremrangebyscore": 3,
+          "bzpopmin": 2,
+          "lpop": 2,
+          "hset": 1,
+          "incr": 1,
+          "lpush": 1,
+          "lrem": 1,
+          "srem": 1,
+          "xtrim": 1,
+          "zremrangebyrank": 1
+        },
+        "scripts": {
+          "evalsha": 9,
+          "eval": 2
+        },
+        "other": {}
+      },
+      "followUpAverage": {
+        "reads": {
+          "hmget": 10.13,
+          "get": 8,
+          "zrangebyscore": 6.13,
+          "zrange": 5.13,
+          "zcard": 5,
+          "hget": 5,
+          "llen": 4,
+          "exists": 1.33,
+          "hgetall": 1,
+          "scard": 1,
+          "zrevrange": 1
+        },
+        "writes": {
+          "rpush": 19,
+          "del": 9.13,
+          "expire": 9,
+          "rpoplpush": 6.13,
+          "zadd": 6,
+          "zpopmin": 5.13,
+          "xadd": 5,
+          "bzpopmin": 4.13,
+          "hmset": 3,
+          "set": 3,
+          "zremrangebyscore": 3,
+          "hincrby": 3,
+          "lpop": 2,
+          "hset": 1,
+          "incr": 1,
+          "lpush": 1,
+          "lrem": 1,
+          "srem": 1,
+          "xtrim": 1,
+          "zremrangebyrank": 1
+        },
+        "scripts": {
+          "evalsha": 11.47,
+          "eval": 1
+        },
+        "other": {}
+      }
+    },
+    "mongoNamespaceAttributionRun": {
+      "purpose": "Separate run used to attribute Mongo activity to collection namespaces and operation families.",
+      "firstTurn": {
+        "readCommands": {
+          "query": 59
+        },
+        "writeCommands": {
+          "update": 5,
+          "insert": 4
+        },
+        "readNamespaces": {
+          "abl_platform.tenant_llm_policies": 8,
+          "abl_platform.project_settings": 5,
+          "abl_platform.dek_registry": 4,
+          "abl_platform.agent_model_configs": 3,
+          "abl_platform.llm_credentials": 3,
+          "abl_platform.materialized_kms_configs": 3,
+          "abl_platform.model_configs": 3,
+          "abl_platform.project_llm_configs": 3,
+          "abl_platform.project_settings_versions": 3,
+          "abl_platform.projects": 3,
+          "abl_platform.subscriptions": 3,
+          "abl_platform.tenant_kms_configs": 3,
+          "abl_platform.tenant_models": 3,
+          "abl_platform.project_runtime_configs": 2,
+          "abl_platform.session_states": 2,
+          "abl_platform.tenants": 2,
+          "abl_platform.environment_variables": 1,
+          "abl_platform.guardrail_policies": 1,
+          "abl_platform.project_agents": 1,
+          "abl_platform.resource_permissions": 1,
+          "abl_platform.tenant_members": 1,
+          "abl_platform.users": 1
+        },
+        "writeNamespaces": {
+          "abl_platform.dek_registry": 3,
+          "abl_platform.session_states": 2,
+          "abl_platform.sessions": 2,
+          "abl_platform.audit_logs": 1,
+          "abl_platform.messages": 1
+        }
+      },
+      "followUpAverage": {
+        "readCommands": {
+          "query": 27,
+          "aggregate": 0.33,
+          "distinct": 0.07
+        },
+        "writeCommands": {
+          "insert": 2.4,
+          "update": 2.13
+        },
+        "readNamespaces": {
+          "abl_platform.tenant_llm_policies": 5.6,
+          "abl_platform.tenant_members": 3.33,
+          "abl_platform.tenants": 3.33,
+          "abl_platform.users": 3.33,
+          "abl_platform.subscriptions": 2.6,
+          "abl_platform.sessions": 2.4,
+          "abl_platform.llm_credentials": 2,
+          "abl_platform.tenant_models": 2,
+          "abl_platform.projects": 1.47,
+          "abl_platform.session_states": 1,
+          "abl_platform.resource_permissions": 0.13,
+          "abl_platform.human_tasks": 0.07,
+          "abl_platform.role_definitions": 0.07,
+          "abl_platform.suspensions": 0.07
+        },
+        "writeNamespaces": {
+          "abl_platform.audit_logs": 1.4,
+          "abl_platform.messages": 1,
+          "abl_platform.session_states": 1,
+          "abl_platform.sessions": 1,
+          "abl_platform.human_tasks": 0.13
+        }
+      }
+    }
+  },
+  "subsystemAttribution": {
+    "redis": {
+      "sessionStore": {
+        "responsibility": [
+          "session hash writes",
+          "reverse lookup key writes",
+          "conversation list writes",
+          "session snapshot replacement",
+          "ttl refresh"
+        ],
+        "codeAnchors": [
+          {
+            "path": "apps/runtime/src/services/session/redis-session-store.ts",
+            "lineStart": 288,
+            "lineEnd": 315,
+            "purpose": "session create path writes HMSET, EXPIRE, SET, RPUSH, EXPIRE"
+          },
+          {
+            "path": "apps/runtime/src/services/session/redis-session-store.ts",
+            "lineStart": 511,
+            "lineEnd": 524,
+            "purpose": "save-and-replace conversation path uses EVAL then DEL, RPUSH, EXPIRE"
+          },
+          {
+            "path": "apps/runtime/src/services/session/redis-session-store.ts",
+            "lineStart": 684,
+            "lineEnd": 689,
+            "purpose": "touch path refreshes TTLs on multiple session keys"
+          }
+        ],
+        "commandsLikely": {
+          "reads": ["get", "hmget", "hget", "hgetall", "lrange"],
+          "writes": ["hmset", "set", "expire", "rpush", "del"],
+          "scripts": ["eval", "evalsha"]
+        }
+      },
+      "executionLocking": {
+        "responsibility": ["per-session execution mutex", "owner-checked lock release"],
+        "codeAnchors": [
+          {
+            "path": "apps/runtime/src/services/session/redis-session-store.ts",
+            "lineStart": 653,
+            "lineEnd": 660,
+            "purpose": "SET NX PX lock acquire and Lua-based release"
+          },
+          {
+            "path": "apps/runtime/src/services/llm/llm-queue.ts",
+            "lineStart": 145,
+            "lineEnd": 166,
+            "purpose": "llm queue acquires and releases per-session lock via session service"
+          }
+        ],
+        "commandsLikely": {
+          "reads": [],
+          "writes": ["set"],
+          "scripts": ["eval", "evalsha"]
+        }
+      },
+      "llmBullMQ": {
+        "responsibility": [
+          "enqueue llm request",
+          "dequeue worker job",
+          "job state transitions and cleanup"
+        ],
+        "codeAnchors": [
+          {
+            "path": "apps/runtime/src/services/llm/llm-queue.ts",
+            "lineStart": 193,
+            "lineEnd": 208,
+            "purpose": "initialize BullMQ queue and worker"
+          },
+          {
+            "path": "apps/runtime/src/services/llm/llm-queue.ts",
+            "lineStart": 472,
+            "lineEnd": 472,
+            "purpose": "enqueue llm-request job"
+          }
+        ],
+        "commandsLikely": {
+          "reads": ["zcard", "zrange", "zrangebyscore", "llen"],
+          "writes": [
+            "rpush",
+            "zadd",
+            "rpoplpush",
+            "bzpopmin",
+            "zpopmin",
+            "zremrangebyscore",
+            "del"
+          ],
+          "scripts": ["evalsha"]
+        },
+        "writesMongoDirectly": false
+      },
+      "messagePersistenceBullMQ": {
+        "responsibility": [
+          "queue user and assistant messages",
+          "queue turn metrics",
+          "flush buffered message batches to BullMQ"
+        ],
+        "codeAnchors": [
+          {
+            "path": "apps/runtime/src/routes/chat.ts",
+            "lineStart": 1755,
+            "lineEnd": 1779,
+            "purpose": "chat route enqueues user message, assistant message, and turn metrics"
+          },
+          {
+            "path": "apps/runtime/src/services/message-persistence-queue.ts",
+            "lineStart": 878,
+            "lineEnd": 927,
+            "purpose": "initialize message-persistence BullMQ queue and worker"
+          },
+          {
+            "path": "apps/runtime/src/services/message-persistence-queue.ts",
+            "lineStart": 983,
+            "lineEnd": 1034,
+            "purpose": "flush buffered messages and metrics into BullMQ jobs"
+          }
+        ],
+        "commandsLikely": {
+          "reads": ["llen", "zcard", "zrange", "zrangebyscore"],
+          "writes": [
+            "rpush",
+            "zadd",
+            "rpoplpush",
+            "bzpopmin",
+            "zpopmin",
+            "zremrangebyscore",
+            "del"
+          ],
+          "scripts": ["evalsha"]
+        },
+        "writesMongoDirectly": true
+      },
+      "traceStore": {
+        "responsibility": [
+          "append per-session trace stream events",
+          "set trace stream ttl",
+          "publish realtime trace notifications"
+        ],
+        "codeAnchors": [
+          {
+            "path": "apps/runtime/src/services/trace/redis-trace-store.ts",
+            "lineStart": 245,
+            "lineEnd": 258,
+            "purpose": "XADD, EXPIRE, PUBLISH for trace event persistence and fan-out"
+          }
+        ],
+        "commandsLikely": {
+          "reads": [],
+          "writes": ["xadd", "xtrim", "expire"],
+          "pubsubNotCountedInReadWriteTotals": ["publish"],
+          "scripts": []
+        }
+      },
+      "sessionSlotGuard": {
+        "responsibility": [
+          "claim active session slot",
+          "release active session slot",
+          "count active sessions"
+        ],
+        "codeAnchors": [
+          {
+            "path": "apps/runtime/src/middleware/rate-limiter.ts",
+            "lineStart": 645,
+            "lineEnd": 670,
+            "purpose": "Lua-backed claim/release and SCARD count path"
+          }
+        ],
+        "commandsLikely": {
+          "reads": ["scard"],
+          "writes": ["srem"],
+          "scripts": ["eval"]
+        }
+      }
+    },
+    "mongodb": {
+      "messagePersistenceWorker": {
+        "responsibility": [
+          "batch insert message documents",
+          "apply per-session aggregate updates after batched persistence"
+        ],
+        "codeAnchors": [
+          {
+            "path": "apps/runtime/src/services/message-persistence-queue.ts",
+            "lineStart": 562,
+            "lineEnd": 570,
+            "purpose": "worker persists message batch to Mongo via batchCreateMessages"
+          },
+          {
+            "path": "apps/runtime/src/services/message-persistence-queue.ts",
+            "lineStart": 637,
+            "lineEnd": 664,
+            "purpose": "worker applies per-session counters and last-activity updates"
+          }
+        ],
+        "writesLikely": ["abl_platform.messages", "abl_platform.sessions"]
+      },
+      "sessionRepoWriteFunctions": {
+        "codeAnchors": [
+          {
+            "path": "apps/runtime/src/repos/session-repo.ts",
+            "lineStart": 241,
+            "lineEnd": 278,
+            "purpose": "Session.updateOne for messageCount/tokenCount/cost/trace/error/handoff counters"
+          },
+          {
+            "path": "apps/runtime/src/repos/session-repo.ts",
+            "lineStart": 401,
+            "lineEnd": 430,
+            "purpose": "Message.insertMany for persisted chat messages"
+          }
+        ],
+        "collections": ["abl_platform.sessions", "abl_platform.messages"]
+      },
+      "readSideHotCollectionsObserved": [
+        "abl_platform.tenant_llm_policies",
+        "abl_platform.project_settings",
+        "abl_platform.dek_registry",
+        "abl_platform.agent_model_configs",
+        "abl_platform.llm_credentials",
+        "abl_platform.materialized_kms_configs",
+        "abl_platform.model_configs",
+        "abl_platform.project_llm_configs",
+        "abl_platform.project_settings_versions",
+        "abl_platform.projects",
+        "abl_platform.subscriptions",
+        "abl_platform.tenant_kms_configs",
+        "abl_platform.tenant_models",
+        "abl_platform.project_runtime_configs",
+        "abl_platform.session_states",
+        "abl_platform.tenants",
+        "abl_platform.resource_permissions",
+        "abl_platform.tenant_members",
+        "abl_platform.users"
+      ]
+    }
+  },
+  "majorPathsChecked": {
+    "sessionStore": true,
+    "executionLocks": true,
+    "llmBullMQ": true,
+    "messagePersistenceBullMQ": true,
+    "traceStore": true,
+    "sessionSlotGuard": true,
+    "messagePersistenceMongoWrites": true,
+    "sessionAggregateMongoWrites": true
+  },
+  "mappingNotes": {
+    "whyRunsAreSeparated": "The math totals, Redis command attribution, and Mongo namespace attribution were captured in separate bounded runs to avoid conflating theoretical sizing inputs with explanatory attribution detail.",
+    "redisWriteInflationExplanation": [
+      "One logical turn updates session state and conversation state.",
+      "One logical turn also enqueues an LLM BullMQ job.",
+      "The completed turn then enqueues user message, assistant message, and turn metrics into a second BullMQ pipeline.",
+      "Trace events also write to Redis streams and publish to Pub/Sub.",
+      "TTL refreshes happen on multiple session-related keys."
+    ],
+    "mongoWriteExplanation": [
+      "Message-persistence BullMQ worker inserts persisted chat messages into abl_platform.messages.",
+      "The same worker updates session aggregates in abl_platform.sessions via applySessionTurnUpdate.",
+      "Profiler also observed writes to abl_platform.session_states, abl_platform.audit_logs, and occasionally other stateful collections."
+    ]
+  },
+  "knownUnknowns": [
+    "Redis PUBLISH traffic exists in the trace path but was intentionally not counted in read/write totals.",
+    "Redis EVAL and EVALSHA are opaque compound operations and may perform both reads and writes internally.",
+    "BullMQ internal Redis command attribution is inferred from command signatures and queue initialization paths rather than from BullMQ source-level instrumentation.",
+    "Mongo namespace attribution was captured in a separate run from the primary math-count run, so namespace counts should be read as explanatory shape rather than strict addends for the primary totals.",
+    "Small amounts of background worker activity can overlap the measurement window in local-dev and slightly perturb exact counts.",
+    "The baseline excludes attachments, KB retrieval, explicit tool execution, multi-agent delegation, real provider latency, and multimodal/voice payloads."
+  ]
+}

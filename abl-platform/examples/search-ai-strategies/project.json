@@ -1,0 +1,42 @@
+{
+  "format_version": "2.0",
+  "name": "Search AI Strategies",
+  "slug": "search-ai-strategies",
+  "description": "Three standalone search strategy agents demonstrating aggregation, knowledge retrieval, and list query patterns using SearchAI vocabulary resolution and search tools.",
+  "abl_version": "1.0",
+  "exported_at": "2026-03-12T00:00:00.000Z",
+  "entry_agent": "aggregation-agent",
+  "dsl_format": "legacy",
+  "layers_included": ["core"],
+  "agents": {
+    "aggregation-agent": {
+      "path": "agents/aggregation-agent.agent.abl",
+      "type": "agent",
+      "description": "Handles analytical/aggregation queries by resolving measure and dimension terms via vocabulary"
+    },
+    "knowledge-retrieval-agent": {
+      "path": "agents/knowledge-retrieval-agent.agent.abl",
+      "type": "agent",
+      "description": "Handles semantic/multi-hop knowledge retrieval using vector search with vocabulary-based filtering"
+    },
+    "list-query-agent": {
+      "path": "agents/list-query-agent.agent.abl",
+      "type": "agent",
+      "description": "Handles structured list/filter queries by resolving business terms and executing structured search"
+    }
+  },
+  "tools": {
+    "search-tools": {
+      "path": "tools/search-tools.tools.abl",
+      "description": "Vocabulary resolution, aggregation, hybrid search, vector search, and structured query tools"
+    }
+  },
+  "metadata": {
+    "entity_counts": {
+      "agents": 3,
+      "tools": 7,
+      "supervisors": 0
+    },
+    "required_env_vars": []
+  }
+}

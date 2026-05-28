@@ -1,0 +1,101 @@
+AGENT: Market_Insights
+VERSION: "1.0"
+DESCRIPTION: "Provides general market and policy guidance using SearchAI when available and a curated fallback when it is not"
+GOAL: "Answer broad market, fund, deadline, and policy questions with grounded, demo-safe guidance"
+
+PERSONA: |
+  Thoughtful insight specialist for the Vanguard demo.
+  Gives short, useful guidance grounded in policy or curated knowledge and
+  avoids pretending to offer real-time personalized advice.
+
+LIMITATIONS:
+  - "Does not provide individualized investment advice"
+  - "Uses SearchAI when available and falls back to curated demo guidance"
+  - "Keeps deadline, policy, and allocation guidance general"
+
+TOOLS:
+  search_kb_retirement_policy_kb(query: string, queryType?: string, filters?: object[], aggregation?: {field: string, function?: string}, rerank?: boolean, skipPreprocessing?: boolean, skipVocabularyResolution?: boolean) -> {results: array, totalCount: number, queryType: string, aggregations?: array}
+    description: "Retirement-service policy guidance for the hosted demo"
+
+  search_demo_policy_library(query: string) -> {topic: string, totalCount: number, results: array, summary: string}
+    description: "Search a curated fallback library of policy and market themes for the demo"
+
+MEMORY:
+  session:
+    - customer_id
+      TYPE: string
+      DESCRIPTION: "Demo customer id for the current household"
+    - customer_name
+      TYPE: string
+      DESCRIPTION: "Display name for the demo customer"
+  persistent:
+    - PATH: workflow.customer_id
+      SCOPE: execution_tree
+      ACCESS: read
+      TYPE: string
+    - PATH: workflow.customer_name
+      SCOPE: execution_tree
+      ACCESS: read
+      TYPE: string
+    - PATH: workflow.default_account_id
+      SCOPE: execution_tree
+      ACCESS: read
+      TYPE: string
+
+FLOW:
+  entry_point: init
+
+  steps:
+    - init
+    - query_policy_kb
+    - query_demo_library
+    - present_kb_answer
+    - present_demo_answer
+
+  init:
+    REASONING: false
+    SET:
+      customer_id = "demo-vanguard-household"
+      customer_name = "Vanguard client"
+    THEN: query_policy_kb
+
+  query_policy_kb:
+    REASONING: false
+    CALL: search_kb_retirement_policy_kb
+      WITH:
+        query: _raw_input
+      AS: kb_result
+    ON_RESULT:
+      - IF: kb_result.totalCount > 0
+        THEN: present_kb_answer
+      - ELSE:
+        THEN: query_demo_library
+    ON_FAIL:
+      THEN: query_demo_library
+
+  query_demo_library:
+    REASONING: false
+    CALL: search_demo_policy_library
+      WITH:
+        query: _raw_input
+      AS: demo_result
+    ON_RESULT:
+      - IF: demo_result.totalCount > 0
+        THEN: present_demo_answer
+      - ELSE:
+        RESPOND: "I can help with contribution deadlines, rollover readiness, and general market-allocation themes, but I need a little more detail on what insight you want."
+        THEN: COMPLETE
+
+  present_kb_answer:
+    REASONING: false
+    RESPOND: |
+      {{kb_result.results.0.content}}
+      If you want, I can also route you into contribution, rollover, or portfolio review next.
+    THEN: COMPLETE
+
+  present_demo_answer:
+    REASONING: false
+    RESPOND: |
+      {{demo_result.summary}}
+      If you want, I can also route you into contribution, rollover, or portfolio review next.
+    THEN: COMPLETE

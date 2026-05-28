@@ -1,0 +1,18 @@
+/**
+ * Saludsa Identity Verification Tools
+ *
+ * Tools for user identity verification, phone verification, and account linking.
+ */
+
+TOOLS:
+  verify_identity(document_type: string, document_number: string) -> VerificationResult:
+    description: "Verify user identity using document type and number"
+
+  check_user_exists(document_number: string) -> UserExistsResult:
+    description: "Check if a user exists by document number"
+
+  verify_by_phone(phone_number: string) -> PhoneVerificationResult:
+    description: "Verify user identity using phone number (WhatsApp channel)"
+
+  link_phone_to_account(phone_number: string, document_number: string) -> LinkResult:
+    description: "Link a phone number to a user account"

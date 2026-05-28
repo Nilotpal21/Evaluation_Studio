@@ -1,0 +1,2872 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Arch AI — The deep dive</title>
+    <meta
+      name="description"
+      content="Interactive walkthrough of how Arch AI designs production multi-agent systems — phases, specialists, gating, knowledge, and ten real scenarios."
+    />
+    <style>
+      /* ─── Theme tokens ──────────────────────────────────────────────── */
+      :root,
+      [data-theme='dark'] {
+        --bg: #07080d;
+        --bg-1: #0c0e16;
+        --bg-2: #11141f;
+        --bg-3: #181c2a;
+        --surface: #0f121b;
+        --surface-2: #161a26;
+        --line: #1f2433;
+        --line-2: #2c3245;
+        --line-3: #3a4358;
+        --text: #e8ebf3;
+        --text-2: #c4cad8;
+        --text-dim: #8c95aa;
+        --text-mute: #5e6678;
+        --accent: #8b9eff;
+        --accent-soft: rgba(139, 158, 255, 0.14);
+        --accent-2: #6ee7c8;
+        --accent-2-soft: rgba(110, 231, 200, 0.14);
+        --accent-3: #ffb168;
+        --accent-3-soft: rgba(255, 177, 104, 0.14);
+        --accent-4: #c89bff;
+        --accent-4-soft: rgba(200, 155, 255, 0.14);
+        --accent-5: #ff8da3;
+        --accent-5-soft: rgba(255, 141, 163, 0.14);
+        --accent-6: #7cd9ff;
+        --accent-6-soft: rgba(124, 217, 255, 0.14);
+        --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+        --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.45);
+        --shadow-lg: 0 22px 60px rgba(0, 0, 0, 0.55);
+        --code-bg: rgba(255, 255, 255, 0.04);
+        --grad-1: linear-gradient(135deg, #8b9eff 0%, #c89bff 100%);
+        --grad-2: linear-gradient(135deg, #6ee7c8 0%, #7cd9ff 100%);
+        --grad-3: linear-gradient(135deg, #ffb168 0%, #ff8da3 100%);
+        color-scheme: dark;
+      }
+      [data-theme='light'] {
+        --bg: #fafafa;
+        --bg-1: #f4f5f8;
+        --bg-2: #eef0f5;
+        --bg-3: #e6e9f0;
+        --surface: #ffffff;
+        --surface-2: #f7f8fb;
+        --line: #e2e5ec;
+        --line-2: #d2d7e0;
+        --line-3: #b6bdcb;
+        --text: #0d1322;
+        --text-2: #2a3146;
+        --text-dim: #5a6376;
+        --text-mute: #8089a0;
+        --accent: #5468ff;
+        --accent-soft: rgba(84, 104, 255, 0.1);
+        --accent-2: #08a884;
+        --accent-2-soft: rgba(8, 168, 132, 0.1);
+        --accent-3: #d0700b;
+        --accent-3-soft: rgba(208, 112, 11, 0.1);
+        --accent-4: #8b3dd9;
+        --accent-4-soft: rgba(139, 61, 217, 0.1);
+        --accent-5: #d63a59;
+        --accent-5-soft: rgba(214, 58, 89, 0.1);
+        --accent-6: #1c93c4;
+        --accent-6-soft: rgba(28, 147, 196, 0.1);
+        --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.06);
+        --shadow-md: 0 6px 18px rgba(15, 23, 42, 0.08);
+        --shadow-lg: 0 18px 48px rgba(15, 23, 42, 0.1);
+        --code-bg: rgba(15, 23, 42, 0.045);
+        --grad-1: linear-gradient(135deg, #5468ff 0%, #8b3dd9 100%);
+        --grad-2: linear-gradient(135deg, #08a884 0%, #1c93c4 100%);
+        --grad-3: linear-gradient(135deg, #d0700b 0%, #d63a59 100%);
+        color-scheme: light;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+      html {
+        scroll-behavior: smooth;
+      }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+        font-family:
+          -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Inter, system-ui, sans-serif;
+        font-size: 15px;
+        line-height: 1.6;
+        -webkit-font-smoothing: antialiased;
+        text-rendering: optimizeLegibility;
+        transition:
+          background-color 200ms ease,
+          color 200ms ease;
+      }
+      body,
+      html {
+        height: 100%;
+      }
+      ::selection {
+        background: var(--accent-soft);
+        color: var(--text);
+      }
+      a {
+        color: var(--accent);
+        text-decoration: none;
+      }
+      code,
+      .mono {
+        font-family: ui-monospace, 'SF Mono', SFMono-Regular, Menlo, Consolas, monospace;
+      }
+      :is(p, li) code {
+        background: var(--code-bg);
+        padding: 1.5px 6px;
+        border-radius: 4px;
+        font-size: 0.92em;
+        color: var(--accent);
+      }
+
+      h1,
+      h2,
+      h3,
+      h4 {
+        margin: 0;
+        line-height: 1.2;
+        letter-spacing: -0.015em;
+        color: var(--text);
+      }
+      h1 {
+        font-size: clamp(34px, 5vw, 54px);
+        font-weight: 700;
+        letter-spacing: -0.025em;
+      }
+      h2 {
+        font-size: 30px;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+      }
+      h3 {
+        font-size: 19px;
+        font-weight: 600;
+      }
+      h4 {
+        font-size: 14px;
+        font-weight: 600;
+      }
+      p {
+        margin: 0 0 14px;
+        color: var(--text-2);
+      }
+
+      /* ─── App layout ────────────────────────────────────────────────── */
+      .app {
+        display: grid;
+        grid-template-columns: 280px 1fr;
+        min-height: 100vh;
+      }
+      @media (max-width: 960px) {
+        .app {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      /* ─── Sidebar ───────────────────────────────────────────────────── */
+      aside.toc {
+        position: sticky;
+        top: 0;
+        height: 100vh;
+        overflow-y: auto;
+        background: var(--surface);
+        border-right: 1px solid var(--line);
+        padding: 22px 18px 28px;
+        z-index: 5;
+      }
+      @media (max-width: 960px) {
+        aside.toc {
+          position: relative;
+          height: auto;
+          border-right: 0;
+          border-bottom: 1px solid var(--line);
+        }
+      }
+      .toc-brand {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-weight: 700;
+        font-size: 14px;
+        letter-spacing: 0.2px;
+        margin-bottom: 4px;
+      }
+      .toc-brand .mark {
+        width: 22px;
+        height: 22px;
+        border-radius: 6px;
+        background: var(--grad-1);
+        position: relative;
+      }
+      .toc-brand .mark::after {
+        content: '';
+        position: absolute;
+        inset: 5px;
+        border-radius: 2px;
+        background: var(--surface);
+      }
+      .toc-meta {
+        font-size: 11.5px;
+        color: var(--text-mute);
+        margin: 2px 0 18px 32px;
+        letter-spacing: 0.3px;
+      }
+      .theme-toggle {
+        display: flex;
+        background: var(--bg-2);
+        border: 1px solid var(--line);
+        border-radius: 9px;
+        padding: 3px;
+        margin: 6px 0 22px;
+      }
+      .theme-toggle button {
+        flex: 1;
+        background: transparent;
+        border: 0;
+        padding: 6px 8px;
+        font-size: 12px;
+        font-family: inherit;
+        color: var(--text-dim);
+        cursor: pointer;
+        border-radius: 6px;
+        transition: all 150ms ease;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+      }
+      .theme-toggle button[aria-pressed='true'] {
+        background: var(--surface);
+        color: var(--text);
+        box-shadow: var(--shadow-sm);
+      }
+      .toc-section {
+        margin-bottom: 18px;
+      }
+      .toc-label {
+        font-size: 10.5px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.7px;
+        color: var(--text-mute);
+        margin: 18px 0 8px;
+        padding: 0 6px;
+      }
+      .toc-link {
+        display: block;
+        padding: 6px 10px;
+        font-size: 13.5px;
+        color: var(--text-dim);
+        border-radius: 6px;
+        margin-bottom: 1px;
+        transition: all 120ms ease;
+        position: relative;
+      }
+      .toc-link:hover {
+        background: var(--bg-2);
+        color: var(--text);
+      }
+      .toc-link.active {
+        background: var(--accent-soft);
+        color: var(--accent);
+        font-weight: 600;
+      }
+      .toc-link.sub {
+        padding-left: 22px;
+        font-size: 12.5px;
+      }
+
+      /* ─── Main content ──────────────────────────────────────────────── */
+      main {
+        padding: 60px 60px 120px;
+        max-width: 1100px;
+        margin: 0 auto;
+      }
+      @media (max-width: 700px) {
+        main {
+          padding: 40px 22px 90px;
+        }
+      }
+      section {
+        scroll-margin-top: 32px;
+        padding: 28px 0;
+      }
+      .eyebrow {
+        font-size: 11.5px;
+        font-weight: 600;
+        letter-spacing: 1.5px;
+        text-transform: uppercase;
+        color: var(--accent);
+      }
+      .lede {
+        font-size: 18px;
+        line-height: 1.55;
+        color: var(--text-dim);
+        max-width: 760px;
+        margin-top: 14px;
+      }
+      .gradient-text {
+        background: var(--grad-1);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+      }
+      .gradient-text-2 {
+        background: var(--grad-2);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+      }
+      .gradient-text-3 {
+        background: var(--grad-3);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+      }
+      hr {
+        border: 0;
+        border-top: 1px solid var(--line);
+        margin: 36px 0;
+      }
+
+      /* ─── Hero ──────────────────────────────────────────────────────── */
+      .hero {
+        padding-top: 24px;
+        position: relative;
+      }
+      .hero h1 {
+        max-width: 920px;
+        margin-top: 12px;
+      }
+      .hero-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 28px;
+        font-size: 12.5px;
+      }
+      .meta-pill {
+        padding: 5px 12px;
+        background: var(--surface-2);
+        border: 1px solid var(--line);
+        border-radius: 100px;
+        color: var(--text-dim);
+        font-family: inherit;
+      }
+      .meta-pill .dot {
+        display: inline-block;
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: var(--accent-2);
+        margin-right: 8px;
+        vertical-align: middle;
+      }
+
+      /* ─── Cards / panels ────────────────────────────────────────────── */
+      .panel {
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        padding: 28px 30px;
+        box-shadow: var(--shadow-sm);
+        margin-top: 22px;
+      }
+      .panel.tight {
+        padding: 20px 22px;
+      }
+      .panel.flat {
+        background: var(--surface-2);
+        box-shadow: none;
+      }
+      .panel h3 {
+        margin-bottom: 8px;
+      }
+      .row-2 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+      }
+      .row-3 {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 16px;
+      }
+      .row-4 {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 14px;
+      }
+      @media (max-width: 880px) {
+        .row-2,
+        .row-3,
+        .row-4 {
+          grid-template-columns: 1fr;
+        }
+      }
+      .stat-tile {
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        padding: 18px 18px 16px;
+      }
+      .stat-tile .n {
+        font-size: 26px;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+        background: var(--grad-1);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+      }
+      .stat-tile .l {
+        font-size: 12.5px;
+        color: var(--text-mute);
+        margin-top: 2px;
+      }
+
+      /* ─── Phase cards ───────────────────────────────────────────────── */
+      .phase-card {
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        padding: 26px 28px;
+        margin-top: 14px;
+        position: relative;
+        overflow: hidden;
+      }
+      .phase-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        width: 4px;
+        background: var(--accent);
+      }
+      .phase-card[data-tone='2']::before {
+        background: var(--accent-2);
+      }
+      .phase-card[data-tone='3']::before {
+        background: var(--accent-3);
+      }
+      .phase-card[data-tone='4']::before {
+        background: var(--accent-4);
+      }
+      .phase-head {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        margin-bottom: 12px;
+      }
+      .phase-num {
+        width: 38px;
+        height: 38px;
+        border-radius: 10px;
+        background: var(--accent-soft);
+        color: var(--accent);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 14px;
+      }
+      .phase-card[data-tone='2'] .phase-num {
+        background: var(--accent-2-soft);
+        color: var(--accent-2);
+      }
+      .phase-card[data-tone='3'] .phase-num {
+        background: var(--accent-3-soft);
+        color: var(--accent-3);
+      }
+      .phase-card[data-tone='4'] .phase-num {
+        background: var(--accent-4-soft);
+        color: var(--accent-4);
+      }
+      .phase-info h3 {
+        margin: 0;
+      }
+      .phase-info .who {
+        font-size: 13px;
+        color: var(--text-mute);
+        margin-top: 2px;
+      }
+      .phase-detail {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 26px;
+        margin-top: 18px;
+        padding-top: 18px;
+        border-top: 1px solid var(--line);
+      }
+      @media (max-width: 720px) {
+        .phase-detail {
+          grid-template-columns: 1fr;
+        }
+      }
+      .phase-block h4 {
+        font-size: 11.5px;
+        text-transform: uppercase;
+        letter-spacing: 0.6px;
+        color: var(--text-mute);
+        margin-bottom: 8px;
+        font-weight: 600;
+      }
+      .check-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+      }
+      .check-list li {
+        padding: 4px 0;
+        font-size: 14px;
+        color: var(--text-2);
+        display: flex;
+        gap: 9px;
+        align-items: flex-start;
+      }
+      .check-list li::before {
+        content: '✓';
+        color: var(--accent-2);
+        font-weight: 700;
+        flex-shrink: 0;
+      }
+      .tools-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+      .tools-list .tool {
+        padding: 4px 10px;
+        background: var(--bg-2);
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        font-family: ui-monospace, monospace;
+        font-size: 12px;
+        color: var(--text-2);
+      }
+      .tools-list .tool.client {
+        background: var(--accent-3-soft);
+        color: var(--accent-3);
+        border-color: transparent;
+      }
+      .tools-list .tool.advance {
+        background: var(--accent-4-soft);
+        color: var(--accent-4);
+        border-color: transparent;
+      }
+
+      /* ─── Specialists ───────────────────────────────────────────────── */
+      .specialist-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 14px;
+        margin-top: 14px;
+      }
+      @media (max-width: 760px) {
+        .specialist-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+      .spec-card {
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        padding: 18px 20px;
+        cursor: pointer;
+        transition: all 180ms ease;
+      }
+      .spec-card:hover {
+        border-color: var(--line-3);
+        background: var(--surface-2);
+      }
+      .spec-card.expanded {
+        background: var(--surface-2);
+        border-color: var(--accent);
+      }
+      .spec-card-head {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+      }
+      .spec-icon {
+        width: 38px;
+        height: 38px;
+        border-radius: 10px;
+        background: var(--accent-soft);
+        color: var(--accent);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 17px;
+        flex-shrink: 0;
+      }
+      .spec-card.t2 .spec-icon {
+        background: var(--accent-2-soft);
+        color: var(--accent-2);
+      }
+      .spec-card.t3 .spec-icon {
+        background: var(--accent-3-soft);
+        color: var(--accent-3);
+      }
+      .spec-card.t4 .spec-icon {
+        background: var(--accent-4-soft);
+        color: var(--accent-4);
+      }
+      .spec-name {
+        font-size: 14.5px;
+        font-weight: 600;
+      }
+      .spec-id {
+        font-size: 11.5px;
+        font-family: ui-monospace, monospace;
+        color: var(--text-mute);
+        margin-top: 1px;
+      }
+      .spec-tag {
+        margin-left: auto;
+        font-size: 10.5px;
+        font-weight: 600;
+        padding: 3px 8px;
+        border-radius: 5px;
+        background: var(--bg-2);
+        color: var(--text-mute);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+      .spec-tag.in {
+        background: var(--accent-2-soft);
+        color: var(--accent-2);
+      }
+      .spec-card-body {
+        margin-top: 14px;
+        font-size: 13.5px;
+        color: var(--text-2);
+        line-height: 1.55;
+      }
+      .spec-detail {
+        display: none;
+        margin-top: 14px;
+        padding-top: 14px;
+        border-top: 1px solid var(--line);
+        font-size: 13px;
+      }
+      .spec-card.expanded .spec-detail {
+        display: block;
+      }
+      .spec-detail h5 {
+        margin: 10px 0 4px;
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: var(--text-mute);
+        font-weight: 600;
+      }
+      .spec-detail h5:first-child {
+        margin-top: 0;
+      }
+      .spec-detail ul {
+        margin: 0;
+        padding-left: 18px;
+        color: var(--text-2);
+      }
+      .spec-detail li {
+        margin-bottom: 3px;
+      }
+
+      /* ─── Gating diagram ────────────────────────────────────────────── */
+      .gates-wrap {
+        margin-top: 18px;
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        padding: 24px;
+        overflow: auto;
+      }
+      .gates-wrap svg {
+        display: block;
+        width: 100%;
+        max-width: 100%;
+        height: auto;
+      }
+      .gates-svg .layer {
+        fill: var(--surface-2);
+        stroke: var(--line);
+        stroke-dasharray: 3 3;
+      }
+      .gates-svg .layer-label {
+        fill: var(--text-mute);
+        font-size: 10.5px;
+        text-transform: uppercase;
+        letter-spacing: 0.7px;
+        font-family: ui-monospace, monospace;
+      }
+      .gates-svg .gate-box {
+        fill: var(--surface);
+        stroke: var(--accent);
+        stroke-width: 1.4;
+      }
+      .gates-svg .gate-box.b {
+        stroke: var(--accent-2);
+      }
+      .gates-svg .gate-box.c {
+        stroke: var(--accent-3);
+      }
+      .gates-svg .gate-box.d {
+        stroke: var(--accent-4);
+      }
+      .gates-svg .label-major {
+        fill: var(--text);
+        font-size: 13px;
+        font-weight: 600;
+      }
+      .gates-svg .label-minor {
+        fill: var(--text-dim);
+        font-size: 10.5px;
+        font-family: ui-monospace, monospace;
+      }
+      .gates-svg .arrow {
+        fill: none;
+        stroke: var(--line-3);
+        stroke-width: 1.3;
+      }
+      .gates-svg .arrow.legal {
+        stroke: var(--accent-2);
+      }
+      .gates-svg .arrow.illegal {
+        stroke: var(--accent-5);
+        stroke-dasharray: 3 3;
+      }
+
+      /* ─── Knowledge cards ───────────────────────────────────────────── */
+      .know-bar {
+        display: flex;
+        gap: 10px;
+        margin-top: 16px;
+        flex-wrap: wrap;
+      }
+      .know-filter {
+        padding: 6px 13px;
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: 100px;
+        font-size: 12.5px;
+        color: var(--text-dim);
+        cursor: pointer;
+        font-family: inherit;
+      }
+      .know-filter:hover {
+        color: var(--text);
+        border-color: var(--line-3);
+      }
+      .know-filter.active {
+        background: var(--accent-soft);
+        color: var(--accent);
+        border-color: transparent;
+      }
+      .know-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+        margin-top: 16px;
+      }
+      @media (max-width: 760px) {
+        .know-grid {
+          grid-template-columns: repeat(2, 1fr);
+        }
+      }
+      @media (max-width: 460px) {
+        .know-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+      .know-card {
+        padding: 12px 14px;
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: 9px;
+        font-size: 12.5px;
+        transition: all 150ms ease;
+      }
+      .know-card:hover {
+        border-color: var(--line-3);
+      }
+      .know-card .kn {
+        font-weight: 600;
+        font-size: 13px;
+        color: var(--text);
+        font-family: ui-monospace, monospace;
+      }
+      .know-card .kc {
+        font-size: 10.5px;
+        color: var(--text-mute);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-top: 4px;
+      }
+      .know-card.hidden {
+        display: none;
+      }
+
+      /* ─── SSE event table ───────────────────────────────────────────── */
+      .events-table {
+        margin-top: 18px;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        overflow: hidden;
+      }
+      .events-row {
+        display: grid;
+        grid-template-columns: 200px 1fr;
+        font-size: 13px;
+        border-top: 1px solid var(--line);
+      }
+      .events-row:first-child {
+        border-top: 0;
+      }
+      .events-row .ev-name {
+        background: var(--surface-2);
+        padding: 12px 16px;
+        font-family: ui-monospace, monospace;
+        color: var(--accent);
+        font-size: 12.5px;
+        font-weight: 600;
+      }
+      .events-row .ev-desc {
+        padding: 12px 16px;
+        background: var(--surface);
+        color: var(--text-2);
+      }
+      @media (max-width: 580px) {
+        .events-row {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      /* ─── Scenario stepper ──────────────────────────────────────────── */
+      .scenario-tabs {
+        display: flex;
+        gap: 6px;
+        overflow-x: auto;
+        padding-bottom: 12px;
+        margin-top: 18px;
+        scrollbar-width: thin;
+      }
+      .scenario-tab {
+        padding: 8px 14px;
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        font-size: 12.5px;
+        color: var(--text-dim);
+        cursor: pointer;
+        white-space: nowrap;
+        font-family: inherit;
+        transition: all 120ms ease;
+      }
+      .scenario-tab:hover {
+        color: var(--text);
+        border-color: var(--line-3);
+      }
+      .scenario-tab.active {
+        background: var(--accent-soft);
+        color: var(--accent);
+        border-color: transparent;
+        font-weight: 600;
+      }
+      .scenario-panel {
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        padding: 28px 32px 24px;
+        margin-top: 12px;
+        min-height: 360px;
+      }
+      .scenario-meta {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 11.5px;
+        color: var(--text-mute);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+      .scenario-meta .badge {
+        padding: 3px 9px;
+        border-radius: 5px;
+        background: var(--accent-soft);
+        color: var(--accent);
+      }
+      .scenario-panel h3 {
+        margin: 8px 0 10px;
+        font-size: 22px;
+      }
+      .scenario-question {
+        font-size: 15.5px;
+        color: var(--text-dim);
+        margin-bottom: 24px;
+        padding: 14px 18px;
+        background: var(--bg-2);
+        border-left: 3px solid var(--accent);
+        border-radius: 0 8px 8px 0;
+        font-style: italic;
+      }
+      .step-progress {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 16px;
+        font-size: 11.5px;
+        color: var(--text-mute);
+        font-family: ui-monospace, monospace;
+      }
+      .step-progress .bar {
+        flex: 1;
+        height: 3px;
+        background: var(--line);
+        border-radius: 100px;
+        overflow: hidden;
+      }
+      .step-progress .bar-fill {
+        height: 100%;
+        background: var(--grad-1);
+        transition: width 350ms cubic-bezier(0.2, 0.7, 0.2, 1);
+      }
+      .step-stage {
+        background: var(--surface-2);
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        padding: 18px 20px;
+        margin-bottom: 10px;
+        opacity: 0;
+        transform: translateY(8px);
+        transition:
+          opacity 250ms ease,
+          transform 250ms ease;
+      }
+      .step-stage.visible {
+        opacity: 1;
+        transform: translateY(0);
+      }
+      .step-stage.dim {
+        opacity: 0.4;
+      }
+      .step-stage h4 {
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--text);
+        margin-bottom: 4px;
+        display: flex;
+        align-items: center;
+        gap: 9px;
+      }
+      .step-stage .who {
+        font-size: 10.5px;
+        font-family: ui-monospace, monospace;
+        color: var(--accent);
+        text-transform: uppercase;
+        letter-spacing: 0.6px;
+        background: var(--accent-soft);
+        padding: 2px 8px;
+        border-radius: 4px;
+      }
+      .step-stage .who.coord {
+        color: var(--accent-4);
+        background: var(--accent-4-soft);
+      }
+      .step-stage .who.user {
+        color: var(--accent-3);
+        background: var(--accent-3-soft);
+      }
+      .step-stage .who.spec {
+        color: var(--accent-2);
+        background: var(--accent-2-soft);
+      }
+      .step-stage .who.system {
+        color: var(--text-mute);
+        background: var(--bg-3);
+      }
+      .step-stage p {
+        margin: 6px 0 0;
+        font-size: 13.5px;
+        color: var(--text-2);
+      }
+      .step-stage code {
+        font-size: 12px;
+      }
+      .scenario-controls {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 18px;
+      }
+      .step-btn {
+        padding: 8px 14px;
+        background: var(--surface);
+        border: 1px solid var(--line-2);
+        border-radius: 7px;
+        font-size: 12.5px;
+        color: var(--text);
+        cursor: pointer;
+        font-family: inherit;
+        transition: all 120ms ease;
+      }
+      .step-btn:hover:not(:disabled) {
+        border-color: var(--line-3);
+      }
+      .step-btn:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+      }
+      .step-btn.primary {
+        background: var(--text);
+        color: var(--bg);
+        border-color: var(--text);
+      }
+
+      /* ─── FAQ ────────────────────────────────────────────────────────── */
+      .faq-item {
+        border-bottom: 1px solid var(--line);
+      }
+      .faq-q {
+        padding: 18px 0;
+        font-size: 15.5px;
+        font-weight: 600;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 14px;
+        color: var(--text);
+      }
+      .faq-q::after {
+        content: '+';
+        font-size: 22px;
+        color: var(--text-mute);
+        font-weight: 300;
+        transition: transform 200ms ease;
+      }
+      .faq-item.open .faq-q::after {
+        content: '−';
+        color: var(--accent);
+      }
+      .faq-a {
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 280ms ease;
+      }
+      .faq-item.open .faq-a {
+        max-height: 600px;
+        padding-bottom: 18px;
+      }
+      .faq-a p {
+        margin: 0 0 8px;
+        color: var(--text-dim);
+        font-size: 14.5px;
+      }
+
+      /* ─── footer ─────────────────────────────────────────────────────── */
+      footer {
+        margin-top: 80px;
+        padding-top: 30px;
+        border-top: 1px solid var(--line);
+        font-size: 13px;
+        color: var(--text-mute);
+        display: flex;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 16px;
+      }
+      footer a {
+        color: var(--text-dim);
+        margin-left: 14px;
+      }
+      footer a:hover {
+        color: var(--text);
+      }
+
+      /* ─── reveal ────────────────────────────────────────────────────── */
+      .reveal {
+        opacity: 0;
+        transform: translateY(16px);
+        transition:
+          opacity 600ms ease,
+          transform 600ms cubic-bezier(0.2, 0.7, 0.2, 1);
+      }
+      .reveal.in {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app">
+      <aside class="toc">
+        <div class="toc-brand">
+          <span class="mark"></span>
+          Arch AI · Deep dive
+        </div>
+        <div class="toc-meta">v0.3 · interactive guide</div>
+
+        <div class="theme-toggle" role="group" aria-label="Theme">
+          <button data-theme-set="light" aria-pressed="false">☼ Light</button>
+          <button data-theme-set="dark" aria-pressed="true">☾ Dark</button>
+        </div>
+
+        <div class="toc-section">
+          <a class="toc-link" href="#overview">Overview</a>
+          <a class="toc-link" href="#how">How it works</a>
+        </div>
+        <div class="toc-label">Phases</div>
+        <a class="toc-link sub" href="#phase-interview">01 · Interview</a>
+        <a class="toc-link sub" href="#phase-blueprint">02 · Blueprint</a>
+        <a class="toc-link sub" href="#phase-build">03 · Build</a>
+        <a class="toc-link sub" href="#phase-create">04 · Create</a>
+
+        <div class="toc-label">Capabilities</div>
+        <a class="toc-link" href="#specialists">Specialists</a>
+        <a class="toc-link" href="#gating">Gating &amp; guardrails</a>
+        <a class="toc-link" href="#knowledge">Knowledge layer</a>
+        <a class="toc-link" href="#tools">Tools &amp; execution</a>
+        <a class="toc-link" href="#streaming">Streaming protocol</a>
+        <a class="toc-link" href="#persistence">Persistence</a>
+
+        <div class="toc-label">Try it</div>
+        <a class="toc-link" href="#scenarios">Scenarios</a>
+        <a class="toc-link" href="#faq">FAQ</a>
+      </aside>
+
+      <main>
+        <section id="overview" class="hero">
+          <div class="eyebrow">Arch AI deep dive</div>
+          <h1>
+            How a coordinator and 11 specialists turn a conversation into
+            <span class="gradient-text">production-grade agents</span>.
+          </h1>
+          <p class="lede">
+            This is the long-form walkthrough of Arch AI — every phase, every specialist, every
+            gate, every knowledge card. Designed for product, engineering, design, sales, and
+            customer review in a single page.
+          </p>
+          <div class="hero-meta">
+            <span class="meta-pill"><span class="dot"></span>v0.3 · live in Studio</span>
+            <span class="meta-pill">11 specialists</span>
+            <span class="meta-pill">35+ knowledge cards</span>
+            <span class="meta-pill">12 streaming events</span>
+            <span class="meta-pill">10 scenarios below</span>
+          </div>
+          <div class="row-4" style="margin-top: 30px">
+            <div class="stat-tile">
+              <div class="n">4</div>
+              <div class="l">Onboarding phases</div>
+            </div>
+            <div class="stat-tile">
+              <div class="n">200</div>
+              <div class="l">Sliding-window cap</div>
+            </div>
+            <div class="stat-tile">
+              <div class="n">256</div>
+              <div class="l">Max agents/topology</div>
+            </div>
+            <div class="stat-tile">
+              <div class="n">1,484</div>
+              <div class="l">Tests · 76 files</div>
+            </div>
+          </div>
+        </section>
+
+        <section id="how">
+          <div class="eyebrow">How it works</div>
+          <h2>The split: coordinator decides, specialist speaks.</h2>
+          <p class="lede">
+            Generative models are good at language and bad at lifecycle. Arch AI keeps the two
+            responsibilities separate. The deterministic coordinator owns the rules of the game; the
+            right specialist plays each round.
+          </p>
+
+          <div class="row-2" style="margin-top: 20px">
+            <div class="panel tight">
+              <h3>
+                Coordinator
+                <span style="color: var(--text-mute); font-weight: 400; font-size: 13px"
+                  >— the rules</span
+                >
+              </h3>
+              <p style="font-size: 14px; margin: 4px 0 12px">
+                Pure functions over typed session metadata. Cannot be talked out of a rule.
+              </p>
+              <ul class="check-list">
+                <li>Validates phase transitions against a static edge table</li>
+                <li>Evaluates exit criteria as predicates, not vibes</li>
+                <li>Classifies user intent as small or large scope</li>
+                <li>Picks the next BUILD gate from a derived queue</li>
+                <li>Enforces guards: max turns, stalls, loops, timeouts</li>
+              </ul>
+            </div>
+            <div class="panel tight">
+              <h3>
+                Specialist
+                <span style="color: var(--text-mute); font-weight: 400; font-size: 13px"
+                  >— the conversation</span
+                >
+              </h3>
+              <p style="font-size: 14px; margin: 4px 0 12px">
+                Focused system prompt + curated tool set. Speaks only when invoked by the
+                coordinator.
+              </p>
+              <ul class="check-list">
+                <li>Writes the conversation, asks questions, proposes designs</li>
+                <li>Calls server-side tools to fetch facts and validate</li>
+                <li>
+                  Calls client-side tools (<code>ask_user</code>, <code>collect_file</code>) to hand
+                  control to the user
+                </li>
+                <li>Requests <code>proceed_to_next_phase</code> only when ready</li>
+                <li>Cannot advance phases or mutate state directly</li>
+              </ul>
+            </div>
+          </div>
+        </section>
+
+        <hr />
+
+        <section id="phases">
+          <div class="eyebrow">The four phases</div>
+          <h2>Onboarding is a deterministic pipeline.</h2>
+          <p class="lede">
+            Each phase has exactly one specialist, one exit predicate, and one forward edge. The
+            only legal backward edge is <code>BUILD → BLUEPRINT</code> for large-scope mutations —
+            used when the user changes their mind about agent topology mid-build.
+          </p>
+
+          <article id="phase-interview" class="phase-card" data-tone="1">
+            <div class="phase-head">
+              <div class="phase-num">01</div>
+              <div class="phase-info">
+                <h3>Interview</h3>
+                <div class="who">Onboarding Specialist · clipboard icon</div>
+              </div>
+            </div>
+            <p style="margin-top: 6px">
+              Captures the foundational specification — what the agent does, who talks to it, what
+              tone it uses, what entities it collects, and what constraints apply. Conversational;
+              never a form.
+            </p>
+            <div class="phase-detail">
+              <div class="phase-block">
+                <h4>Inputs gathered</h4>
+                <ul class="check-list">
+                  <li>Project name + one-line summary</li>
+                  <li>Channels (web, voice, SMS, email)</li>
+                  <li>Tone &amp; voice persona</li>
+                  <li>Primary intents &amp; success criteria</li>
+                  <li>Entities to collect, validation rules</li>
+                  <li>Hand-off / escalation thresholds</li>
+                  <li>Optional file uploads (existing docs, transcripts)</li>
+                </ul>
+              </div>
+              <div class="phase-block">
+                <h4>Tools available</h4>
+                <div class="tools-list">
+                  <span class="tool client">ask_user</span>
+                  <span class="tool client">collect_file</span>
+                  <span class="tool">platform_context</span>
+                  <span class="tool">update_specification</span>
+                  <span class="tool">add_conversation_note</span>
+                  <span class="tool advance">proceed_to_next_phase</span>
+                </div>
+                <h4 style="margin-top: 14px">Exit criterion</h4>
+                <p style="margin: 0; font-size: 13px; color: var(--text-2)">
+                  <code>canExitInterview(specification)</code> — required spec fields populated
+                  (name, summary, channels, intents). Coordinator-evaluated, not LLM-decided.
+                </p>
+              </div>
+            </div>
+          </article>
+
+          <article id="phase-blueprint" class="phase-card" data-tone="2">
+            <div class="phase-head">
+              <div class="phase-num">02</div>
+              <div class="phase-info">
+                <h3>Blueprint</h3>
+                <div class="who">Multi-Agent Architect · network icon</div>
+              </div>
+            </div>
+            <p style="margin-top: 6px">
+              Designs the multi-agent topology. Picks a pattern (single agent, supervisor + workers,
+              pipeline, fan-out), defines hand-offs, and computes a deterministic build order via
+              Kahn topological sort. The user approves the topology before proceeding.
+            </p>
+            <div class="phase-detail">
+              <div class="phase-block">
+                <h4>What the architect decides</h4>
+                <ul class="check-list">
+                  <li>Topology pattern from the decision-tree vocabulary</li>
+                  <li>Agent count, names, and roles</li>
+                  <li>Hand-off edges + their guard conditions</li>
+                  <li>Build order (topological sort)</li>
+                  <li>Tool ownership — which agent owns which integration</li>
+                </ul>
+              </div>
+              <div class="phase-block">
+                <h4>Tools available</h4>
+                <div class="tools-list">
+                  <span class="tool">propose_topology</span>
+                  <span class="tool">refine_topology</span>
+                  <span class="tool">classify_pattern</span>
+                  <span class="tool client">ask_user</span>
+                  <span class="tool advance">approve_topology</span>
+                  <span class="tool advance">proceed_to_next_phase</span>
+                </div>
+                <h4 style="margin-top: 14px">Exit criterion</h4>
+                <p style="margin: 0; font-size: 13px; color: var(--text-2)">
+                  <code>metadata.topologyApproved === true</code>. Until approval is captured in
+                  session metadata, the phase machine refuses to advance.
+                </p>
+              </div>
+            </div>
+          </article>
+
+          <article id="phase-build" class="phase-card" data-tone="3">
+            <div class="phase-head">
+              <div class="phase-num">03</div>
+              <div class="phase-info">
+                <h3>Build</h3>
+                <div class="who">ABL Construct Expert · code icon</div>
+              </div>
+            </div>
+            <p style="margin-top: 6px">
+              Generates compilable ABL agent code, one agent at a time, in topological build order.
+              Each agent goes through skeleton → validate → auto-fix → compile. Reviewed
+              sequentially via the build-gate queue, with progress streamed live.
+            </p>
+            <div class="phase-detail">
+              <div class="phase-block">
+                <h4>Per-agent pipeline</h4>
+                <ul class="check-list">
+                  <li><code>buildSkeleton</code> — structural scaffold</li>
+                  <li><code>validatePreCompile</code> — Zod + grammar checks</li>
+                  <li><code>autoFixABL</code> — repairs common issues</li>
+                  <li>Compile via <code>@abl/compiler</code></li>
+                  <li>Status: <code>compiled</code> or <code>warning</code></li>
+                  <li>Mock-server scaffold per external tool</li>
+                </ul>
+              </div>
+              <div class="phase-block">
+                <h4>Tools available</h4>
+                <div class="tools-list">
+                  <span class="tool">generate_agent</span>
+                  <span class="tool">validate_agent</span>
+                  <span class="tool">apply_fix</span>
+                  <span class="tool">extract_tools</span>
+                  <span class="tool client">agent_review</span>
+                  <span class="tool advance">approve_agent</span>
+                </div>
+                <h4 style="margin-top: 14px">Exit criterion</h4>
+                <p style="margin: 0; font-size: 13px; color: var(--text-2)">
+                  Every agent in the topology has status <code>compiled</code> or
+                  <code>warning</code>. Build progress is streamed via <code>build_*</code> SSE
+                  events.
+                </p>
+              </div>
+            </div>
+          </article>
+
+          <article id="phase-create" class="phase-card" data-tone="4">
+            <div class="phase-head">
+              <div class="phase-num">04</div>
+              <div class="phase-info">
+                <h3>Create</h3>
+                <div class="who">Coordinator-driven · no LLM call</div>
+              </div>
+            </div>
+            <p style="margin-top: 6px">
+              Assembles the project summary from session metadata and persists the project. No LLM
+              round-trip — purely coordinator + service work. The user clicks Create; Arch persists
+              the spec doc, topology, agents, and a fresh decision journal.
+            </p>
+            <div class="phase-detail">
+              <div class="phase-block">
+                <h4>What gets persisted</h4>
+                <ul class="check-list">
+                  <li>Spec document (markdown SSOT)</li>
+                  <li>Approved topology (with build order)</li>
+                  <li>All compiled agent files</li>
+                  <li>Mock-server artifacts</li>
+                  <li>Decision journal (append-only)</li>
+                  <li>Project memory snapshot</li>
+                </ul>
+              </div>
+              <div class="phase-block">
+                <h4>Triggers</h4>
+                <div class="tools-list">
+                  <span class="tool">create_project</span>
+                </div>
+                <h4 style="margin-top: 14px">Exit criterion</h4>
+                <p style="margin: 0; font-size: 13px; color: var(--text-2)">
+                  <code>metadata.projectId</code> set. Session transitions to <code>COMPLETE</code>;
+                  the user is moved to the project workspace.
+                </p>
+              </div>
+            </div>
+          </article>
+        </section>
+
+        <hr />
+
+        <section id="specialists">
+          <div class="eyebrow">The cast</div>
+          <h2>11 specialists, two pools.</h2>
+          <p class="lede">
+            Click any card to see capabilities, tools, knowledge focus, and when the coordinator
+            routes to it. Onboarding pool drives the four-phase flow; in-project pool runs after the
+            agent ships.
+          </p>
+
+          <div class="specialist-grid" id="specialist-grid"></div>
+        </section>
+
+        <hr />
+
+        <section id="gating">
+          <div class="eyebrow">Gating &amp; guardrails</div>
+          <h2>Five mechanisms keep the loop sane.</h2>
+          <p class="lede">
+            A general-purpose LLM left to its own devices will drift, loop, or skip steps. Arch AI
+            layers five deterministic gates on top so the conversation cannot escape the rails
+            without the coordinator noticing.
+          </p>
+
+          <div class="row-2" style="margin-top: 18px">
+            <div class="panel tight">
+              <h3>1 · Phase machine</h3>
+              <p style="font-size: 13.5px; margin: 0">
+                A static edge table validates every transition.
+                <code>INTERVIEW → BLUEPRINT</code>, <code>BLUEPRINT → BUILD</code>,
+                <code>BUILD → CREATE</code>, plus the one legal backward edge
+                <code>BUILD → BLUEPRINT</code>. Forward edges check the source phase's exit
+                predicate; the backtrack skips it. Anything else throws
+                <code>InvalidTransitionError</code>.
+              </p>
+            </div>
+            <div class="panel tight">
+              <h3>2 · Session state machine</h3>
+              <p style="font-size: 13.5px; margin: 0">
+                Gate-free design. Sessions alternate between <code>IDLE</code> and
+                <code>ACTIVE</code>; pending widget interactions persist as
+                <code>pendingInteraction</code> on the session, not as a distinct state. Atomic
+                transitions via <code>findOneAndUpdate</code> with the precondition in the filter —
+                no read-then-write race.
+              </p>
+            </div>
+            <div class="panel tight">
+              <h3>3 · Scope classifier</h3>
+              <p style="font-size: 13.5px; margin: 0">
+                Categorizes user intent as <code>SMALL</code> (typo, copy, single-field edit) or
+                <code>LARGE</code> (add/remove agent, redesign topology, change channel set). LARGE
+                during BUILD triggers the backtrack;
+                <code>diffTopologyAgainstBuildState</code> preserves work for unchanged agents.
+              </p>
+            </div>
+            <div class="panel tight">
+              <h3>4 · Build-gate queue</h3>
+              <p style="font-size: 13.5px; margin: 0">
+                Pure function over <code>(topology, files, approvedAgents)</code>. Returns one of
+                three decisions: <code>next</code> (review this agent),
+                <code>needs_generation</code> (call LLM to generate more files),
+                <code>all_done</code> (advance phase). No persistent queue collection to drift.
+              </p>
+            </div>
+            <div class="panel tight">
+              <h3>5 · Loop detection</h3>
+              <p style="font-size: 13.5px; margin: 0">
+                Per-turn SHA-256 fingerprint of LLM output. If the model emits the same response
+                twice in a row, the executor trips a guard and returns
+                <code>guard_tripped</code> rather than burning tokens in a tight loop.
+              </p>
+            </div>
+            <div class="panel tight">
+              <h3>6 · Executor guards</h3>
+              <p style="font-size: 13.5px; margin: 0">
+                Per-turn counters: max reinvocations, stall windows, cumulative time. Checked
+                <em>before</em> each LLM call, not after — a runaway is caught before the next
+                round-trip. Retriable errors (rate limit, transient 5xx) get up to 2 retries with
+                500 ms backoff.
+              </p>
+            </div>
+          </div>
+
+          <div class="gates-wrap reveal">
+            <h3 style="margin-bottom: 10px">Phase transition map</h3>
+            <p style="font-size: 13.5px; margin: 0 0 14px">
+              Solid green edges are legal forward transitions. The dashed amber edge is the only
+              legal backtrack. Dashed red illustrates illegal moves the coordinator rejects with
+              <code>InvalidTransitionError</code>.
+            </p>
+            <svg class="gates-svg" viewBox="0 0 980 220" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <marker
+                  id="g-arrow"
+                  viewBox="0 0 10 10"
+                  refX="9"
+                  refY="5"
+                  markerWidth="6"
+                  markerHeight="6"
+                  orient="auto-start-reverse"
+                >
+                  <path d="M0,0 L10,5 L0,10 z" fill="var(--accent-2)" />
+                </marker>
+                <marker
+                  id="g-arrow-amber"
+                  viewBox="0 0 10 10"
+                  refX="9"
+                  refY="5"
+                  markerWidth="6"
+                  markerHeight="6"
+                  orient="auto-start-reverse"
+                >
+                  <path d="M0,0 L10,5 L0,10 z" fill="var(--accent-3)" />
+                </marker>
+                <marker
+                  id="g-arrow-red"
+                  viewBox="0 0 10 10"
+                  refX="9"
+                  refY="5"
+                  markerWidth="6"
+                  markerHeight="6"
+                  orient="auto-start-reverse"
+                >
+                  <path d="M0,0 L10,5 L0,10 z" fill="var(--accent-5)" />
+                </marker>
+              </defs>
+              <!-- Phase boxes -->
+              <g>
+                <rect class="gate-box" x="40" y="80" width="170" height="60" rx="8" />
+                <text class="label-major" x="60" y="108">INTERVIEW</text>
+                <text class="label-minor" x="60" y="126">canExitInterview()</text>
+              </g>
+              <g>
+                <rect class="gate-box b" x="270" y="80" width="170" height="60" rx="8" />
+                <text class="label-major" x="290" y="108">BLUEPRINT</text>
+                <text class="label-minor" x="290" y="126">topologyApproved</text>
+              </g>
+              <g>
+                <rect class="gate-box c" x="500" y="80" width="170" height="60" rx="8" />
+                <text class="label-major" x="520" y="108">BUILD</text>
+                <text class="label-minor" x="520" y="126">all agents compiled</text>
+              </g>
+              <g>
+                <rect class="gate-box d" x="730" y="80" width="170" height="60" rx="8" />
+                <text class="label-major" x="750" y="108">CREATE</text>
+                <text class="label-minor" x="750" y="126">projectId set</text>
+              </g>
+              <!-- Forward edges -->
+              <path class="arrow legal" d="M210,110 L270,110" marker-end="url(#g-arrow)" />
+              <path class="arrow legal" d="M440,110 L500,110" marker-end="url(#g-arrow)" />
+              <path class="arrow legal" d="M670,110 L730,110" marker-end="url(#g-arrow)" />
+              <!-- Legal backtrack -->
+              <path
+                class="arrow"
+                stroke="var(--accent-3)"
+                stroke-dasharray="4 3"
+                d="M540,80 Q420,30 320,80"
+                marker-end="url(#g-arrow-amber)"
+              />
+              <text class="label-minor" x="380" y="34" fill="var(--accent-3)">
+                LARGE-scope mutation only
+              </text>
+              <!-- Illegal example -->
+              <path
+                class="arrow illegal"
+                d="M820,140 Q500,200 130,140"
+                marker-end="url(#g-arrow-red)"
+              />
+              <text class="label-minor" x="430" y="200" fill="var(--accent-5)">
+                All other transitions throw InvalidTransitionError
+              </text>
+            </svg>
+          </div>
+        </section>
+
+        <hr />
+
+        <section id="knowledge">
+          <div class="eyebrow">Knowledge layer</div>
+          <h2>35+ cards. Selected per turn, within budget.</h2>
+          <p class="lede">
+            The LLM never has to invent ABL syntax, platform limits, or workflow patterns. Every
+            relevant rule is encoded as a small card and injected into the system prompt — only when
+            relevant to the current turn.
+          </p>
+
+          <div class="row-3" style="margin-top: 20px">
+            <div class="panel tight">
+              <h3>How selection works</h3>
+              <ol style="font-size: 13.5px; padding-left: 18px; margin: 0; color: var(--text-2)">
+                <li>Phase + specialist define the eligible card pool</li>
+                <li><code>selectKnowledgeCards(query, capabilities)</code> ranks by relevance</li>
+                <li>The selector adds cards in priority order until the prompt budget is hit</li>
+                <li>
+                  <code>PLATFORM_LIMITS_CARD</code> is always included — limits never get skipped
+                </li>
+              </ol>
+            </div>
+            <div class="panel tight">
+              <h3>What a card contains</h3>
+              <ul style="font-size: 13.5px; padding-left: 18px; margin: 0; color: var(--text-2)">
+                <li>Construct grammar (gather, handoff, flow…)</li>
+                <li>Real ABL examples that compile</li>
+                <li>Common mistakes and the right pattern</li>
+                <li>When NOT to use it</li>
+                <li>Cross-references to related cards</li>
+              </ul>
+            </div>
+            <div class="panel tight">
+              <h3>Why budget matters</h3>
+              <p style="font-size: 13.5px; margin: 0; color: var(--text-2)">
+                Big prompts dilute attention and explode cost. Selecting the smallest relevant card
+                set keeps the model focused and the latency tight. Cards load into the same prompt
+                section every time so the model knows where to look.
+              </p>
+            </div>
+          </div>
+
+          <div class="know-bar">
+            <button class="know-filter active" data-cat="all">All cards</button>
+            <button class="know-filter" data-cat="construct">Constructs</button>
+            <button class="know-filter" data-cat="workflow">Workflows</button>
+            <button class="know-filter" data-cat="advanced">Advanced</button>
+            <button class="know-filter" data-cat="meta">Meta</button>
+          </div>
+          <div class="know-grid" id="know-grid"></div>
+        </section>
+
+        <hr />
+
+        <section id="tools">
+          <div class="eyebrow">Tools &amp; execution</div>
+          <h2>Two flavors. Validated. Time-boxed.</h2>
+          <p class="lede">
+            Every tool the LLM can call is declared as a JSON Schema. Inputs are validated before
+            execution; outputs are typed; both kinds — server-side and client-side — cleanly compose
+            with the multi-turn loop.
+          </p>
+
+          <div class="row-2" style="margin-top: 16px">
+            <div class="panel tight">
+              <h3>Server-side tools</h3>
+              <p style="font-size: 14px; margin: 4px 0 12px">
+                Coordinator runs the executor, feeds the result back to the LLM in the same stream.
+                The model can call multiple in a turn.
+              </p>
+              <ul class="check-list">
+                <li>JSON Schema input validation pre-execution</li>
+                <li>30 s timeout per call (<code>toolTimeoutMs</code>)</li>
+                <li>Errors classified as retriable / fatal</li>
+                <li>Up to 2 retries with 500 ms backoff for transient errors</li>
+                <li>
+                  Examples: <code>generate_agent</code>, <code>validate_agent</code>,
+                  <code>extract_tools</code>
+                </li>
+              </ul>
+            </div>
+            <div class="panel tight">
+              <h3>Client-side tools</h3>
+              <p style="font-size: 14px; margin: 4px 0 12px">
+                Executor emits <code>tool_call</code> + <code>done</code> and stops the stream. UI
+                renders a widget; user answers; coordinator calls <code>resume()</code> with the
+                result.
+              </p>
+              <ul class="check-list">
+                <li><code>ask_user</code> — choice, free text, slider, file</li>
+                <li><code>collect_file</code> — text or image, with size limits</li>
+                <li><code>agent_review</code> — approve/edit a generated agent</li>
+                <li>Pending interaction persists on the session — survives page reloads</li>
+              </ul>
+            </div>
+          </div>
+        </section>
+
+        <hr />
+
+        <section id="streaming">
+          <div class="eyebrow">Streaming protocol</div>
+          <h2>12 typed Server-Sent Events.</h2>
+          <p class="lede">
+            Every event has a Zod schema. The Studio client parses the same schemas the runtime
+            emits — no string-fiddling, no implicit contracts. Activity events give the UI
+            breadcrumbs between large gaps.
+          </p>
+
+          <div class="events-table">
+            <div class="events-row">
+              <div class="ev-name">specialist</div>
+              <div class="ev-desc">First event of every turn — banner with name + icon.</div>
+            </div>
+            <div class="events-row">
+              <div class="ev-name">text_delta</div>
+              <div class="ev-desc">Streaming token chunk from the LLM. Append-only.</div>
+            </div>
+            <div class="events-row">
+              <div class="ev-name">tool_call</div>
+              <div class="ev-desc">Tool invocation with id, name, and validated input.</div>
+            </div>
+            <div class="events-row">
+              <div class="ev-name">tool_result</div>
+              <div class="ev-desc">
+                Server-side tool result. <code>isError</code> if applicable.
+              </div>
+            </div>
+            <div class="events-row">
+              <div class="ev-name">activity</div>
+              <div class="ev-desc">
+                UI breadcrumb — "Thinking…", "Running search_docs…", "Response ready".
+              </div>
+            </div>
+            <div class="events-row">
+              <div class="ev-name">file_processed</div>
+              <div class="ev-desc">
+                File ingestion succeeded — extracted text / image refs ready.
+              </div>
+            </div>
+            <div class="events-row">
+              <div class="ev-name">file_error</div>
+              <div class="ev-desc">File ingestion failed with a typed reason code.</div>
+            </div>
+            <div class="events-row">
+              <div class="ev-name">file_context_change</div>
+              <div class="ev-desc">Files added/removed from the active context.</div>
+            </div>
+            <div class="events-row">
+              <div class="ev-name">suggestion</div>
+              <div class="ev-desc">Inline chip suggestions categorized for UX.</div>
+            </div>
+            <div class="events-row">
+              <div class="ev-name">quality_floor</div>
+              <div class="ev-desc">
+                Spec/topology dropped below quality threshold — surfaced as actionable issues.
+              </div>
+            </div>
+            <div class="events-row">
+              <div class="ev-name">build_*</div>
+              <div class="ev-desc">
+                Per-agent BUILD progress:
+                <code>start · stage · compiled · enriched · error · diagnostics</code>.
+              </div>
+            </div>
+            <div class="events-row">
+              <div class="ev-name">done</div>
+              <div class="ev-desc">Turn ended. UI clears typing indicators, enables input.</div>
+            </div>
+          </div>
+        </section>
+
+        <hr />
+
+        <section id="persistence">
+          <div class="eyebrow">Persistence</div>
+          <h2>One source of truth, append-only history.</h2>
+          <p class="lede">
+            Five collections, all scoped by tenant. Nothing in process memory is treated as
+            authoritative — every decision is journaled, every transition is atomic.
+          </p>
+
+          <div class="row-3" style="margin-top: 16px">
+            <div class="panel tight">
+              <h3>arch_sessions</h3>
+              <p style="font-size: 13px; margin: 0">
+                Live session state, sliding-window <code>messages[]</code> capped at 200, pending
+                interaction, build progress. Atomic transitions via
+                <code>findOneAndUpdate</code> with precondition in filter.
+              </p>
+            </div>
+            <div class="panel tight">
+              <h3>arch_journal</h3>
+              <p style="font-size: 13px; margin: 0">
+                Append-only typed events. Five record types: <code>decision</code>,
+                <code>consultation</code>, <code>mutation</code>, <code>validation</code>,
+                <code>analysis</code>. Status transitions only — content never mutates.
+              </p>
+            </div>
+            <div class="panel tight">
+              <h3>arch_spec_documents</h3>
+              <p style="font-size: 13px; margin: 0">
+                Per-project markdown specification — the SSOT that survives long after the session
+                is archived. Editable paths are explicitly enumerated.
+              </p>
+            </div>
+            <div class="panel tight">
+              <h3>arch_files (GridFS)</h3>
+              <p style="font-size: 13px; margin: 0">
+                User-uploaded files referenced by content blocks. Server-only access; never bundled
+                into client code.
+              </p>
+            </div>
+            <div class="panel tight">
+              <h3>arch_audit_log</h3>
+              <p style="font-size: 13px; margin: 0">
+                Operational/security entries from <code>AuditLogEmitter</code>. Separate sink from
+                the journal — security concerns isolated.
+              </p>
+            </div>
+            <div class="panel tight">
+              <h3>arch_project_memory</h3>
+              <p style="font-size: 13px; margin: 0">
+                Cross-session facts about the project. In-project specialists pull from here. Tenant
+                + project scoped.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <hr />
+
+        <section id="scenarios">
+          <div class="eyebrow">Scenarios</div>
+          <h2>Ten real situations, step by step.</h2>
+          <p class="lede">
+            Use the tabs to pick a scenario, then step through what the user does, what Arch
+            decides, and what the user sees. Each scenario is grounded in actual coordinator
+            behavior — not aspirational.
+          </p>
+
+          <div class="scenario-tabs" id="scenario-tabs"></div>
+          <div class="scenario-panel" id="scenario-panel"></div>
+        </section>
+
+        <hr />
+
+        <section id="faq">
+          <div class="eyebrow">FAQ</div>
+          <h2>Questions that come up.</h2>
+
+          <div class="panel" style="padding: 6px 26px">
+            <div class="faq-item">
+              <div class="faq-q">Does the LLM ever decide to advance phases?</div>
+              <div class="faq-a">
+                <p>
+                  No. The LLM can <em>request</em> advancement by calling the
+                  <code>proceed_to_next_phase</code> tool, but the coordinator validates the request
+                  against the source phase's exit criteria. If the criteria fail, the request is
+                  rejected and the LLM gets a tool result telling it what's still missing.
+                </p>
+              </div>
+            </div>
+            <div class="faq-item">
+              <div class="faq-q">What happens if the user changes their mind mid-build?</div>
+              <div class="faq-a">
+                <p>
+                  The scope classifier categorizes the request. SMALL changes (rewording, field
+                  tweaks) stay in BUILD. LARGE changes (add/remove agent, redesign topology) trigger
+                  the only legal backward edge — <code>BUILD → BLUEPRINT</code>.
+                  <code>diffTopologyAgainstBuildState</code> preserves files and approvals for
+                  unchanged agents so the user doesn't redo work.
+                </p>
+              </div>
+            </div>
+            <div class="faq-item">
+              <div class="faq-q">How does Arch avoid hallucinated ABL syntax?</div>
+              <div class="faq-a">
+                <p>
+                  Three layers. (1) The <code>abl-construct-expert</code> system prompt embeds the
+                  canonical ABL grammar reference. (2) The knowledge layer injects relevant
+                  construct cards per turn (gather, handoff, flow, hooks). (3) Generated ABL is
+                  validated and auto-fixed before the user sees it — the model gets a tool result
+                  with errors and re-tries.
+                </p>
+              </div>
+            </div>
+            <div class="faq-item">
+              <div class="faq-q">What if a tool call hangs?</div>
+              <div class="faq-a">
+                <p>
+                  Every server-side tool runs with a 30-second timeout (configurable via
+                  <code>toolTimeoutMs</code>). On timeout, the executor emits an
+                  <code>isError: true</code> tool result and the multi-turn loop continues.
+                  Retriable errors (rate limit, transient 5xx) get up to 2 retries with 500 ms
+                  backoff before being surfaced as fatal.
+                </p>
+              </div>
+            </div>
+            <div class="faq-item">
+              <div class="faq-q">Can two clients race a phase transition?</div>
+              <div class="faq-a">
+                <p>
+                  Transitions are atomic. <code>SessionService.transition</code> uses
+                  <code>findOneAndUpdate</code> with the precondition in the filter, not a
+                  read-then-write pattern. Two clients see one success and one well-typed
+                  <code>InvalidTransitionError</code> the API can return as a 409.
+                </p>
+              </div>
+            </div>
+            <div class="faq-item">
+              <div class="faq-q">What survives a session resume after days?</div>
+              <div class="faq-a">
+                <p>
+                  Everything material. <code>buildResumeSnapshot</code> reconstructs the last
+                  specialist, pending interaction, last decision, and partial topology/build state
+                  from the session, journal, and spec document. The UI renders a "where we left off"
+                  banner — no transcript replay required.
+                </p>
+              </div>
+            </div>
+            <div class="faq-item">
+              <div class="faq-q">How is tenant isolation enforced?</div>
+              <div class="faq-a">
+                <p>
+                  Every Mongoose model uses the shared tenant-isolation plugin from
+                  <code>@agent-platform/database</code>. Every query scopes by
+                  <code>tenantId</code>. Cross-tenant access returns 404 (not 403) by design — never
+                  leak the existence of resources you can't see.
+                </p>
+              </div>
+            </div>
+            <div class="faq-item">
+              <div class="faq-q">Does Arch AI work without an LLM provider?</div>
+              <div class="faq-a">
+                <p>
+                  The package consumes an <code>LLMStreamClient</code> interface — it doesn't depend
+                  on any specific provider SDK. The Runtime injects the implementation. CREATE phase
+                  runs entirely without an LLM. Diagnostics is a pure rules engine.
+                </p>
+              </div>
+            </div>
+            <div class="faq-item">
+              <div class="faq-q">Where is the source of truth — chat or spec?</div>
+              <div class="faq-a">
+                <p>
+                  The spec document. Chat is the input modality; the spec doc is the durable
+                  artifact the project lives by. Approved fields propagate from the session into the
+                  spec doc on every turn. The journal records every mutation with from/to +
+                  rationale so you can reconstruct the timeline.
+                </p>
+              </div>
+            </div>
+            <div class="faq-item">
+              <div class="faq-q">Can I extend Arch with a new specialist?</div>
+              <div class="faq-a">
+                <p>
+                  Yes. Add a system prompt under <code>prompts/specialists/</code>, register the ID
+                  in <code>SPECIALIST_IDS</code> or <code>IN_PROJECT_SPECIALIST_IDS</code>, declare
+                  tools in <code>PHASE_TOOL_MAP</code> or <code>IN_PROJECT_TOOLS</code>, and add a
+                  display banner in the executor. The architecture is designed for additive
+                  extension.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <footer>
+          <div>Arch AI · <code>@agent-platform/arch-ai</code> · ABL Platform</div>
+          <div>
+            <a href="./presentation.html">Product demo</a>
+            <a href="./architecture.html">Architecture diagram</a>
+            <a href="../DESIGN.md">Design doc</a>
+          </div>
+        </footer>
+      </main>
+    </div>
+
+    <script>
+      // ─── Theme handling ─────────────────────────────────────────────────
+      (function () {
+        const root = document.documentElement;
+        const stored = localStorage.getItem('arch-theme');
+        const prefersLight = window.matchMedia('(prefers-color-scheme: light)').matches;
+        const initial = stored || (prefersLight ? 'light' : 'dark');
+        applyTheme(initial);
+
+        for (const btn of document.querySelectorAll('[data-theme-set]')) {
+          btn.addEventListener('click', () => applyTheme(btn.dataset.themeSet));
+        }
+
+        function applyTheme(theme) {
+          root.setAttribute('data-theme', theme);
+          localStorage.setItem('arch-theme', theme);
+          for (const btn of document.querySelectorAll('[data-theme-set]')) {
+            btn.setAttribute('aria-pressed', btn.dataset.themeSet === theme ? 'true' : 'false');
+          }
+        }
+      })();
+
+      // ─── Sidebar active link via IntersectionObserver ───────────────────
+      (function () {
+        const links = document.querySelectorAll('aside.toc a.toc-link');
+        const map = new Map();
+        for (const a of links) {
+          const id = a.getAttribute('href').slice(1);
+          if (id) map.set(id, a);
+        }
+        const sections = [...document.querySelectorAll('section[id], article[id]')].filter((el) =>
+          map.has(el.id),
+        );
+
+        const io = new IntersectionObserver(
+          (entries) => {
+            for (const e of entries) {
+              if (e.isIntersecting) {
+                for (const a of links) a.classList.remove('active');
+                map.get(e.target.id)?.classList.add('active');
+              }
+            }
+          },
+          { rootMargin: '-30% 0px -55% 0px', threshold: 0 },
+        );
+        for (const s of sections) io.observe(s);
+      })();
+
+      // ─── Reveal-on-scroll ────────────────────────────────────────────────
+      (function () {
+        const io = new IntersectionObserver(
+          (entries) => {
+            for (const e of entries) {
+              if (e.isIntersecting) {
+                e.target.classList.add('in');
+                io.unobserve(e.target);
+              }
+            }
+          },
+          { threshold: 0.1, rootMargin: '0px 0px -50px 0px' },
+        );
+        for (const el of document.querySelectorAll('.reveal')) io.observe(el);
+      })();
+
+      // ─── Specialists ─────────────────────────────────────────────────────
+      const SPECIALISTS = [
+        {
+          id: 'onboarding',
+          name: 'Onboarding Specialist',
+          icon: '📋',
+          pool: 'onboarding',
+          tone: 1,
+          summary:
+            'Captures the foundational specification — intent, channels, tone, entities, constraints — through conversation.',
+          when: 'INTERVIEW phase',
+          tools: [
+            'ask_user',
+            'collect_file',
+            'platform_context',
+            'update_specification',
+            'add_conversation_note',
+          ],
+          knows: ['nlu-intents', 'channel-voice-workflow', 'attachments', 'limitations'],
+          ask: [
+            'What does this agent do in one sentence?',
+            'Which channels should it support?',
+            'How should it sound?',
+          ],
+        },
+        {
+          id: 'multi-agent-architect',
+          name: 'Multi-Agent Architect',
+          icon: '🌐',
+          pool: 'onboarding',
+          tone: 1,
+          summary:
+            'Designs the topology — picks a pattern, defines hand-offs, computes build order, owns the topology approval gate.',
+          when: 'BLUEPRINT phase',
+          tools: [
+            'propose_topology',
+            'refine_topology',
+            'classify_pattern',
+            'ask_user',
+            'approve_topology',
+          ],
+          knows: [
+            'topology-design-workflow',
+            'multi-supervisor',
+            'routing-intents',
+            'cross-agent-validation',
+          ],
+          ask: [
+            'Should this be a supervisor + workers, or a pipeline?',
+            'Where should the hand-off threshold sit?',
+          ],
+        },
+        {
+          id: 'abl-construct-expert',
+          name: 'ABL Construct Expert',
+          icon: '⚙️',
+          pool: 'onboarding',
+          tone: 1,
+          summary:
+            'Generates compilable ABL via skeleton → validate → auto-fix. Drives the BUILD gate queue.',
+          when: 'BUILD phase',
+          tools: ['generate_agent', 'validate_agent', 'apply_fix', 'extract_tools', 'agent_review'],
+          knows: [
+            'gather-advanced',
+            'flow-steps',
+            'hooks-lifecycle',
+            'on-input-on-fail',
+            'cel-expressions',
+            'guardrails-full',
+          ],
+          ask: ['Approve this agent?', 'Edit a field before approval?'],
+        },
+        {
+          id: 'channel-voice',
+          name: 'Channel & Voice Expert',
+          icon: '📞',
+          pool: 'onboarding',
+          tone: 1,
+          summary:
+            'Tunes tone, persona, and channel-specific behavior — voice, chat, SMS, email each get the right rendering.',
+          when: 'INTERVIEW (consulted) · BUILD (rich content)',
+          tools: ['ask_user', 'set_voice_profile', 'preview_response'],
+          knows: ['channel-voice-workflow', 'rich-content', 'respond-construct', 'destinations'],
+          ask: ['Casual or formal?', 'Should voice support barge-in?'],
+        },
+        {
+          id: 'entity-collection',
+          name: 'Entity Collection Expert',
+          icon: '🗂',
+          pool: 'onboarding',
+          tone: 1,
+          summary:
+            'Designs gather flows, validation, and on-fail behavior — knows when to ask, retry, escalate.',
+          when: 'INTERVIEW (consulted) · BUILD (gather construction)',
+          tools: ['design_gather', 'add_validation', 'set_on_fail'],
+          knows: [
+            'gather-advanced',
+            'on-input-on-fail',
+            'entity-collection-workflow',
+            'template-engine',
+          ],
+          ask: ['Required field?', 'Free text or constrained set?', 'Retry policy?'],
+        },
+        {
+          id: 'integration-methodologist',
+          name: 'Integration Methodologist',
+          icon: '🔌',
+          pool: 'onboarding',
+          tone: 1,
+          summary:
+            'Plans tool integration, auth, and the mock-server scaffold so demos work before real APIs are wired.',
+          when: 'BLUEPRINT (tool ownership) · BUILD (mock server)',
+          tools: ['plan_tool', 'configure_auth', 'extract_tools', 'generate_mock_server'],
+          knows: ['tool-types', 'tool-auth', 'tool-integration-workflow', 'error-handlers'],
+          ask: [
+            'REST or GraphQL?',
+            'OAuth or static token?',
+            'What does the response shape look like?',
+          ],
+        },
+        {
+          id: 'testing-eval',
+          name: 'Testing & Eval Expert',
+          icon: '🧪',
+          pool: 'onboarding',
+          tone: 1,
+          summary:
+            'Builds eval matrices and regression tests against the spec — catches drift before it ships.',
+          when: 'CREATE (post-build) · IN_PROJECT',
+          tools: ['build_eval_matrix', 'run_regression', 'compare_versions'],
+          knows: ['testing-eval-workflow', 'analytics-workflow'],
+          ask: ['Which intents need golden cases?', "What's the acceptable drift threshold?"],
+        },
+        {
+          id: 'diagnostician',
+          name: 'Diagnostician',
+          icon: '🩺',
+          pool: 'in-project',
+          tone: 2,
+          summary:
+            'Audits an existing agent against rules and patterns. Returns typed findings with one-click fix templates.',
+          when: 'IN_PROJECT (user-initiated audit)',
+          tools: ['run_diagnostics', 'apply_fix', 'preview_fix'],
+          knows: [
+            'diagnostics-workflow',
+            'limitations',
+            'cross-agent-validation',
+            'guardrails-full',
+          ],
+          ask: ['Apply this fix?', 'Preview the diff before applying?'],
+        },
+        {
+          id: 'analyst',
+          name: 'Performance Analyst',
+          icon: '📊',
+          pool: 'in-project',
+          tone: 2,
+          summary:
+            'Reads traces, latency, and tool failures. Recommends targeted changes — not vague rewrites.',
+          when: 'IN_PROJECT (post-deploy review)',
+          tools: ['fetch_traces', 'compute_p95', 'attribute_failure'],
+          knows: ['analytics-workflow', 'observer-patterns', 'execution-config'],
+          ask: ['Which time window?', 'Drill into a specific intent?'],
+        },
+        {
+          id: 'observer',
+          name: 'Observer',
+          icon: '🔭',
+          pool: 'in-project',
+          tone: 2,
+          summary:
+            'Watches conversation flow at runtime. Surfaces patterns the team should know — emerging intents, dropped flows.',
+          when: 'IN_PROJECT (continuous)',
+          tools: ['fetch_observations', 'cluster_intents'],
+          knows: ['observer-patterns', 'observer-workflow', 'nlu-intents'],
+          ask: ['Look at last 24 h?', 'Filter to a specific channel?'],
+        },
+        {
+          id: 'in-project-generalist',
+          name: 'In-Project Generalist',
+          icon: '🧭',
+          pool: 'in-project',
+          tone: 3,
+          summary:
+            "Routes IN_PROJECT questions that don't cleanly fit a specialist, and stitches multi-specialist consultations.",
+          when: 'IN_PROJECT (fallback router)',
+          tools: ['route_to_specialist', 'consult'],
+          knows: ['cross-cutting'],
+          ask: ['Want diagnostics on this, or are you asking about performance?'],
+        },
+      ];
+
+      function renderSpecialists() {
+        const grid = document.getElementById('specialist-grid');
+        for (const s of SPECIALISTS) {
+          const card = document.createElement('div');
+          card.className = 'spec-card t' + s.tone;
+          card.dataset.id = s.id;
+
+          const head = document.createElement('div');
+          head.className = 'spec-card-head';
+
+          const icon = document.createElement('div');
+          icon.className = 'spec-icon';
+          icon.textContent = s.icon;
+          head.appendChild(icon);
+
+          const meta = document.createElement('div');
+          const name = document.createElement('div');
+          name.className = 'spec-name';
+          name.textContent = s.name;
+          const id = document.createElement('div');
+          id.className = 'spec-id';
+          id.textContent = s.id;
+          meta.appendChild(name);
+          meta.appendChild(id);
+          head.appendChild(meta);
+
+          const tag = document.createElement('span');
+          tag.className = 'spec-tag' + (s.pool === 'in-project' ? ' in' : '');
+          tag.textContent = s.pool;
+          head.appendChild(tag);
+
+          const body = document.createElement('div');
+          body.className = 'spec-card-body';
+          body.textContent = s.summary;
+
+          const detail = document.createElement('div');
+          detail.className = 'spec-detail';
+
+          const addBlock = (heading, items) => {
+            const h5 = document.createElement('h5');
+            h5.textContent = heading;
+            detail.appendChild(h5);
+            const ul = document.createElement('ul');
+            for (const item of items) {
+              const li = document.createElement('li');
+              li.textContent = item;
+              ul.appendChild(li);
+            }
+            detail.appendChild(ul);
+          };
+
+          const addText = (heading, txt) => {
+            const h5 = document.createElement('h5');
+            h5.textContent = heading;
+            detail.appendChild(h5);
+            const p = document.createElement('p');
+            p.style.margin = '0';
+            p.style.fontSize = '13px';
+            p.style.color = 'var(--text-2)';
+            p.textContent = txt;
+            detail.appendChild(p);
+          };
+
+          addText('When invoked', s.when);
+          addBlock('Tools available', s.tools);
+          addBlock('Knowledge focus', s.knows);
+          addBlock('Typical questions it asks', s.ask);
+
+          card.appendChild(head);
+          card.appendChild(body);
+          card.appendChild(detail);
+
+          card.addEventListener('click', () => {
+            card.classList.toggle('expanded');
+          });
+
+          grid.appendChild(card);
+        }
+      }
+      renderSpecialists();
+
+      // ─── Knowledge cards ─────────────────────────────────────────────────
+      const KNOWLEDGE = [
+        ['gather-advanced', 'construct'],
+        ['flow-steps', 'construct'],
+        ['hooks-lifecycle', 'construct'],
+        ['respond-construct', 'construct'],
+        ['delegate-full', 'construct'],
+        ['guardrails-full', 'construct'],
+        ['memory-full', 'construct'],
+        ['on-input-on-fail', 'construct'],
+        ['stateful-flows', 'construct'],
+        ['tool-types', 'construct'],
+        ['tool-auth', 'construct'],
+        ['rich-content', 'construct'],
+        ['error-handlers', 'construct'],
+        ['behavior-profiles', 'construct'],
+
+        ['channel-voice-workflow', 'workflow'],
+        ['entity-collection-workflow', 'workflow'],
+        ['testing-eval-workflow', 'workflow'],
+        ['observer-workflow', 'workflow'],
+        ['observer-patterns', 'workflow'],
+        ['diagnostics-workflow', 'workflow'],
+        ['analytics-workflow', 'workflow'],
+        ['topology-design-workflow', 'workflow'],
+        ['tool-integration-workflow', 'workflow'],
+
+        ['cel-expressions', 'advanced'],
+        ['constraints-advanced', 'advanced'],
+        ['cross-agent-validation', 'advanced'],
+        ['multi-supervisor', 'advanced'],
+        ['template-engine', 'advanced'],
+        ['nlu-intents', 'advanced'],
+        ['routing-intents', 'advanced'],
+        ['execution-config', 'advanced'],
+        ['compaction', 'advanced'],
+        ['destinations', 'advanced'],
+        ['attachments', 'advanced'],
+
+        ['limitations', 'meta'],
+        ['platform-limits-card', 'meta'],
+      ];
+
+      function renderKnowledge() {
+        const grid = document.getElementById('know-grid');
+        for (const [name, cat] of KNOWLEDGE) {
+          const card = document.createElement('div');
+          card.className = 'know-card';
+          card.dataset.cat = cat;
+          const kn = document.createElement('div');
+          kn.className = 'kn';
+          kn.textContent = name;
+          const kc = document.createElement('div');
+          kc.className = 'kc';
+          kc.textContent = cat;
+          card.appendChild(kn);
+          card.appendChild(kc);
+          grid.appendChild(card);
+        }
+        for (const btn of document.querySelectorAll('.know-filter')) {
+          btn.addEventListener('click', () => {
+            for (const b of document.querySelectorAll('.know-filter')) {
+              b.classList.toggle('active', b === btn);
+            }
+            const cat = btn.dataset.cat;
+            for (const c of grid.children) {
+              c.classList.toggle('hidden', cat !== 'all' && c.dataset.cat !== cat);
+            }
+          });
+        }
+      }
+      renderKnowledge();
+
+      // ─── FAQ accordion ───────────────────────────────────────────────────
+      for (const item of document.querySelectorAll('.faq-item')) {
+        const q = item.querySelector('.faq-q');
+        q.addEventListener('click', () => item.classList.toggle('open'));
+      }
+
+      // ─── Scenarios ───────────────────────────────────────────────────────
+      const SCENARIOS = [
+        {
+          title: 'Typo fix mid-blueprint',
+          badge: 'SMALL scope',
+          q: '"Actually, rename the agent from OrderBot to OrderHelper."',
+          steps: [
+            {
+              who: 'user',
+              heading: 'User message',
+              body: 'Asks the architect to rename the proposed agent.',
+            },
+            {
+              who: 'coord',
+              heading: 'Coordinator: scope-classifier',
+              body: 'classifyMutationScope() → SMALL — single-field rename, no topology change.',
+            },
+            {
+              who: 'spec',
+              heading: 'Architect: refine_topology',
+              body: 'Calls refine_topology with the new name. The patch updates session metadata.',
+            },
+            {
+              who: 'system',
+              heading: 'Journal: mutation',
+              body: 'Append-only entry: { type: "mutation", from: "OrderBot", to: "OrderHelper", requestedBy: "user" }.',
+            },
+            {
+              who: 'spec',
+              heading: 'Architect responds',
+              body: 'Confirms the rename in conversation. No phase change, no backtrack.',
+            },
+          ],
+        },
+        {
+          title: 'Add agent during BUILD',
+          badge: 'LARGE scope · backtrack',
+          q: '"Wait, we also need a fraud-check agent before returns."',
+          steps: [
+            {
+              who: 'user',
+              heading: 'User message',
+              body: 'Asks for a new agent mid-BUILD — affects topology.',
+            },
+            {
+              who: 'coord',
+              heading: 'Coordinator: scope-classifier',
+              body: 'classifyMutationScope() → LARGE — adds an agent, changes hand-off graph.',
+            },
+            {
+              who: 'coord',
+              heading: 'Coordinator: phase machine',
+              body: 'transitionPhase(BUILD → BLUEPRINT) — the only legal backward edge. Skips exit-criteria check.',
+            },
+            {
+              who: 'spec',
+              heading: 'Architect: refine_topology',
+              body: 'Generates new topology with FraudCheckAgent inserted before ReturnsAgent.',
+            },
+            {
+              who: 'coord',
+              heading: 'Coordinator: diffTopologyAgainstBuildState',
+              body: 'preserve: [Router, OrderStatusAgent], regenerate: [FraudCheckAgent, ReturnsAgent], remove: [].',
+            },
+            {
+              who: 'system',
+              heading: 'Checkpoint rollback',
+              body: 'Approved files for unchanged agents are kept. User does not redo work.',
+            },
+            {
+              who: 'coord',
+              heading: 'Coordinator: phase machine',
+              body: 'transitionPhase(BLUEPRINT → BUILD) on user approval. Build-gate queue resumes with the regenerate set.',
+            },
+          ],
+        },
+        {
+          title: 'LLM proposes invalid ABL',
+          badge: 'auto-fix loop',
+          q: 'Construct expert generates a `gather` block with a missing `field` key.',
+          steps: [
+            {
+              who: 'spec',
+              heading: 'Construct expert: generate_agent',
+              body: 'Emits ABL with a malformed gather block.',
+            },
+            {
+              who: 'system',
+              heading: 'validatePreCompile',
+              body: 'Zod + grammar check fails: "gather[0].field: required".',
+            },
+            {
+              who: 'system',
+              heading: 'autoFixABL',
+              body: 'Pipeline applies a deterministic fix template — adds the missing key with an inferred field name.',
+            },
+            {
+              who: 'system',
+              heading: 'validatePreCompile (rerun)',
+              body: 'Passes. Compiles clean via @abl/compiler.',
+            },
+            {
+              who: 'spec',
+              heading: 'Build SSE: compiled',
+              body: 'build_agent_compiled emitted with status=warning (auto-fixed).',
+            },
+            {
+              who: 'system',
+              heading: 'Journal: validation',
+              body: 'Append-only entry capturing the auto-fix. Visible in the diagnostics view.',
+            },
+          ],
+        },
+        {
+          title: 'User uploads a PDF',
+          badge: 'multimodal',
+          q: 'User uploads existing call-center transcripts during INTERVIEW.',
+          steps: [
+            {
+              who: 'user',
+              heading: 'User uploads file',
+              body: 'Attaches transcripts.pdf via the file picker.',
+            },
+            {
+              who: 'system',
+              heading: 'FileStoreService',
+              body: 'Stored in GridFS, capped at 10 MB per file. Returns a fileRef ID.',
+            },
+            {
+              who: 'system',
+              heading: 'file_processed SSE',
+              body: 'Extracted text + image refs ready. Studio updates the file context panel.',
+            },
+            {
+              who: 'spec',
+              heading: 'Onboarding: collect_file',
+              body: 'Client-side tool resolves; multimodal preamble built via content-block-resolver.',
+            },
+            {
+              who: 'spec',
+              heading: 'Onboarding responds',
+              body: 'Cites passages from the transcript when proposing intents and entities.',
+            },
+          ],
+        },
+        {
+          title: 'Resume after 3 days',
+          badge: 'session continuity',
+          q: 'User opens the project; the last session was 3 days ago at the BUILD gate.',
+          steps: [
+            {
+              who: 'user',
+              heading: 'User opens Studio',
+              body: 'Mounts /arch with no explicit session ID.',
+            },
+            {
+              who: 'coord',
+              heading: 'SessionService.getOrCreate',
+              body: 'Finds an existing session in RESUMABLE_STATES (IDLE / ACTIVE) for this tenant + user + project.',
+            },
+            {
+              who: 'system',
+              heading: 'buildResumeSnapshot',
+              body: 'Reconstructs last specialist, pending interaction, last decision, partial topology, build progress.',
+            },
+            {
+              who: 'system',
+              heading: 'Studio resume banner',
+              body: '"You were reviewing OrderStatusAgent. 2 of 3 agents approved. Continue?"',
+            },
+            {
+              who: 'user',
+              heading: 'User clicks Continue',
+              body: 'Coordinator emits the agent_review widget for OrderStatusAgent. No transcript replay.',
+            },
+          ],
+        },
+        {
+          title: 'Diagnostician finds a missing handoff',
+          badge: 'IN_PROJECT audit',
+          q: 'After deploy, user runs an audit on the ReturnsAgent.',
+          steps: [
+            {
+              who: 'user',
+              heading: 'User: "Audit ReturnsAgent"',
+              body: 'IN_PROJECT mode. content-router picks Diagnostician.',
+            },
+            {
+              who: 'spec',
+              heading: 'Diagnostician: run_diagnostics',
+              body: 'Pure rules engine evaluates against agent + topology + spec.',
+            },
+            {
+              who: 'system',
+              heading: 'Finding',
+              body: 'severity=high, category=routing — "no fallback handoff for low-confidence intents".',
+            },
+            {
+              who: 'spec',
+              heading: 'Diagnostician: getFixTemplate',
+              body: 'Returns a one-click fix: insert a default handoff with confidence threshold.',
+            },
+            {
+              who: 'user',
+              heading: 'User clicks Apply',
+              body: 'apply_fix mutates the agent. Journal entry: { type: "mutation" }, then validation: pass.',
+            },
+          ],
+        },
+        {
+          title: 'Tool call times out',
+          badge: 'guards',
+          q: 'Architect calls extract_tools but the OpenAPI fetch hangs.',
+          steps: [
+            {
+              who: 'spec',
+              heading: 'Architect: extract_tools',
+              body: 'Calls extract_tools with the user-supplied OpenAPI URL.',
+            },
+            {
+              who: 'system',
+              heading: 'Pre-execution validation',
+              body: 'JSON Schema check passes. Executor starts a 30 s timer.',
+            },
+            {
+              who: 'system',
+              heading: 'Timeout fires',
+              body: 'Promise.race rejects. Tool result emitted with isError=true, message="timed out after 30000ms".',
+            },
+            {
+              who: 'spec',
+              heading: 'Architect re-invoked',
+              body: 'Multi-turn loop feeds the error back. Architect proposes calling the user-provided fallback URL.',
+            },
+            {
+              who: 'system',
+              heading: 'Activity SSE',
+              body: 'activity events keep the UI labeled — no silent hang.',
+            },
+          ],
+        },
+        {
+          title: 'Channel switch mid-INTERVIEW',
+          badge: 'mutation journal',
+          q: '"Actually, drop email. Just web chat for v1."',
+          steps: [
+            { who: 'user', heading: 'User message', body: 'Removes a previously stated channel.' },
+            {
+              who: 'coord',
+              heading: 'Coordinator: scope-classifier',
+              body: 'classifyMutationScope() → SMALL — no topology impact yet, INTERVIEW phase.',
+            },
+            {
+              who: 'spec',
+              heading: 'Onboarding: update_specification',
+              body: 'channels: ["web", "email"] → ["web"]. Spec doc patched.',
+            },
+            {
+              who: 'system',
+              heading: 'Journal: mutation',
+              body: '{ type: "mutation", field: "channels", from: ["web","email"], to: ["web"], reason: "user simplified scope" }.',
+            },
+            {
+              who: 'system',
+              heading: 'canExitInterview()',
+              body: 'Re-evaluated. Still passes — channels[] non-empty. No blocker raised.',
+            },
+          ],
+        },
+        {
+          title: 'Two clients race a transition',
+          badge: 'concurrency',
+          q: 'User has Studio open in two tabs; both click "Approve topology" at once.',
+          steps: [
+            {
+              who: 'user',
+              heading: 'Two clicks, same instant',
+              body: 'Both tabs POST to /resume with topologyApproved=true.',
+            },
+            {
+              who: 'coord',
+              heading: 'SessionService.transition',
+              body: 'Atomic findOneAndUpdate({ _id, state: "ACTIVE" }, ...). Precondition is in the filter, not a separate read.',
+            },
+            {
+              who: 'system',
+              heading: 'One wins',
+              body: 'First request matches and updates. Returns the new state.',
+            },
+            {
+              who: 'system',
+              heading: 'Other loses cleanly',
+              body: 'Second request finds no match. SessionService throws InvalidTransitionError. API returns 409.',
+            },
+            {
+              who: 'system',
+              heading: 'UI reconciles',
+              body: 'Loser tab refetches session — sees the approved state and renders the BUILD phase.',
+            },
+          ],
+        },
+        {
+          title: 'LLM loops on the same response',
+          badge: 'loop detection',
+          q: 'Construct expert returns the same partial agent twice.',
+          steps: [
+            {
+              who: 'spec',
+              heading: 'Specialist turn N',
+              body: 'Emits a response. SHA-256 fingerprint stored on the turn.',
+            },
+            {
+              who: 'spec',
+              heading: 'Specialist turn N+1',
+              body: 'Emits the same response (same fingerprint).',
+            },
+            {
+              who: 'coord',
+              heading: 'LoopDetector.check()',
+              body: 'Detects the duplicate. Multi-turn executor returns guard_tripped.',
+            },
+            {
+              who: 'system',
+              heading: 'UI surfaces',
+              body: 'A typed banner: "Specialist couldn\'t make further progress. Try refining your last instruction."',
+            },
+            {
+              who: 'system',
+              heading: 'Audit log',
+              body: 'guard_tripped recorded with reason=loop. Visible in operational dashboards.',
+            },
+          ],
+        },
+      ];
+
+      const tabsEl = document.getElementById('scenario-tabs');
+      const panelEl = document.getElementById('scenario-panel');
+      let currentScenario = 0;
+      let currentStep = 0;
+
+      function buildTabs() {
+        SCENARIOS.forEach((s, i) => {
+          const t = document.createElement('button');
+          t.className = 'scenario-tab' + (i === 0 ? ' active' : '');
+          t.textContent = (i + 1).toString().padStart(2, '0') + ' · ' + s.title;
+          t.dataset.idx = i;
+          t.addEventListener('click', () => loadScenario(i));
+          tabsEl.appendChild(t);
+        });
+      }
+
+      function loadScenario(i) {
+        currentScenario = i;
+        currentStep = 0;
+        for (const t of tabsEl.children) {
+          t.classList.toggle('active', Number(t.dataset.idx) === i);
+        }
+        renderScenario();
+      }
+
+      function renderScenario() {
+        const s = SCENARIOS[currentScenario];
+        while (panelEl.firstChild) panelEl.removeChild(panelEl.firstChild);
+
+        const meta = document.createElement('div');
+        meta.className = 'scenario-meta';
+        const idx = document.createElement('span');
+        idx.textContent =
+          'Scenario ' + String(currentScenario + 1).padStart(2, '0') + ' of ' + SCENARIOS.length;
+        const badge = document.createElement('span');
+        badge.className = 'badge';
+        badge.textContent = s.badge;
+        meta.appendChild(idx);
+        meta.appendChild(badge);
+        panelEl.appendChild(meta);
+
+        const h = document.createElement('h3');
+        h.textContent = s.title;
+        panelEl.appendChild(h);
+
+        const q = document.createElement('div');
+        q.className = 'scenario-question';
+        q.textContent = s.q;
+        panelEl.appendChild(q);
+
+        const prog = document.createElement('div');
+        prog.className = 'step-progress';
+        const lbl = document.createElement('span');
+        lbl.textContent = 'Step ' + (currentStep + 1) + ' of ' + s.steps.length;
+        const bar = document.createElement('div');
+        bar.className = 'bar';
+        const fill = document.createElement('div');
+        fill.className = 'bar-fill';
+        fill.style.width = ((currentStep + 1) / s.steps.length) * 100 + '%';
+        bar.appendChild(fill);
+        prog.appendChild(lbl);
+        prog.appendChild(bar);
+        panelEl.appendChild(prog);
+
+        const stepsWrap = document.createElement('div');
+        s.steps.forEach((st, i) => {
+          const stage = document.createElement('div');
+          stage.className = 'step-stage';
+          if (i <= currentStep) stage.classList.add('visible');
+          if (i < currentStep) stage.classList.add('dim');
+
+          const heading = document.createElement('h4');
+          const who = document.createElement('span');
+          who.className = 'who ' + st.who;
+          who.textContent = whoLabel(st.who);
+          heading.appendChild(who);
+          const txt = document.createElement('span');
+          txt.textContent = st.heading;
+          heading.appendChild(txt);
+          stage.appendChild(heading);
+
+          const p = document.createElement('p');
+          p.textContent = st.body;
+          stage.appendChild(p);
+
+          stepsWrap.appendChild(stage);
+        });
+        panelEl.appendChild(stepsWrap);
+
+        const ctrl = document.createElement('div');
+        ctrl.className = 'scenario-controls';
+
+        const prev = document.createElement('button');
+        prev.className = 'step-btn';
+        prev.textContent = '← Previous step';
+        prev.disabled = currentStep === 0;
+        prev.addEventListener('click', () => {
+          if (currentStep > 0) {
+            currentStep--;
+            renderScenario();
+          }
+        });
+
+        const next = document.createElement('button');
+        next.className = 'step-btn primary';
+        if (currentStep < s.steps.length - 1) {
+          next.textContent = 'Next step →';
+          next.addEventListener('click', () => {
+            currentStep++;
+            renderScenario();
+          });
+        } else {
+          next.textContent =
+            currentScenario < SCENARIOS.length - 1 ? 'Next scenario ↓' : 'Replay ↺';
+          next.addEventListener('click', () => {
+            if (currentScenario < SCENARIOS.length - 1) loadScenario(currentScenario + 1);
+            else {
+              currentStep = 0;
+              renderScenario();
+            }
+          });
+        }
+
+        ctrl.appendChild(prev);
+        ctrl.appendChild(next);
+        panelEl.appendChild(ctrl);
+      }
+
+      function whoLabel(w) {
+        return (
+          {
+            user: 'User',
+            coord: 'Coordinator',
+            spec: 'Specialist',
+            system: 'System',
+          }[w] || w
+        );
+      }
+
+      buildTabs();
+      renderScenario();
+    </script>
+  </body>
+</html>

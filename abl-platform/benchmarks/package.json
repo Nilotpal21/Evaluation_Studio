@@ -1,0 +1,20 @@
+{
+  "name": "@agent-platform/benchmarks",
+  "version": "1.0.0",
+  "private": true,
+  "description": "k6 benchmark suite for ABL Platform production topology sizing",
+  "type": "module",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "service-test": "node ../packages/kore-platform-cli/dist/index.js sizing service-test",
+    "integration-test": "node ../packages/kore-platform-cli/dist/index.js sizing integration-test",
+    "saturation-test": "node ../packages/kore-platform-cli/dist/index.js sizing saturation-test",
+    "service-smoke": "node ../packages/kore-platform-cli/dist/index.js sizing service-smoke",
+    "integration-smoke": "node ../packages/kore-platform-cli/dist/index.js sizing integration-smoke",
+    "saturation-smoke": "node ../packages/kore-platform-cli/dist/index.js sizing saturation-smoke"
+  },
+  "devDependencies": {
+    "@types/k6": "^1.6.0",
+    "typescript": "^5.3.0"
+  }
+}

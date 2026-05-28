@@ -1,0 +1,2338 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Wireframes — Guardrails "Sensitive Data Block"</title>
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        font-family:
+          -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+        background: #f5f6f8;
+        color: #1a1a1a;
+        margin: 0;
+        padding: 0;
+        line-height: 1.5;
+      }
+      header {
+        background: #1f2937;
+        color: #fff;
+        padding: 32px 48px;
+      }
+      header h1 {
+        margin: 0 0 8px 0;
+        font-size: 28px;
+        font-weight: 600;
+      }
+      header .meta {
+        color: #9ca3af;
+        font-size: 14px;
+      }
+      header .meta a {
+        color: #93c5fd;
+      }
+      nav.toc {
+        background: #fff;
+        border-bottom: 1px solid #e5e7eb;
+        padding: 16px 48px;
+        position: sticky;
+        top: 0;
+        z-index: 10;
+      }
+      nav.toc ol {
+        margin: 0;
+        padding-left: 20px;
+        columns: 2;
+        column-gap: 40px;
+        font-size: 14px;
+      }
+      nav.toc a {
+        color: #1f2937;
+        text-decoration: none;
+      }
+      nav.toc a:hover {
+        text-decoration: underline;
+      }
+      main {
+        padding: 24px 48px 96px 48px;
+        max-width: 1400px;
+        margin: 0 auto;
+      }
+      section {
+        background: #fff;
+        border: 1px solid #e5e7eb;
+        border-radius: 12px;
+        padding: 32px;
+        margin-bottom: 32px;
+      }
+      section h2 {
+        margin: 0 0 8px 0;
+        font-size: 22px;
+      }
+      section .lede {
+        color: #6b7280;
+        margin-bottom: 24px;
+        font-size: 14px;
+      }
+      .frame-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 24px;
+        align-items: start;
+      }
+      .frame {
+        border: 1px solid #d1d5db;
+        border-radius: 10px;
+        padding: 0;
+        overflow: hidden;
+        background: #fff;
+      }
+      .frame-title {
+        background: #f3f4f6;
+        border-bottom: 1px solid #d1d5db;
+        padding: 8px 16px;
+        font-size: 12px;
+        font-weight: 600;
+        color: #374151;
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      .frame-title.before {
+        background: #fee2e2;
+        color: #991b1b;
+      }
+      .frame-title.after {
+        background: #d1fae5;
+        color: #065f46;
+      }
+      .frame-body {
+        padding: 20px;
+      }
+      .browser-chrome {
+        background: #f9fafb;
+        border-bottom: 1px solid #e5e7eb;
+        padding: 6px 12px;
+        font-size: 11px;
+        color: #6b7280;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .browser-chrome .dots {
+        display: flex;
+        gap: 4px;
+      }
+      .browser-chrome .dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #d1d5db;
+      }
+      .browser-chrome .url {
+        background: #fff;
+        border: 1px solid #e5e7eb;
+        padding: 2px 8px;
+        border-radius: 4px;
+        flex: 1;
+        font-family: monospace;
+      }
+      .dialog {
+        border: 1px solid #d1d5db;
+        border-radius: 8px;
+        background: #fff;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+      }
+      .dialog-header {
+        padding: 20px 24px 8px;
+      }
+      .dialog-header h3 {
+        margin: 0 0 4px 0;
+        font-size: 18px;
+        font-weight: 600;
+      }
+      .dialog-header p {
+        margin: 0;
+        color: #6b7280;
+        font-size: 13px;
+      }
+      .dialog-body {
+        padding: 0 24px 20px;
+      }
+      .tabs {
+        display: flex;
+        gap: 24px;
+        border-bottom: 1px solid #e5e7eb;
+        margin-bottom: 16px;
+        padding: 8px 24px 0;
+      }
+      .tab {
+        padding: 8px 0;
+        font-size: 14px;
+        color: #6b7280;
+        border-bottom: 2px solid transparent;
+        cursor: default;
+      }
+      .tab.active {
+        color: #1a1a1a;
+        font-weight: 600;
+        border-bottom-color: #1a1a1a;
+      }
+      label {
+        display: block;
+        font-size: 12px;
+        font-weight: 500;
+        margin-bottom: 4px;
+        color: #374151;
+      }
+      .input {
+        background: #f9fafb;
+        border: 1px solid #e5e7eb;
+        border-radius: 6px;
+        padding: 8px 12px;
+        font-size: 13px;
+        color: #9ca3af;
+      }
+      .input.filled {
+        color: #111827;
+        background: #fff;
+      }
+      .row {
+        margin-bottom: 16px;
+      }
+      .row-2 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+      }
+      .scope {
+        display: flex;
+        gap: 24px;
+      }
+      .scope label {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-weight: 400;
+        font-size: 13px;
+      }
+      .radio {
+        width: 14px;
+        height: 14px;
+        border: 1.5px solid #6b7280;
+        border-radius: 50%;
+        display: inline-block;
+        position: relative;
+      }
+      .radio.checked {
+        border-color: #111827;
+      }
+      .radio.checked::after {
+        content: '';
+        width: 6px;
+        height: 6px;
+        background: #111827;
+        border-radius: 50%;
+        position: absolute;
+        top: 2px;
+        left: 2px;
+      }
+      .rules-section {
+        margin-top: 8px;
+      }
+      .rules-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 12px;
+      }
+      .rules-header h4 {
+        margin: 0;
+        font-size: 14px;
+        font-weight: 600;
+      }
+      .rules-header .sub {
+        font-size: 12px;
+        color: #6b7280;
+      }
+      .btn {
+        padding: 6px 12px;
+        font-size: 12px;
+        border: 1px solid #d1d5db;
+        border-radius: 6px;
+        background: #fff;
+        cursor: default;
+      }
+      .btn-add::before {
+        content: '+ ';
+      }
+      .preset {
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+        padding: 14px 16px;
+        margin-bottom: 10px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      .toggle {
+        width: 32px;
+        height: 18px;
+        background: #1a1a1a;
+        border-radius: 9px;
+        position: relative;
+        flex-shrink: 0;
+      }
+      .toggle::after {
+        content: '';
+        width: 14px;
+        height: 14px;
+        background: #fff;
+        border-radius: 50%;
+        position: absolute;
+        top: 2px;
+        left: 2px;
+      }
+      .toggle.off {
+        background: #d1d5db;
+      }
+      .preset-name {
+        flex: 1;
+        font-size: 14px;
+        font-weight: 500;
+      }
+      .preset-name .caret {
+        color: #9ca3af;
+        margin-right: 8px;
+      }
+      .badge {
+        padding: 2px 8px;
+        border-radius: 4px;
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: lowercase;
+      }
+      .badge-block {
+        background: #fee2e2;
+        color: #991b1b;
+      }
+      .badge-warn {
+        background: #fef3c7;
+        color: #92400e;
+      }
+      .badge-redact {
+        background: #ede9fe;
+        color: #5b21b6;
+      }
+      .badge-escalate {
+        background: #dbeafe;
+        color: #1e40af;
+      }
+      .helper {
+        font-size: 12px;
+        color: #6b7280;
+        padding: 8px 16px 14px 60px;
+        line-height: 1.5;
+        background: #fafafa;
+        border-top: 1px solid #f3f4f6;
+      }
+      .helper a {
+        color: #2563eb;
+        text-decoration: underline;
+      }
+      .annot {
+        background: #fffbeb;
+        border-left: 3px solid #f59e0b;
+        padding: 12px 16px;
+        margin-top: 16px;
+        font-size: 13px;
+        color: #78350f;
+      }
+      .annot strong {
+        display: block;
+        margin-bottom: 4px;
+      }
+      .annot.good {
+        background: #f0fdf4;
+        border-left-color: #16a34a;
+        color: #166534;
+      }
+      .annot.bad {
+        background: #fef2f2;
+        border-left-color: #dc2626;
+        color: #991b1b;
+      }
+      .annot ul {
+        margin: 4px 0 0 0;
+        padding-left: 18px;
+      }
+      .banner {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        padding: 14px 18px;
+        border-radius: 8px;
+        background: #eff6ff;
+        border: 1px solid #bfdbfe;
+        color: #1e3a8a;
+        margin-bottom: 20px;
+      }
+      .banner-icon {
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background: #2563eb;
+        color: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+        font-weight: 700;
+        flex-shrink: 0;
+      }
+      .banner-body {
+        flex: 1;
+        font-size: 13px;
+        line-height: 1.5;
+      }
+      .banner-body strong {
+        font-weight: 600;
+      }
+      .banner-cta {
+        color: #2563eb;
+        text-decoration: underline;
+        font-weight: 600;
+        cursor: pointer;
+      }
+      .banner-dismiss {
+        color: #6b7280;
+        cursor: pointer;
+        padding: 0 4px;
+        font-size: 18px;
+        line-height: 1;
+      }
+      .sidebar {
+        background: #f9fafb;
+        border-right: 1px solid #e5e7eb;
+        padding: 16px;
+        font-size: 13px;
+      }
+      .sidebar-section {
+        margin-bottom: 20px;
+      }
+      .sidebar-section-title {
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: #9ca3af;
+        margin-bottom: 8px;
+      }
+      .sidebar-item {
+        padding: 6px 10px;
+        border-radius: 6px;
+        color: #374151;
+      }
+      .sidebar-item.active {
+        background: #1a1a1a;
+        color: #fff;
+      }
+      table.dm {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 12px;
+        font-size: 13px;
+      }
+      table.dm th,
+      table.dm td {
+        padding: 10px 12px;
+        text-align: left;
+        border: 1px solid #e5e7eb;
+      }
+      table.dm th {
+        background: #f9fafb;
+        font-weight: 600;
+        color: #374151;
+      }
+      table.dm td:last-child {
+        font-weight: 500;
+      }
+      .tag-settings {
+        display: inline-block;
+        padding: 2px 8px;
+        background: #dbeafe;
+        color: #1e40af;
+        border-radius: 4px;
+        font-size: 12px;
+      }
+      .tag-guardrails {
+        display: inline-block;
+        padding: 2px 8px;
+        background: #fef3c7;
+        color: #92400e;
+        border-radius: 4px;
+        font-size: 12px;
+      }
+      .pii-form-field {
+        border: 1px solid #e5e7eb;
+        border-radius: 6px;
+        padding: 10px 14px;
+        margin-bottom: 8px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 13px;
+      }
+      .pii-form-field-name {
+        font-weight: 500;
+      }
+      .pii-form-field-meta {
+        color: #6b7280;
+        font-size: 12px;
+      }
+      .full-width {
+        grid-column: 1 / -1;
+      }
+      .help-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 16px;
+        height: 16px;
+        border: 1.5px solid #6b7280;
+        color: #6b7280;
+        border-radius: 50%;
+        font-size: 11px;
+        font-weight: 600;
+        margin-left: 6px;
+        cursor: default;
+      }
+      .ux-callout {
+        background: #f9fafb;
+        border: 1px dashed #d1d5db;
+        border-radius: 8px;
+        padding: 16px;
+        margin-top: 16px;
+        font-size: 13px;
+      }
+      .ux-callout h5 {
+        margin: 0 0 6px 0;
+        font-size: 13px;
+        font-weight: 600;
+        color: #1a1a1a;
+      }
+      .ux-callout p {
+        margin: 0;
+        color: #6b7280;
+      }
+      .legend {
+        display: flex;
+        gap: 16px;
+        font-size: 12px;
+        color: #6b7280;
+        margin-top: 4px;
+      }
+      .legend-item {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .legend-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 2px;
+      }
+      .legend-dot.before {
+        background: #fee2e2;
+      }
+      .legend-dot.after {
+        background: #d1fae5;
+      }
+      ol.steps {
+        padding-left: 20px;
+        margin: 8px 0;
+        font-size: 13px;
+      }
+      ol.steps li {
+        margin-bottom: 4px;
+      }
+      /* Policy list with chip preview */
+      .policy-row {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        padding: 16px 20px;
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+        margin-bottom: 10px;
+        background: #fff;
+      }
+      .policy-row.active {
+        border-color: #16a34a;
+        background: #f7fefb;
+      }
+      .policy-name {
+        font-weight: 600;
+        font-size: 14px;
+        color: #1a1a1a;
+      }
+      .status-pill {
+        padding: 2px 10px;
+        border-radius: 999px;
+        font-size: 11px;
+        font-weight: 600;
+      }
+      .status-pill.draft {
+        background: #f3f4f6;
+        color: #4b5563;
+      }
+      .status-pill.active {
+        background: #d1fae5;
+        color: #065f46;
+      }
+      .rule-chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        flex: 1;
+      }
+      .rule-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 3px 10px;
+        background: #f0fdf4;
+        border: 1px solid #bbf7d0;
+        color: #166534;
+        border-radius: 999px;
+        font-size: 12px;
+      }
+      .rule-chip .green-dot {
+        width: 7px;
+        height: 7px;
+        background: #16a34a;
+        border-radius: 50%;
+        display: inline-block;
+      }
+      .rule-chip.more {
+        background: #f3f4f6;
+        border-color: #e5e7eb;
+        color: #4b5563;
+      }
+      .no-rules {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        color: #b45309;
+        font-size: 12px;
+        font-style: italic;
+      }
+      .row-actions {
+        display: flex;
+        gap: 4px;
+      }
+      .row-actions .icon-btn {
+        width: 28px;
+        height: 28px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid #e5e7eb;
+        border-radius: 6px;
+        color: #6b7280;
+        background: #fff;
+        font-size: 12px;
+      }
+      .row-actions .toggle-disabled {
+        background: #f3f4f6;
+        color: #9ca3af;
+        border-color: #e5e7eb;
+        position: relative;
+      }
+      .row-actions .toggle-active {
+        background: #16a34a;
+        color: #fff;
+        border-color: #16a34a;
+      }
+      /* Tooltip */
+      .tooltip {
+        position: relative;
+        display: inline-flex;
+      }
+      .tooltip-bubble {
+        position: absolute;
+        bottom: calc(100% + 8px);
+        left: 50%;
+        transform: translateX(-50%);
+        background: #111827;
+        color: #fff;
+        padding: 6px 10px;
+        border-radius: 6px;
+        font-size: 11px;
+        white-space: nowrap;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+      }
+      .tooltip-bubble::after {
+        content: '';
+        position: absolute;
+        top: 100%;
+        left: 50%;
+        transform: translateX(-50%);
+        border: 5px solid transparent;
+        border-top-color: #111827;
+      }
+      .tooltip-bubble.error {
+        background: #991b1b;
+      }
+      .tooltip-bubble.error::after {
+        border-top-color: #991b1b;
+      }
+      /* Entity multiselect */
+      .preset-radio-group {
+        display: flex;
+        gap: 12px;
+        margin-bottom: 14px;
+        padding: 10px;
+        background: #f9fafb;
+        border-radius: 8px;
+        border: 1px solid #e5e7eb;
+      }
+      .preset-radio {
+        flex: 1;
+        display: flex;
+        align-items: flex-start;
+        gap: 8px;
+        padding: 8px 10px;
+        border-radius: 6px;
+        cursor: default;
+      }
+      .preset-radio.selected {
+        background: #fff;
+        border: 1px solid #16a34a;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+      }
+      .preset-radio .radio {
+        margin-top: 3px;
+      }
+      .preset-radio-label {
+        font-size: 13px;
+        font-weight: 600;
+        color: #111827;
+      }
+      .preset-radio-desc {
+        font-size: 11px;
+        color: #6b7280;
+        line-height: 1.4;
+        margin-top: 2px;
+      }
+      .entity-list {
+        max-height: 240px;
+        overflow-y: auto;
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+        padding: 8px;
+      }
+      .entity-pack {
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: #6b7280;
+        padding: 6px 8px 4px;
+      }
+      .entity-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 6px 8px;
+        font-size: 13px;
+        border-radius: 4px;
+      }
+      .entity-row .checkbox {
+        width: 14px;
+        height: 14px;
+        border: 1.5px solid #6b7280;
+        border-radius: 3px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+      }
+      .entity-row .checkbox.checked {
+        background: #1a1a1a;
+        border-color: #1a1a1a;
+        color: #fff;
+      }
+      .entity-row .checkbox.checked::after {
+        content: '✓';
+        font-size: 10px;
+        line-height: 1;
+      }
+      .entity-name {
+        flex: 1;
+      }
+      .entity-meta {
+        font-size: 11px;
+        color: #9ca3af;
+      }
+      .tier-badge {
+        display: inline-block;
+        padding: 1px 6px;
+        border-radius: 3px;
+        font-size: 10px;
+        font-weight: 600;
+        margin-left: 6px;
+      }
+      .tier-1 {
+        background: #dcfce7;
+        color: #166534;
+      }
+      .tier-2 {
+        background: #fef3c7;
+        color: #92400e;
+      }
+      .tier-3 {
+        background: #ede9fe;
+        color: #5b21b6;
+      }
+      .toast {
+        display: inline-flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 16px;
+        background: #111827;
+        color: #fff;
+        border-radius: 8px;
+        font-size: 13px;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+      }
+      .toast-undo {
+        color: #93c5fd;
+        text-decoration: underline;
+        cursor: pointer;
+        font-weight: 600;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>Wireframes — Guardrails "Sensitive Data Block"</h1>
+      <div class="meta">
+        Companion to
+        <a href="2026-05-14-guardrails-pii-separation-adr.md"
+          >ADR — Separate PII Handling (Settings) from PII Gating (Guardrails)</a
+        >
+        and
+        <a href="guardrails-sensitive-data-block.prd.md">PRD — Guardrails "Sensitive Data Block"</a>
+        · Branch
+        <code style="background: rgba(255, 255, 255, 0.1); padding: 2px 6px; border-radius: 4px"
+          >discuss/guardrails-pii-consolidation</code
+        >
+        · 2026-05-14
+      </div>
+      <div class="legend">
+        <span class="legend-item"><span class="legend-dot before"></span>Today (problem)</span>
+        <span class="legend-item"><span class="legend-dot after"></span>Proposed (solution)</span>
+      </div>
+    </header>
+
+    <nav class="toc">
+      <ol>
+        <li><a href="#screen-1">1. Create Guardrail Policy — preset row rename</a></li>
+        <li><a href="#screen-2">2. Expanded row — action selector restricted</a></li>
+        <li><a href="#screen-3">3. Settings → PII Protection — cross-link banner</a></li>
+        <li><a href="#screen-4">4. Decision matrix modal</a></li>
+        <li><a href="#screen-5">5. Cross-link helper text in context</a></li>
+        <li><a href="#screen-6">6. Empty state — first-run experience</a></li>
+        <li><a href="#screen-7">7. Customer journeys — before vs. after</a></li>
+        <li>
+          <a href="#screen-8"
+            >8. Policy list — enabled-rule chip preview <em>(added 2026-05-15)</em></a
+          >
+        </li>
+        <li><a href="#screen-9">9. Policy list — empty policy + disabled activation</a></li>
+        <li><a href="#screen-10">10. Sensitive Data Block — entity multiselect</a></li>
+        <li><a href="#screen-11">11. Rule enable gate — required-field tooltip</a></li>
+        <li><a href="#screen-12">12. Auto-deactivation toast + undo</a></li>
+      </ol>
+    </nav>
+
+    <main>
+      <!-- ============ SCREEN 1 ============ -->
+      <section id="screen-1">
+        <h2>1. Create Guardrail Policy — preset row rename</h2>
+        <p class="lede">
+          The first thing a user sees when creating a guardrail. We rename "PII Protection" →
+          "Sensitive Data Block", change default action from <code>redact</code> →
+          <code>block</code>, and add inline helper text pointing to Settings.
+        </p>
+
+        <div class="frame-grid">
+          <!-- BEFORE -->
+          <div class="frame">
+            <div class="frame-title before">Today — confusing</div>
+            <div class="frame-body">
+              <div class="dialog">
+                <div class="dialog-header">
+                  <h3>Create Guardrail Policy</h3>
+                  <p>Define rules and settings for content safety evaluation.</p>
+                </div>
+                <div class="tabs">
+                  <div class="tab active">Form</div>
+                  <div class="tab">YAML</div>
+                </div>
+                <div class="dialog-body">
+                  <div class="row-2">
+                    <div class="row">
+                      <label>Policy Name</label>
+                      <div class="input">e.g. Content Safety Policy</div>
+                    </div>
+                    <div class="row">
+                      <label>Description</label>
+                      <div class="input">What this policy enforces…</div>
+                    </div>
+                  </div>
+                  <div class="row">
+                    <label>Scope</label>
+                    <div class="scope">
+                      <label><span class="radio checked"></span> Project (all agents)</label>
+                      <label><span class="radio"></span> Agent (specific)</label>
+                    </div>
+                  </div>
+                  <div class="rules-section">
+                    <div class="rules-header">
+                      <div>
+                        <h4>Rules</h4>
+                        <div class="sub">Enable and configure guardrail rules.</div>
+                      </div>
+                      <span class="btn btn-add">Add Custom Rule</span>
+                    </div>
+                    <div class="preset">
+                      <span class="toggle off"></span>
+                      <div class="preset-name"><span class="caret">›</span>Content Safety</div>
+                      <span class="badge badge-block">block</span>
+                    </div>
+                    <div class="preset" style="border-color: #ef4444; background: #fef2f2">
+                      <span class="toggle off"></span>
+                      <div class="preset-name"><span class="caret">›</span>PII Protection</div>
+                      <span class="badge badge-redact">redact</span>
+                    </div>
+                    <div class="preset">
+                      <span class="toggle off"></span>
+                      <div class="preset-name"><span class="caret">›</span>Prompt Injection</div>
+                      <span class="badge badge-block">block</span>
+                    </div>
+                    <div class="preset">
+                      <span class="toggle off"></span>
+                      <div class="preset-name"><span class="caret">›</span>Topic Restriction</div>
+                      <span class="badge badge-warn">warn</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="annot bad">
+                <strong>Problems:</strong>
+                <ul>
+                  <li>
+                    Name "PII Protection" collides with Settings → PII Protection (same label,
+                    different behavior)
+                  </li>
+                  <li>
+                    Default action <code>redact</code> is destructive — tool calls get
+                    <code>[REDACTED]</code>
+                  </li>
+                  <li>
+                    No signal that this is a "gate" (block/escalate) vs. the Settings "handler"
+                    (mask/tokenize)
+                  </li>
+                  <li>Users have no way to predict which screen to use</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <!-- AFTER -->
+          <div class="frame">
+            <div class="frame-title after">Proposed — clear</div>
+            <div class="frame-body">
+              <div class="dialog">
+                <div class="dialog-header">
+                  <h3>Create Guardrail Policy</h3>
+                  <p>Define rules and settings for content safety evaluation.</p>
+                </div>
+                <div class="tabs">
+                  <div class="tab active">Form</div>
+                  <div class="tab">YAML</div>
+                </div>
+                <div class="dialog-body">
+                  <div class="row-2">
+                    <div class="row">
+                      <label>Policy Name</label>
+                      <div class="input">e.g. Content Safety Policy</div>
+                    </div>
+                    <div class="row">
+                      <label>Description</label>
+                      <div class="input">What this policy enforces…</div>
+                    </div>
+                  </div>
+                  <div class="row">
+                    <label>Scope</label>
+                    <div class="scope">
+                      <label><span class="radio checked"></span> Project (all agents)</label>
+                      <label><span class="radio"></span> Agent (specific)</label>
+                    </div>
+                  </div>
+                  <div class="rules-section">
+                    <div class="rules-header">
+                      <div>
+                        <h4>Rules</h4>
+                        <div class="sub">Enable and configure guardrail rules.</div>
+                      </div>
+                      <span class="btn btn-add">Add Custom Rule</span>
+                    </div>
+                    <div class="preset">
+                      <span class="toggle off"></span>
+                      <div class="preset-name"><span class="caret">›</span>Content Safety</div>
+                      <span class="badge badge-block">block</span>
+                    </div>
+                    <div
+                      style="
+                        border: 1px solid #16a34a;
+                        border-radius: 8px;
+                        background: #f0fdf4;
+                        margin-bottom: 10px;
+                      "
+                    >
+                      <div class="preset" style="border: none; background: transparent; margin: 0">
+                        <span class="toggle off"></span>
+                        <div class="preset-name">
+                          <span class="caret">›</span>Sensitive Data Block<span class="help-icon"
+                            >?</span
+                          >
+                        </div>
+                        <span class="badge badge-block">block</span>
+                      </div>
+                      <div class="helper">
+                        Stops requests containing PII outright. To
+                        <strong>anonymize or tokenize</strong> PII while keeping the agent working,
+                        configure under <a href="#">Settings → PII Protection ↗</a>
+                      </div>
+                    </div>
+                    <div class="preset">
+                      <span class="toggle off"></span>
+                      <div class="preset-name"><span class="caret">›</span>Prompt Injection</div>
+                      <span class="badge badge-block">block</span>
+                    </div>
+                    <div class="preset">
+                      <span class="toggle off"></span>
+                      <div class="preset-name"><span class="caret">›</span>Topic Restriction</div>
+                      <span class="badge badge-warn">warn</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="annot good">
+                <strong>Resolved:</strong>
+                <ul>
+                  <li>New name "Sensitive Data Block" — no collision with Settings</li>
+                  <li>Default action <code>block</code> — matches the "stop" verb</li>
+                  <li>Inline helper text teaches the gate-vs-handle mental model</li>
+                  <li>Cross-link routes the right user to the right screen</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ SCREEN 2 ============ -->
+      <section id="screen-2">
+        <h2>2. Expanded row — action selector restricted</h2>
+        <p class="lede">
+          When the user clicks to expand the "Sensitive Data Block" row, the action selector shows
+          only <code>Block</code>, <code>Warn</code>, <code>Escalate</code>. The
+          <code>Redact</code> option is removed — that's Settings' job.
+        </p>
+
+        <div class="frame-grid">
+          <!-- BEFORE -->
+          <div class="frame">
+            <div class="frame-title before">Today — action collision</div>
+            <div class="frame-body">
+              <div class="dialog">
+                <div class="dialog-body" style="padding-top: 20px">
+                  <div
+                    class="preset"
+                    style="
+                      border-color: #ef4444;
+                      background: #fef2f2;
+                      flex-direction: column;
+                      align-items: stretch;
+                      gap: 16px;
+                    "
+                  >
+                    <div style="display: flex; align-items: center; gap: 12px">
+                      <span class="toggle"></span>
+                      <div class="preset-name" style="flex: 1">
+                        <span class="caret">⌄</span>PII Protection
+                      </div>
+                      <span class="badge badge-redact">redact</span>
+                    </div>
+                    <div style="padding-left: 44px">
+                      <div class="row-2">
+                        <div class="row">
+                          <label>Provider</label>
+                          <div class="input filled">builtin-pii</div>
+                        </div>
+                        <div class="row">
+                          <label>Action</label>
+                          <div class="input filled">Redact ▾</div>
+                          <div style="margin-top: 4px; font-size: 11px; color: #9ca3af">
+                            Block · Warn · <strong>Redact</strong>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="row">
+                        <label>Threshold (0.0–1.0)</label>
+                        <div class="input filled">0.3</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="annot bad">
+                <strong>Problem:</strong> The <code>Redact</code> action here destructively replaces
+                strings (e.g., "Hi Jamie" → "Hi [REDACTED]"). This is <strong>not</strong> the same
+                as Settings <code>redact</code> render mode (vault-backed, reversible). Same word,
+                two meanings.
+              </div>
+            </div>
+          </div>
+
+          <!-- AFTER -->
+          <div class="frame">
+            <div class="frame-title after">Proposed — three actions only</div>
+            <div class="frame-body">
+              <div class="dialog">
+                <div class="dialog-body" style="padding-top: 20px">
+                  <div style="border: 1px solid #16a34a; border-radius: 8px; background: #f0fdf4">
+                    <div style="display: flex; align-items: center; gap: 12px; padding: 14px 16px">
+                      <span class="toggle"></span>
+                      <div class="preset-name" style="flex: 1">
+                        <span class="caret">⌄</span>Sensitive Data Block<span class="help-icon"
+                          >?</span
+                        >
+                      </div>
+                      <span class="badge badge-block">block</span>
+                    </div>
+                    <div class="helper" style="margin-left: 0; padding-left: 60px">
+                      Stops requests containing PII outright. To
+                      <strong>anonymize or tokenize</strong> PII while keeping the agent working,
+                      configure under <a href="#">Settings → PII Protection ↗</a>
+                    </div>
+                    <div
+                      style="
+                        padding: 14px 16px 18px 60px;
+                        background: #fff;
+                        border-top: 1px solid #e5e7eb;
+                      "
+                    >
+                      <div class="row-2">
+                        <div class="row">
+                          <label>Provider</label>
+                          <div class="input filled">builtin-pii</div>
+                        </div>
+                        <div class="row">
+                          <label>Action</label>
+                          <div class="input filled">Block ▾</div>
+                          <div style="margin-top: 4px; font-size: 11px; color: #6b7280">
+                            Block · Warn · Escalate
+                          </div>
+                        </div>
+                      </div>
+                      <div class="row">
+                        <label>Confidence threshold (0.0–1.0)</label>
+                        <div class="input filled">0.7</div>
+                        <div style="margin-top: 4px; font-size: 11px; color: #6b7280">
+                          Higher threshold = fewer false-positive blocks. Tier 2/3 confidence from
+                          ABLP-921.
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="annot good">
+                <strong>Resolved:</strong> Three actions only. No <code>redact</code> in this
+                preset. The action vocabulary maps 1:1 to the "stop" verb. Confidence threshold gets
+                a clearer label.
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ SCREEN 3 ============ -->
+      <section id="screen-3">
+        <h2>3. Settings → PII Protection — cross-link banner</h2>
+        <p class="lede">
+          The reverse direction: when a user lands on Settings PII (the handler), they need to know
+          that "block" lives in Guardrails. Banner at the top, dismissible.
+        </p>
+
+        <div class="frame-grid">
+          <!-- BEFORE -->
+          <div class="frame">
+            <div class="frame-title before">Today — no cross-link</div>
+            <div class="frame-body">
+              <div style="border: 1px solid #e5e7eb; border-radius: 8px; padding: 24px">
+                <div
+                  style="
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    margin-bottom: 24px;
+                  "
+                >
+                  <div>
+                    <h3 style="margin: 0 0 4px 0; font-size: 18px">PII Protection</h3>
+                    <p style="margin: 0; color: #6b7280; font-size: 13px">
+                      Detect and handle sensitive data in conversations.
+                    </p>
+                  </div>
+                  <span class="btn btn-add">Add Pattern</span>
+                </div>
+                <div class="pii-form-field">
+                  <div>
+                    <div class="pii-form-field-name">Email Address</div>
+                    <div class="pii-form-field-meta">
+                      Tier 1 · render: masked · confidence: high
+                    </div>
+                  </div>
+                  <span class="toggle"></span>
+                </div>
+                <div class="pii-form-field">
+                  <div>
+                    <div class="pii-form-field-name">Credit Card Number</div>
+                    <div class="pii-form-field-meta">
+                      Tier 1 · render: tokenized · confidence: high
+                    </div>
+                  </div>
+                  <span class="toggle"></span>
+                </div>
+                <div class="pii-form-field">
+                  <div>
+                    <div class="pii-form-field-name">Social Security Number</div>
+                    <div class="pii-form-field-meta">
+                      Tier 1 · render: redacted · confidence: high
+                    </div>
+                  </div>
+                  <span class="toggle"></span>
+                </div>
+              </div>
+              <div class="annot bad">
+                <strong>Problem:</strong> A compliance lead looking to "block" PII outright finds no
+                path. There's no "block" action here — only render modes. They wander off to
+                Guardrails (where they'll find <em>another</em> "PII Protection" screen with
+                overlapping vocabulary).
+              </div>
+            </div>
+          </div>
+
+          <!-- AFTER -->
+          <div class="frame">
+            <div class="frame-title after">Proposed — banner pulls right users to Guardrails</div>
+            <div class="frame-body">
+              <div style="border: 1px solid #e5e7eb; border-radius: 8px; padding: 24px">
+                <div class="banner">
+                  <div class="banner-icon">i</div>
+                  <div class="banner-body">
+                    Need to <strong>block</strong> requests containing PII outright? Create a
+                    Guardrail Policy with a <strong>Sensitive Data Block</strong> rule.
+                    <span class="banner-cta">Configure now →</span>
+                  </div>
+                  <div class="banner-dismiss">×</div>
+                </div>
+                <div
+                  style="
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    margin-bottom: 24px;
+                  "
+                >
+                  <div>
+                    <h3 style="margin: 0 0 4px 0; font-size: 18px">
+                      PII Protection<span class="help-icon">?</span>
+                    </h3>
+                    <p style="margin: 0; color: #6b7280; font-size: 13px">
+                      <strong>Handle</strong> sensitive data — anonymize, tokenize, or render per
+                      consumer.
+                    </p>
+                  </div>
+                  <span class="btn btn-add">Add Pattern</span>
+                </div>
+                <div class="pii-form-field">
+                  <div>
+                    <div class="pii-form-field-name">Email Address</div>
+                    <div class="pii-form-field-meta">
+                      Tier 1 · render: masked · confidence: high
+                    </div>
+                  </div>
+                  <span class="toggle"></span>
+                </div>
+                <div class="pii-form-field">
+                  <div>
+                    <div class="pii-form-field-name">Credit Card Number</div>
+                    <div class="pii-form-field-meta">
+                      Tier 1 · render: tokenized · confidence: high
+                    </div>
+                  </div>
+                  <span class="toggle"></span>
+                </div>
+                <div class="pii-form-field">
+                  <div>
+                    <div class="pii-form-field-name">Social Security Number</div>
+                    <div class="pii-form-field-meta">
+                      Tier 1 · render: redacted · confidence: high
+                    </div>
+                  </div>
+                  <span class="toggle"></span>
+                </div>
+              </div>
+              <div class="annot good">
+                <strong>Resolved:</strong>
+                <ul>
+                  <li>Banner gives compliance leads the path to Guardrails for hard blocking</li>
+                  <li>
+                    Subtitle clarifies the verb: this screen is for <strong>handling</strong> (not
+                    stopping)
+                  </li>
+                  <li>"?" help icon opens the decision matrix</li>
+                  <li>Banner is dismissible per-user via localStorage</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ SCREEN 4 ============ -->
+      <section id="screen-4">
+        <h2>4. Decision matrix modal</h2>
+        <p class="lede">
+          Opens from the "?" icon on either screen. Single source of truth for the gate-vs-handle
+          mental model.
+        </p>
+
+        <div style="max-width: 720px; margin: 0 auto">
+          <div class="frame">
+            <div class="frame-title after">Decision matrix — shared component</div>
+            <div class="frame-body">
+              <div class="dialog">
+                <div class="dialog-header">
+                  <h3>PII: where do I configure what?</h3>
+                  <p>
+                    The platform has two screens for PII. Each does a different job. Use this table
+                    to decide which one you need.
+                  </p>
+                </div>
+                <div class="dialog-body">
+                  <table class="dm">
+                    <thead>
+                      <tr>
+                        <th style="width: 70%">I want to…</th>
+                        <th>Go to</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td>
+                          Hide PII from the LLM but still let the agent use it (tool calls work)
+                        </td>
+                        <td><span class="tag-settings">Settings → PII Protection</span></td>
+                      </tr>
+                      <tr>
+                        <td>Mask PII in agent responses to end users</td>
+                        <td><span class="tag-settings">Settings → PII Protection</span></td>
+                      </tr>
+                      <tr>
+                        <td>Reversibly tokenize PII (vault-backed)</td>
+                        <td><span class="tag-settings">Settings → PII Protection</span></td>
+                      </tr>
+                      <tr>
+                        <td>Audit every PII detection event</td>
+                        <td><span class="tag-settings">Settings → PII Protection</span></td>
+                      </tr>
+                      <tr>
+                        <td>
+                          <strong>Block</strong> messages containing specific PII types outright
+                        </td>
+                        <td>
+                          <span class="tag-guardrails">Guardrails → Sensitive Data Block</span>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td><strong>Escalate</strong> to a human when PII confidence is high</td>
+                        <td>
+                          <span class="tag-guardrails">Guardrails → Sensitive Data Block</span>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td>
+                          Enforce PII blocking across <strong>all projects</strong> in a tenant
+                        </td>
+                        <td>
+                          <span class="tag-guardrails">Guardrails (tenant-level policy)</span>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                  <div class="ux-callout">
+                    <h5>The one-word rule</h5>
+                    <p>
+                      <span class="tag-settings">Settings</span> = "<strong>handle</strong>"
+                      sensitive data so the agent can do its job without exposing it. &nbsp;
+                      <span class="tag-guardrails">Guardrails</span> = "<strong>stop</strong>" the
+                      agent from processing data it must never touch.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ SCREEN 5 ============ -->
+      <section id="screen-5">
+        <h2>5. Cross-link helper text — fully in context</h2>
+        <p class="lede">
+          Microscope view of the helper text + link, showing exactly what the user sees inline as
+          they hover or browse.
+        </p>
+
+        <div style="max-width: 720px; margin: 0 auto">
+          <div class="frame">
+            <div class="frame-title after">In-context helper text</div>
+            <div class="frame-body">
+              <div style="border: 1px solid #16a34a; border-radius: 8px; background: #f0fdf4">
+                <div style="display: flex; align-items: center; gap: 12px; padding: 14px 16px">
+                  <span class="toggle"></span>
+                  <div class="preset-name" style="flex: 1">
+                    <span class="caret">›</span>Sensitive Data Block<span class="help-icon">?</span>
+                  </div>
+                  <span class="badge badge-block">block</span>
+                </div>
+                <div class="helper" style="padding: 8px 16px 14px 60px">
+                  Stops requests containing PII outright. To
+                  <strong>anonymize or tokenize</strong> PII while keeping the agent working,
+                  configure under <a href="#">Settings → PII Protection ↗</a>
+                </div>
+              </div>
+              <div class="ux-callout">
+                <h5>Why "always visible"?</h5>
+                <p>
+                  Tooltips hide context behind a hover. New users won't hover. The helper text
+                  appears unconditionally under the row, so the gate-vs-handle distinction is
+                  visible to everyone who looks at the form for the first time.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ SCREEN 6 ============ -->
+      <section id="screen-6">
+        <h2>6. Empty state — first-run experience</h2>
+        <p class="lede">
+          A new project has neither a guardrail policy nor a PII pattern configured. Both empty
+          states cross-link to each other.
+        </p>
+
+        <div class="frame-grid">
+          <div class="frame">
+            <div class="frame-title after">Guardrails — empty state</div>
+            <div class="frame-body">
+              <div
+                style="
+                  border: 1px dashed #d1d5db;
+                  border-radius: 8px;
+                  padding: 32px;
+                  text-align: center;
+                "
+              >
+                <div style="font-size: 32px; margin-bottom: 12px">🛡️</div>
+                <h4 style="margin: 0 0 8px 0">No guardrail policies yet</h4>
+                <p style="color: #6b7280; font-size: 13px; margin: 0 0 16px 0">
+                  Guardrails set hard limits on what your agent will accept or do. Start with our
+                  four presets, or write a custom rule.
+                </p>
+                <span
+                  class="btn"
+                  style="background: #1a1a1a; color: #fff; border-color: #1a1a1a; padding: 8px 16px"
+                  >Create Policy</span
+                >
+                <div
+                  style="
+                    margin-top: 20px;
+                    padding-top: 20px;
+                    border-top: 1px solid #e5e7eb;
+                    font-size: 12px;
+                    color: #6b7280;
+                  "
+                >
+                  Looking to <strong>anonymize</strong> or <strong>tokenize</strong> PII (instead of
+                  blocking it)? → <a href="#">Settings → PII Protection</a>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="frame">
+            <div class="frame-title after">Settings PII — empty state</div>
+            <div class="frame-body">
+              <div
+                style="
+                  border: 1px dashed #d1d5db;
+                  border-radius: 8px;
+                  padding: 32px;
+                  text-align: center;
+                "
+              >
+                <div style="font-size: 32px; margin-bottom: 12px">🔒</div>
+                <h4 style="margin: 0 0 8px 0">No PII patterns configured</h4>
+                <p style="color: #6b7280; font-size: 13px; margin: 0 0 16px 0">
+                  PII Protection detects sensitive data and tokenizes it. Your agent still works on
+                  real values; consumers see anonymized output.
+                </p>
+                <span
+                  class="btn"
+                  style="background: #1a1a1a; color: #fff; border-color: #1a1a1a; padding: 8px 16px"
+                  >Add Built-in Patterns</span
+                >
+                <div
+                  style="
+                    margin-top: 20px;
+                    padding-top: 20px;
+                    border-top: 1px solid #e5e7eb;
+                    font-size: 12px;
+                    color: #6b7280;
+                  "
+                >
+                  Need to <strong>block</strong> messages containing PII outright? →
+                  <a href="#">Guardrails → Sensitive Data Block</a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ SCREEN 7 ============ -->
+      <section id="screen-7">
+        <h2>7. Customer journeys — before vs. after</h2>
+        <p class="lede">
+          Replay the three journeys from the PRD, comparing what the user actually experiences today
+          vs. after the rename.
+        </p>
+
+        <div class="frame-grid">
+          <div class="frame">
+            <div class="frame-title before">Journey A — Apple Care project owner (today)</div>
+            <div class="frame-body">
+              <ol class="steps">
+                <li>Opens Studio. Two PII screens visible. No signal which is correct.</li>
+                <li>Picks Guardrails → PII Protection → action: <code>redact</code>. Saves.</li>
+                <li>Tests agent. PII is gone — but greeting "Hi Jamie" → "Hi [REDACTED]".</li>
+                <li>Tool calls to CRM fail because email is <code>[REDACTED]</code>.</li>
+                <li>Agent breaks. She gives up.</li>
+              </ol>
+              <div class="annot bad">
+                <strong>Outcome:</strong> Misconfigured. Customer never finds Settings → PII
+                Protection.
+              </div>
+            </div>
+          </div>
+          <div class="frame">
+            <div class="frame-title after">Journey A — Apple Care project owner (after)</div>
+            <div class="frame-body">
+              <ol class="steps">
+                <li>
+                  Opens Studio. Sees "Sensitive Data Block" in Guardrails. Helper text reads:
+                  <em
+                    >"To anonymize or tokenize PII while keeping the agent working, configure under
+                    Settings → PII Protection ↗"</em
+                  >
+                </li>
+                <li>Clicks the link. Lands on Settings PII.</li>
+                <li>Enables Email + SSN with render mode <code>tokenized</code>. Saves.</li>
+                <li>
+                  Tests. Agent greets "Hi Jamie" correctly. CRM tool call works (vault restoration).
+                </li>
+              </ol>
+              <div class="annot good">
+                <strong>Outcome:</strong> Right tool, right job. ~30 seconds end-to-end.
+              </div>
+            </div>
+          </div>
+
+          <div class="frame">
+            <div class="frame-title before">
+              Journey B — Compliance lead, hard-block SSNs (today)
+            </div>
+            <div class="frame-body">
+              <ol class="steps">
+                <li>Opens Settings → PII Protection. Looks for a "block" action.</li>
+                <li>Sees only render modes. No "block." Gives up.</li>
+                <li>Opens Guardrails → PII Protection. Sets action: <code>block</code>. Saves.</li>
+                <li>Tests. SSN-containing message is blocked. ✅</li>
+              </ol>
+              <div class="annot">
+                <strong>Outcome:</strong> Works, but only after wandering. Two minutes wasted on the
+                wrong screen first.
+              </div>
+            </div>
+          </div>
+          <div class="frame">
+            <div class="frame-title after">
+              Journey B — Compliance lead, hard-block SSNs (after)
+            </div>
+            <div class="frame-body">
+              <ol class="steps">
+                <li>
+                  Opens Settings → PII Protection. Sees banner:
+                  <em>"Need to block requests containing PII outright? → Configure now"</em>
+                </li>
+                <li>
+                  Clicks the banner CTA. Lands on Create Guardrail Policy with Sensitive Data Block
+                  pre-expanded.
+                </li>
+                <li>Sets action: <code>block</code>, threshold: 0.7. Saves.</li>
+                <li>Tests. SSN-containing message is blocked. ✅</li>
+              </ol>
+              <div class="annot good">
+                <strong>Outcome:</strong> Single hop. Banner taught the mental model.
+              </div>
+            </div>
+          </div>
+
+          <div class="frame">
+            <div class="frame-title before">Journey C — AI engineer panicking pre-demo (today)</div>
+            <div class="frame-body">
+              <ol class="steps">
+                <li>Agent leaked SSN. Searches "PII" in Studio.</li>
+                <li>Finds two screens with same name. Panics. Turns on both.</li>
+                <li>
+                  Now requests are double-processed: guardrail strips strings, then Settings tries
+                  to tokenize empty strings.
+                </li>
+                <li>Vault is empty. Tool calls get <code>[REDACTED]</code>. Worse than before.</li>
+              </ol>
+              <div class="annot bad"><strong>Outcome:</strong> Double-stripping. Demo broken.</div>
+            </div>
+          </div>
+          <div class="frame">
+            <div class="frame-title after">Journey C — AI engineer panicking pre-demo (after)</div>
+            <div class="frame-body">
+              <ol class="steps">
+                <li>
+                  Agent leaked SSN. Searches "PII". Finds one screen ("PII Protection") and one
+                  screen ("Sensitive Data Block").
+                </li>
+                <li>Different names. Clicks "?" icon. Decision matrix opens.</li>
+                <li>
+                  Reads: "Mask PII in agent responses → Settings → PII Protection". Goes there.
+                </li>
+                <li>
+                  Enables built-in patterns with render: <code>masked</code>. Saves. Tests. Fixed.
+                </li>
+              </ol>
+              <div class="annot good">
+                <strong>Outcome:</strong> Confident routing. Decision matrix carried the cognitive
+                load.
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ SCREEN 8 ============ -->
+      <section id="screen-8">
+        <h2>
+          8. Policy list — enabled-rule chip preview
+          <span style="font-size: 14px; font-weight: normal; color: #9ca3af"
+            >(added 2026-05-15)</span
+          >
+        </h2>
+        <p class="lede">
+          Today the policy list (the screenshot from
+          <code>http://localhost:5173/projects/proj-apple-care/guardrails-config</code>) only shows
+          policy name + Draft/Active pill. Users cannot audit at a glance which rules are enforced.
+          After: a row of green-dot chips inline, showing only the rules that are <em>enabled</em>.
+        </p>
+
+        <div class="frame-grid">
+          <!-- BEFORE -->
+          <div class="frame">
+            <div class="frame-title before">Today — opaque list</div>
+            <div class="frame-body">
+              <div
+                style="
+                  border: 1px solid #e5e7eb;
+                  border-radius: 8px;
+                  padding: 24px;
+                  background: #fff;
+                "
+              >
+                <div
+                  style="
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    margin-bottom: 16px;
+                  "
+                >
+                  <h3 style="margin: 0; font-size: 16px">3 POLICIES</h3>
+                  <span
+                    class="btn btn-add"
+                    style="background: #1a1a1a; color: #fff; border-color: #1a1a1a"
+                    >Add Policy</span
+                  >
+                </div>
+                <div class="policy-row">
+                  <div class="policy-name" style="flex: 1">IJK</div>
+                  <span class="status-pill draft">Draft</span>
+                  <div class="row-actions">
+                    <span class="icon-btn">👁</span><span class="icon-btn">✎</span
+                    ><span class="icon-btn">🗑</span>
+                  </div>
+                </div>
+                <div class="policy-row active">
+                  <div class="policy-name" style="flex: 1">abc</div>
+                  <span class="status-pill active">Active</span>
+                  <div class="row-actions">
+                    <span class="icon-btn toggle-active">●</span><span class="icon-btn">✎</span
+                    ><span class="icon-btn">🗑</span>
+                  </div>
+                </div>
+                <div class="policy-row">
+                  <div class="policy-name" style="flex: 1">xyz</div>
+                  <span class="status-pill draft">Draft</span>
+                  <div class="row-actions">
+                    <span class="icon-btn">👁</span><span class="icon-btn">✎</span
+                    ><span class="icon-btn">🗑</span>
+                  </div>
+                </div>
+              </div>
+              <div class="annot bad">
+                <strong>Problem:</strong> "abc" is Active — but Active <em>what</em>? Zero signal in
+                this view about what's enforced. Could be one rule, could be zero rules masquerading
+                as protection (Journey D).
+              </div>
+            </div>
+          </div>
+
+          <!-- AFTER -->
+          <div class="frame">
+            <div class="frame-title after">Proposed — chips inline</div>
+            <div class="frame-body">
+              <div
+                style="
+                  border: 1px solid #e5e7eb;
+                  border-radius: 8px;
+                  padding: 24px;
+                  background: #fff;
+                "
+              >
+                <div
+                  style="
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    margin-bottom: 16px;
+                  "
+                >
+                  <h3 style="margin: 0; font-size: 16px">3 POLICIES</h3>
+                  <span
+                    class="btn btn-add"
+                    style="background: #1a1a1a; color: #fff; border-color: #1a1a1a"
+                    >Add Policy</span
+                  >
+                </div>
+                <div class="policy-row">
+                  <div class="policy-name" style="min-width: 60px">IJK</div>
+                  <div class="rule-chips">
+                    <span class="rule-chip"><span class="green-dot"></span>Content Safety</span>
+                  </div>
+                  <span class="status-pill draft">Draft</span>
+                  <div class="row-actions">
+                    <span class="icon-btn">👁</span><span class="icon-btn">✎</span
+                    ><span class="icon-btn">🗑</span>
+                  </div>
+                </div>
+                <div class="policy-row active">
+                  <div class="policy-name" style="min-width: 60px">abc</div>
+                  <div class="rule-chips">
+                    <span class="rule-chip"><span class="green-dot"></span>Content Safety</span>
+                    <span class="rule-chip"
+                      ><span class="green-dot"></span>Sensitive Data Block · SSN, CC</span
+                    >
+                    <span class="rule-chip"><span class="green-dot"></span>Prompt Injection</span>
+                  </div>
+                  <span class="status-pill active">Active</span>
+                  <div class="row-actions">
+                    <span class="icon-btn toggle-active">●</span><span class="icon-btn">✎</span
+                    ><span class="icon-btn">🗑</span>
+                  </div>
+                </div>
+                <div class="policy-row">
+                  <div class="policy-name" style="min-width: 60px">xyz</div>
+                  <div class="rule-chips">
+                    <span class="no-rules">⚠ No rules enabled</span>
+                  </div>
+                  <span class="status-pill draft">Draft</span>
+                  <div class="row-actions">
+                    <span class="tooltip">
+                      <span class="icon-btn toggle-disabled">○</span>
+                      <span class="tooltip-bubble">Enable at least one rule first</span>
+                    </span>
+                    <span class="icon-btn">✎</span><span class="icon-btn">🗑</span>
+                  </div>
+                </div>
+              </div>
+              <div class="annot good">
+                <strong>Resolved:</strong>
+                <ul>
+                  <li>
+                    "abc" Active now shows exactly which 3 rules are enforced + which entities for
+                    Sensitive Data Block (FR-9.1, FR-9.3, Open Item #10).
+                  </li>
+                  <li>
+                    "xyz" Draft shows ⚠ "No rules enabled" muted text + the activation toggle is
+                    greyed with a tooltip (FR-9.5, FR-7.2).
+                  </li>
+                  <li>Chips clickable — deep-link to the rule inside the editor (FR-9.4).</li>
+                  <li>
+                    Entity preview ("SSN, CC") tied to §5.6 entity multiselect (Open Item #10 —
+                    design call on whether to show this depth in the row).
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ SCREEN 9 ============ -->
+      <section id="screen-9">
+        <h2>9. Policy list — empty policy + disabled activation</h2>
+        <p class="lede">
+          Microscope view of the "xyz" row from screen 8. Two states: hover over disabled toggle
+          (tooltip), and the muted "No rules enabled" warning.
+        </p>
+
+        <div style="max-width: 720px; margin: 0 auto">
+          <div class="frame">
+            <div class="frame-title after">Empty policy — activation blocked</div>
+            <div class="frame-body">
+              <div class="policy-row" style="margin-bottom: 0">
+                <div class="policy-name" style="min-width: 60px">xyz</div>
+                <div class="rule-chips">
+                  <span class="no-rules">⚠ No rules enabled — open editor to add</span>
+                </div>
+                <span class="status-pill draft">Draft</span>
+                <div class="row-actions">
+                  <span class="tooltip">
+                    <span class="icon-btn toggle-disabled">○</span>
+                    <span class="tooltip-bubble error"
+                      >Enable at least one rule to activate this policy</span
+                    >
+                  </span>
+                  <span class="icon-btn">✎</span><span class="icon-btn">🗑</span>
+                </div>
+              </div>
+              <div class="ux-callout">
+                <h5>Why both signals?</h5>
+                <p>
+                  The inline ⚠ text answers "what's wrong" at a glance. The tooltip on the disabled
+                  toggle answers "what do I do?" when the user actually reaches to flip the switch.
+                  Two cues at two different moments of attention.
+                </p>
+              </div>
+              <div class="annot good">
+                <strong>Behavior (FR-7.1–7.4):</strong> Server-side guard also rejects programmatic
+                activation (<code>POST /activate</code> → <code>400 NO_ENABLED_RULES</code>).
+                Disabling the last enabled rule on an active policy auto-deactivates with a toast
+                (Screen 12).
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ SCREEN 10 ============ -->
+      <section id="screen-10">
+        <h2>10. Sensitive Data Block — entity multiselect</h2>
+        <p class="lede">
+          The expanded "Sensitive Data Block" row, redesigned per §5.6. Quick-preset radio (All PII
+          / High-risk only / Custom) above a scrollable entity list grouped by pack. Applies To and
+          Action message exposed as explicit required fields.
+        </p>
+
+        <div style="max-width: 900px; margin: 0 auto">
+          <div class="frame">
+            <div class="frame-title after">Sensitive Data Block — full redesign</div>
+            <div class="frame-body">
+              <div style="border: 1px solid #16a34a; border-radius: 8px; background: #f0fdf4">
+                <div style="display: flex; align-items: center; gap: 12px; padding: 14px 16px">
+                  <span class="toggle"></span>
+                  <div class="preset-name" style="flex: 1">
+                    <span class="caret">⌄</span>Sensitive Data Block<span class="help-icon">?</span>
+                  </div>
+                  <span class="badge badge-block">block</span>
+                </div>
+                <div class="helper" style="padding: 8px 16px 14px 60px">
+                  Stops requests containing PII outright. To
+                  <strong>anonymize or tokenize</strong> PII while keeping the agent working,
+                  configure under <a href="#">Settings → PII Protection ↗</a>
+                </div>
+
+                <div
+                  style="
+                    padding: 18px 16px 18px 60px;
+                    background: #fff;
+                    border-top: 1px solid #e5e7eb;
+                  "
+                >
+                  <!-- Row 1: Provider + Action -->
+                  <div class="row-2">
+                    <div class="row">
+                      <label>Provider</label>
+                      <div class="input filled" style="background: #f9fafb; color: #6b7280">
+                        Built-in PII
+                        <span style="font-size: 11px; color: #9ca3af"
+                          >(only provider available)</span
+                        >
+                      </div>
+                    </div>
+                    <div class="row">
+                      <label>Action <span style="color: #dc2626">*</span></label>
+                      <div class="input filled">Block ▾</div>
+                      <div style="margin-top: 4px; font-size: 11px; color: #6b7280">
+                        Block · Warn · Escalate
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Row 2: Applies To + Severity threshold -->
+                  <div class="row-2">
+                    <div class="row">
+                      <label>Applies To <span style="color: #dc2626">*</span></label>
+                      <div style="display: flex; gap: 16px; padding: 8px 0">
+                        <label
+                          style="
+                            display: flex;
+                            align-items: center;
+                            gap: 6px;
+                            font-weight: 400;
+                            font-size: 13px;
+                          "
+                          ><span
+                            class="checkbox checked"
+                            style="
+                              width: 14px;
+                              height: 14px;
+                              border: 1.5px solid #1a1a1a;
+                              border-radius: 3px;
+                              background: #1a1a1a;
+                              color: #fff;
+                              display: inline-flex;
+                              align-items: center;
+                              justify-content: center;
+                            "
+                          ></span>
+                          Input (user messages)</label
+                        >
+                        <label
+                          style="
+                            display: flex;
+                            align-items: center;
+                            gap: 6px;
+                            font-weight: 400;
+                            font-size: 13px;
+                          "
+                          ><span
+                            class="checkbox checked"
+                            style="
+                              width: 14px;
+                              height: 14px;
+                              border: 1.5px solid #1a1a1a;
+                              border-radius: 3px;
+                              background: #1a1a1a;
+                              color: #fff;
+                              display: inline-flex;
+                              align-items: center;
+                              justify-content: center;
+                            "
+                          ></span>
+                          Output (agent responses)</label
+                        >
+                      </div>
+                    </div>
+                    <div class="row">
+                      <label>Confidence threshold <span style="color: #dc2626">*</span></label>
+                      <div class="input filled">0.7</div>
+                      <div style="margin-top: 4px; font-size: 11px; color: #6b7280">
+                        Higher = fewer false positives. Tier 2/3 confidence (ABLP-921).
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Row 3: Action message -->
+                  <div class="row full-width" style="margin-top: 4px">
+                    <label>Action message <span style="color: #dc2626">*</span></label>
+                    <div class="input filled" style="min-height: 56px; padding: 10px 12px">
+                      Your message contains sensitive information and cannot be processed. Please
+                      remove personal details and try again.
+                    </div>
+                    <div style="margin-top: 4px; font-size: 11px; color: #6b7280">
+                      Shown to the user when the rule fires.
+                    </div>
+                  </div>
+
+                  <!-- Quick preset radio -->
+                  <div style="margin-top: 20px">
+                    <label>Entities to detect <span style="color: #dc2626">*</span></label>
+                    <div class="preset-radio-group">
+                      <div class="preset-radio">
+                        <span class="radio"></span>
+                        <div>
+                          <div class="preset-radio-label">All PII</div>
+                          <div class="preset-radio-desc">All entities from your enabled packs</div>
+                        </div>
+                      </div>
+                      <div class="preset-radio selected">
+                        <span class="radio checked"></span>
+                        <div>
+                          <div class="preset-radio-label">High-risk only</div>
+                          <div class="preset-radio-desc">
+                            SSN · CC · Bank · Passport · DL · IBAN
+                          </div>
+                        </div>
+                      </div>
+                      <div class="preset-radio">
+                        <span class="radio"></span>
+                        <div>
+                          <div class="preset-radio-label">Custom</div>
+                          <div class="preset-radio-desc">Pick individual entities below</div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Entity list -->
+                    <div class="entity-list">
+                      <div class="entity-pack">
+                        Government IDs <span class="tier-badge tier-1">tier 1</span>
+                      </div>
+                      <div class="entity-row">
+                        <span class="checkbox checked"></span
+                        ><span class="entity-name">Social Security Number (SSN)</span
+                        ><span class="entity-meta">US</span>
+                      </div>
+                      <div class="entity-row">
+                        <span class="checkbox checked"></span
+                        ><span class="entity-name">Passport Number</span
+                        ><span class="entity-meta">US / Intl</span>
+                      </div>
+                      <div class="entity-row">
+                        <span class="checkbox checked"></span
+                        ><span class="entity-name">Driver's License Number</span
+                        ><span class="entity-meta">US</span>
+                      </div>
+
+                      <div class="entity-pack">
+                        Financial <span class="tier-badge tier-1">tier 1</span>
+                      </div>
+                      <div class="entity-row">
+                        <span class="checkbox checked"></span
+                        ><span class="entity-name">Credit Card Number</span
+                        ><span class="entity-meta">Luhn-validated</span>
+                      </div>
+                      <div class="entity-row">
+                        <span class="checkbox checked"></span
+                        ><span class="entity-name">Bank Account Number</span
+                        ><span class="entity-meta"></span>
+                      </div>
+                      <div class="entity-row">
+                        <span class="checkbox checked"></span><span class="entity-name">IBAN</span
+                        ><span class="entity-meta">Intl</span>
+                      </div>
+
+                      <div class="entity-pack">
+                        Contact <span class="tier-badge tier-1">tier 1</span>
+                      </div>
+                      <div class="entity-row">
+                        <span class="checkbox"></span><span class="entity-name">Email Address</span
+                        ><span class="entity-meta"></span>
+                      </div>
+                      <div class="entity-row">
+                        <span class="checkbox"></span><span class="entity-name">Phone Number</span
+                        ><span class="entity-meta">E.164 / US</span>
+                      </div>
+
+                      <div class="entity-pack">
+                        Internet / Network <span class="tier-badge tier-2">tier 2</span>
+                      </div>
+                      <div class="entity-row">
+                        <span class="checkbox"></span
+                        ><span class="entity-name">IP Address (v4 / v6)</span
+                        ><span class="entity-meta"></span>
+                      </div>
+                      <div class="entity-row">
+                        <span class="checkbox"></span><span class="entity-name">URL</span
+                        ><span class="entity-meta"></span>
+                      </div>
+
+                      <div class="entity-pack">
+                        Medical <span class="tier-badge tier-3">tier 3</span>
+                      </div>
+                      <div class="entity-row">
+                        <span class="checkbox"></span
+                        ><span class="entity-name">Medical Record Number</span
+                        ><span class="entity-meta">GLiNER (planned)</span>
+                      </div>
+                      <div class="entity-row">
+                        <span class="checkbox"></span
+                        ><span class="entity-name">Diagnosis / Condition</span
+                        ><span class="entity-meta">GLiNER (planned)</span>
+                      </div>
+
+                      <div
+                        style="text-align: center; padding: 8px; font-size: 12px; color: #6b7280"
+                      >
+                        Showing 11 of {N} entities (filtered by your enabled packs) ·
+                        <a href="#">Expand all</a>
+                      </div>
+                    </div>
+                    <div style="margin-top: 4px; font-size: 11px; color: #6b7280">
+                      Detection runs across all entities; the rule triggers only when a
+                      <em>selected</em> entity matches with confidence ≥ threshold (FR-6.1).
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="annot good">
+                <strong>What changed vs. the original PRD §5.1:</strong>
+                <ul>
+                  <li>
+                    Provider is read-only label when only one provider exists (cleaner UI;
+                    future-proof).
+                  </li>
+                  <li>
+                    <strong>Applies To</strong> (input/output) — was hidden, now explicit and
+                    required.
+                  </li>
+                  <li>
+                    <strong>Action message</strong> — new required textarea with default template.
+                  </li>
+                  <li>
+                    <strong>Entities to detect</strong> — new multiselect, ABLP-921 entity catalog
+                    with quick-preset radio.
+                  </li>
+                  <li>Tier badges (1/2/3) inform latency expectations.</li>
+                  <li>
+                    Future-planned entities (GLiNER) show as "(planned)" — visible but not yet
+                    selectable.
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ SCREEN 11 ============ -->
+      <section id="screen-11">
+        <h2>11. Rule enable gate — required-field tooltip</h2>
+        <p class="lede">
+          Per FR-8.2, the rule's enable toggle is disabled until all required fields are filled.
+          Hover/focus shows exactly what's missing — no silent failures, no "Save" buttons that
+          don't work.
+        </p>
+
+        <div class="frame-grid">
+          <div class="frame">
+            <div class="frame-title before">Today (PR #989) — Save disabled, error in banner</div>
+            <div class="frame-body">
+              <div style="border: 1px solid #ef4444; border-radius: 8px; background: #fef2f2">
+                <div style="display: flex; align-items: center; gap: 12px; padding: 14px 16px">
+                  <span class="toggle"></span>
+                  <div class="preset-name" style="flex: 1">
+                    <span class="caret">›</span>Sensitive Data Block
+                  </div>
+                  <span style="color: #dc2626; font-size: 13px">⚠ Missing provider</span>
+                </div>
+              </div>
+              <div
+                style="
+                  margin-top: 12px;
+                  padding: 10px 14px;
+                  background: #fef2f2;
+                  border-left: 3px solid #dc2626;
+                  font-size: 13px;
+                  color: #991b1b;
+                "
+              >
+                ⚠ Cannot save: 1 rule has validation errors. Fix the highlighted rule before saving.
+              </div>
+              <div class="annot bad">
+                <strong>Gap:</strong> User can still <em>flip</em> the toggle ON, then learn about
+                the problem only at Save time. The toggle should refuse to flip in the first place.
+              </div>
+            </div>
+          </div>
+
+          <div class="frame">
+            <div class="frame-title after">Proposed — toggle disabled with field list tooltip</div>
+            <div class="frame-body">
+              <div style="border: 1px solid #d1d5db; border-radius: 8px; background: #fff">
+                <div style="display: flex; align-items: center; gap: 12px; padding: 14px 16px">
+                  <span class="tooltip">
+                    <span class="toggle off" style="opacity: 0.4; cursor: not-allowed"></span>
+                    <span
+                      class="tooltip-bubble error"
+                      style="white-space: normal; width: 240px; left: 16px; transform: none"
+                    >
+                      <div style="font-weight: 600; margin-bottom: 4px">Fill these to enable:</div>
+                      <div style="font-size: 11px; line-height: 1.5">
+                        • Action message<br />• Entities to detect (at least 1)
+                      </div>
+                      <div
+                        style="
+                          position: absolute;
+                          top: 100%;
+                          left: 12px;
+                          transform: none;
+                          border: 5px solid transparent;
+                          border-top-color: #991b1b;
+                        "
+                      ></div>
+                    </span>
+                  </span>
+                  <div class="preset-name" style="flex: 1; color: #6b7280">
+                    <span class="caret">›</span>Sensitive Data Block
+                  </div>
+                  <span style="color: #9ca3af; font-size: 11px; font-style: italic"
+                    >2 fields missing</span
+                  >
+                </div>
+              </div>
+              <div style="margin-top: 12px">
+                <div class="ux-callout">
+                  <h5>Coexistence with PR #989 (Open Item #6)</h5>
+                  <p>
+                    The new gate prevents the user from <em>flipping the toggle ON</em>. PR #989's
+                    banner still fires if a rule was somehow saved enabled-but-incomplete (e.g.,
+                    older data, schema migration). One mechanism is preventive (UI level); the other
+                    is corrective (form level). They cover different failure modes.
+                  </p>
+                </div>
+              </div>
+              <div class="annot good">
+                <strong>Behavior (FR-8.1–8.4):</strong>
+                <ul>
+                  <li>Toggle is visually muted + cursor not-allowed.</li>
+                  <li>Tooltip lists missing fields by name (i18n).</li>
+                  <li>Compact inline hint "2 fields missing" to the right.</li>
+                  <li>
+                    Server-side mirror — direct API attempts to enable an incomplete rule return
+                    <code>400 RULE_INCOMPLETE</code> with <code>missingFields[]</code>.
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ SCREEN 12 ============ -->
+      <section id="screen-12">
+        <h2>12. Auto-deactivation toast + undo</h2>
+        <p class="lede">
+          Per FR-7.4, if the last enabled rule in an active policy is disabled, the policy is
+          auto-deactivated. The user sees a toast explaining the change with an Undo CTA (Open Item
+          #9 — confirmed as the proposed behavior).
+        </p>
+
+        <div style="max-width: 720px; margin: 0 auto">
+          <div class="frame">
+            <div class="frame-title after">Auto-deactivation — toast with Undo</div>
+            <div class="frame-body">
+              <div
+                style="
+                  background: #f5f6f8;
+                  padding: 32px;
+                  border-radius: 8px;
+                  display: flex;
+                  justify-content: center;
+                "
+              >
+                <div class="toast">
+                  <span style="font-size: 16px">ℹ</span>
+                  <div>
+                    <div style="font-weight: 600; margin-bottom: 2px">
+                      Policy "abc" was deactivated
+                    </div>
+                    <div style="font-size: 12px; color: #d1d5db">
+                      The last enabled rule was disabled. No rules are being enforced.
+                    </div>
+                  </div>
+                  <span class="toast-undo">Undo</span>
+                </div>
+              </div>
+              <div class="ux-callout">
+                <h5>Why a toast (and not a confirmation modal)?</h5>
+                <p>
+                  Modals block the user mid-flow and demand a decision before they understand the
+                  context. A toast is non-blocking: it announces the consequence after the fact and
+                  offers Undo for 5 seconds — long enough to recover from an accidental click, short
+                  enough to disappear when intentional. If the user dismisses the toast or the
+                  timeout elapses, the deactivation is final.
+                </p>
+              </div>
+              <div class="annot good">
+                <strong>Behavior:</strong>
+                <ul>
+                  <li>Toast auto-dismisses after 5 seconds (configurable).</li>
+                  <li>"Undo" re-enables the rule AND re-activates the policy in one operation.</li>
+                  <li>
+                    Telemetry: emit <code>guardrail.auto_deactivation</code> with
+                    <code>{ policyId, ruleId, undone: boolean }</code>.
+                  </li>
+                  <li>
+                    Empty policy + user toggles activation directly: same path, no toast (handled by
+                    FR-7.2 — toggle is disabled at the source).
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section style="background: transparent; border: none; padding: 12px 0">
+        <p style="text-align: center; color: #6b7280; font-size: 12px">
+          End of wireframes · See companion
+          <a href="2026-05-14-guardrails-pii-separation-adr.md">ADR</a> and
+          <a href="guardrails-sensitive-data-block.prd.md">PRD</a>
+        </p>
+      </section>
+    </main>
+  </body>
+</html>

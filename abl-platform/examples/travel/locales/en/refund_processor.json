@@ -1,0 +1,11 @@
+{
+  "agent": "Refund_Processor",
+  "locale": "en",
+  "strings": {
+    "refund_processed": "Refund processed successfully.",
+    "refund_to_original_only": "Refunds can only be processed to the original payment method.",
+    "manager_approval_needed": "Refund requires manager approval.",
+    "refund_denied": "The refund request was reviewed and unfortunately cannot be approved at this time.",
+    "refund_error": "Error processing refund. Escalating to support."
+  }
+}

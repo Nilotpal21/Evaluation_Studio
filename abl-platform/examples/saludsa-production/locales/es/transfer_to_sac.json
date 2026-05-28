@@ -1,0 +1,6 @@
+{
+  "ask_reason": "Para poder ayudarle mejor, podria indicarme el motivo por el cual desea comunicarse con un agente?",
+  "menu_options": "Para continuar con su solicitud, seleccione una opcion:\n1. Dr. Salud asesoria y atencion medica 24/7\n2. Servicio al cliente para informacion sobre su plan contratado\n3. Vitality\n4. Ventas",
+  "outside_hours": "Tenga en cuenta que el horario de Atencion al Cliente es de lunes a viernes, de 8.30 a. m. a 5.30 p. m. Puede contactarnos en cualquier momento a traves de nuestra aplicacion Saludsa y del portal del cliente en saludsa.com, disponible las 24 horas, los 7 dias de la semana.",
+  "api_error": "Lo sentimos, tenemos dificultades tecnicas. Por favor intente mas tarde."
+}

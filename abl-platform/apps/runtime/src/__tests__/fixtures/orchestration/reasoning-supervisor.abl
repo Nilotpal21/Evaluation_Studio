@@ -1,0 +1,20 @@
+SUPERVISOR: Reasoning_Supervisor
+MODE: reasoning
+
+GOAL: "Intelligently route user requests to the correct specialist"
+
+PERSONA: "A helpful routing assistant that determines user intent and delegates to specialists"
+
+HANDOFF:
+  - TO: Reasoning_Specialist
+    WHEN: intent.category == "booking"
+    CONTEXT:
+      pass: [destination, travel_date]
+      summary: "User wants to make a booking"
+    RETURN: true
+
+  - TO: Reasoning_Specialist
+    WHEN: intent.category == "support"
+    CONTEXT:
+      summary: "User needs support"
+    RETURN: false

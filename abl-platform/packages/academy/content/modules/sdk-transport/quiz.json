@@ -1,0 +1,98 @@
+{
+  "moduleId": "sdk-transport",
+  "passThreshold": 0.8,
+  "questions": [
+    {
+      "id": "sdk-q1",
+      "type": "mcq",
+      "stem": "The Web SDK is organized in four layers. A developer needs to build a custom chat UI with their own message rendering but wants to use the SDK's streaming and typing management. Which SDK layer should they work with directly?",
+      "options": [
+        {
+          "id": "a",
+          "text": "The Transport layer, by implementing the SDKTransport interface"
+        },
+        {
+          "id": "b",
+          "text": "The Chat Logic layer via ChatClient, which is transport-agnostic and manages messages, typing, and streaming",
+          "correct": true
+        },
+        {
+          "id": "c",
+          "text": "The React UI layer, by customizing the 11 shared components with CSS overrides"
+        }
+      ],
+      "explanation": "The Web SDK has four layers: Transport (SDKTransport interface with pluggable implementations), Chat Logic (ChatClient -- manages messages, typing, streaming), React UI (11 shared components), and Theme/i18n (SDKThemeProvider + StringsProvider). For custom message rendering while keeping streaming and typing management, the developer should use ChatClient directly. It accepts any transport and handles the business logic without prescribing UI."
+    },
+    {
+      "id": "sdk-q2",
+      "type": "mcq",
+      "stem": "AgentProvider supports two initialization paths. Path A uses projectId + apiKey + endpoint. What distinguishes Path B and what limitation does it have?",
+      "options": [
+        {
+          "id": "a",
+          "text": "Path B uses a custom SDKTransport prop; voice is not available in this mode",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "Path B uses a JWT token instead of an API key; streaming is not available in this mode"
+        },
+        {
+          "id": "c",
+          "text": "Path B connects directly to a WebSocket URL; file uploads are not available in this mode"
+        }
+      ],
+      "explanation": "AgentProvider has two initialization paths. Path A (SDK-managed) takes projectId, apiKey, and endpoint -- the provider creates AgentSDK, connects, and manages chat/voice clients internally. Path B (custom transport) accepts a 'transport' prop implementing the SDKTransport interface -- the provider creates ChatClient directly from the transport. The key limitation of Path B is that voice is not available, since voice requires the full AgentSDK setup."
+    },
+    {
+      "id": "sdk-q3",
+      "type": "fill-blank",
+      "stem": "The Web SDK provides __________ shared React components, including AgentProvider, ChatWidget, MessageList, ChatInput, StreamingMessage, ThoughtCard, HandoffMessage, ErrorMessage, RichContent, ActionHandler, TypingIndicator, and MarkdownContent.",
+      "answer": "11",
+      "explanation": "The documentation states '11 shared components' in the React UI layer description. However, the actual import list shows 12 named exports: AgentProvider, ChatWidget, MessageList, ChatInput, StreamingMessage, ThoughtCard, HandoffMessage, ErrorMessage, RichContent, ActionHandler, TypingIndicator, and MarkdownContent. The documentation describes the layer as having '11 shared components' with AgentProvider being a provider/wrapper rather than a UI component.",
+      "acceptAlternatives": ["11", "eleven"]
+    },
+    {
+      "id": "sdk-q4",
+      "type": "mcq",
+      "stem": "A company uses ABL Studio internally and wants to embed the same chat experience in their customer-facing app. Studio uses StudioTransport (JWT auth via existing WebSocket). The customer app should use API key auth. Which transport should each use?",
+      "options": [
+        {
+          "id": "a",
+          "text": "Both should use DefaultTransport but with different auth headers"
+        },
+        {
+          "id": "b",
+          "text": "Studio uses StudioTransport (custom SDKTransport with JWT auth over WebSocket); the customer app uses DefaultTransport (API key/SDK token auth)",
+          "correct": true
+        },
+        {
+          "id": "c",
+          "text": "Studio uses a custom WebSocket wrapper; the customer app should implement SDKTransport from scratch"
+        }
+      ],
+      "explanation": "The SDK architecture is transport-agnostic by design. DefaultTransport is the built-in transport for customer-facing deployments -- it wraps SessionManager and authenticates with API key/SDK token. StudioTransport is a custom SDKTransport implementation that bridges Studio's existing WebSocket connection with JWT auth. This demonstrates the pluggable transport pattern: ChatClient accepts any SDKTransport implementation, allowing different auth strategies without changing the chat logic."
+    },
+    {
+      "id": "sdk-q5",
+      "type": "mcq",
+      "stem": "The SDKTransport interface includes a 'capabilities' property of type TransportCapabilities. Which of the following is NOT one of the four declared capability flags?",
+      "options": [
+        {
+          "id": "a",
+          "text": "supportsStreaming",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "supportsThoughts"
+        },
+        {
+          "id": "c",
+          "text": "supportsFileUpload"
+        }
+      ],
+      "explanation": "TransportCapabilities has exactly four boolean flags: supportsThoughts, supportsHandoff, supportsFileUpload, and supportsVoice. 'supportsStreaming' is not one of them -- streaming is handled at the ChatClient level, not as a transport capability flag. The capabilities interface lets each transport declare what features it supports so the UI layer can adapt accordingly."
+    }
+  ]
+}

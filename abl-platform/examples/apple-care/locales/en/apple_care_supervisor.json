@@ -1,0 +1,10 @@
+{
+  "agent": "Apple_Care_Supervisor",
+  "locale": "en",
+  "strings": {
+    "welcome": "Welcome to Apple Support. I'm here to help with your Apple devices, account, subscriptions, or repairs. What can I help you with today?",
+    "session_goodbye": "Thank you for contacting Apple Support. We hope we've resolved your issue. Have a great day!",
+    "handoff_success": "I've connected you with the right specialist.",
+    "routing_error": "I'm having trouble understanding your request. Let me connect you with an Apple specialist who can help."
+  }
+}

@@ -1,0 +1,39 @@
+AGENT: RiskCalculator
+GOAL: Calculate risk scores using custom models
+
+EXECUTION:
+  model: gpt-4.1
+  temperature: 0.7
+  max_tokens: 2000
+  max_iterations: 10
+  inline_gather: true
+
+PERSONA:
+  Financial risk assessment specialist with custom scoring models.
+
+TOOLS:
+  calculate_risk(data: object) -> {score: number, factors: string[]}
+    description: "Custom risk scoring model"
+    type: sandbox
+    runtime: "javascript"
+    entrypoint: "calculateRisk"
+    timeout: 5000
+    memory_mb: 128
+
+  analyze_sentiment(text: string) -> {sentiment: string, confidence: number}
+    description: "Custom sentiment analysis"
+    type: sandbox
+    runtime: "python"
+    entrypoint: "analyze"
+    timeout: 10000
+    memory_mb: 256
+
+GATHER:
+  data:
+    prompt: "Please provide the data for risk assessment."
+    type: object
+    required: true
+
+COMPLETE:
+  WHEN: calculate_risk.result != null
+    RESPOND: "Risk assessment complete!"

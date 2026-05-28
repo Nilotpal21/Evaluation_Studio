@@ -1,0 +1,19 @@
+TOOL: perform_provider_authentication
+VERSION: "1.0"
+DESCRIPTION: "Authenticate a provider by validating their Provider ID (9 digits) or NPI ID (10 digits) against the provider database"
+TYPE: http
+METHOD: POST
+ENDPOINT: "https://bots.kore.ai/api/public/tables/providerinfo/query?sys_limit=100"
+TIMEOUT: 30000
+HEADERS:
+  auth: "${KORE_DATA_TABLES_AUTH_TOKEN}"
+  Content-Type: "application/json"
+PARAMETERS:
+  providerId:
+    type: string
+    description: "Provider's unique identifier (9 digits)"
+    required: false
+  npiId:
+    type: string
+    description: "Provider's National Provider Identifier (10 digits)"
+    required: false

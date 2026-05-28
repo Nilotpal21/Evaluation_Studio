@@ -1,0 +1,7 @@
+{
+  "agent_name": "EmailVerifier",
+  "strings": {
+    "gather_email": "What email address would you like to verify?",
+    "complete_success": "Verification complete!"
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "name": "@abl/piece-google-drive",
+  "version": "0.1.0",
+  "private": true,
+  "type": "commonjs",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "build": "tsc"
+  },
+  "devDependencies": {
+    "@types/mime-types": "^2.1.4",
+    "@types/form-data": "^2.5.0"
+  },
+  "dependencies": {
+    "@activepieces/piece-google-drive": "^0.6.5",
+    "@activepieces/pieces-framework": "^0.25.4",
+    "@activepieces/pieces-common": "^0.11.6",
+    "form-data": "^4.0.0",
+    "mime-types": "^2.1.35"
+  }
+}

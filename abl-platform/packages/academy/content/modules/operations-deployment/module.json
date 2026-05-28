@@ -1,0 +1,19 @@
+{
+  "id": "operations-deployment",
+  "title": "Operations & Deployment",
+  "lessons": [
+    {
+      "id": "01-billing-quotas",
+      "title": "Billing, Quotas & Operations",
+      "sourceFile": "admin/05-billing-quotas-and-operations.md",
+      "minutes": 20
+    },
+    {
+      "id": "02-channels-overview",
+      "title": "Channels: Where Agents Deploy",
+      "sourceFile": "guides/11-channels.md",
+      "minutes": 10,
+      "personaFilter": "overview-only"
+    }
+  ]
+}

@@ -1,0 +1,88 @@
+id: studio-api-wiring
+title: Studio API → Service → Runtime Wiring
+enforcement: advisory
+severity_default: high
+rubric_concern: 12
+
+protects:
+  - Studio API route handlers being reachable from the UI layer
+  - service methods being called through the correct DI chain
+  - Mongoose models being exported through packages/database/src/models/index.ts
+
+review_when:
+  - a new apps/studio/src/app/api/ route file is added
+  - a new service class is added to packages/ or apps/runtime/
+  - a new Mongoose model is added to packages/database/
+
+review_questions:
+  - Is the new Studio API route actually called from a UI component (fetch/useQuery/useMutation)?
+  - Is the Studio API route handler actually calling the runtime API (proxyToRuntime) or a service method?
+  - Is the new service registered in the DI container / constructor chain from start()?
+  - Is the new Mongoose model exported from packages/database/src/models/index.ts?
+  - Is the runtime route registered in the router file (not just defined in isolation)?
+
+proof_expected:
+  - grep showing the route path is used in a client-side fetch/useQuery/useMutation call
+  - grep showing the new model is in packages/database/src/models/index.ts exports
+  - grep showing the new service is constructed and passed to its consumers in the startup chain
+
+scope:
+  globs:
+    - apps/studio/src/app/api/**/*.ts
+    - apps/runtime/src/routes/**/*.ts
+    - packages/database/src/models/**/*.ts
+    - packages/database/src/models/index.ts
+
+detectors:
+  - id: model-not-in-index
+    kind: grep
+    severity: high
+    glob: 'packages/database/src/models/index.ts'
+    pattern: 'export.*from'
+    message: |
+      Check that every new Mongoose model file in packages/database/src/models/
+      has a corresponding export line in packages/database/src/models/index.ts.
+      Models defined but not exported are unreachable from services.
+    fix_hint: |
+      Add: export { MyModel } from './my-model.js';
+      to packages/database/src/models/index.ts
+
+  - id: studio-route-not-called-from-ui
+    kind: model-review
+    severity: high
+    guidance_ref: ../prompts/studio-api-wiring-lens.md
+    output_schema:
+      rule_id: studio-route-not-called-from-ui
+      severity: high | medium
+      location:
+        file: string
+        line: number
+      claim: string
+      reality: string
+      options:
+        A: add a fetch/useQuery/useMutation call from the UI component that owns this feature
+        B: confirm the route is called indirectly via an existing service hook (cite it)
+        C: this route is an internal webhook/callback not called from Studio UI (document it)
+
+  - id: runtime-route-not-registered
+    kind: model-review
+    severity: high
+    guidance_ref: ../prompts/runtime-route-wiring-lens.md
+    output_schema:
+      rule_id: runtime-route-not-registered
+      severity: high | medium
+      location:
+        file: string
+        line: number
+      claim: string
+      reality: string
+      options:
+        A: add router.use('/path', handler) in the correct router file
+        B: confirm the route is registered via a dynamic loader (cite it)
+        C: this is a test-only route not intended for production (move to test helpers)
+
+stage_hooks:
+  - stage: implementation
+    inject_checklist: true
+  - stage: oracle-analysis
+    as_review_lens: true

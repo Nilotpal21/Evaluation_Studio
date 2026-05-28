@@ -1,0 +1,107 @@
+{
+  "format_version": "2.0",
+  "name": "saludsa-production",
+  "description": "Saludsa Samy \u2014 Production health insurance virtual assistant ported from Kore.ai",
+  "entry_agent": "Samy_Supervisor",
+  "dsl_format": "legacy",
+  "abl_version": "1.0",
+  "language": "es-EC",
+  "agents": {
+    "Samy_Supervisor": {
+      "path": "agents/samy_supervisor.agent.abl"
+    },
+    "Client_Entry_Gateway": {
+      "path": "agents/client_entry_gateway.agent.abl"
+    },
+    "Broker_Entry_Gateway": {
+      "path": "agents/broker_entry_gateway.agent.abl"
+    },
+    "Transfer_Services": {
+      "path": "agents/transfer_services.agent.abl"
+    },
+    "Contract_Data_Assistant": {
+      "path": "agents/contract_data_assistant.agent.abl"
+    },
+    "Contract_Sending": {
+      "path": "agents/contract_sending.agent.abl"
+    },
+    "Pending_Payments": {
+      "path": "agents/pending_payments.agent.abl"
+    },
+    "Password_Reset": {
+      "path": "agents/password_reset.agent.abl"
+    },
+    "Refund_Guidance": {
+      "path": "agents/refund_guidance.agent.abl"
+    },
+    "Refund_Status": {
+      "path": "agents/refund_status.agent.abl"
+    },
+    "Coverage_Certificates": {
+      "path": "agents/coverage_certificates.agent.abl"
+    },
+    "Other_Services": {
+      "path": "agents/other_services.agent.abl"
+    },
+    "Transfer_To_Vitality": {
+      "path": "agents/transfer_to_vitality.agent.abl"
+    },
+    "Transfer_To_SAC": {
+      "path": "agents/transfer_to_sac.agent.abl"
+    },
+    "PCA_XPR_Transfer": {
+      "path": "agents/pca_xpr_transfer.agent.abl"
+    },
+    "Fallback_Handler": {
+      "path": "agents/fallback_handler.agent.abl"
+    },
+    "Farewell_Handler": {
+      "path": "agents/farewell_handler.agent.abl"
+    }
+  },
+  "tools": {
+    "saludsa-identity": {
+      "path": "tools/saludsa-identity.tools.abl"
+    },
+    "saludsa-otp": {
+      "path": "tools/saludsa-otp.tools.abl"
+    },
+    "saludsa-services": {
+      "path": "tools/saludsa-services.tools.abl"
+    },
+    "saludsa-coverage": {
+      "path": "tools/saludsa-coverage.tools.abl"
+    },
+    "saludsa-transfer": {
+      "path": "tools/saludsa-transfer.tools.abl"
+    },
+    "saludsa-zendesk": {
+      "path": "tools/saludsa-zendesk.tools.abl"
+    },
+    "saludsa-refund": {
+      "path": "tools/saludsa-refund.tools.abl"
+    },
+    "saludsa-misc": {
+      "path": "tools/saludsa-misc.tools.abl"
+    },
+    "code-identity": {
+      "path": "tools/code-identity.tools.abl"
+    },
+    "code-otp": {
+      "path": "tools/code-otp.tools.abl"
+    },
+    "code-transfer": {
+      "path": "tools/code-transfer.tools.abl"
+    },
+    "code-misc": {
+      "path": "tools/code-misc.tools.abl"
+    }
+  },
+  "metadata": {
+    "source": "Kore.ai Agent Platform (saludsa_app_temp)",
+    "exported": "2026-03-09",
+    "ported": "2026-03-20",
+    "port_type": "1:1 production"
+  },
+  "slug": "saludsa-production"
+}

@@ -1,0 +1,7 @@
+# Site Inventory Tools
+# These tools are defined inline in the agent DSL files.
+# This file serves as a tool registry reference for the v2 export format.
+
+# Tools:
+#   get_site_inventory — Get equipment inventory for a site
+#   get_affected_services — Determine subscriber and service impact

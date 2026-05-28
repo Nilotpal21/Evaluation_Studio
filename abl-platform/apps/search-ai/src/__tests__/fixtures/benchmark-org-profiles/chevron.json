@@ -1,0 +1,52 @@
+{
+  "organizationName": "Chevron Corporation",
+  "industry": "Energy",
+  "keyTerms": [
+    "integrated energy",
+    "oil production",
+    "natural gas",
+    "refining",
+    "chemicals",
+    "renewable fuels",
+    "exploration",
+    "offshore drilling",
+    "pipeline",
+    "terminal operations",
+    "environmental stewardship",
+    "energy transition",
+    "operational excellence"
+  ],
+  "acronyms": {
+    "LNG": "Liquefied Natural Gas",
+    "TCO": "Tengizchevroil",
+    "PSC": "Production Sharing Contract",
+    "HSE": "Health, Safety, and Environment",
+    "OE": "Operational Excellence",
+    "GHG": "Greenhouse Gas Emissions",
+    "R&D": "Research and Development",
+    "CCS": "Carbon Capture and Sequestration"
+  },
+  "departmentBoundaries": [
+    {
+      "product1": "upstream-exploration-production",
+      "product2": "downstream-refining-marketing",
+      "reasoning": "Upstream finds and produces crude oil/gas while downstream processes and sells refined products; different capital intensity, timelines, and risk profiles"
+    },
+    {
+      "product1": "oil",
+      "product2": "natural-gas",
+      "reasoning": "Both are fossil fuels but oil is liquid while gas is gaseous; different extraction, transportation, storage, and market pricing mechanisms"
+    },
+    {
+      "product1": "traditional-energy",
+      "product2": "renewable-energy",
+      "reasoning": "Traditional is oil and gas while renewable includes biofuels, hydrogen, and carbon capture; different technologies, margins, and regulatory frameworks"
+    }
+  ],
+  "productSpecificNames": {
+    "upstream": ["Permian Basin", "Tengiz", "Offshore Gulf of Mexico", "Australia LNG"],
+    "downstream": ["Refining", "Fuel & Lubricants Marketing", "Chemicals", "Pipeline & Power"],
+    "brands": ["Chevron", "Texaco", "Caltex"],
+    "new-energies": ["Renewable Fuels", "Hydrogen", "Carbon Capture", "Offsets & Credits"]
+  }
+}

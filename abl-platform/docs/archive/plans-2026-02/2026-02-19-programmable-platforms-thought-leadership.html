@@ -1,0 +1,3497 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>The Third Wave: Why Programmable Platforms Will Win the Agent Era</title>
+    <style>
+      :root {
+        --bg: #0f1117;
+        --bg-surface: #161922;
+        --bg-elevated: #1c1f2e;
+        --bg-code: #12141d;
+        --text: #e2e4eb;
+        --text-muted: #9498a8;
+        --text-subtle: #6b7084;
+        --accent: #6c7bf0;
+        --accent-muted: #4f5bbd;
+        --accent-subtle: rgba(108, 123, 240, 0.12);
+        --green: #34d399;
+        --green-subtle: rgba(52, 211, 153, 0.1);
+        --amber: #fbbf24;
+        --amber-subtle: rgba(251, 191, 36, 0.1);
+        --red: #f87171;
+        --red-subtle: rgba(248, 113, 113, 0.1);
+        --cyan: #22d3ee;
+        --cyan-subtle: rgba(34, 211, 238, 0.1);
+        --purple: #a78bfa;
+        --purple-subtle: rgba(167, 139, 250, 0.1);
+        --border: rgba(255, 255, 255, 0.08);
+        --border-accent: rgba(108, 123, 240, 0.3);
+        --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+        --font-mono: 'JetBrains Mono', 'Fira Code', 'SF Mono', monospace;
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      html {
+        scroll-behavior: smooth;
+      }
+
+      body {
+        font-family: var(--font-sans);
+        background: var(--bg);
+        color: var(--text);
+        line-height: 1.7;
+        font-size: 16px;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      /* --- Navigation --- */
+      nav {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 100;
+        background: rgba(15, 17, 23, 0.85);
+        backdrop-filter: blur(20px);
+        border-bottom: 1px solid var(--border);
+        padding: 0 2rem;
+      }
+
+      nav .nav-inner {
+        max-width: 1200px;
+        margin: 0 auto;
+        display: flex;
+        align-items: center;
+        gap: 2rem;
+        height: 56px;
+        overflow-x: auto;
+      }
+
+      nav a {
+        color: var(--text-muted);
+        text-decoration: none;
+        font-size: 0.82rem;
+        font-weight: 500;
+        white-space: nowrap;
+        padding: 6px 0;
+        border-bottom: 2px solid transparent;
+        transition:
+          color 0.2s,
+          border-color 0.2s;
+      }
+      nav a:hover,
+      nav a.active {
+        color: var(--accent);
+        border-bottom-color: var(--accent);
+      }
+
+      nav .logo {
+        font-weight: 700;
+        font-size: 0.9rem;
+        color: var(--text);
+        letter-spacing: -0.02em;
+        margin-right: 1rem;
+      }
+
+      /* --- Hero --- */
+      .hero {
+        padding: 10rem 2rem 5rem;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .hero::before {
+        content: '';
+        position: absolute;
+        top: -200px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 800px;
+        height: 800px;
+        background: radial-gradient(circle, rgba(108, 123, 240, 0.08) 0%, transparent 70%);
+        pointer-events: none;
+      }
+
+      .hero .badge {
+        display: inline-block;
+        padding: 6px 16px;
+        border-radius: 100px;
+        font-size: 0.78rem;
+        font-weight: 600;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        background: var(--accent-subtle);
+        color: var(--accent);
+        border: 1px solid var(--border-accent);
+        margin-bottom: 1.5rem;
+      }
+
+      .hero h1 {
+        font-size: clamp(2.2rem, 5vw, 3.6rem);
+        font-weight: 800;
+        letter-spacing: -0.03em;
+        line-height: 1.15;
+        max-width: 900px;
+        margin: 0 auto 1.5rem;
+        background: linear-gradient(135deg, var(--text) 0%, var(--text-muted) 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+
+      .hero .subtitle {
+        font-size: 1.15rem;
+        color: var(--text-muted);
+        max-width: 680px;
+        margin: 0 auto 2.5rem;
+        line-height: 1.7;
+      }
+
+      .hero .meta {
+        font-size: 0.82rem;
+        color: var(--text-subtle);
+      }
+
+      /* --- Version Tabs --- */
+      .tabs-container {
+        max-width: 1000px;
+        margin: 0 auto;
+        padding: 0 2rem;
+      }
+
+      .tabs {
+        display: flex;
+        gap: 4px;
+        background: var(--bg-surface);
+        border-radius: 12px;
+        padding: 4px;
+        border: 1px solid var(--border);
+        margin-bottom: 3rem;
+      }
+
+      .tab {
+        flex: 1;
+        padding: 12px 20px;
+        border: none;
+        background: transparent;
+        color: var(--text-muted);
+        font-family: var(--font-sans);
+        font-size: 0.88rem;
+        font-weight: 600;
+        cursor: pointer;
+        border-radius: 9px;
+        transition: all 0.25s;
+        text-align: center;
+      }
+      .tab:hover {
+        color: var(--text);
+        background: rgba(255, 255, 255, 0.04);
+      }
+      .tab.active {
+        background: var(--accent);
+        color: #fff;
+        box-shadow: 0 2px 12px rgba(108, 123, 240, 0.3);
+      }
+
+      .tab-panel {
+        display: none;
+      }
+      .tab-panel.active {
+        display: block;
+      }
+
+      /* --- Content --- */
+      .content {
+        max-width: 780px;
+        margin: 0 auto;
+        padding: 0 2rem 6rem;
+      }
+
+      .content h2 {
+        font-size: 1.8rem;
+        font-weight: 800;
+        letter-spacing: -0.025em;
+        margin: 3.5rem 0 1rem;
+        color: var(--text);
+      }
+
+      .content h3 {
+        font-size: 1.35rem;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+        margin: 3rem 0 0.75rem;
+        color: var(--text);
+      }
+
+      .content h4 {
+        font-size: 1.05rem;
+        font-weight: 700;
+        margin: 2.5rem 0 0.75rem;
+        color: var(--text);
+      }
+
+      .content p {
+        margin-bottom: 1.25rem;
+        color: var(--text-muted);
+      }
+
+      .content strong {
+        color: var(--text);
+        font-weight: 600;
+      }
+
+      .content em {
+        color: var(--text);
+        font-style: italic;
+      }
+
+      .content ul,
+      .content ol {
+        margin: 0 0 1.25rem 1.5rem;
+        color: var(--text-muted);
+      }
+      .content li {
+        margin-bottom: 0.5rem;
+      }
+      .content li strong {
+        color: var(--text);
+      }
+
+      /* --- Code blocks --- */
+      pre {
+        background: var(--bg-code);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 1.25rem 1.5rem;
+        overflow-x: auto;
+        margin: 1.5rem 0;
+        font-family: var(--font-mono);
+        font-size: 0.82rem;
+        line-height: 1.65;
+        color: var(--text-muted);
+      }
+
+      code {
+        font-family: var(--font-mono);
+        font-size: 0.88em;
+        background: rgba(108, 123, 240, 0.08);
+        padding: 2px 7px;
+        border-radius: 4px;
+        color: var(--accent);
+      }
+      pre code {
+        background: none;
+        padding: 0;
+        color: inherit;
+        font-size: 1em;
+      }
+
+      /* Syntax highlighting */
+      .kw {
+        color: var(--purple);
+      }
+      .str {
+        color: var(--green);
+      }
+      .cmt {
+        color: var(--text-subtle);
+        font-style: italic;
+      }
+      .fn {
+        color: var(--cyan);
+      }
+      .num {
+        color: var(--amber);
+      }
+      .prop {
+        color: var(--accent);
+      }
+      .type {
+        color: var(--amber);
+      }
+
+      /* --- Tables --- */
+      .table-wrap {
+        overflow-x: auto;
+        margin: 1.5rem 0;
+        border-radius: 10px;
+        border: 1px solid var(--border);
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.85rem;
+      }
+
+      th {
+        text-align: left;
+        padding: 12px 16px;
+        background: var(--bg-surface);
+        color: var(--text);
+        font-weight: 600;
+        border-bottom: 1px solid var(--border);
+        white-space: nowrap;
+      }
+
+      td {
+        padding: 10px 16px;
+        border-bottom: 1px solid var(--border);
+        color: var(--text-muted);
+        vertical-align: top;
+      }
+
+      tr:last-child td {
+        border-bottom: none;
+      }
+      tr:hover td {
+        background: rgba(255, 255, 255, 0.02);
+      }
+
+      /* --- Callout cards --- */
+      .callout {
+        border-radius: 10px;
+        padding: 1.25rem 1.5rem;
+        margin: 1.5rem 0;
+        border: 1px solid var(--border);
+      }
+      .callout.accent {
+        background: var(--accent-subtle);
+        border-color: var(--border-accent);
+      }
+      .callout.green {
+        background: var(--green-subtle);
+        border-color: rgba(52, 211, 153, 0.2);
+      }
+      .callout.amber {
+        background: var(--amber-subtle);
+        border-color: rgba(251, 191, 36, 0.2);
+      }
+      .callout.red {
+        background: var(--red-subtle);
+        border-color: rgba(248, 113, 113, 0.2);
+      }
+      .callout.cyan {
+        background: var(--cyan-subtle);
+        border-color: rgba(34, 211, 238, 0.2);
+      }
+
+      .callout .callout-title {
+        font-weight: 700;
+        font-size: 0.9rem;
+        margin-bottom: 0.5rem;
+        color: var(--text);
+      }
+      .callout p {
+        margin-bottom: 0.5rem;
+        font-size: 0.92rem;
+      }
+      .callout p:last-child {
+        margin-bottom: 0;
+      }
+
+      /* --- Persona cards --- */
+      .persona-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+        margin: 1.5rem 0;
+      }
+      @media (max-width: 640px) {
+        .persona-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      .persona-card {
+        background: var(--bg-surface);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 1.25rem;
+      }
+      .persona-card .role {
+        font-weight: 700;
+        font-size: 0.85rem;
+        color: var(--accent);
+        margin-bottom: 0.5rem;
+      }
+      .persona-card p {
+        font-size: 0.88rem;
+        color: var(--text-muted);
+        margin: 0;
+      }
+
+      /* --- Option cards --- */
+      .options {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 1rem;
+        margin: 1.5rem 0;
+      }
+      @media (max-width: 768px) {
+        .options {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      .option-card {
+        background: var(--bg-surface);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 1.25rem;
+        transition: border-color 0.2s;
+      }
+      .option-card:hover {
+        border-color: rgba(255, 255, 255, 0.15);
+      }
+      .option-card.highlight {
+        border-color: var(--border-accent);
+        background: var(--accent-subtle);
+      }
+      .option-card .option-label {
+        font-weight: 700;
+        font-size: 0.9rem;
+        margin-bottom: 0.5rem;
+        color: var(--text);
+      }
+      .option-card p {
+        font-size: 0.85rem;
+        color: var(--text-muted);
+        margin: 0;
+      }
+
+      /* --- Competitor section --- */
+      .competitor-section {
+        background: var(--bg-surface);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 2rem;
+        margin: 2rem 0;
+      }
+      .competitor-section h3 {
+        margin-top: 0;
+      }
+
+      .pitch-box {
+        background: var(--bg-elevated);
+        border-radius: 8px;
+        padding: 1rem 1.25rem;
+        margin: 1rem 0;
+        font-size: 0.9rem;
+        border-left: 3px solid var(--accent-muted);
+      }
+
+      .strength-list,
+      .counter-list {
+        list-style: none;
+        margin-left: 0;
+        padding: 0;
+      }
+      .strength-list li,
+      .counter-list li {
+        padding: 0.75rem 0;
+        border-bottom: 1px solid var(--border);
+        font-size: 0.92rem;
+      }
+      .strength-list li:last-child,
+      .counter-list li:last-child {
+        border-bottom: none;
+      }
+
+      .counter-list li strong {
+        color: var(--text);
+      }
+
+      .verdict-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+        margin-top: 1.5rem;
+      }
+      @media (max-width: 640px) {
+        .verdict-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      .verdict-card {
+        border-radius: 8px;
+        padding: 1rem 1.25rem;
+      }
+      .verdict-card.their {
+        background: var(--amber-subtle);
+        border: 1px solid rgba(251, 191, 36, 0.15);
+      }
+      .verdict-card.ours {
+        background: var(--green-subtle);
+        border: 1px solid rgba(52, 211, 153, 0.15);
+      }
+      .verdict-card .verdict-title {
+        font-weight: 700;
+        font-size: 0.82rem;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        margin-bottom: 0.4rem;
+      }
+      .verdict-card.their .verdict-title {
+        color: var(--amber);
+      }
+      .verdict-card.ours .verdict-title {
+        color: var(--green);
+      }
+      .verdict-card p {
+        font-size: 0.85rem;
+        color: var(--text-muted);
+        margin: 0;
+      }
+
+      /* --- Evolution timeline --- */
+      .timeline {
+        position: relative;
+        padding-left: 2rem;
+        margin: 1.5rem 0;
+      }
+      .timeline::before {
+        content: '';
+        position: absolute;
+        left: 7px;
+        top: 8px;
+        bottom: 8px;
+        width: 2px;
+        background: linear-gradient(to bottom, var(--accent-muted), var(--green));
+      }
+      .timeline-item {
+        position: relative;
+        margin-bottom: 1.5rem;
+      }
+      .timeline-item::before {
+        content: '';
+        position: absolute;
+        left: -2rem;
+        top: 8px;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        border: 2px solid var(--accent);
+        background: var(--bg);
+      }
+      .timeline-item:last-child::before {
+        border-color: var(--green);
+        background: var(--green);
+        box-shadow: 0 0 12px rgba(52, 211, 153, 0.4);
+      }
+      .timeline-item .gen-label {
+        font-weight: 700;
+        font-size: 0.85rem;
+        color: var(--accent);
+        margin-bottom: 0.25rem;
+      }
+      .timeline-item:last-child .gen-label {
+        color: var(--green);
+      }
+      .timeline-item p {
+        font-size: 0.9rem;
+        color: var(--text-muted);
+        margin: 0;
+      }
+
+      /* --- Rebuttal cards --- */
+      .rebuttal {
+        background: var(--bg-surface);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        margin: 1rem 0;
+        overflow: hidden;
+      }
+      .rebuttal-header {
+        padding: 1rem 1.25rem;
+        font-weight: 700;
+        font-size: 0.92rem;
+        color: var(--text);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: background 0.2s;
+      }
+      .rebuttal-header:hover {
+        background: rgba(255, 255, 255, 0.03);
+      }
+      .rebuttal-header .arrow {
+        font-size: 0.7rem;
+        color: var(--text-subtle);
+        transition: transform 0.2s;
+      }
+      .rebuttal.open .arrow {
+        transform: rotate(90deg);
+      }
+      .rebuttal-body {
+        padding: 0 1.25rem 1rem;
+        font-size: 0.9rem;
+        color: var(--text-muted);
+        display: none;
+      }
+      .rebuttal.open .rebuttal-body {
+        display: block;
+      }
+
+      /* --- Sources --- */
+      .sources {
+        border-top: 1px solid var(--border);
+        margin-top: 4rem;
+        padding-top: 2rem;
+      }
+      .sources h3 {
+        margin-top: 0;
+      }
+      .sources a {
+        color: var(--accent);
+        text-decoration: none;
+        transition: color 0.2s;
+      }
+      .sources a:hover {
+        color: var(--text);
+        text-decoration: underline;
+      }
+      .sources ul {
+        list-style: none;
+        margin-left: 0;
+        padding: 0;
+      }
+      .sources li {
+        padding: 6px 0;
+        font-size: 0.85rem;
+        color: var(--text-muted);
+      }
+
+      /* --- Workflow steps --- */
+      .workflow {
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+        margin: 1.5rem 0;
+      }
+      .workflow-step {
+        display: flex;
+        align-items: flex-start;
+        gap: 1rem;
+        padding: 0.75rem 0;
+      }
+      .workflow-step .step-num {
+        flex-shrink: 0;
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        background: var(--accent-subtle);
+        border: 1px solid var(--border-accent);
+        color: var(--accent);
+        font-weight: 700;
+        font-size: 0.78rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .workflow-step p {
+        margin: 0;
+        font-size: 0.92rem;
+        color: var(--text-muted);
+        padding-top: 3px;
+      }
+
+      /* --- Separator --- */
+      .section-divider {
+        border: none;
+        height: 1px;
+        background: var(--border);
+        margin: 4rem 0;
+      }
+
+      /* --- Pull quote --- */
+      blockquote {
+        border-left: 3px solid var(--accent);
+        padding: 0.75rem 0 0.75rem 1.25rem;
+        margin: 1.5rem 0;
+        font-size: 1.05rem;
+        font-weight: 500;
+        color: var(--text);
+        font-style: italic;
+      }
+
+      /* --- Feature grid --- */
+      .feature-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+        margin: 1.5rem 0;
+      }
+      @media (max-width: 640px) {
+        .feature-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      .feature-card {
+        background: var(--bg-surface);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 1.25rem;
+      }
+      .feature-card .feature-icon {
+        font-size: 1.4rem;
+        margin-bottom: 0.5rem;
+      }
+      .feature-card .feature-title {
+        font-weight: 700;
+        font-size: 0.9rem;
+        color: var(--text);
+        margin-bottom: 0.4rem;
+      }
+      .feature-card p {
+        font-size: 0.85rem;
+        color: var(--text-muted);
+        margin: 0;
+      }
+      .feature-card h4 {
+        font-size: 0.9rem;
+        font-weight: 700;
+        color: var(--accent);
+        margin-bottom: 0.6rem;
+      }
+      .feature-card ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+      }
+      .feature-card ul li {
+        font-size: 0.8rem;
+        color: var(--text-muted);
+        padding: 0.2rem 0;
+        line-height: 1.5;
+      }
+      .feature-card ul li code {
+        color: var(--cyan);
+        font-size: 0.75rem;
+      }
+
+      /* --- Lifecycle flow --- */
+      .lifecycle-flow {
+        display: flex;
+        gap: 0;
+        margin: 1.5rem 0;
+        overflow-x: auto;
+        padding-bottom: 0.5rem;
+      }
+      .lifecycle-step {
+        flex: 1;
+        min-width: 120px;
+        text-align: center;
+        position: relative;
+        padding: 0 0.5rem;
+      }
+      .lifecycle-step::after {
+        content: '\2192';
+        position: absolute;
+        right: -6px;
+        top: 14px;
+        color: var(--text-subtle);
+        font-size: 1rem;
+      }
+      .lifecycle-step:last-child::after {
+        content: '';
+      }
+      .lifecycle-step .step-circle {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        margin: 0 auto 0.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.9rem;
+        font-weight: 700;
+      }
+      .lifecycle-step .step-label {
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+      }
+      .lifecycle-step .step-desc {
+        font-size: 0.72rem;
+        color: var(--text-subtle);
+        margin-top: 0.2rem;
+      }
+      .lc-ideate .step-circle {
+        background: var(--purple-subtle, rgba(167, 139, 250, 0.15));
+        color: var(--purple);
+      }
+      .lc-design .step-circle {
+        background: var(--cyan-subtle);
+        color: var(--cyan);
+      }
+      .lc-build .step-circle {
+        background: var(--accent-subtle);
+        color: var(--accent);
+      }
+      .lc-test .step-circle {
+        background: var(--amber-subtle);
+        color: var(--amber);
+      }
+      .lc-deploy .step-circle {
+        background: var(--green-subtle);
+        color: var(--green);
+      }
+      .lc-evolve .step-circle {
+        background: var(--red-subtle);
+        color: var(--red);
+      }
+      .lc-ideate .step-label {
+        color: var(--purple);
+      }
+      .lc-design .step-label {
+        color: var(--cyan);
+      }
+      .lc-build .step-label {
+        color: var(--accent);
+      }
+      .lc-test .step-label {
+        color: var(--amber);
+      }
+      .lc-deploy .step-label {
+        color: var(--green);
+      }
+      .lc-evolve .step-label {
+        color: var(--red);
+      }
+
+      /* --- Construct list --- */
+      .construct-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 0.75rem;
+        margin: 1.5rem 0;
+      }
+      @media (max-width: 768px) {
+        .construct-grid {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+      @media (max-width: 480px) {
+        .construct-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      .construct-item {
+        background: var(--bg-surface);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 0.75rem 1rem;
+      }
+      .construct-item .construct-name {
+        font-family: var(--font-mono);
+        font-size: 0.78rem;
+        font-weight: 600;
+        color: var(--accent);
+      }
+      .construct-item .construct-desc {
+        font-size: 0.75rem;
+        color: var(--text-muted);
+        margin-top: 0.3rem;
+        line-height: 1.5;
+      }
+      .construct-item .construct-desc code {
+        color: var(--cyan);
+        font-size: 0.72rem;
+      }
+
+      /* --- Footer --- */
+      footer {
+        text-align: center;
+        padding: 3rem 2rem;
+        border-top: 1px solid var(--border);
+        color: var(--text-subtle);
+        font-size: 0.82rem;
+      }
+    </style>
+  </head>
+  <body>
+    <nav>
+      <div class="nav-inner">
+        <span class="logo">Kore.ai &middot; ABL</span>
+        <a href="#version-technical" class="active" onclick="switchTab('technical')">Technical</a>
+        <a href="#version-executive" onclick="switchTab('executive')">Executive</a>
+        <a href="#version-narrative" onclick="switchTab('narrative')">Narrative</a>
+        <a href="#depth">ABL in Depth</a>
+        <a href="#competitors">Competitors</a>
+        <a href="#evolution">Evolution</a>
+        <a href="#rebuttals">Rebuttals</a>
+        <a
+          href="../ABL_PLATFORM_COMPETITIVE_ANALYSIS_DARK.html"
+          style="
+            color: var(--green);
+            border-left: 1px solid var(--border);
+            margin-left: 8px;
+            padding-left: 16px;
+          "
+          >Competitive Matrix</a
+        >
+      </div>
+    </nav>
+
+    <!-- ========== HERO ========== -->
+    <section class="hero">
+      <div class="badge">Thought Leadership &middot; Draft</div>
+      <h1>The Third Wave: Why Programmable Platforms Will Win the Agent Era</h1>
+      <p class="subtitle">
+        ABL is Kore.ai's next-generation programmable agent platform. Kore.ai has both a legacy
+        intent-based platform and a production multi-agent system with reasoning-first architecture
+        already deployed at enterprise scale. ABL is the purpose-built next generation &mdash;
+        informed by those production deployments &mdash; that gives proven enterprise capabilities a
+        compilable DSL and deterministic runtime.
+      </p>
+      <p class="meta">
+        February 19, 2026 &middot; Three audience versions &middot; Competitive analysis included
+      </p>
+    </section>
+
+    <!-- ========== VERSION TABS ========== -->
+    <div class="tabs-container">
+      <div class="tabs">
+        <button class="tab active" onclick="switchTab('technical')">Technical</button>
+        <button class="tab" onclick="switchTab('executive')">Executive</button>
+        <button class="tab" onclick="switchTab('narrative')">Narrative</button>
+      </div>
+    </div>
+
+    <div class="content">
+      <!-- ==================== VERSION 1: TECHNICAL ==================== -->
+      <div id="version-technical" class="tab-panel active">
+        <h2>Beyond No-Code, Beyond Frameworks</h2>
+        <p style="font-size: 1.05rem; color: var(--text)">
+          The Case for Programmable Agent Platforms
+        </p>
+
+        <h3>No-Code Hit a Wall</h3>
+
+        <p>
+          No-code agent builders promised democratization. For linear chatbots &mdash; single-turn
+          Q&amp;A, simple FAQ routing &mdash; they delivered. But enterprise agent development
+          isn&rsquo;t linear.
+        </p>
+
+        <p>
+          Real agents require <strong>threaded conversations</strong> where context accumulates
+          across dozens of turns. They require <strong>agent loops</strong> &mdash; cycles of
+          reasoning, tool execution, evaluation, and re-planning that repeat until a goal is met or
+          a constraint fires. They require <strong>guardrails</strong> that enforce behavior
+          boundaries: token budgets, topic restrictions, PII redaction, escalation triggers. They
+          require <strong>context passing</strong> between agents in a delegation chain &mdash; a
+          supervisor hands off to a specialist, the specialist completes work, context flows back
+          up.
+        </p>
+
+        <p>
+          None of this is expressible in a drag-and-drop canvas. No-code platforms don&rsquo;t have
+          primitives for orchestration patterns. They don&rsquo;t distinguish between a
+          <code>handoff</code> (transfer control), a <code>delegate</code> (retain control, await
+          result), and an <code>escalate</code> (break out of the current loop to a human). They
+          can&rsquo;t encode that a gather loop should retry extraction three times with increasing
+          specificity before asking the user to rephrase. They can&rsquo;t express that an agent
+          operating in <code>reasoning</code> mode should have access to tools but be constrained by
+          a <code>routing_only</code> directive that prevents it from taking actions directly.
+        </p>
+
+        <p>
+          The ceiling isn&rsquo;t high enough. It never will be. The complexity of production agent
+          systems exceeds what visual abstractions can represent.
+        </p>
+
+        <h3>Pro-Code: Maximum Flexibility, Minimum Leverage</h3>
+
+        <p>
+          So engineering teams go pro-code. LangChain, LlamaIndex, custom Python orchestration, raw
+          API calls to Claude or GPT.
+        </p>
+
+        <p>They get flexibility. They also get to solve every platform problem themselves:</p>
+
+        <p>
+          <strong>Session state management</strong> &mdash; How do you persist a multi-turn threaded
+          conversation across distributed pods? How do you rehydrate a session that was last active
+          on a different server? How do you handle concurrent messages to the same session?
+        </p>
+
+        <p>
+          <strong>Orchestration patterns</strong> &mdash; How do you implement supervisor routing
+          where one agent triages and delegates to specialists? How do you manage delegation chains
+          where Agent A calls Agent B which calls external Agent C via A2A protocol, and context
+          needs to flow through the entire chain and back?
+        </p>
+
+        <p>
+          <strong>Agent loops with guardrails</strong> &mdash; How do you implement a reasoning loop
+          where the agent plans, executes tools, observes results, and re-plans &mdash; but with
+          hard limits on iterations, token spend, and wall-clock time? How do you add constraints
+          like &ldquo;never reveal pricing below tier 2 verification&rdquo; that are enforced at the
+          engine level, not hoped for in the prompt?
+        </p>
+
+        <p>
+          <strong>Context passing and memory</strong> &mdash; How do you pass structured context
+          between agents in a handoff? How do you implement sliding conversation windows that keep
+          recent context but don&rsquo;t blow up LLM token limits? How do you carry caller identity
+          &mdash; tenant, verification tier, channel, permissions &mdash; through every tool call
+          and trace event?
+        </p>
+
+        <p>
+          <strong>Threaded conversations</strong> &mdash; How do you manage branching conversation
+          flows where a verification side-thread runs in parallel with the main conversation, and
+          the results merge back? How do you handle cross-channel continuity where the same verified
+          user moves from web chat to WhatsApp and their conversation context follows?
+        </p>
+
+        <p>
+          Every team rebuilds these. Different abstractions, different bugs, different operational
+          characteristics. The agent logic that differentiates the product &mdash; the actual
+          business value &mdash; gets a fraction of the engineering effort.
+        </p>
+
+        <h3>The Programmable Platform: Right Primitives, Right Level</h3>
+
+        <p>
+          ABL (Agent Blueprint Language) is Kore.ai&rsquo;s next-generation platform &mdash; a
+          domain-specific language with a production runtime purpose-built for agent development.
+          It&rsquo;s not a startup&rsquo;s first guess at what enterprises need. Kore.ai already has
+          both an intent-based platform deployed at Fortune 500 scale and a production multi-agent
+          system with reasoning-first architecture. ABL gives that experience a compilable,
+          deterministic foundation.
+        </p>
+
+        <p>
+          <strong>The most differentiating capability</strong>: ABL is a
+          <strong>powerful multi-agent system architecture</strong> where multiple agents work in
+          tandem to fulfill complex workflows. Supervisors route by intent and context. Agents
+          delegate to specialists, hand off control with typed context passing, escalate to humans
+          with priority rules, and fan out to parallel sub-agents &mdash; all expressed as
+          first-class constructs in the DSL. Add constraints and guardrails enforced at the engine
+          level, entity collection with validation, conditional orchestration based on runtime
+          context, and you have production-grade agent systems in 50&ndash;200 lines of code. Where
+          specific agents need flow-driven controlled steps &mdash; voice IVR, identity
+          verification, high-volume transactional flows &mdash; ABL provides a scripted mode option
+          with deterministic state machines, NER-based extraction, and sub-500ms latency. Both modes
+          coexist in the same system: one DSL, one runtime, one deployment.
+        </p>
+
+        <p>
+          ABL provides <strong>the primitives that agent systems actually need</strong> as
+          first-class constructs:
+        </p>
+
+        <pre><code><span class="kw">agent</span> <span class="type">Support_Supervisor</span> {
+  <span class="prop">model</span>: <span class="str">"claude-sonnet-4-6"</span>
+  <span class="prop">execution</span>: { <span class="prop">mode</span>: <span class="str">"reasoning"</span>, <span class="prop">max_tool_iterations</span>: <span class="num">10</span> }
+
+  <span class="kw">routing</span> {
+    <span class="prop">rules</span>: [
+      { <span class="prop">when</span>: <span class="str">"billing question"</span>, <span class="prop">delegate_to</span>: <span class="str">"Billing_Agent"</span> },
+      { <span class="prop">when</span>: <span class="str">"technical issue"</span>, <span class="prop">delegate_to</span>: <span class="str">"Tech_Agent"</span> },
+      { <span class="prop">when</span>: <span class="str">"identity verification needed"</span>, <span class="prop">delegate_to</span>: <span class="str">"Verification_Agent"</span> }
+    ]
+    <span class="prop">fallback</span>: <span class="fn">escalate</span>(<span class="str">"No specialist matched"</span>)
+  }
+
+  <span class="prop">constraints</span>: [
+    <span class="str">"Never share internal pricing tiers"</span>,
+    <span class="str">"Escalate if user expresses legal intent"</span>
+  ]
+
+  <span class="kw">coordination</span> {
+    <span class="prop">handoffs</span>: [
+      { <span class="prop">target</span>: <span class="str">"Billing_Agent"</span>, <span class="prop">context_pass</span>: [<span class="str">"account_id"</span>, <span class="str">"tier"</span>, <span class="str">"history"</span>] },
+      { <span class="prop">target</span>: <span class="str">"Tech_Agent"</span>, <span class="prop">context_pass</span>: [<span class="str">"device_info"</span>, <span class="str">"error_logs"</span>] }
+    ]
+    <span class="prop">external_agents</span>: [
+      { <span class="prop">protocol</span>: <span class="str">"a2a"</span>, <span class="prop">endpoint</span>: <span class="str">"$PARTNER_AGENT_URL"</span>, <span class="prop">auth</span>: <span class="str">"oauth2"</span> }
+    ]
+  }
+}
+
+<span class="kw">agent</span> <span class="type">Billing_Agent</span> {
+  <span class="prop">execution</span>: { <span class="prop">mode</span>: <span class="str">"scripted"</span> }
+
+  <span class="kw">step</span> <span class="fn">verify_identity</span> {
+    <span class="prop">prompt</span>: <span class="str">"I need to verify your identity before accessing billing."</span>
+    <span class="kw">gather</span> {
+      <span class="kw">field</span> <span class="fn">account_email</span> { <span class="prop">type</span>: <span class="type">email</span>, <span class="prop">required</span>: <span class="num">true</span> }
+      <span class="kw">field</span> <span class="fn">verification_code</span> { <span class="prop">type</span>: <span class="type">string</span>, <span class="prop">required</span>: <span class="num">true</span>, <span class="prop">validation</span>: <span class="str">"6 digits"</span> }
+    }
+    <span class="prop">guardrails</span>: { <span class="prop">max_attempts</span>: <span class="num">3</span>, <span class="prop">on_failure</span>: <span class="fn">escalate</span>(<span class="str">"Verification failed"</span>) }
+    <span class="kw">transition</span> -> <span class="fn">lookup_account</span> <span class="kw">when</span> <span class="fn">all_collected</span>
+  }
+
+  <span class="kw">step</span> <span class="fn">lookup_account</span> {
+    <span class="prop">call</span>: <span class="str">"BillingAPI.getAccount"</span>
+    <span class="prop">context_pass</span>: { <span class="prop">email</span>: <span class="str">"$account_email"</span>, <span class="prop">tenant</span>: <span class="str">"$tenantId"</span> }
+    <span class="prop">on_error</span>: <span class="fn">respond</span>(<span class="str">"I couldn't access your account. Let me connect you with a specialist."</span>)
+    <span class="kw">transition</span> -> <span class="fn">handle_request</span>
+  }
+}</code></pre>
+
+        <p>This compiles to an intermediate representation. The runtime handles:</p>
+
+        <ul>
+          <li>
+            <strong>Threaded conversations</strong>: Multi-turn state management with sliding
+            windows, cross-channel context resumption, session rehydration across pods
+          </li>
+          <li>
+            <strong>Agent loops</strong>: Configurable reasoning cycles with
+            <code>max_tool_iterations</code>, token budgets, and wall-clock timeouts &mdash;
+            enforced by the engine, not the prompt
+          </li>
+          <li>
+            <strong>Guardrails and constraints</strong>: Declared per-agent, evaluated at the engine
+            level before and after each LLM call &mdash; not embedded in system prompts and hoped
+            for
+          </li>
+          <li>
+            <strong>Orchestration patterns</strong>: Native <code>handoff</code>,
+            <code>delegate</code>, <code>escalate</code>, <code>complete</code> &mdash; with
+            structured context passing through each transition
+          </li>
+          <li>
+            <strong>External agent integration</strong>: A2A protocol support for federating with
+            agents outside the platform, with authentication and context marshaling
+          </li>
+          <li>
+            <strong>Identity and compliance</strong>: Caller context propagation, tenant isolation,
+            PII encryption, audit trails &mdash; as platform guarantees, not application code
+          </li>
+        </ul>
+
+        <p>
+          The developer writes <strong>50&ndash;200 lines of ABL</strong> for a sophisticated
+          multi-agent system. The platform provides the other <strong>15,000 lines</strong> of
+          distributed runtime, session management, orchestration engine, and compliance
+          infrastructure.
+        </p>
+
+        <p>
+          <strong>What this means in practice</strong>: Kore.ai already powers large-scale
+          enterprise customer service deployments achieving 80%+ automation &mdash; not just
+          deflection, but end-to-end resolution. ABL continues to support those outcomes while
+          dramatically expanding what&rsquo;s possible: new use cases ship in days instead of
+          months, existing agents upgrade in hours instead of weeks. The platform delivers
+          engine-level compliance guarantees, multi-agent orchestration, and data sovereignty that
+          managed vendors can&rsquo;t match.
+        </p>
+
+        <h3>AI That Reasons and Generates Code: The Multiplier</h3>
+
+        <p>Here&rsquo;s where the model shifts fundamentally.</p>
+
+        <p>
+          Modern AI &mdash; Claude, specifically &mdash; doesn&rsquo;t autocomplete code. It&rsquo;s
+          a
+          <strong
+            >reasoning engine that designs architectures, generates production code across dozens of
+            files, writes comprehensive test suites, and iterates on compiler feedback</strong
+          >. When you point it at a codebase, it reads, understands patterns, and generates code
+          that follows existing conventions.
+        </p>
+
+        <p>The question is: what should it generate <em>into</em>?</p>
+
+        <p>
+          When AI reasons about and generates raw Python orchestration code, it&rsquo;s operating in
+          an unbounded space. There are infinite ways to implement session management, infinite ways
+          to wire agent delegation, infinite ways to subtly break tenant isolation. The AI is
+          powerful, but the target is too wide.
+        </p>
+
+        <p>
+          When AI reasons about and generates ABL, it&rsquo;s operating in a
+          <strong>constrained, well-defined domain</strong>:
+        </p>
+        <ul>
+          <li>The language has a grammar. Mistakes are caught at compile time.</li>
+          <li>
+            Orchestration patterns are named constructs (<code>handoff</code>,
+            <code>delegate</code>, <code>escalate</code>), not ad-hoc implementations.
+          </li>
+          <li>Guardrails and constraints are declarations, not code to invent.</li>
+          <li>
+            Agent loops have deterministic runtime behavior for a given IR &mdash; there&rsquo;s no
+            ambiguity about how a <code>gather</code> loop with
+            <code>max_attempts: 3</code> behaves.
+          </li>
+          <li>
+            Context passing is typed and validated &mdash; the AI can&rsquo;t accidentally drop
+            tenant identity from a delegation chain.
+          </li>
+        </ul>
+
+        <blockquote>
+          A programmable platform gives AI a structured target that maximizes the ratio of correct
+          code generated to total code generated.
+        </blockquote>
+
+        <p>The workflow becomes:</p>
+
+        <div class="workflow">
+          <div class="workflow-step">
+            <div class="step-num">1</div>
+            <p>Developer describes the agent system in natural language</p>
+          </div>
+          <div class="workflow-step">
+            <div class="step-num">2</div>
+            <p>
+              AI reasons about the architecture &mdash; which agents, which orchestration patterns,
+              what constraints, what guardrails
+            </p>
+          </div>
+          <div class="workflow-step">
+            <div class="step-num">3</div>
+            <p>AI generates ABL definitions, tool bindings, test cases</p>
+          </div>
+          <div class="workflow-step">
+            <div class="step-num">4</div>
+            <p>Platform compiles, validates, reports errors at compile time</p>
+          </div>
+          <div class="workflow-step">
+            <div class="step-num">5</div>
+            <p>AI iterates on failures with precise compiler feedback</p>
+          </div>
+          <div class="workflow-step">
+            <div class="step-num">6</div>
+            <p>
+              Platform deploys with production guarantees (session management, tracing, compliance)
+            </p>
+          </div>
+        </div>
+
+        <p>
+          This isn&rsquo;t AI replacing developers. It&rsquo;s AI operating at the right level of
+          abstraction &mdash; where its reasoning capabilities align with the domain&rsquo;s
+          structure. The platform constrains the problem space. The AI fills it efficiently.
+        </p>
+
+        <p>
+          ABL takes this further with two built-in capabilities: <strong>Arch</strong> &mdash; a
+          powerful AI that is contextually aware of everything you&rsquo;ve designed (agents,
+          handoffs, routing, tools, constraints) and programs the entire platform through natural
+          language conversation. You don&rsquo;t need to learn ABL &mdash; you talk to Arch, and it
+          designs topologies, generates complete ABL, creates test cases, suggests improvements, and
+          deploys. Plus <strong>MCP debug tools</strong> that connect Claude Code directly to the
+          running runtime &mdash; 18 tools for interactive trace analysis, state inspection, flow
+          visualization, and automated diagnostics. And you can use
+          <strong>your own AI</strong> (OpenAI, Claude, Gemini Pro) to directly interact with the
+          platform &mdash; update agents, design new ones, program behavior &mdash; through the same
+          structured APIs. (See <a href="#depth">ABL in Depth</a> below.)
+        </p>
+
+        <h3>The Math</h3>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th></th>
+                <th>No-Code</th>
+                <th>Pro-Code (frameworks)</th>
+                <th>Programmable Platform + AI</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Threaded conversations</strong></td>
+                <td>Basic</td>
+                <td>Build from scratch</td>
+                <td>Platform primitive</td>
+              </tr>
+              <tr>
+                <td><strong>Agent loops with guardrails</strong></td>
+                <td>Not possible</td>
+                <td>Custom implementation</td>
+                <td>Declared, engine-enforced</td>
+              </tr>
+              <tr>
+                <td><strong>Multi-agent orchestration</strong></td>
+                <td>Simple routing</td>
+                <td>Custom wiring</td>
+                <td><code>handoff</code> / <code>delegate</code> / <code>escalate</code></td>
+              </tr>
+              <tr>
+                <td><strong>External agent federation</strong></td>
+                <td>No</td>
+                <td>Custom protocol handling</td>
+                <td>A2A protocol built in</td>
+              </tr>
+              <tr>
+                <td><strong>Context passing</strong></td>
+                <td>Limited</td>
+                <td>Manual serialization</td>
+                <td>Structured, type-safe</td>
+              </tr>
+              <tr>
+                <td><strong>Constraints</strong></td>
+                <td>Prompt-based (unreliable)</td>
+                <td>Prompt-based (unreliable)</td>
+                <td>Engine-level enforcement</td>
+              </tr>
+              <tr>
+                <td><strong>Compliance</strong></td>
+                <td>Vendor-dependent</td>
+                <td>Build from scratch</td>
+                <td>Platform guarantee</td>
+              </tr>
+              <tr>
+                <td><strong>AI code generation target</strong></td>
+                <td>Not applicable (visual)</td>
+                <td>Unbounded (high error rate)</td>
+                <td>Structured DSL (high accuracy)</td>
+              </tr>
+              <tr>
+                <td><strong>Time to production agent</strong></td>
+                <td>Hours (simple only)</td>
+                <td>Weeks&ndash;months</td>
+                <td>Hours&ndash;days</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <p>
+          The teams that will build the most capable agent systems won&rsquo;t have the most
+          engineers. They&rsquo;ll have a platform with the right primitives and AI that can reason
+          about and program it.
+        </p>
+      </div>
+
+      <!-- ==================== VERSION 2: EXECUTIVE ==================== -->
+      <div id="version-executive" class="tab-panel">
+        <h2>The Platform Shift</h2>
+        <p style="font-size: 1.05rem; color: var(--text)">
+          Why the Agent Development Market Is About to Consolidate
+        </p>
+
+        <h3>We Built Three Generations. The Third One Changes Everything.</h3>
+
+        <p>
+          Kore.ai has been in the enterprise AI agent market longer than most companies in this
+          space have existed. We didn&rsquo;t arrive at our current position by reading market
+          reports. We built through three generations, each one revealing what the next one needed:
+        </p>
+
+        <div class="callout amber">
+          <div class="callout-title">Generation 1: Intent-Based Platform</div>
+          <p>
+            We built it. Deployed at Fortune 500 scale. Powered millions of conversations. Learned
+            where it hit the ceiling: no reasoning loops, no multi-agent coordination, rigid
+            conversation models.
+          </p>
+        </div>
+
+        <div class="callout red">
+          <div class="callout-title">Generation 2: Multi-Agent Reasoning System</div>
+          <p>
+            We built it. Shipped reasoning-first agents with tool execution, supervisors, delegation
+            chains, and production orchestration. Proved that the multi-agent paradigm works at
+            enterprise scale. But this generation wasn&rsquo;t built to harness the new wave of AI
+            that can reason deeply, generate code, and help you design and build agents. It lacked a
+            structured target for AI code generation, compile-time guarantees, and engine-level
+            constraint enforcement.
+          </p>
+        </div>
+
+        <div class="callout green">
+          <div class="callout-title">Generation 3: ABL (Agent Blueprint Language)</div>
+          <p>
+            A compilable domain-specific language with a deterministic runtime. Not a pivot. A
+            progression. Each generation proved something. ABL makes it programmable, auditable, and
+            AI-native.
+          </p>
+        </div>
+
+        <p>
+          <strong>Why this matters to you</strong>: Decagon ($4.5B) and Sierra ($10B) are building
+          their first-generation platforms. We&rsquo;re shipping our third. The hard-won lessons
+          from real enterprise deployments are baked into every ABL construct.
+        </p>
+
+        <h3>The Market: Three Eras in 18 Months</h3>
+
+        <p>The broader market has moved through the same three phases we lived through:</p>
+
+        <p>
+          <strong>Era 1: No-Code (2023&ndash;2024)</strong> &mdash; Platforms like Voiceflow and
+          Botpress promised agents without engineering. Worked for FAQ bots. Failed for multi-step
+          transactions, cross-department coordination, threaded conversations across channels. The
+          abstraction was wrong.
+        </p>
+
+        <p>
+          <strong>Era 2: Pro-Code (2024&ndash;2025)</strong> &mdash; LangChain, CrewAI, custom
+          orchestration. Full control, no leverage. Each team spending 80% of effort on platform
+          concerns, 20% on business value. Slow, expensive, fragile.
+        </p>
+
+        <p>
+          <strong>Era 3: Programmable Platforms (2025+)</strong> &mdash; Purpose-built platforms
+          with domain-specific languages. This is where the market consolidates.
+        </p>
+
+        <h3>What ABL Delivers &mdash; In Outcomes</h3>
+
+        <p>
+          ABL (Agent Blueprint Language) is Kore.ai&rsquo;s next-generation programmable platform
+          &mdash; the foundation for building the next generation of agents across
+          <strong>customer service</strong>, <strong>employee productivity workflows</strong>, and
+          <strong>process automation</strong>. Without ABL, you cannot get there. Kore.ai already
+          achieves <strong>80%+ automation</strong> across large-scale enterprise deployments
+          &mdash; with real case studies, real volumes, real outcomes. ABL continues to deliver
+          those results while dramatically accelerating how fast you can
+          <strong>expand into new use cases</strong> and <strong>upgrade existing ones</strong>. Add
+          engine-level compliance guarantees and <strong>full data sovereignty</strong> &mdash; your
+          infrastructure, your keys, your jurisdiction.
+        </p>
+
+        <p>
+          The depth behind those outcomes &mdash; Kore.ai has been serving Fortune 500 enterprises
+          for years. ABL is what we built when that experience showed us exactly what a compilable,
+          deterministic runtime needs:
+        </p>
+
+        <div class="persona-grid">
+          <div class="persona-card">
+            <div class="role">For the CTO</div>
+            <p>
+              A single platform that handles session management, distributed orchestration, identity
+              verification, contact management, compliance (GDPR, PCI, SOC 2), and multi-tenant
+              isolation. Your teams write agent logic. The platform handles production concerns.
+            </p>
+          </div>
+          <div class="persona-card">
+            <div class="role">For the VP of Engineering</div>
+            <p>
+              Agent definitions are 50&ndash;200 lines of structured, auditable code &mdash; not
+              15,000 lines of custom orchestration. Multiple orchestration patterns are built-in
+              primitives, not engineering projects. New agents ship in days, not months. The
+              platform includes <strong>Arch</strong> &mdash; an AI that is contextually aware of
+              everything in your project and programs the platform through natural language. Your
+              team doesn&rsquo;t need to learn the DSL &mdash; they describe what they need, and
+              Arch designs, generates, tests, and deploys. You can also use your own AI (OpenAI,
+              Claude, Gemini Pro) to interact with the platform directly.
+            </p>
+          </div>
+          <div class="persona-card">
+            <div class="role">For the Head of Product</div>
+            <p>
+              Agent behavior is readable by non-engineers. Product managers can review an ABL
+              definition and understand what the agent does, what constraints it operates under, and
+              what happens when things go wrong.
+            </p>
+          </div>
+          <div class="persona-card">
+            <div class="role">For the CISO</div>
+            <p>
+              Compliance is a platform guarantee, not an application responsibility. Tenant
+              isolation at every data path. PII encryption. Audit trails on every operation. GDPR
+              cascade deletes. These are properties of the runtime.
+            </p>
+          </div>
+        </div>
+
+        <h3>The AI Multiplier</h3>
+
+        <p>
+          The most significant strategic shift:
+          <strong
+            >AI that can reason about systems and generate code is transforming who can build what
+            and how fast.</strong
+          >
+        </p>
+
+        <p>
+          This isn&rsquo;t autocomplete. AI systems like Claude reason about architecture, design
+          multi-agent orchestration with proper <strong>context passing</strong> and
+          <strong>delegation chains</strong>, generate code that implements
+          <strong>agent loops</strong> with <strong>guardrails</strong>, and iterate on compiler
+          feedback.
+        </p>
+
+        <p>But the impact depends entirely on what the AI generates <em>into</em>:</p>
+        <ul>
+          <li>
+            Generating into raw Python: high variance, unpredictable quality, requires deep review
+          </li>
+          <li>
+            Generating into ABL: structured domain, compile-time validation, predictable behavior,
+            deterministic runtime guarantees
+          </li>
+        </ul>
+
+        <p>
+          When your platform has a well-defined language, AI becomes a
+          <strong>force multiplier on your agent development capacity</strong>. One architect
+          working with AI that reasons and generates code can design and ship agent systems that
+          previously required a team of five working for a quarter.
+        </p>
+
+        <p>
+          ABL embeds this directly into the platform: <strong>Arch</strong> &mdash; a contextually
+          aware AI that programs the entire platform through natural language &mdash; handles
+          design-through-deploy. <strong>MCP debug tools</strong> let AI debug running agents from
+          the developer&rsquo;s editor. And the platform is open to <strong>your own AI</strong>:
+          OpenAI, Claude, Gemini Pro, or any frontier model can directly interact with ABL to update
+          agents, design topologies, and program behavior. The full loop is AI-assisted at every
+          stage, with the AI provider of your choice.
+        </p>
+
+        <h3>The Competitive Calculus</h3>
+
+        <div class="options">
+          <div class="option-card">
+            <div class="option-label">Option A: No-Code</div>
+            <p>
+              Fast start, hard ceiling. Your agents will be simpler than your competitors&rsquo;.
+              You&rsquo;ll hit the wall when you need real orchestration. Migration off no-code is
+              expensive.
+            </p>
+          </div>
+          <div class="option-card">
+            <div class="option-label">Option B: Pro-Code</div>
+            <p>
+              No ceiling, no floor. Your engineering team spends months building infrastructure
+              before shipping a single agent. Every agent is a custom project.
+            </p>
+          </div>
+          <div class="option-card">
+            <div class="option-label">Option C: Managed Vendor (Sierra)</div>
+            <p>
+              Premium service, fast first deployment. But: your conversations flow through their
+              infrastructure, your agent logic lives in their ecosystem, your roadmap depends on
+              their priorities. You&rsquo;re buying a vendor relationship, not building a
+              capability.
+            </p>
+          </div>
+          <div class="option-card highlight">
+            <div class="option-label">Option D: Programmable Platform (ABL)</div>
+            <p>
+              Fast start, high ceiling. AI amplifies development speed. Critically: you own the
+              capability. Agent definitions are code in your repository. The runtime deploys on your
+              infrastructure. You control your AI agent stack.
+            </p>
+          </div>
+        </div>
+
+        <h3>The ROI Case</h3>
+
+        <p>The comparison for a mid-size enterprise expanding agent automation:</p>
+
+        <table style="width: 100%; border-collapse: collapse; margin: 1.5rem 0; font-size: 0.9rem">
+          <thead>
+            <tr style="border-bottom: 2px solid var(--border)">
+              <th style="text-align: left; padding: 10px; color: var(--text-muted)"></th>
+              <th style="text-align: left; padding: 10px; color: var(--text-muted)">Pro-Code</th>
+              <th style="text-align: left; padding: 10px; color: var(--text-muted)">
+                Managed Vendor
+              </th>
+              <th style="text-align: left; padding: 10px; color: var(--accent)">ABL Platform</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr style="border-bottom: 1px solid var(--border)">
+              <td style="padding: 10px">Team size</td>
+              <td style="padding: 10px">Large engineering team</td>
+              <td style="padding: 10px">Small team + vendor fees</td>
+              <td style="padding: 10px; color: var(--green)">Small team</td>
+            </tr>
+            <tr style="border-bottom: 1px solid var(--border)">
+              <td style="padding: 10px">Time to first production agent</td>
+              <td style="padding: 10px">Months (infrastructure first)</td>
+              <td style="padding: 10px">Weeks (vendor-managed)</td>
+              <td style="padding: 10px; color: var(--green)">Weeks (platform handles infra)</td>
+            </tr>
+            <tr style="border-bottom: 1px solid var(--border)">
+              <td style="padding: 10px">Expanding to new use cases</td>
+              <td style="padding: 10px">Each agent is a new project</td>
+              <td style="padding: 10px">Vendor roadmap dependent</td>
+              <td style="padding: 10px; color: var(--green)">
+                Fast &mdash; platform primitives + Arch
+              </td>
+            </tr>
+            <tr style="border-bottom: 1px solid var(--border)">
+              <td style="padding: 10px">Data sovereignty</td>
+              <td style="padding: 10px">Full control</td>
+              <td style="padding: 10px; color: var(--red)">Vendor-dependent</td>
+              <td style="padding: 10px; color: var(--green)">Full control</td>
+            </tr>
+            <tr>
+              <td style="padding: 10px">Switching cost</td>
+              <td style="padding: 10px">Low (own code)</td>
+              <td style="padding: 10px; color: var(--red)">High (vendor lock-in)</td>
+              <td style="padding: 10px; color: var(--green)">Low (own code + DSL)</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <p>
+          <strong>The key metric</strong>: Time to implement new use cases and upgrade existing ones
+          &mdash; across customer service, employee productivity, and process automation.
+          ABL&rsquo;s platform primitives eliminate the infrastructure work that dominates pro-code
+          projects, while giving you ownership and control that managed vendors can&rsquo;t offer.
+          Kore.ai customers already achieve 80%+ automation &mdash; ABL makes it faster to reach
+          those outcomes and expand into new domains.
+        </p>
+
+        <h3>Migration Path: Weeks, Not Months</h3>
+
+        <p>
+          Migration is fast because ABL already speaks your language. ABL natively supports
+          controlled flows, intent-based routing, NER models, and the same conversation patterns
+          your existing agents use. You&rsquo;re not translating to a foreign system &mdash;
+          you&rsquo;re moving to a more powerful version of what you already have.
+        </p>
+
+        <div class="callout green">
+          <div class="callout-title">Auto-Migration</div>
+          <p>
+            Kore.ai will help you auto-migrate your current agents and bots to the new platform.
+            Existing agent configurations are analyzed and translated to equivalent ABL definitions
+            &mdash; not manually rewritten. The effort is weeks, not months.
+          </p>
+        </div>
+
+        <p>
+          <strong>Once on ABL, you choose how to evolve</strong>: Your agents are migrated and
+          running. Now upgrade them at your own pace:
+        </p>
+
+        <div class="options">
+          <div class="option-card">
+            <div class="option-label">Selectively Agentic</div>
+            <p>
+              Choose specific agents to upgrade with reasoning mode, fan-out and delegate patterns.
+              The rest continue running as controlled flows on a more powerful platform.
+            </p>
+          </div>
+          <div class="option-card">
+            <div class="option-label">Incrementally Agentic</div>
+            <p>
+              Upgrade agents one by one over time, adding reasoning, supervisor patterns, and
+              external federation as each use case demands.
+            </p>
+          </div>
+          <div class="option-card highlight">
+            <div class="option-label">Fully Agentic at Once</div>
+            <p>
+              Upgrade your entire portfolio to take full advantage of reasoning mode, multi-agent
+              orchestration, and AI-assisted development in one move.
+            </p>
+          </div>
+        </div>
+
+        <p>
+          <strong>What existing customers keep</strong>: All enterprise integrations, authentication
+          infrastructure, analytics pipelines, and operational knowledge. ABL doesn&rsquo;t replace
+          your infrastructure investment &mdash; it gives it a more powerful programming model.
+        </p>
+
+        <p>
+          <strong>What existing customers gain</strong>: AI that can reason about and help build
+          your agents (through Arch and BYOAI), compile-time validation, engine-level constraint
+          enforcement, multi-agent orchestration with typed context passing, delegation and fan-out
+          patterns, external agent federation, and a 50&ndash;200 line DSL that replaces
+          configuration screens. The platform enables the next generation of agents across customer
+          service, employee productivity, and process automation.
+        </p>
+
+        <h3>Change Management</h3>
+
+        <p>
+          <strong>For developers</strong>: You don&rsquo;t need to learn ABL. Arch programs the
+          platform through natural language. For those who want direct control, ABL is a DSL with
+          familiar constructs. Most developers productive within the first week.
+        </p>
+        <p>
+          <strong>For product managers</strong>: ABL is readable. PMs can review agent definitions
+          and understand behavior, constraints, and escalation paths.
+        </p>
+        <p>
+          <strong>For operations</strong>: Built-in monitoring, tracing, alerting. Standard
+          container-based deployment.
+        </p>
+        <p>
+          <strong>For leadership</strong>: Standardized platform with compile-time validation and
+          clear audit trails. Knowledge transfers between team members because definitions are
+          structured and readable.
+        </p>
+
+        <p>
+          The organizations that ship the most capable agents fastest will be on programmable
+          platforms. The ones outsourcing to managed vendors will ship quickly &mdash; until they
+          need something the vendor doesn&rsquo;t offer.
+        </p>
+      </div>
+
+      <!-- ==================== VERSION 3: NARRATIVE ==================== -->
+      <div id="version-narrative" class="tab-panel">
+        <h2>The Agents Won&rsquo;t Be Built in Boxes or in Blank Files</h2>
+
+        <p>
+          There&rsquo;s a quiet crisis in enterprise AI right now, and it has nothing to do with
+          model capabilities.
+        </p>
+
+        <p>
+          The models are extraordinary. Claude can reason through multi-step problems, generate
+          production code, maintain context across long interactions, use tools to interact with
+          external systems, and coordinate complex workflows. The reasoning layer is good and
+          getting better fast.
+        </p>
+
+        <p>
+          The crisis is in the <em>building</em> layer. How do you actually construct, deploy, and
+          operate AI agents at enterprise scale?
+        </p>
+
+        <p>
+          The industry has tried two answers. Both are failing for the same reason: they got the
+          level of abstraction wrong.
+        </p>
+
+        <h3>The No-Code Dead End</h3>
+
+        <p>
+          No-code agent platforms assumed that the hard part of building agents was writing code.
+          Remove the code, they reasoned, and everyone can build agents.
+        </p>
+
+        <p>They were wrong about what&rsquo;s hard.</p>
+
+        <p>
+          The hard part of building agents isn&rsquo;t syntax. It&rsquo;s
+          <em>behavior under constraints</em>. It&rsquo;s designing a system where:
+        </p>
+
+        <ul>
+          <li>
+            A supervisor agent triages incoming requests, delegates to specialist agents, and
+            handles the cases where specialists get stuck or need to escalate &mdash;
+            <strong>multiple orchestration patterns</strong> in a single system
+          </li>
+          <li>
+            Agents maintain <strong>threaded conversations</strong> &mdash; not single-turn Q&amp;A,
+            but extended interactions where context from turn 12 matters at turn 47
+          </li>
+          <li>
+            <strong>Agent loops</strong> &mdash; the fundamental cycle of think, act, observe,
+            re-plan &mdash; run within <strong>guardrails</strong>: iteration limits, token budgets,
+            topic boundaries, compliance <strong>constraints</strong> that the engine enforces, not
+            the prompt suggests
+          </li>
+          <li>
+            <strong>Context passes</strong> between agents in a delegation chain &mdash; identity,
+            permissions, conversation history, business state &mdash; carrying through handoffs,
+            delegations, and escalations without dropping critical information
+          </li>
+          <li>External agents participate in the orchestration through federation</li>
+          <li>
+            A user who starts on web chat and returns on WhatsApp picks up exactly where they left
+            off
+          </li>
+        </ul>
+
+        <p>
+          None of this fits in a flowchart. No-code isn&rsquo;t being disrupted. It&rsquo;s being
+          outgrown.
+        </p>
+
+        <h3>The Pro-Code Treadmill</h3>
+
+        <p>
+          So engineering teams went the other direction. Raw code. Full power. Python, TypeScript,
+          custom frameworks built on top of LLM APIs.
+        </p>
+
+        <p>
+          They can build anything. The question is whether they should be building
+          <em>everything</em>.
+        </p>
+
+        <p>
+          Every team building agents in pro-code is solving the same foundational problems from
+          scratch. These are platform problems. Solving them per-project is engineering waste. The
+          agent logic that differentiates the product &mdash; the actual business value &mdash; gets
+          maybe 20% of the effort. The other 80% goes to plumbing that&rsquo;s identical across
+          every agent system.
+        </p>
+
+        <blockquote>
+          Pro-code gives you infinite flexibility to solve problems that have already been solved.
+        </blockquote>
+
+        <h3>The Third Path: A Platform You Program</h3>
+
+        <p>
+          What if there were a <strong>domain-specific language</strong> built for exactly the
+          concepts agent developers work with?
+        </p>
+
+        <p>
+          Not a visual canvas. Not a blank file. A language where <strong>agent loops</strong>,
+          <strong>guardrails</strong>, <strong>orchestration patterns</strong>,
+          <strong>context passing</strong>, <strong>threaded conversations</strong>,
+          <strong>constraints</strong>, and <strong>external agent federation</strong> are
+          <strong>named, first-class constructs</strong> &mdash; that compiles to an intermediate
+          representation, and runs on an engine that handles the production concerns.
+        </p>
+
+        <p>
+          That&rsquo;s what ABL is. The foundation for building the next generation of agents across
+          <strong>customer service</strong>, <strong>employee productivity workflows</strong>, and
+          <strong>process automation</strong> &mdash; because without a platform like this, you
+          cannot get there. Not a startup&rsquo;s hypothesis about what enterprises might need. Not
+          a first-generation platform learning through customer pain. ABL is the third generation
+          &mdash; built by a team that deployed intent-based systems and reasoning-first multi-agent
+          systems in production, learned what works and what&rsquo;s missing, and engineered what
+          comes next: a DSL that validates at compile time, an IR that optimizes at build time, and
+          a runtime that enforces at execution time.
+        </p>
+
+        <pre><code><span class="kw">agent</span> <span class="type">Claims_Processor</span> {
+  <span class="prop">execution</span>: { <span class="prop">mode</span>: <span class="str">"reasoning"</span>, <span class="prop">max_tool_iterations</span>: <span class="num">15</span> }
+
+  <span class="prop">constraints</span>: [
+    <span class="str">"Never approve claims over $10,000 without supervisor review"</span>,
+    <span class="str">"Always verify policyholder identity before accessing claim details"</span>,
+    <span class="str">"Escalate immediately if fraud indicators detected"</span>
+  ]
+
+  <span class="prop">tools</span>: [<span class="fn">PolicyLookup</span>, <span class="fn">ClaimHistory</span>, <span class="fn">FraudScore</span>, <span class="fn">PaymentProcessor</span>]
+
+  <span class="kw">coordination</span> {
+    <span class="prop">delegates_to</span>: [<span class="fn">DocumentVerifier</span>, <span class="fn">MedicalReviewer</span>]
+    <span class="prop">escalates_to</span>: <span class="str">"Claims_Supervisor"</span>
+    <span class="prop">external</span>: [{ <span class="prop">agent</span>: <span class="str">"PartnerAdjuster"</span>, <span class="prop">protocol</span>: <span class="str">"a2a"</span> }]
+  }
+}</code></pre>
+
+        <p>
+          50 lines. Auditable. Testable. Compiles to IR. Runs on an engine that provides agent loops
+          with hard limits, guardrails evaluated before and after every LLM call, orchestration
+          patterns as typed operations, threaded conversations with cross-channel resume, and
+          compliance as infrastructure.
+        </p>
+
+        <h3>AI That Reasons and Generates: The Real Unlock</h3>
+
+        <p>Here&rsquo;s the part nobody&rsquo;s talking about enough.</p>
+
+        <p>
+          The same AI that <em>powers</em> agents is now capable of <em>building</em> them. Claude
+          doesn&rsquo;t just answer questions &mdash; it reasons about system architecture, designs
+          multi-agent orchestration, generates production code across dozens of files, writes
+          comprehensive test suites, and iterates on compiler feedback.
+        </p>
+
+        <p>This changes the equation completely. But only if the AI has the right target.</p>
+
+        <p>
+          When AI reasons and generates into an <strong>unbounded space</strong> &mdash; raw Python,
+          custom frameworks &mdash; its power is diluted by the breadth of decisions. When AI
+          reasons and generates into a <strong>programmable platform</strong> &mdash; a structured
+          DSL with compile-time validation and a deterministic runtime &mdash; its reasoning
+          concentrates on the <strong>right problem</strong>: what should the agent do?
+        </p>
+
+        <p>The platform answers the <em>how</em>. AI focuses on the <em>what</em>.</p>
+
+        <blockquote>
+          The programmable platform gives AI a higher floor and a higher ceiling simultaneously.
+        </blockquote>
+
+        <p>
+          And ABL takes this all the way. The platform ships with <strong>Arch</strong> &mdash; a
+          powerful AI that is contextually aware of everything you&rsquo;ve designed: every agent,
+          every handoff, every routing rule, every tool binding. You talk to Arch in natural
+          language. You say &ldquo;add a returns agent that handles cross-channel resume&rdquo;
+          &mdash; and Arch knows your existing topology, creates the agent, updates routing,
+          generates tests, and shows you the changes. You don&rsquo;t need to learn ABL. You
+          describe what you want; Arch programs the platform. It also ships
+          <strong>MCP debug tools</strong> that connect AI coding assistants directly to the running
+          runtime. And the platform is open: you can use <strong>your own AI</strong> &mdash;
+          OpenAI, Claude, Gemini Pro &mdash; to directly interact with ABL, update agents, design
+          new ones, and program behavior through structured APIs. The AI doesn&rsquo;t stop at code
+          generation. It designs, builds, tests, deploys, debugs, and improves &mdash; and you
+          choose which AI does it.
+        </p>
+
+        <h3>The Future Is Programmed, Not Dragged and Not Hacked</h3>
+
+        <p>
+          The agent development market will consolidate around platforms. Not no-code platforms
+          &mdash; the complexity ceiling is too low. Not generic frameworks &mdash; the leverage is
+          too small.
+        </p>
+
+        <p>
+          <strong>Programmable platforms</strong> with domain-specific languages, production
+          runtimes, and built-in compliance. Platforms where:
+        </p>
+
+        <ul>
+          <li>
+            <strong>Agent loops</strong>, delegation, escalation, and federation are named
+            constructs, not reimplemented per project
+          </li>
+          <li>
+            <strong>Guardrails</strong> and <strong>constraints</strong> are engine-level
+            guarantees, not prompt-level suggestions
+          </li>
+          <li>
+            <strong>Threaded conversations</strong>, <strong>context passing</strong>, and
+            cross-channel continuity are platform primitives
+          </li>
+          <li>
+            <strong>Multiple orchestration patterns</strong> &mdash; supervisor routing, delegation,
+            fan-out, reasoning loops, controlled flows, external agent federation &mdash; coexist in
+            the same system
+          </li>
+          <li>
+            AI that can reason and generate code has a structured, validated target that maximizes
+            its effectiveness
+          </li>
+          <li>Compliance, tracing, and tenant isolation are properties of the runtime</li>
+        </ul>
+
+        <h3>Your Data, Your Infrastructure, Your Control</h3>
+
+        <p>
+          There&rsquo;s a dimension to this choice that technical comparisons often miss:
+          <strong>where your customer conversations live</strong>.
+        </p>
+
+        <p>
+          Managed agent vendors &mdash; Sierra, Decagon &mdash; route your customer conversations
+          through their infrastructure. Every support interaction, every identity verification,
+          every transaction flows through servers you don&rsquo;t control, in jurisdictions you may
+          not have chosen.
+        </p>
+
+        <p>
+          <strong>Regulated industries</strong> (healthcare, financial services, insurance) face
+          data residency requirements that prohibit customer PII from leaving specific
+          jurisdictions. HIPAA, PCI DSS, and GDPR don&rsquo;t care how good the vendor&rsquo;s
+          security certification is.
+        </p>
+
+        <p>
+          <strong>Sovereign markets</strong> (UAE, GCC, Saudi Arabia, parts of APAC) increasingly
+          require that customer data remain in-country. Organizations serving these markets
+          can&rsquo;t use a managed agent platform headquartered in the US, regardless of the
+          vendor&rsquo;s intent.
+        </p>
+
+        <p>
+          ABL deploys on your infrastructure. Your Kubernetes cluster, your VPC, your data center,
+          your sovereign cloud. Customer conversations never leave your boundary. PII encryption
+          uses your keys. Audit trails live in your systems. This isn&rsquo;t a feature &mdash;
+          it&rsquo;s an architectural decision that determines which markets you can serve.
+        </p>
+
+        <p>
+          The agents that will matter &mdash; the ones handling customer service, driving employee
+          productivity, and automating complex business processes &mdash; coordinating across
+          systems, maintaining identity and context, operating within regulatory constraints &mdash;
+          will be built on platforms that respect where data lives.
+        </p>
+
+        <p>Everything else is either too simple to matter or too bespoke to scale.</p>
+      </div>
+
+      <!-- ==================== ABL IN DEPTH ==================== -->
+      <hr class="section-divider" id="depth" />
+
+      <h2>ABL in Depth: What the Platform Actually Provides</h2>
+
+      <p>
+        The previous sections make the strategic argument. This section is for anyone who wants to
+        see the depth &mdash; starting with ABL&rsquo;s most differentiating capability.
+      </p>
+
+      <h3>The Core Innovation: Multi-Agent Orchestration as a First-Class Construct</h3>
+
+      <p>
+        Every other agent platform gives you a single agent with tools. If you need multiple agents
+        working together &mdash; routing, delegation, escalation, parallel execution &mdash; you
+        build the orchestration yourself. Different teams build different orchestrators, with
+        different bugs, different failure modes, different operational characteristics.
+      </p>
+
+      <p>
+        ABL makes multi-agent orchestration a first-class construct in the language itself. Multiple
+        agents work in tandem to fulfill complex workflows through built-in primitives:
+      </p>
+
+      <ul>
+        <li>
+          <strong>Supervisor routing</strong> &mdash; Classify intent and route to specialized child
+          agents with priority rules and conditional logic based on runtime context. Default
+          fallback when no rule matches.
+        </li>
+        <li>
+          <strong>Delegation</strong> &mdash; Invoke a sub-agent synchronously with explicit
+          input/output mapping, timeout, and failure handling (CONTINUE, ESCALATE, RESPOND). Fan-out
+          to multiple agents in parallel with result synthesis.
+        </li>
+        <li>
+          <strong>Handoff</strong> &mdash; Transfer full control to another agent with typed context
+          passing, conversation history options (none, summary, full, last N), memory grants, and
+          optional return flow back to the parent.
+        </li>
+        <li>
+          <strong>Escalation</strong> &mdash; Human transfer with priority levels, skill-based
+          routing tags, PII-safe context summaries, and on-complete hooks.
+        </li>
+        <li>
+          <strong>Constraints and guardrails</strong> &mdash; Declared per-agent, grouped by phase,
+          enforced at the engine level before and after each LLM call. CHECK conditions with ON_FAIL
+          actions: respond, escalate, handoff, block, redact.
+        </li>
+        <li>
+          <strong>Entity collection and validation</strong> &mdash; GATHER with field-level types,
+          validation rules, NER-based extraction with multi-lingual support, and natural
+          corrections.
+        </li>
+        <li>
+          <strong>Conditional orchestration</strong> &mdash; Branch on tool results, user input
+          patterns, session context, and gathered data. Runtime decisions drive the workflow, not
+          static configuration.
+        </li>
+      </ul>
+
+      <p>
+        For agents that need flow-driven controlled steps &mdash; voice IVR, identity verification,
+        high-volume transactional flows &mdash; ABL provides a
+        <strong>scripted mode</strong> option: deterministic state machines with sub-500ms latency.
+        Both reasoning and scripted agents coexist in the same system, share the same session and
+        tracing infrastructure, and orchestrate through the same handoff/delegate/escalate
+        constructs. One DSL, one runtime, one deployment.
+      </p>
+
+      <p>
+        <strong>Why this matters in practice</strong>: A utility company handling 50,000 calls/day
+        has a triage supervisor routing to specialized agents &mdash; billing lookup, outage status,
+        dispute resolution, payment arrangements. Each agent has its own constraints, its own entity
+        collection, its own escalation rules. Complex disputes delegate to a reasoning agent with
+        tool access. Simple lookups run through a controlled flow agent. All of them share session
+        context, all of them escalate to the same human queue with priority and skill tags. The
+        developer doesn&rsquo;t build an orchestration layer &mdash; ABL <em>is</em> the
+        orchestration layer.
+      </p>
+
+      <h3>The DSL: 20+ Constructs for Production Agent Development</h3>
+
+      <p>
+        ABL isn&rsquo;t a configuration format with a compiler on top. It&rsquo;s a domain-specific
+        language covering the full surface area of production agent development:
+      </p>
+
+      <div class="construct-grid">
+        <div class="construct-item">
+          <div class="construct-name">Identity &amp; Behavior</div>
+          <div class="construct-desc">
+            <code>AGENT</code>, <code>SUPERVISOR</code>, <code>MODE</code>, <code>GOAL</code>,
+            <code>PERSONA</code>, <code>LIMITATIONS</code>, <code>IDENTITY</code>
+          </div>
+        </div>
+        <div class="construct-item">
+          <div class="construct-name">Information Collection</div>
+          <div class="construct-desc">
+            <code>GATHER</code> with field-level types, validation, extraction strategies (NER
+            models, multi-lingual validations, LLMs, or hybrid), corrections.
+          </div>
+        </div>
+        <div class="construct-item">
+          <div class="construct-name">Tool Integration</div>
+          <div class="construct-desc">
+            Four bindings: <code>HTTP</code> (REST + auth), <code>MCP</code> (Model Context
+            Protocol), <code>Lambda</code>, <code>Sandbox</code> (JS/Python).
+          </div>
+        </div>
+        <div class="construct-item">
+          <div class="construct-name">Multi-Agent Coordination</div>
+          <div class="construct-desc">
+            <code>HANDOFF</code> (transfer), <code>DELEGATE</code> (sub-call),
+            <code>ESCALATE</code> (human) &mdash; typed context passing, history options.
+          </div>
+        </div>
+        <div class="construct-item">
+          <div class="construct-name">Constraints &amp; Guardrails</div>
+          <div class="construct-desc">
+            Grouped by phase. Each: <code>CHECK</code> &rarr; <code>ON_FAIL</code> (respond,
+            escalate, block, redact). Engine-enforced.
+          </div>
+        </div>
+        <div class="construct-item">
+          <div class="construct-name">Memory</div>
+          <div class="construct-desc">
+            Persistent reads, session writes, auto-store triggers (<code>WHEN</code> &rarr;
+            <code>STORE</code> with TTL), recall instructions.
+          </div>
+        </div>
+        <div class="construct-item">
+          <div class="construct-name">NLU</div>
+          <div class="construct-desc">
+            Multi-model routing, embedding intent matching, language detection, code-switching,
+            entity extraction, A/B testing.
+          </div>
+        </div>
+        <div class="construct-item">
+          <div class="construct-name">Voice Optimization</div>
+          <div class="construct-desc">
+            SSML (W3C), natural voice (OpenAI Realtime), plain text (ElevenLabs). Channel-aware
+            formatting. Configurable latency targets.
+          </div>
+        </div>
+        <div class="construct-item">
+          <div class="construct-name">Rich Content</div>
+          <div class="construct-desc">
+            Markdown, Adaptive Cards, HTML, Slack Block Kit, AG-UI, WhatsApp templates. Interactive
+            actions with handlers.
+          </div>
+        </div>
+        <div class="construct-item">
+          <div class="construct-name">Lifecycle Hooks</div>
+          <div class="construct-desc">
+            <code>ON_START</code>, <code>HOOKS</code> (before/after agent &amp; turn execution).
+            Session initialization.
+          </div>
+        </div>
+      </div>
+
+      <p>
+        This compiles to an intermediate representation (AgentIR) carrying metadata, execution
+        config, identity, tools, gather fields, memory, constraints, coordination rules, flow
+        definition, NLU config, routing rules, and a static graph for visualization. The runtime
+        reads the IR &mdash; never the raw DSL. Deploy-time validation, runtime-time execution.
+      </p>
+
+      <h3>Problems ABL Solves &mdash; With Examples</h3>
+
+      <p>
+        The construct list above is what the DSL provides. Here&rsquo;s what it looks like when you
+        apply it to real enterprise problems &mdash; the kind that take teams months to build from
+        scratch and that no-code can&rsquo;t express at all.
+      </p>
+
+      <!-- EXAMPLE 1: Insurance Claims -->
+      <div class="competitor-section">
+        <h4>Problem 1: Insurance Claims That Span Multiple Departments</h4>
+
+        <p>
+          <strong>The situation</strong>: A customer files a claim. The system needs to verify
+          identity, check fraud scores, route to the right adjuster type (auto, property, medical),
+          delegate document verification to a specialist agent, call an external partner&rsquo;s
+          adjuster for co-insured claims, and escalate to a human supervisor if the claim exceeds
+          $50K.
+        </p>
+
+        <div class="callout red">
+          <div class="callout-title">Without ABL</div>
+          <p>
+            3&ndash;6 months of custom orchestration. You build session management, routing logic,
+            delegation chains, context passing between agents, external partner integration, and
+            escalation paths. Different teams implement different pieces with different assumptions
+            about context format.
+          </p>
+        </div>
+
+        <div class="callout green">
+          <div class="callout-title">With ABL</div>
+        </div>
+
+        <pre><code><span class="kw">agent</span> <span class="type">Claims_Supervisor</span> {
+  <span class="prop">execution</span>: { <span class="prop">mode</span>: <span class="str">"reasoning"</span>, <span class="prop">max_tool_iterations</span>: <span class="num">12</span> }
+
+  <span class="kw">routing</span> {
+    <span class="prop">rules</span>: [
+      { <span class="prop">when</span>: <span class="str">"auto claim"</span>, <span class="prop">delegate_to</span>: <span class="str">"Auto_Adjuster"</span> },
+      { <span class="prop">when</span>: <span class="str">"property damage"</span>, <span class="prop">delegate_to</span>: <span class="str">"Property_Adjuster"</span> },
+      { <span class="prop">when</span>: <span class="str">"medical claim"</span>, <span class="prop">delegate_to</span>: <span class="str">"Medical_Adjuster"</span> },
+      { <span class="prop">when</span>: <span class="str">"co-insured claim"</span>, <span class="prop">delegate_to</span>: <span class="str">"Partner_Adjuster"</span> }
+    ]
+    <span class="prop">fallback</span>: <span class="fn">escalate</span>(<span class="str">"No adjuster matched"</span>)
+  }
+
+  <span class="prop">constraints</span>: [
+    { <span class="prop">check</span>: <span class="str">"claim_amount > 50000"</span>, <span class="prop">on_fail</span>: <span class="fn">escalate</span>(<span class="str">"High-value claim &mdash; supervisor review required"</span>) },
+    { <span class="prop">check</span>: <span class="str">"fraud_score > 0.7"</span>, <span class="prop">on_fail</span>: <span class="fn">escalate</span>(<span class="str">"Fraud risk detected"</span>) },
+    <span class="str">"Never disclose internal fraud scoring methodology"</span>
+  ]
+
+  <span class="kw">coordination</span> {
+    <span class="prop">handoffs</span>: [
+      { <span class="prop">target</span>: <span class="str">"Auto_Adjuster"</span>, <span class="prop">context_pass</span>: [<span class="str">"policy_id"</span>, <span class="str">"claim_id"</span>, <span class="str">"identity_tier"</span>] },
+      { <span class="prop">target</span>: <span class="str">"Medical_Adjuster"</span>, <span class="prop">context_pass</span>: [<span class="str">"policy_id"</span>, <span class="str">"medical_records_consent"</span>] }
+    ]
+    <span class="prop">external_agents</span>: [
+      { <span class="prop">protocol</span>: <span class="str">"a2a"</span>, <span class="prop">endpoint</span>: <span class="str">"$PARTNER_ADJUSTER_URL"</span>, <span class="prop">auth</span>: <span class="str">"oauth2"</span> }
+    ]
+  }
+}
+
+<span class="kw">agent</span> <span class="type">Auto_Adjuster</span> {
+  <span class="prop">execution</span>: { <span class="prop">mode</span>: <span class="str">"scripted"</span> }
+
+  <span class="kw">step</span> <span class="fn">verify_identity</span> {
+    <span class="prop">prompt</span>: <span class="str">"I need to verify your identity before accessing your claim."</span>
+    <span class="kw">gather</span> {
+      <span class="kw">field</span> <span class="fn">policy_number</span> { <span class="prop">type</span>: <span class="type">string</span>, <span class="prop">validation</span>: <span class="str">"^POL-[0-9]{8}$"</span> }
+      <span class="kw">field</span> <span class="fn">date_of_birth</span> { <span class="prop">type</span>: <span class="type">date</span>, <span class="prop">required</span>: <span class="num">true</span> }
+    }
+    <span class="prop">guardrails</span>: { <span class="prop">max_attempts</span>: <span class="num">3</span>, <span class="prop">on_failure</span>: <span class="fn">escalate</span>(<span class="str">"Identity verification failed"</span>) }
+    <span class="prop">transition</span> -&gt; <span class="fn">assess_damage</span> <span class="kw">when</span> <span class="type">all_collected</span>
+  }
+
+  <span class="kw">step</span> <span class="fn">assess_damage</span> {
+    <span class="prop">call</span>: <span class="str">"ClaimsAPI.getDamageAssessment"</span>
+    <span class="prop">context_pass</span>: { <span class="prop">policy</span>: <span class="str">"$policy_number"</span>, <span class="prop">tenant</span>: <span class="str">"$tenantId"</span> }
+    <span class="prop">on_success</span> -&gt; <span class="fn">process_claim</span>
+    <span class="prop">on_failure</span> -&gt; <span class="fn">respond</span>(<span class="str">"I couldn't retrieve the assessment. Let me connect you with a specialist."</span>)
+  }
+
+  <span class="kw">step</span> <span class="fn">process_claim</span> {
+    <span class="prop">delegate_to</span>: <span class="str">"Document_Verifier"</span>
+    <span class="prop">input</span>: { <span class="prop">claim_id</span>: <span class="str">"$claim_id"</span>, <span class="prop">documents</span>: <span class="str">"$uploaded_docs"</span> }
+    <span class="prop">timeout</span>: <span class="num">120s</span>
+    <span class="prop">on_success</span> -&gt; <span class="fn">finalize</span>
+    <span class="prop">on_failure</span> -&gt; <span class="fn">escalate</span>(<span class="str">"Document verification failed"</span>)
+  }
+}</code></pre>
+
+        <div class="verdict-grid">
+          <div class="verdict-card ours" style="grid-column: 1 / -1">
+            <div class="verdict-title">What the developer wrote vs. what the platform handles</div>
+            <p>
+              <strong>Developer</strong>: ~60 lines of ABL describing routing rules, context
+              passing, identity verification, constraints, delegation.
+            </p>
+            <p>
+              <strong>Platform</strong>: Session management across pods. Context serialization
+              through the delegation chain. Fraud score constraint enforcement (engine-level). A2A
+              protocol negotiation with the partner. Conversation threading across all agents. Audit
+              trail on every transition. Tenant isolation at every data path.
+            </p>
+            <p style="margin-top: 0.8rem; color: var(--green)">
+              <strong>Business impact</strong>: Claims that previously required 3&ndash;4 human
+              handoffs resolve in a single automated conversation &mdash; with a provable audit
+              trail for every routing decision. New claim types and routing rules deploy in days,
+              not months. The same topology expands to cover new products without rebuilding
+              orchestration.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- EXAMPLE 2: Financial Services -->
+      <div class="competitor-section">
+        <h4>
+          Problem 2: Financial Services &mdash; Identity-Gated Access with Compliance Constraints
+        </h4>
+
+        <p>
+          <strong>The situation</strong>: A bank&rsquo;s agent handles account inquiries, but
+          different information requires different verification levels. Checking a balance requires
+          basic verification. Initiating a transfer requires full verification (OTP). Changing
+          account settings requires enhanced verification (video + manager). At no point can the
+          agent reveal account details to an unverified caller.
+        </p>
+
+        <div class="callout red">
+          <div class="callout-title">Without ABL</div>
+          <p>
+            You embed verification logic in prompts and hope the LLM respects it. When the auditor
+            asks &ldquo;can you prove the agent <em>never</em> reveals balance to an unverified
+            user?&rdquo; &mdash; you can&rsquo;t. The constraint lives in a system prompt, and LLMs
+            don&rsquo;t guarantee prompt adherence.
+          </p>
+        </div>
+
+        <div class="callout green">
+          <div class="callout-title">With ABL</div>
+        </div>
+
+        <pre><code><span class="kw">agent</span> <span class="type">Banking_Agent</span> {
+  <span class="prop">execution</span>: { <span class="prop">mode</span>: <span class="str">"reasoning"</span>, <span class="prop">max_tool_iterations</span>: <span class="num">8</span> }
+
+  <span class="prop">constraints</span>: [
+    { <span class="prop">phase</span>: <span class="str">"always"</span>,
+      <span class="prop">check</span>: <span class="str">"identity_tier &lt; 'basic' AND tool_requested IN ['BalanceLookup', 'TransactionHistory']"</span>,
+      <span class="prop">on_fail</span>: <span class="fn">respond</span>(<span class="str">"I need to verify your identity before I can access account information."</span>) },
+    { <span class="prop">phase</span>: <span class="str">"always"</span>,
+      <span class="prop">check</span>: <span class="str">"identity_tier &lt; 'full' AND tool_requested IN ['InitiateTransfer', 'WireTransfer']"</span>,
+      <span class="prop">on_fail</span>: <span class="fn">respond</span>(<span class="str">"Transfers require full verification. Let me send a code to your registered phone."</span>) },
+    { <span class="prop">phase</span>: <span class="str">"always"</span>,
+      <span class="prop">check</span>: <span class="str">"identity_tier &lt; 'enhanced' AND tool_requested IN ['ChangeAddress', 'UpdateBeneficiary']"</span>,
+      <span class="prop">on_fail</span>: <span class="fn">escalate</span>(<span class="str">"Account changes require enhanced verification."</span>) },
+    <span class="str">"Never reveal account numbers, SSNs, or PII in responses"</span>
+  ]
+
+  <span class="prop">tools</span>: [<span class="fn">BalanceLookup</span>, <span class="fn">TransactionHistory</span>, <span class="fn">InitiateTransfer</span>, <span class="fn">ChangeAddress</span>]
+  <span class="kw">coordination</span> { <span class="prop">delegates_to</span>: [<span class="str">"Verification_Agent"</span>], <span class="prop">escalates_to</span>: <span class="str">"Branch_Manager_Queue"</span> }
+}</code></pre>
+
+        <div class="callout accent">
+          <div class="callout-title">Why this matters</div>
+          <p>
+            These constraints compile into the IR and are enforced by the execution engine
+            <em>before</em> the tool call reaches the LLM. The LLM never sees balance data if the
+            identity tier is insufficient &mdash; the engine blocks the tool call and returns the
+            safe response. The trace shows exactly which constraint fired, when, and what was
+            blocked. <strong>The auditor can verify it. The compliance team can test it.</strong>
+          </p>
+          <p style="margin-top: 0.8rem; color: var(--green)">
+            <strong>Business impact</strong>: The bank can prove to auditors &mdash; with
+            deterministic trace evidence &mdash; that unauthorized data access is impossible.
+            Self-service automates high-volume call types. The identity-gated model enables
+            higher-value self-service that was previously human-only &mdash; expanding what agents
+            can handle, not just deflecting. New compliance rules deploy as ABL updates without
+            re-engineering.
+          </p>
+        </div>
+      </div>
+
+      <!-- EXAMPLE 3: Retail Cross-Channel -->
+      <div class="competitor-section">
+        <h4>Problem 3: Retail &mdash; Cross-Channel Continuity</h4>
+
+        <p>
+          <strong>The situation</strong>: A customer starts a return request on web chat at work.
+          Provides the order number, explains the issue, uploads photos. Gets interrupted. Returns
+          that evening on WhatsApp from their personal phone. They expect to pick up where they left
+          off.
+        </p>
+
+        <div class="callout red">
+          <div class="callout-title">Without ABL</div>
+          <p>
+            You build custom identity resolution, context serialization across channels, and session
+            matching by contact info. Every team that needs cross-channel continuity builds their
+            own version.
+          </p>
+        </div>
+
+        <div class="callout green">
+          <div class="callout-title">With ABL</div>
+        </div>
+
+        <pre><code><span class="kw">agent</span> <span class="type">Returns_Agent</span> {
+  <span class="prop">execution</span>: { <span class="prop">mode</span>: <span class="str">"scripted"</span> }
+
+  <span class="kw">step</span> <span class="fn">collect_return_info</span> {
+    <span class="prop">prompt</span>: <span class="str">"I can help with your return. What's your order number?"</span>
+    <span class="kw">gather</span> {
+      <span class="kw">field</span> <span class="fn">order_number</span> { <span class="prop">type</span>: <span class="type">string</span>, <span class="prop">validation</span>: <span class="str">"^ORD-[0-9]+$"</span> }
+      <span class="kw">field</span> <span class="fn">reason</span> { <span class="prop">type</span>: <span class="type">string</span>, <span class="prop">required</span>: <span class="num">true</span> }
+      <span class="kw">field</span> <span class="fn">photos</span> { <span class="prop">type</span>: <span class="type">attachment</span>, <span class="prop">required</span>: <span class="num">false</span> }
+    }
+    <span class="prop">transition</span> -&gt; <span class="fn">lookup_order</span> <span class="kw">when</span> <span class="type">order_number</span> AND <span class="type">reason</span>
+  }
+
+  <span class="kw">step</span> <span class="fn">lookup_order</span> {
+    <span class="prop">call</span>: <span class="str">"OrdersAPI.getOrder"</span>
+    <span class="prop">context_pass</span>: { <span class="prop">order</span>: <span class="str">"$order_number"</span>, <span class="prop">tenant</span>: <span class="str">"$tenantId"</span> }
+    <span class="prop">on_success</span> -&gt; <span class="fn">process_return</span>
+    <span class="prop">on_failure</span> -&gt; <span class="fn">respond</span>(<span class="str">"I couldn't find that order. Could you double-check?"</span>)
+  }
+}</code></pre>
+
+        <p>
+          <strong>What the platform handles behind that ABL</strong>: When the customer returns on
+          WhatsApp, the runtime&rsquo;s identity resolution matches their phone number to their web
+          session contact. The session rehydrates on whatever pod handles the WhatsApp message. The
+          gathered fields (<code>order_number</code>, <code>reason</code>, <code>photos</code>) are
+          already populated. The agent picks up at <code>lookup_order</code>. The customer sees:
+          &ldquo;Welcome back! I have your return request for order ORD-12345. Let me continue
+          processing that.&rdquo;
+        </p>
+
+        <p>
+          The developer wrote a linear flow. The platform handled identity resolution, session
+          resume, context rehydration, and channel-appropriate message formatting.
+        </p>
+
+        <p style="color: var(--green)">
+          <strong>Business impact</strong>: Customers who drop off mid-conversation and return on a
+          different channel face the highest-friction moment in retail CX. Without cross-channel
+          continuity, most abandon the process. With it, the return completes &mdash; reducing
+          abandoned returns, improving NPS, and recapturing revenue. Adding new channels (WhatsApp,
+          SMS, voice) is a configuration change, not an engineering project.
+        </p>
+      </div>
+
+      <!-- EXAMPLE 4: Healthcare Guardrails -->
+      <div class="competitor-section">
+        <h4>
+          Problem 4: Healthcare &mdash; Hard Guardrails That Can&rsquo;t Be Prompt-Engineered Away
+        </h4>
+
+        <p>
+          <strong>The situation</strong>: A telehealth triage agent assesses symptoms and routes to
+          care. It must <em>never</em> provide a diagnosis. It must <em>never</em> recommend
+          specific medications. If the patient describes emergency symptoms, it must immediately
+          escalate. If the patient mentions self-harm, mandatory reporting protocol.
+        </p>
+
+        <div class="callout red">
+          <div class="callout-title">Without ABL</div>
+          <p>
+            You write extensive system prompts. The LLM follows them 98% of the time. The 2% where
+            it says &ldquo;it sounds like you might have X&rdquo; or recommends a medication creates
+            liability. You add output filters. Now you maintain prompt engineering, custom filters,
+            and escalation logic &mdash; all as application code, all brittle.
+          </p>
+        </div>
+
+        <div class="callout green">
+          <div class="callout-title">With ABL</div>
+        </div>
+
+        <pre><code><span class="kw">agent</span> <span class="type">Triage_Agent</span> {
+  <span class="prop">execution</span>: { <span class="prop">mode</span>: <span class="str">"reasoning"</span>, <span class="prop">max_tool_iterations</span>: <span class="num">10</span> }
+
+  <span class="prop">constraints</span>: [
+    { <span class="prop">phase</span>: <span class="str">"always"</span>,
+      <span class="prop">check</span>: <span class="str">"response contains diagnosis pattern"</span>,
+      <span class="prop">on_fail</span>: { <span class="prop">action</span>: <span class="str">"redact"</span>,
+        <span class="prop">replacement</span>: <span class="str">"I can help you understand your symptoms, but I'm not able to provide a diagnosis."</span> } },
+    { <span class="prop">phase</span>: <span class="str">"always"</span>,
+      <span class="prop">check</span>: <span class="str">"response contains medication recommendation"</span>,
+      <span class="prop">on_fail</span>: { <span class="prop">action</span>: <span class="str">"redact"</span>,
+        <span class="prop">replacement</span>: <span class="str">"Medication recommendations need to come from your doctor."</span> } },
+    { <span class="prop">phase</span>: <span class="str">"always"</span>,
+      <span class="prop">check</span>: <span class="str">"user_input matches emergency_keywords"</span>,
+      <span class="prop">on_fail</span>: <span class="fn">escalate</span>(<span class="str">"EMERGENCY: Patient reporting emergency symptoms"</span>,
+        <span class="prop">priority</span>: <span class="str">"critical"</span>, <span class="prop">tags</span>: [<span class="str">"emergency"</span>]) },
+    { <span class="prop">phase</span>: <span class="str">"always"</span>,
+      <span class="prop">check</span>: <span class="str">"user_input matches self_harm_indicators"</span>,
+      <span class="prop">on_fail</span>: <span class="fn">escalate</span>(<span class="str">"MANDATORY REPORT: Self-harm indicators detected"</span>,
+        <span class="prop">priority</span>: <span class="str">"critical"</span>, <span class="prop">tags</span>: [<span class="str">"mandatory_report"</span>]) }
+  ]
+
+  <span class="prop">guardrails</span>: [
+    { <span class="prop">kind</span>: <span class="str">"output"</span>, <span class="prop">check</span>: <span class="str">"no_diagnosis_language"</span>, <span class="prop">action</span>: <span class="str">"block"</span> },
+    { <span class="prop">kind</span>: <span class="str">"input"</span>, <span class="prop">check</span>: <span class="str">"emergency_detection"</span>, <span class="prop">action</span>: <span class="str">"escalate"</span> }
+  ]
+}</code></pre>
+
+        <p>
+          <strong>The difference</strong>: Guardrails are evaluated by the execution engine, not by
+          the LLM. The engine checks the LLM&rsquo;s response <em>before</em> it reaches the
+          patient. If the LLM generates a diagnosis, the engine catches it and substitutes the safe
+          response. If the patient describes emergency symptoms, the engine triggers escalation
+          <em>before</em> the LLM processes the message. This is deterministic. Testable.
+          <strong
+            >An auditor can verify that emergency escalation fires 100% of the time, not
+            98%.</strong
+          >
+        </p>
+
+        <p style="color: var(--green)">
+          <strong>Business impact</strong>: Deploy AI triage at scale without liability risk from
+          AI-generated diagnoses. Engine-level guardrails reduce legal exposure from &ldquo;hope the
+          LLM follows instructions 98% of the time&rdquo; to &ldquo;deterministic enforcement,
+          verifiable by audit.&rdquo; New triage protocols and safety rules deploy as ABL constraint
+          updates &mdash; not code changes &mdash; so clinical teams can iterate on safety without
+          engineering sprints.
+        </p>
+      </div>
+
+      <!-- EXAMPLE 5: Voice IVR -->
+      <div class="competitor-section">
+        <h4>Problem 5: Voice IVR &mdash; Sub-500ms Responses at Scale</h4>
+
+        <p>
+          <strong>The situation</strong>: A utility company handles 50,000 calls/day. Most are
+          simple (check balance, report outage). Callers won&rsquo;t wait 2 seconds for an LLM to
+          reason about &ldquo;what&rsquo;s my balance.&rdquo; But some calls are complex (bill
+          disputes, hazardous situations) and need full LLM reasoning.
+        </p>
+
+        <div class="callout red">
+          <div class="callout-title">Without ABL</div>
+          <p>
+            You build two systems: a fast rule-based IVR for simple flows, and a separate LLM agent
+            for complex cases. Two codebases, two deployment pipelines, two monitoring systems, and
+            a handoff mechanism between them.
+          </p>
+        </div>
+
+        <div class="callout green">
+          <div class="callout-title">With ABL &mdash; both modes in one system</div>
+        </div>
+
+        <pre><code><span class="kw">agent</span> <span class="type">Utility_Triage</span> {
+  <span class="prop">execution</span>: { <span class="prop">mode</span>: <span class="str">"reasoning"</span> }
+  <span class="kw">routing</span> {
+    <span class="prop">rules</span>: [
+      { <span class="prop">when</span>: <span class="str">"balance inquiry"</span>, <span class="prop">delegate_to</span>: <span class="str">"Balance_Bot"</span> },
+      { <span class="prop">when</span>: <span class="str">"outage report"</span>, <span class="prop">delegate_to</span>: <span class="str">"Outage_Bot"</span> },
+      { <span class="prop">when</span>: <span class="str">"bill dispute"</span>, <span class="prop">delegate_to</span>: <span class="str">"Dispute_Agent"</span> }
+    ]
+    <span class="prop">fallback</span>: <span class="fn">escalate</span>(<span class="str">"Connecting you with a representative"</span>)
+  }
+}
+
+<span class="kw">agent</span> <span class="type">Balance_Bot</span> {
+  <span class="prop">execution</span>: { <span class="prop">mode</span>: <span class="str">"scripted"</span> }
+  <span class="prop">voice</span>: { <span class="prop">style</span>: <span class="str">"ssml"</span>, <span class="prop">latency_target</span>: <span class="str">"500ms"</span> }
+
+  <span class="kw">step</span> <span class="fn">get_account</span> {
+    <span class="prop">prompt</span>: <span class="str">"&lt;speak&gt;What is your account number?&lt;/speak&gt;"</span>
+    <span class="kw">gather</span> {
+      <span class="kw">field</span> <span class="fn">account_number</span> { <span class="prop">type</span>: <span class="type">string</span>, <span class="prop">extraction</span>: <span class="str">"ner"</span>, <span class="prop">validation</span>: <span class="str">"^[0-9]{10}$"</span> }
+    }
+    <span class="prop">guardrails</span>: { <span class="prop">max_attempts</span>: <span class="num">2</span>, <span class="prop">on_failure</span>: <span class="fn">escalate</span>(<span class="str">"Transferring to representative"</span>) }
+    <span class="prop">transition</span> -&gt; <span class="fn">read_balance</span> <span class="kw">when</span> <span class="type">all_collected</span>
+  }
+
+  <span class="kw">step</span> <span class="fn">read_balance</span> {
+    <span class="prop">call</span>: <span class="str">"BillingAPI.getBalance"</span>
+    <span class="prop">on_success</span> -&gt; <span class="fn">respond</span>(<span class="str">"&lt;speak&gt;Your balance is &lt;say-as interpret-as='currency'&gt;{{balance}}&lt;/say-as&gt;, due {{due_date}}.&lt;/speak&gt;"</span>)
+    <span class="prop">on_failure</span> -&gt; <span class="fn">escalate</span>(<span class="str">"Couldn't look that up. Transferring."</span>)
+  }
+}
+
+<span class="kw">agent</span> <span class="type">Dispute_Agent</span> {
+  <span class="prop">execution</span>: { <span class="prop">mode</span>: <span class="str">"reasoning"</span>, <span class="prop">max_tool_iterations</span>: <span class="num">15</span> }
+  <span class="prop">tools</span>: [<span class="fn">BillingAPI</span>, <span class="fn">UsageHistory</span>, <span class="fn">PaymentHistory</span>, <span class="fn">AdjustmentCalculator</span>]
+  <span class="prop">constraints</span>: [<span class="str">"Never issue adjustments over $500 without supervisor approval"</span>]
+}</code></pre>
+
+        <p>
+          <strong>One system, two modes</strong>: <code>Balance_Bot</code> runs scripted &mdash;
+          NER-based extraction with validation, no LLM call, sub-500ms.
+          <code>Dispute_Agent</code> runs reasoning &mdash; full LLM with tool access. The triage
+          supervisor routes between them. Same runtime. Same deployment. Same tracing. No two-system
+          handoff bridge.
+        </p>
+
+        <p style="color: var(--green)">
+          <strong>Business impact</strong>: At 50,000 calls/day, routine inquiries run in scripted
+          mode at sub-500ms without LLM costs. Complex cases get full reasoning-mode treatment.
+          Total infrastructure: one system instead of two. Adding new routine flows (payment
+          arrangements, meter reads) is a scripted agent addition &mdash; hours of work, not a new
+          project.
+        </p>
+      </div>
+
+      <h3>Arch: The AI That Programs the Entire Platform for You</h3>
+
+      <p>
+        Here&rsquo;s the most important thing about ABL:
+        <strong>you don&rsquo;t need to learn it.</strong>
+      </p>
+
+      <p>
+        Arch is not a code assistant. It&rsquo;s not autocomplete with context. Arch is a powerful
+        AI that is <strong>contextually aware of everything you&rsquo;ve designed</strong> &mdash;
+        every agent, every handoff, every routing rule, every tool binding, every constraint, every
+        escalation path in your entire project. You talk to Arch in natural language. Arch programs
+        the platform.
+      </p>
+
+      <p>
+        <strong>What Arch actually does</strong>: You say &ldquo;add a billing agent that verifies
+        identity before showing balance.&rdquo; Arch knows your existing topology. It creates the
+        new agent, updates the supervisor&rsquo;s routing, adds the identity verification flow,
+        wires the context passing, generates test cases, and shows you the changes as inline diffs.
+        You approve. It compiles, validates, deploys. You never wrote a line of ABL.
+      </p>
+
+      <p>
+        <strong>Why this changes everything</strong>: Imagine a powerful AI that can program the
+        entire platform for you &mdash; that understands not just ABL syntax, but your specific
+        project&rsquo;s architecture, your domain&rsquo;s regulatory constraints, and enterprise
+        orchestration patterns. That&rsquo;s Arch. A product manager describes a requirement. Arch
+        asks clarifying questions, proposes the architecture, generates the implementation, compiles
+        it, tests it, and surfaces issues &mdash; all in natural language conversation.
+      </p>
+
+      <h4>Six-stage lifecycle with Arch at every step</h4>
+
+      <div class="lifecycle-flow">
+        <div class="lifecycle-step lc-ideate">
+          <div class="step-circle">1</div>
+          <div class="step-label">Ideate</div>
+          <div class="step-desc">
+            Arch interviews you. Extracts requirements from documents. Builds a structured project
+            brief.
+          </div>
+        </div>
+        <div class="lifecycle-step lc-design">
+          <div class="step-circle">2</div>
+          <div class="step-label">Design</div>
+          <div class="step-desc">
+            Proposes full agent topology. Renders as live graph. Updates on demand. Proactively
+            suggests improvements to your design.
+          </div>
+        </div>
+        <div class="lifecycle-step lc-build">
+          <div class="step-circle">3</div>
+          <div class="step-label">Build</div>
+          <div class="step-desc">
+            Generates valid ABL for every agent. Inline diffs. Proactive suggestions. Live
+            compilation.
+            <strong
+              >Arch doesn&rsquo;t just generate &mdash; it redesigns and iterates based on your
+              feedback.</strong
+            >
+          </div>
+        </div>
+        <div class="lifecycle-step lc-test">
+          <div class="step-circle">4</div>
+          <div class="step-label">Test</div>
+          <div class="step-desc">
+            Generates test personas &amp; scenarios. LLM-judge evaluators. Surfaces coverage gaps.
+          </div>
+        </div>
+        <div class="lifecycle-step lc-deploy">
+          <div class="step-circle">5</div>
+          <div class="step-label">Deploy</div>
+          <div class="step-desc">
+            Pre-flight checklist. Validates compilation, constraints, endpoints, eval coverage,
+            error handlers.
+          </div>
+        </div>
+        <div class="lifecycle-step lc-evolve">
+          <div class="step-circle">6</div>
+          <div class="step-label">Improve</div>
+          <div class="step-desc">
+            Analyzes production metrics. Proactively suggests changes: &ldquo;Escalation rate is
+            above threshold &mdash; here&rsquo;s a routing change.&rdquo; &ldquo;Users asking about
+            topic with no agent &mdash; want me to design one?&rdquo;
+          </div>
+        </div>
+      </div>
+
+      <p>
+        <strong>Two modes</strong>: Assisted (guided wizard, Arch drives) and Pro (direct ABL
+        editing, Arch in sidebar). Junior developers start in Assisted; senior engineers work in
+        Pro. Toggle freely.
+      </p>
+
+      <div class="callout green">
+        <div class="callout-title">Bring Your Own AI</div>
+        <p>
+          Beyond Arch, ABL&rsquo;s platform is designed for AI-native interaction. You can use
+          <strong>your own AI &mdash; OpenAI, Claude, Gemini Pro, or any frontier model</strong>
+          &mdash; to directly interact with the platform, update your agents, design new topologies,
+          and program agent behavior. The platform exposes structured APIs and an MCP server that
+          any AI can use to read, modify, and deploy agent definitions. This isn&rsquo;t locked to
+          one AI provider &mdash; it&rsquo;s an open surface that any reasoning AI can program.
+        </p>
+      </div>
+
+      <p>
+        <strong>What separates Arch from Copilot/Cursor</strong>: Generic AI code assistants
+        generate into unbounded code space with no awareness of your project&rsquo;s architecture.
+        Arch is contextually aware of <strong>everything</strong> &mdash; every agent you&rsquo;ve
+        designed, every handoff, every routing rule, every constraint. It knows that a
+        <code>HANDOFF</code> needs <code>context_pass</code>. It knows that a supervisor needs a
+        <code>fallback</code>. And it knows your specific project&rsquo;s structure, so changes are
+        always consistent with the existing design.
+      </p>
+
+      <p>
+        <strong>The tight loop</strong>: Arch generates &rarr; Platform compiles &rarr; Errors feed
+        back &rarr; Arch fixes &rarr; Compiles clean &rarr; Deploy. This loop between AI generation
+        and deterministic validation is why ABL + Arch ships faster and more reliably.
+      </p>
+
+      <h3>MCP Debug Tools: AI-Powered Agent Debugging from Your Editor</h3>
+
+      <p>
+        ABL ships an MCP (Model Context Protocol) server that connects Claude Code &mdash; or any
+        MCP-compatible AI tool &mdash; directly to the running agent runtime. 18 tools that let AI
+        debug agents interactively:
+      </p>
+
+      <div class="feature-grid">
+        <div class="feature-card">
+          <h4>Connect &amp; Interact</h4>
+          <ul>
+            <li><code>debug_connect</code> &mdash; Authenticated connection to runtime</li>
+            <li><code>debug_load_agent</code> &mdash; Load any agent by domain/name</li>
+            <li><code>debug_send_message</code> &mdash; Send test messages, observe responses</li>
+            <li><code>debug_reset_session</code> &mdash; Clear state, start fresh</li>
+          </ul>
+        </div>
+        <div class="feature-card">
+          <h4>Trace Analysis</h4>
+          <ul>
+            <li>
+              <code>debug_get_recent_traces</code> &mdash; Every LLM call, tool exec, decision,
+              error
+            </li>
+            <li><code>debug_search_traces</code> &mdash; Search by text, type, agent, errors</li>
+            <li><code>debug_get_span_tree</code> &mdash; Hierarchical execution tree</li>
+            <li><code>debug_explain_decision</code> &mdash; Why the agent made a choice</li>
+          </ul>
+        </div>
+        <div class="feature-card">
+          <h4>State Inspection</h4>
+          <ul>
+            <li>
+              <code>debug_get_current_state</code> &mdash; Context, fields, flow step, constraints
+            </li>
+            <li><code>debug_get_errors</code> &mdash; Errors, warnings, constraint violations</li>
+            <li><code>debug_get_flow_graph</code> &mdash; State machine as Mermaid or JSON</li>
+          </ul>
+        </div>
+        <div class="feature-card">
+          <h4>Live Observation &amp; Analysis</h4>
+          <ul>
+            <li><code>debug_list_active_sessions</code> &mdash; See all running sessions</li>
+            <li><code>debug_subscribe_session</code> &mdash; Watch UI sessions live from editor</li>
+            <li>
+              <code>debug_analyze_session</code> &mdash; AI diagnostics: loops, violations, failures
+            </li>
+            <li>
+              <code>debug_get_docs</code> / <code>debug_search_docs</code> &mdash; ABL reference for
+              AI
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="callout accent">
+        <div class="callout-title">The workflow this enables</div>
+        <p>
+          A developer says to Claude Code: &ldquo;The booking agent isn&rsquo;t collecting the
+          check-in date. Debug it.&rdquo; Claude connects to the runtime, loads the agent, sends a
+          test message, analyzes the traces, inspects the state, finds the extraction is failing on
+          date format, and suggests the fix &mdash; all from the terminal. No context-switching to a
+          debugging UI. No manual trace inspection. AI does the debugging.
+        </p>
+      </div>
+
+      <p>
+        <strong>Why this matters competitively</strong>: No other agent platform offers AI-powered
+        debugging as a first-class feature. Decagon, Sierra, and Cognigy have dashboards. ABL has an
+        AI debugger that understands the DSL, reads traces, and suggests fixes.
+      </p>
+
+      <h3>
+        The Full Loop: Design &rarr; Compile &rarr; Deploy &rarr; Debug &rarr; Measure &rarr;
+        Improve
+      </h3>
+
+      <div class="workflow">
+        <div class="workflow-step">
+          <div class="step-num">1</div>
+          <p>
+            <strong>Design</strong> &mdash; Arch helps design the agent topology from natural
+            language
+          </p>
+        </div>
+        <div class="workflow-step">
+          <div class="step-num">2</div>
+          <p>
+            <strong>Write</strong> &mdash; Developer writes ABL (or Arch generates it), 50&ndash;200
+            lines per agent
+          </p>
+        </div>
+        <div class="workflow-step">
+          <div class="step-num">3</div>
+          <p>
+            <strong>Compile</strong> &mdash; DSL compiles to IR with validation, type checking,
+            static graph extraction
+          </p>
+        </div>
+        <div class="workflow-step">
+          <div class="step-num">4</div>
+          <p>
+            <strong>Deploy</strong> &mdash; IR deploys to the distributed runtime with production
+            guarantees
+          </p>
+        </div>
+        <div class="workflow-step">
+          <div class="step-num">5</div>
+          <p>
+            <strong>Debug</strong> &mdash; MCP tools connect Claude Code to the running runtime for
+            AI-powered debugging
+          </p>
+        </div>
+        <div class="workflow-step">
+          <div class="step-num">6</div>
+          <p>
+            <strong>Measure</strong> &mdash; Built-in tracing tracks resolution rates, escalation
+            rates, handle time, and satisfaction signals
+          </p>
+        </div>
+        <div class="workflow-step">
+          <div class="step-num">7</div>
+          <p>
+            <strong>Improve</strong> &mdash; Arch analyzes production metrics and proactively
+            suggests changes: &ldquo;Escalation rate is above threshold &mdash; here&rsquo;s a
+            routing change.&rdquo;
+          </p>
+        </div>
+      </div>
+
+      <p>
+        The loop ends when customer outcomes are met &mdash; automation rates, handle times,
+        satisfaction scores, use case coverage. Kore.ai customers already achieve 80%+ automation;
+        ABL makes the cycle of expanding to new use cases and upgrading existing ones dramatically
+        faster. Every stage is AI-assisted.
+      </p>
+
+      <h3>Minimum Viable Team</h3>
+
+      <div class="persona-grid">
+        <div class="persona-card">
+          <div class="role">Starting Team (2&ndash;3 people)</div>
+          <p>
+            <strong>1 Agent Architect</strong> &mdash; Designs topologies, writes ABL or guides
+            Arch. Productive within first week via Assisted mode.
+          </p>
+          <p>
+            <strong>1 Integration Developer</strong> &mdash; Wires tool bindings to APIs. Standard
+            backend work, no ABL expertise required.
+          </p>
+          <p>
+            <strong>1 Product/Domain Owner</strong> &mdash; Defines requirements, reviews behavior.
+            Can work with Arch directly.
+          </p>
+        </div>
+        <div class="persona-card">
+          <div class="role">What the Platform Eliminates</div>
+          <p>
+            No session management team. No orchestration infrastructure team. No compliance
+            implementation team. No separate monitoring team. The platform handles those.
+          </p>
+          <p>
+            <strong>The difference from pro-code</strong>: A large team spending months on
+            infrastructure before the first agent ships. With ABL, a small team focuses on agent
+            logic from day one &mdash; and Arch means they don&rsquo;t need to learn a new language
+            to start.
+          </p>
+        </div>
+      </div>
+
+      <!-- ==================== COMPETITORS ==================== -->
+      <hr class="section-divider" id="competitors" />
+
+      <h2>Counter-Arguments &amp; Competitive Notes</h2>
+
+      <!-- DECAGON -->
+      <div class="competitor-section">
+        <h3>Decagon: Agent Operating Procedures (AOPs)</h3>
+        <div class="pitch-box">
+          AOPs combine natural language instructions with code. Non-technical teams define agent
+          behavior in natural language; technical teams handle integrations in code. $4.5B
+          valuation, 100+ enterprise customers (Chime, Hertz, Avis, Deutsche Telekom). 80%+
+          deflection rates. $250M Series D (Jan 2026).
+        </div>
+
+        <h4>What they do well</h4>
+        <ul class="strength-list">
+          <li>
+            Accessibility for CX teams &mdash; natural language workflow definition lowers barrier
+            to entry
+          </li>
+          <li>
+            Strong customer support vertical focus with measurable outcomes (70%+ resolution rates)
+          </li>
+          <li>
+            Test-driven approach to agent validation &mdash; integrated testing suite for
+            pre-deployment validation
+          </li>
+          <li>
+            &ldquo;AOP Copilot&rdquo; &mdash; AI that helps build and optimize AOPs, similar to our
+            thesis about AI programming platforms
+          </li>
+        </ul>
+
+        <h4>Where ABL wins</h4>
+        <ol class="counter-list">
+          <li>
+            <strong>Natural language is inherently ambiguous.</strong> AOPs define agent behavior in
+            prose. Prose doesn&rsquo;t compile. When you write &ldquo;if the customer seems
+            frustrated, offer a discount,&rdquo; there&rsquo;s no validation, no type checking, no
+            deterministic guarantee about what &ldquo;seems frustrated&rdquo; means at runtime. ABL
+            compiles to IR &mdash; behavior is deterministic for a given definition.
+          </li>
+          <li>
+            <strong>CX-only vs. general-purpose.</strong> Decagon is a customer support platform
+            with an agent layer. ABL is a general-purpose agent development platform. Their
+            orchestration is implicit (the LLM decides); ours is explicit (handoff, delegate,
+            escalate are typed operations).
+          </li>
+          <li>
+            <strong>Developer control is actually limited.</strong> Decagon&rsquo;s own
+            documentation acknowledges that &ldquo;managing AI agents often requires developer
+            support&rdquo; for &ldquo;complex changes or integrations.&rdquo; ABL gives developers
+            full programmatic control with a DSL that compiles and validates.
+          </li>
+          <li>
+            <strong>No multi-agent orchestration.</strong> Decagon runs single agents per
+            conversation with tool access. They don&rsquo;t support supervisor/specialist patterns,
+            delegation chains, or external agent federation. Kore.ai has production multi-agent
+            systems with these patterns already running &mdash; ABL makes them compilable and
+            deterministic.
+          </li>
+          <li>
+            <strong>Guardrails are prompt-level, not engine-level.</strong> AOPs describe guardrails
+            in natural language. The LLM interprets them. ABL constraints are evaluated by the
+            engine before and after each LLM call &mdash; the model never gets a chance to violate
+            them.
+          </li>
+          <li>
+            <strong>No threaded conversation primitives.</strong> Decagon conversations are linear.
+            There&rsquo;s no concept of branching side-threads, cross-channel resume, or sliding
+            context windows with structured memory management.
+          </li>
+        </ol>
+
+        <div class="verdict-grid">
+          <div class="verdict-card their">
+            <div class="verdict-title">When Decagon wins</div>
+            <p>
+              Pure customer support automation where the team is primarily CX operators, not
+              developers. Single-agent deflection at scale. Organizations that want a managed
+              service, not a development platform.
+            </p>
+          </div>
+          <div class="verdict-card ours">
+            <div class="verdict-title">When ABL wins</div>
+            <p>
+              Multi-agent orchestration. Developer-centric teams building complex workflows.
+              Cross-domain agent systems. Regulated industries requiring engine-level guardrails and
+              compliance guarantees. External agent federation.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- SIERRA -->
+      <div class="competitor-section">
+        <h3>Sierra: Agent OS</h3>
+        <div class="pitch-box">
+          Agent OS 2.0 &mdash; agents with memory, context, and the ability to take action across
+          systems. &ldquo;Constellation of models&rdquo; architecture using 15+ frontier and
+          proprietary models. Both no-code (Agent Studio) and programmatic (Agent SDK) development.
+          $10B valuation. $100M ARR in under two years. Customers include Rivian, SoFi, ADT, Cigna,
+          SiriusXM.
+        </div>
+
+        <h4>What they do well</h4>
+        <ul class="strength-list">
+          <li>
+            Enterprise credibility &mdash; founded by Bret Taylor (OpenAI board chair, ex-Salesforce
+            CEO) and Clay Bavor (ex-Google)
+          </li>
+          <li>Multi-model architecture &mdash; selecting the right model for each subtask</li>
+          <li>
+            Agent SDK with real software development lifecycle &mdash; version control, CI/CD,
+            release gating, atomic snapshots
+          </li>
+          <li>Acquired Receptive AI for voice &mdash; genuine multi-channel deployment</li>
+          <li>
+            Conversation testing at scale &mdash; thousands of parallel test conversations per
+            release
+          </li>
+        </ul>
+
+        <h4>Where ABL wins</h4>
+        <ol class="counter-list">
+          <li>
+            <strong>Vendor lock-in and opacity.</strong> Sierra&rsquo;s &ldquo;constellation of
+            models&rdquo; is a black box. You don&rsquo;t choose which model handles which subtask.
+            ABL is model-agnostic: you specify <code>model: "claude-sonnet-4-6"</code> or any
+            provider.
+          </li>
+          <li>
+            <strong>Outcome-based pricing is unpredictable.</strong> Sierra doesn&rsquo;t publish
+            pricing. Their outcome-based model means costs are hard to forecast. ABL runs on your
+            infrastructure with predictable cost.
+          </li>
+          <li>
+            <strong>CX-centric despite SDK claims.</strong> Sierra&rsquo;s case studies are support
+            deflection, returns processing, appointment scheduling. ABL supports arbitrary agent
+            domains because the DSL is domain-agnostic.
+          </li>
+          <li>
+            <strong>Orchestration is implicit, not developer-declared.</strong> Sierra composes
+            &ldquo;skills&rdquo; into workflows, but the orchestration between skills is managed by
+            their platform. In ABL, orchestration patterns are explicit first-class constructs
+            &mdash; validated at compile time.
+          </li>
+          <li>
+            <strong>External agent federation is absent.</strong> Sierra agents live within
+            Sierra&rsquo;s ecosystem. No A2A protocol support for cross-platform agent coordination.
+          </li>
+          <li>
+            <strong
+              >Agent loops and guardrails are platform-managed, not developer-declared.</strong
+            >
+            ABL&rsquo;s constraints and guardrails compile into the IR and are enforced by the
+            execution engine &mdash; auditable, testable, deterministic.
+          </li>
+          <li>
+            <strong>Deployment model.</strong> Sierra is a managed service. Your customer data flows
+            through Sierra&rsquo;s infrastructure. For regulated industries (healthcare, finance,
+            UAE/GCC), this raises data sovereignty concerns. ABL deploys on your infrastructure.
+          </li>
+          <li>
+            <strong>Vendor relationship vs. internal capability.</strong> Sierra is an outsourced
+            vendor: your conversations flow through their infrastructure, your agent definitions
+            live in their ecosystem, your roadmap depends on their priorities, and switching costs
+            compound. ABL is an internal capability you own: definitions are code in your repo, the
+            runtime deploys on your infra, your team builds expertise in a DSL they control. Sierra
+            builds <em>for</em> you. ABL enables you to <em>build</em>.
+          </li>
+        </ol>
+
+        <div class="verdict-grid">
+          <div class="verdict-card their">
+            <div class="verdict-title">When Sierra wins</div>
+            <p>
+              Organizations wanting a premium managed service where speed-to-first-deployment
+              outweighs long-term ownership. Companies that prefer to outsource agent operations
+              entirely. No data sovereignty requirements.
+            </p>
+          </div>
+          <div class="verdict-card ours">
+            <div class="verdict-title">When ABL wins</div>
+            <p>
+              Organizations that want to build agent development as an internal capability.
+              Developer-centric teams. Multi-domain systems beyond CX. Regulated industries with
+              data sovereignty needs. Multi-agent orchestration with explicit delegation chains and
+              external federation. Long-term strategic control over the AI agent stack.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- OPENAI FRONTIER -->
+      <div class="competitor-section">
+        <h3>OpenAI Frontier Platform</h3>
+        <div class="pitch-box">
+          Enterprise platform for deploying AI agents as &ldquo;business coworkers&rdquo; &mdash;
+          agents that connect to company data, execute workflows, and operate with enterprise-grade
+          security. Early customers include Uber, Intuit, State Farm, HP, Oracle. Launched Feb 2026.
+        </div>
+
+        <ol class="counter-list">
+          <li>
+            <strong>Model-locked.</strong> Frontier is built on OpenAI&rsquo;s models. ABL is
+            model-agnostic &mdash; use Claude, GPT, open-weight models, or a mix.
+          </li>
+          <li>
+            <strong>General-purpose without domain primitives.</strong> No first-class
+            handoff/delegate/escalate patterns. No compiled DSL with validation. No typed context
+            passing between agents.
+          </li>
+          <li>
+            <strong>Platform play, not developer tool.</strong> Designed for business users
+            deploying pre-built agent patterns, not developers building custom orchestration.
+          </li>
+        </ol>
+      </div>
+
+      <!-- COGNIGY -->
+      <div class="competitor-section">
+        <h3>Cognigy (NICE): Enterprise Conversational AI</h3>
+        <div class="pitch-box">
+          Low-code/no-code AI Agent Studio, voice specialization, real-time collaboration. Acquired
+          by NICE for $955M (2025). Powers 1B+ annual interactions (Lufthansa, Mercedes-Benz).
+          25,000 concurrent sessions.
+        </div>
+
+        <ol class="counter-list">
+          <li>
+            <strong>Legacy architecture with AI bolted on.</strong> Core architecture is still
+            flow-based with NLU &mdash; not natively built for reasoning agents, agent loops, or
+            multi-agent orchestration. ABL was designed from the ground up for the LLM era.
+          </li>
+          <li>
+            <strong>No multi-agent orchestration.</strong> Complex workflows are built as
+            single-agent flows with branching &mdash; not composable multi-agent systems.
+          </li>
+          <li>
+            <strong>Guardrails are configuration, not compilation.</strong> Safety enforcement is
+            configured through admin interfaces, not declared in code and validated at compile time.
+          </li>
+          <li>
+            <strong>No DSL = no AI code generation advantage.</strong> Without a domain-specific
+            language, Cognigy can&rsquo;t benefit from AI that reasons and generates code into a
+            structured, validated target.
+          </li>
+          <li>
+            <strong>Acquired = integration focus, not innovation focus.</strong> Post-NICE
+            acquisition, Cognigy&rsquo;s roadmap will be driven by CX suite integration priorities.
+          </li>
+        </ol>
+      </div>
+
+      <!-- ==================== EVOLUTION ==================== -->
+      <hr class="section-divider" id="evolution" />
+
+      <h2>Why Kore.ai Built ABL: The Evolution Argument</h2>
+
+      <div class="callout accent">
+        <div class="callout-title">This is our strongest narrative advantage.</div>
+        <p>
+          Kore.ai isn&rsquo;t a startup guessing at what enterprises need. We&rsquo;ve been in the
+          enterprise conversational AI market for years &mdash; powering Fortune 500 deployments,
+          handling complex multi-department automation, serving regulated industries.
+        </p>
+      </div>
+
+      <p>We lived through the limitations firsthand &mdash; twice:</p>
+
+      <div class="timeline">
+        <div class="timeline-item">
+          <div class="gen-label">First Generation</div>
+          <p>
+            We built the intent-based, flow-driven platform. We deployed it at Fortune 500 scale. We
+            saw exactly where it hit the ceiling &mdash; no reasoning loops, no multi-agent
+            coordination, rigid conversation models.
+          </p>
+        </div>
+        <div class="timeline-item">
+          <div class="gen-label">Second Generation</div>
+          <p>
+            We built a multi-agent system platform with reasoning-first architecture &mdash; agents,
+            tools, supervisors, agent network patterns &mdash; and shipped it to production. This
+            proved that the multi-agent paradigm works at enterprise scale.
+          </p>
+        </div>
+        <div class="timeline-item">
+          <div class="gen-label">Third Generation &mdash; ABL</div>
+          <p>
+            The second generation wasn&rsquo;t designed to harness the new wave of AI that can
+            reason deeply, generate code, and help you build agents. We needed a compilable DSL that
+            AI could reason about and generate into, engine-level constraint enforcement, and a
+            platform where new-age AI is a first-class participant in building and operating agents
+            &mdash; not just powering them.
+          </p>
+        </div>
+      </div>
+
+      <blockquote>
+        ABL is what you build when you&rsquo;ve already deployed multi-agent systems in production
+        and know exactly what the next level requires.
+      </blockquote>
+
+      <p>
+        Each generation proved something. The intent-based platform proved the market. The
+        multi-agent system proved the architecture. ABL makes it programmable, compilable, and
+        AI-native:
+      </p>
+
+      <ul>
+        <li>
+          From intent-based NLU to <strong>reasoning agents</strong> with agent loops and tool
+          execution
+        </li>
+        <li>
+          From runtime-configured routing to <strong>compiled orchestration</strong> with handoff,
+          delegate, escalate as typed operations
+        </li>
+        <li>
+          From runtime guardrails to <strong>compiled constraints</strong> with engine-level
+          enforcement
+        </li>
+        <li>
+          From click-and-configure to a <strong>domain-specific language</strong> that AI can reason
+          about and generate into
+        </li>
+        <li>From proprietary model dependency to <strong>model-agnostic</strong> architecture</li>
+        <li>
+          From platform-internal agents to <strong>external agent federation</strong> via A2A
+          protocol
+        </li>
+      </ul>
+
+      <p>
+        This isn&rsquo;t a pivot. It&rsquo;s a progression &mdash; intent-based &rarr;
+        reasoning-first multi-agent &rarr; programmable DSL &mdash; backed by production deployments
+        at each stage. Decagon and Sierra are building their first-generation platforms. We&rsquo;re
+        shipping our third.
+      </p>
+
+      <!-- ==================== REBUTTALS ==================== -->
+      <hr class="section-divider" id="rebuttals" />
+
+      <h2>General Counter-Arguments to Our Position</h2>
+
+      <div class="rebuttal open">
+        <div class="rebuttal-header" onclick="toggleRebuttal(this)">
+          <span class="arrow">&#9654;</span>
+          &ldquo;Natural language IS the DSL&rdquo;
+        </div>
+        <div class="rebuttal-body">
+          <p>
+            Natural language is ambiguous by definition. &ldquo;Handle the refund if
+            appropriate&rdquo; means different things to different LLMs, different model versions,
+            and different contexts. A DSL that compiles provides deterministic behavior guarantees.
+            When an enterprise needs to prove to an auditor that their agent will
+            <em>always</em> escalate claims over $10K, &ldquo;we told it to in English&rdquo;
+            doesn&rsquo;t pass. A compiled constraint with engine-level enforcement does.
+          </p>
+        </div>
+      </div>
+
+      <div class="rebuttal">
+        <div class="rebuttal-header" onclick="toggleRebuttal(this)">
+          <span class="arrow">&#9654;</span>
+          &ldquo;You&rsquo;re adding complexity &mdash; developers should just write Python&rdquo;
+        </div>
+        <div class="rebuttal-body">
+          <p>
+            Developers write Python for everything <em>except</em> agent orchestration patterns.
+            They don&rsquo;t implement their own HTTP servers (they use Express/FastAPI). They
+            don&rsquo;t implement their own auth (they use middleware). They don&rsquo;t implement
+            their own databases (they use Postgres/MongoDB). Agent orchestration &mdash; threaded
+            conversations, context passing, agent loops, guardrails, multi-agent delegation &mdash;
+            is the same class of infrastructure problem. It deserves a platform, not bespoke code
+            per project.
+          </p>
+        </div>
+      </div>
+
+      <div class="rebuttal">
+        <div class="rebuttal-header" onclick="toggleRebuttal(this)">
+          <span class="arrow">&#9654;</span>
+          &ldquo;The big platforms will eat this space&rdquo;
+        </div>
+        <div class="rebuttal-body">
+          <p>
+            Big platforms optimize for breadth and lock-in, not developer experience. They&rsquo;ll
+            always be model-locked (or strongly model-biased). They&rsquo;ll provide general agent
+            capabilities without domain-specific orchestration primitives. And they&rsquo;ll be
+            managed services &mdash; not deployable on customer infrastructure. There&rsquo;s a
+            permanent gap for an opinionated, developer-centric, model-agnostic, self-hosted
+            programmable platform.
+          </p>
+        </div>
+      </div>
+
+      <div class="rebuttal">
+        <div class="rebuttal-header" onclick="toggleRebuttal(this)">
+          <span class="arrow">&#9654;</span>
+          &ldquo;Managed services win because enterprises don&rsquo;t want to run
+          infrastructure&rdquo;
+        </div>
+        <div class="rebuttal-body">
+          <p>
+            True for some enterprises. Not true for regulated industries (healthcare, finance,
+            government) where data sovereignty is non-negotiable. Not true for enterprises with
+            existing Kubernetes infrastructure that want to control their AI stack. The market is
+            large enough for both models &mdash; but the managed services can&rsquo;t serve the
+            segment that requires deployment control.
+          </p>
+        </div>
+      </div>
+
+      <div class="rebuttal">
+        <div class="rebuttal-header" onclick="toggleRebuttal(this)">
+          <span class="arrow">&#9654;</span>
+          &ldquo;AI will make the platform irrelevant&rdquo;
+        </div>
+        <div class="rebuttal-body">
+          <p>
+            AI generates <em>better</em> code when the target is structured and validated. The same
+            AI that might produce buggy session management in raw Python produces correct ABL
+            because the DSL constrains the solution space and the compiler catches errors. The
+            platform doesn&rsquo;t compete with AI &mdash; it amplifies AI. The question isn&rsquo;t
+            &ldquo;can AI write orchestration code?&rdquo; It&rsquo;s &ldquo;what should AI write
+            orchestration code <em>into</em>?&rdquo;
+          </p>
+        </div>
+      </div>
+
+      <div class="rebuttal">
+        <div class="rebuttal-header" onclick="toggleRebuttal(this)">
+          <span class="arrow">&#9654;</span>
+          &ldquo;Market timing &mdash; the category isn&rsquo;t proven yet&rdquo;
+        </div>
+        <div class="rebuttal-body">
+          <p>
+            The category is being created right now. Decagon ($4.5B), Sierra ($10B), and the model
+            providers are all building towards &ldquo;platforms for agent development.&rdquo; The
+            question isn&rsquo;t whether the category exists &mdash; it&rsquo;s which abstraction
+            level wins. Kore.ai isn&rsquo;t theorizing &mdash; we have both intent-based and
+            multi-agent systems deployed in production. ABL isn&rsquo;t a bet on a category;
+            it&rsquo;s the informed next step from inside the category.
+          </p>
+        </div>
+      </div>
+
+      <div class="rebuttal">
+        <div class="rebuttal-header" onclick="toggleRebuttal(this)">
+          <span class="arrow">&#9654;</span>
+          &ldquo;Kore.ai is reinventing itself &mdash; that&rsquo;s risky&rdquo;
+        </div>
+        <div class="rebuttal-body">
+          <p>
+            Every platform company faces this moment. The ones that build the next thing while the
+            current thing is still working are the ones that survive. Adobe went from boxed software
+            to Creative Cloud. Salesforce went from CRM to platform. Kore.ai&rsquo;s evolution is
+            less risky than most because it&rsquo;s a progression, not a leap: intent-based platform
+            &rarr; production multi-agent system &rarr; programmable DSL. Each step built on the
+            last. The risk isn&rsquo;t reinvention. The risk is standing still while the market
+            moves to reasoning agents, multi-agent orchestration, and AI-generated agent definitions
+            &mdash; a market we&rsquo;re already serving.
+          </p>
+        </div>
+      </div>
+
+      <!-- ==================== SOURCES ==================== -->
+      <div class="sources">
+        <h3>Sources</h3>
+        <ul>
+          <li>
+            <a
+              href="https://siliconangle.com/2026/01/28/decagon-ai-raises-250m-4-5b-valuation-scale-ai-concierge-platform/"
+              target="_blank"
+              >Decagon raises $250M at $4.5B valuation</a
+            >
+          </li>
+          <li>
+            <a href="https://decagon.ai/product/aop" target="_blank"
+              >Decagon Agent Operating Procedures</a
+            >
+          </li>
+          <li>
+            <a href="https://decagon.ai/resources/why-we-built-aop" target="_blank"
+              >Why Decagon built AOPs</a
+            >
+          </li>
+          <li>
+            <a href="https://decagon.ai/resources/aop-the-future-of-cx" target="_blank"
+              >AOPs: The Future of CX</a
+            >
+          </li>
+          <li>
+            <a
+              href="https://techcrunch.com/2025/11/21/bret-taylors-sierra-reaches-100m-arr-in-under-two-years/"
+              target="_blank"
+              >Sierra reaches $100M ARR in under two years</a
+            >
+          </li>
+          <li>
+            <a
+              href="https://www.cnbc.com/2025/09/04/bret-taylor-sierra-ai-startup-salesforce-openai.html"
+              target="_blank"
+              >Sierra $10B valuation</a
+            >
+          </li>
+          <li>
+            <a href="https://sierra.ai/blog/agent-os-2-0" target="_blank">Sierra Agent OS 2.0</a>
+          </li>
+          <li>
+            <a href="https://sierra.ai/product/develop-your-agent" target="_blank"
+              >Sierra Agent SDK</a
+            >
+          </li>
+          <li>
+            <a href="https://sierra.ai/blog/constellation-of-models" target="_blank"
+              >Sierra constellation of models</a
+            >
+          </li>
+          <li>
+            <a href="https://www.axios.com/2026/02/05/openai-platform-ai-agents" target="_blank"
+              >OpenAI Frontier launch</a
+            >
+          </li>
+          <li>
+            <a
+              href="https://www.gartner.com/en/newsroom/press-releases/2025-08-26-gartner-predicts-40-percent-of-enterprise-apps-will-feature-task-specific-ai-agents-by-2026-up-from-less-than-5-percent-in-2025"
+              target="_blank"
+              >Gartner: 40% of enterprise apps with AI agents by 2026</a
+            >
+          </li>
+          <li>
+            <a
+              href="https://www.kore.ai/blog/ai-agents-in-2026-from-hype-to-enterprise-reality"
+              target="_blank"
+              >Kore.ai: AI Agents in 2026</a
+            >
+          </li>
+          <li>
+            <a href="https://www.kore.ai/blog/7-best-agentic-ai-platforms" target="_blank"
+              >Kore.ai: 7 Best Agentic AI Platforms in 2026</a
+            >
+          </li>
+          <li>
+            <a href="https://www.cognigy.com/platform/cognigy-ai" target="_blank"
+              >NICE acquires Cognigy for $955M</a
+            >
+          </li>
+        </ul>
+      </div>
+    </div>
+    <!-- .content -->
+
+    <footer>
+      Kore.ai &middot; ABL &middot; Internal Draft &middot; February 2026
+      <br /><a
+        href="../ABL_PLATFORM_COMPETITIVE_ANALYSIS_DARK.html"
+        style="color: var(--green); text-decoration: none"
+        >Competitive Analysis (390+ features vs Decagon vs Sierra)</a
+      >
+    </footer>
+
+    <script>
+      function switchTab(id) {
+        document.querySelectorAll('.tab-panel').forEach((p) => p.classList.remove('active'));
+        document.querySelectorAll('.tab').forEach((t) => t.classList.remove('active'));
+        document.querySelectorAll('nav a').forEach((a) => a.classList.remove('active'));
+
+        document.getElementById('version-' + id).classList.add('active');
+
+        const labels = { technical: 'Technical', executive: 'Executive', narrative: 'Narrative' };
+        document.querySelectorAll('.tab').forEach((t) => {
+          if (t.textContent.trim() === labels[id]) t.classList.add('active');
+        });
+        document.querySelectorAll('nav a').forEach((a) => {
+          if (a.getAttribute('href') === '#version-' + id) a.classList.add('active');
+        });
+      }
+
+      function toggleRebuttal(header) {
+        header.parentElement.classList.toggle('open');
+      }
+
+      // Smooth scroll for nav links
+      document.querySelectorAll('nav a').forEach((a) => {
+        a.addEventListener('click', function (e) {
+          const href = this.getAttribute('href');
+          if (href.startsWith('#version-')) {
+            e.preventDefault();
+            const id = href.replace('#version-', '');
+            switchTab(id);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          }
+        });
+      });
+    </script>
+  </body>
+</html>

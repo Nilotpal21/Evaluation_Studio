@@ -1,0 +1,684 @@
+#!/usr/bin/env bash
+# =============================================================================
+# apx — Agent Platform v2 CLI
+#
+# Usage:
+#   apx up [group...]          Start services (default: infra + apps)
+#   apx down [group...]        Stop services (default: all)
+#   apx restart <service>      Restart a specific service
+#   apx logs [service]         Tail logs (all or specific service)
+#   apx status                 Health dashboard
+#   apx build                  Build all packages
+#   apx doctor                 Repo-focused readiness checks
+#   apx rebuild [service]      Clear caches + build + restart a service
+#                              (no args = clear caches + full build)
+#
+# Groups:
+#   core          mongo, redis, clickhouse
+#   streaming     kafka
+#   orchestration restate, workflow-engine, pipeline-engine
+#   nlu           nlu-sidecar
+#   search        opensearch, bge-m3, preprocessing
+#   docs          docling-service
+#   sandbox       codetool-sandbox
+#   graph         neo4j, qdrant
+#   infra         core + streaming + orchestration + nlu (daily driver)
+#   apps          runtime, template-store, studio, admin, docs-internal (PM2, dev servers + HMR)
+#   apps:build    same as apps but built artifacts (NODE_ENV=production, next start)
+#   search-apps   search-ai, search-ai-runtime (via PM2)
+#   apps:all      all PM2 services
+#   all           infra + apps
+#
+# App-name filters (after an apps* group, scopes both build and PM2 start):
+#   runtime, template-store, studio, admin, docs-internal, search-ai, search-ai-runtime, multimodal
+#   e.g. `apx up apps:build runtime studio` — build + start only those two
+#        `apx build runtime studio`         — pnpm build scoped to those two (+ deps)
+# =============================================================================
+
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "$0")" && pwd)"
+cd "$ROOT"
+
+# ── Colors ──────────────────────────────────────────────────────────────────
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[0;33m'
+BLUE='\033[0;34m'
+CYAN='\033[0;36m'
+BOLD='\033[1m'
+DIM='\033[2m'
+NC='\033[0m'
+
+# ── Docker service groups (bash 3.x compatible) ───────────────────────────
+GROUP_CORE="mongo redis clickhouse"
+GROUP_STREAMING="kafka init-kafka-topics"
+GROUP_ORCHESTRATION="restate workflow-engine pipeline-engine"
+GROUP_NLU="nlu-sidecar"
+GROUP_SEARCH="opensearch bge-m3-embeddings preprocessing-service"
+GROUP_DOCS="docling-service"
+GROUP_SANDBOX="codetool-sandbox"
+GROUP_GRAPH="neo4j qdrant"
+GROUP_INFRA="$GROUP_CORE $GROUP_STREAMING $GROUP_ORCHESTRATION $GROUP_NLU"
+GROUP_DOCKER_ALL="$GROUP_INFRA $GROUP_SEARCH $GROUP_DOCS $GROUP_SANDBOX $GROUP_GRAPH"
+
+resolve_group() {
+  case "$1" in
+    core)          echo "$GROUP_CORE" ;;
+    streaming)     echo "$GROUP_STREAMING" ;;
+    orchestration) echo "$GROUP_ORCHESTRATION" ;;
+    nlu)           echo "$GROUP_NLU" ;;
+    search)        echo "$GROUP_SEARCH" ;;
+    docs)          echo "$GROUP_DOCS" ;;
+    sandbox)       echo "$GROUP_SANDBOX" ;;
+    graph)         echo "$GROUP_GRAPH" ;;
+    infra)         echo "$GROUP_INFRA" ;;
+    docker:all)    echo "$GROUP_DOCKER_ALL" ;;
+    *)             echo "" ;;
+  esac
+}
+
+is_group() {
+  local resolved
+  resolved=$(resolve_group "$1")
+  [[ -n "$resolved" ]]
+}
+
+# ── PM2 app groups ─────────────────────────────────────────────────────────
+APPS_CORE="abl-runtime abl-template-store abl-studio abl-admin abl-docs-internal"
+APPS_SEARCH="abl-search-ai abl-search-ai-runtime"
+APPS_ALL="abl-runtime abl-template-store abl-studio abl-admin abl-search-ai abl-search-ai-runtime abl-multimodal abl-docs-internal"
+
+# ── App shortnames ─────────────────────────────────────────────────────────
+# Used as positional filters after `apps`, `apps:build`, or `apx build`.
+# Example: `apx up apps:build runtime studio` builds + starts only those two.
+APP_SHORTNAMES="runtime template-store studio admin docs-internal search-ai search-ai-runtime multimodal"
+
+app_workspace_name() {
+  case "$1" in
+    runtime)           echo "@agent-platform/runtime" ;;
+    template-store)    echo "@agent-platform/template-store" ;;
+    studio)            echo "@agent-platform/studio" ;;
+    admin)             echo "@agent-platform/admin" ;;
+    docs-internal)     echo "@agent-platform/docs-internal" ;;
+    search-ai)         echo "@agent-platform/search-ai" ;;
+    search-ai-runtime) echo "@agent-platform/search-ai-runtime" ;;
+    multimodal)        echo "@agent-platform/multimodal-service" ;;
+    *)                 echo "" ;;
+  esac
+}
+
+is_app_shortname() {
+  echo "$APP_SHORTNAMES" | grep -qw "$1"
+}
+
+# Build pnpm --filter args for a list of shortnames.
+# Uses `<pkg>...` so dependencies are built too (Turbo dependency-aware filter).
+build_filter_args() {
+  local args=""
+  for app in "$@"; do
+    local ws
+    ws=$(app_workspace_name "$app")
+    if [[ -n "$ws" ]]; then
+      args="$args --filter=${ws}..."
+    fi
+  done
+  echo "$args"
+}
+
+# ── PM2 helper ─────────────────────────────────────────────────────────────
+PM2="$ROOT/node_modules/.bin/pm2"
+
+ensure_pm2() {
+  if [[ ! -x "$PM2" ]]; then
+    echo -e "${YELLOW}pm2 not found, installing...${NC}"
+    pnpm add -D pm2 -w
+  fi
+}
+
+# ── Resolve docker services from group names ───────────────────────────────
+resolve_docker_services() {
+  local services=""
+  for group in "$@"; do
+    local resolved
+    resolved=$(resolve_group "$group")
+    if [[ -n "$resolved" ]]; then
+      services="$services $resolved"
+    else
+      # Treat as a raw docker service name
+      services="$services $group"
+    fi
+  done
+  echo "$services"
+}
+
+# ── Commands ───────────────────────────────────────────────────────────────
+
+cmd_up() {
+  local groups=("$@")
+  local start_docker=false
+  local start_apps=false
+  local docker_services=""
+  local app_set="core"
+  local app_mode="dev"  # "dev" (default) = tsx + next dev with HMR; "prod" = built artifacts
+  local app_filter=""   # space-separated list of app shortnames (acts as build+start filter)
+
+  # Default: infra + apps
+  if [[ ${#groups[@]} -eq 0 ]]; then
+    groups=("infra" "apps")
+  fi
+
+  for g in "${groups[@]}"; do
+    case "$g" in
+      apps)
+        start_apps=true
+        app_set="core"
+        ;;
+      apps:build)
+        start_apps=true
+        app_set="core"
+        app_mode="prod"
+        ;;
+      search-apps)
+        start_apps=true
+        app_set="search"
+        ;;
+      apps:all)
+        start_apps=true
+        app_set="all"
+        ;;
+      *)
+        if is_app_shortname "$g"; then
+          app_filter="$app_filter $g"
+        else
+          start_docker=true
+          docker_services="$docker_services $(resolve_docker_services "$g")"
+        fi
+        ;;
+    esac
+  done
+
+  # App shortname filters only make sense alongside an apps* group.
+  if [[ -n "$app_filter" ]] && ! $start_apps; then
+    echo -e "${RED}App filter(s) require an apps/apps:build group.${NC}"
+    echo "  Examples:"
+    echo "    apx up apps:build runtime studio"
+    echo "    apx up apps runtime"
+    exit 1
+  fi
+
+  if $start_docker && [[ -n "$docker_services" ]]; then
+    echo -e "${BOLD}${BLUE}Starting Docker services...${NC}"
+    # shellcheck disable=SC2086
+    docker compose up -d $docker_services
+    echo ""
+  fi
+
+  if $start_apps; then
+    ensure_pm2
+
+    # Build — scoped to filtered apps if filter is set (plus their deps).
+    if [[ -n "$app_filter" ]]; then
+      local filter_args
+      # shellcheck disable=SC2086
+      filter_args=$(build_filter_args $app_filter)
+      echo -e "${BOLD}${BLUE}Building packages (filtered:$app_filter)...${NC}"
+      # shellcheck disable=SC2086
+      pnpm build $filter_args
+    else
+      echo -e "${BOLD}${BLUE}Building packages...${NC}"
+      pnpm build
+    fi
+    echo ""
+
+    # Determine which PM2 apps to start. Filter wins over app_set when set.
+    local apps_to_start=""
+    if [[ -n "$app_filter" ]]; then
+      for app in $app_filter; do
+        apps_to_start="$apps_to_start abl-$app"
+      done
+    elif [[ "$app_set" == "all" ]]; then
+      apps_to_start=""  # empty = all apps in ecosystem.config.js
+    elif [[ "$app_set" == "search" ]]; then
+      apps_to_start="$APPS_SEARCH"
+    else
+      apps_to_start="$APPS_CORE"
+    fi
+
+    # Production mode (default): NODE_ENV=production routes ecosystem.config.js
+    #   to dist/index.js (node) + next start.
+    # Dev mode (apps:dev): tsx + next dev with HMR.
+    if [[ "$app_mode" == "dev" ]]; then
+      echo -e "${BOLD}${BLUE}Starting app services (dev mode, HMR)...${NC}"
+      if [[ -z "$apps_to_start" ]]; then
+        SKIP_SETUP=1 "$PM2" start ecosystem.config.js --env development
+      else
+        for app in $apps_to_start; do
+          SKIP_SETUP=1 "$PM2" start ecosystem.config.js --only "$app" --env development
+        done
+      fi
+    else
+      echo -e "${BOLD}${BLUE}Starting app services (built artifacts)...${NC}"
+      if [[ -z "$apps_to_start" ]]; then
+        SKIP_SETUP=1 NODE_ENV=production "$PM2" start ecosystem.config.js --env production
+      else
+        for app in $apps_to_start; do
+          SKIP_SETUP=1 NODE_ENV=production "$PM2" start ecosystem.config.js --only "$app" --env production
+        done
+      fi
+    fi
+    echo ""
+    "$PM2" status
+  fi
+
+  echo ""
+  echo -e "${GREEN}${BOLD}Platform is up.${NC}"
+}
+
+cmd_down() {
+  local groups=("$@")
+  local stop_docker=false
+  local stop_apps=false
+  local docker_services=""
+
+  # Default: everything
+  if [[ ${#groups[@]} -eq 0 ]]; then
+    groups=("all" "apps")
+  fi
+
+  for g in "${groups[@]}"; do
+    case "$g" in
+      apps|apps:all|search-apps)
+        stop_apps=true
+        ;;
+      all)
+        stop_docker=true
+        stop_apps=true
+        docker_services="$GROUP_DOCKER_ALL"
+        ;;
+      *)
+        stop_docker=true
+        docker_services="$docker_services $(resolve_docker_services "$g")"
+        ;;
+    esac
+  done
+
+  if $stop_apps; then
+    if [[ -x "$PM2" ]]; then
+      echo -e "${BOLD}${BLUE}Stopping app services...${NC}"
+      "$PM2" stop all 2>/dev/null || true
+      "$PM2" delete all 2>/dev/null || true
+      echo ""
+    fi
+  fi
+
+  if $stop_docker && [[ -n "$docker_services" ]]; then
+    echo -e "${BOLD}${BLUE}Stopping Docker services...${NC}"
+    # shellcheck disable=SC2086
+    docker compose stop $docker_services
+    echo ""
+  fi
+
+  echo -e "${GREEN}${BOLD}Platform stopped.${NC}"
+}
+
+cmd_restart() {
+  local target="${1:-}"
+  if [[ -z "$target" ]]; then
+    echo -e "${RED}Usage: apx restart <service|group>${NC}"
+    echo "  Examples: apx restart runtime, apx restart studio, apx restart mongo, apx restart core"
+    exit 1
+  fi
+
+  # Check if it's a PM2 app (with or without abl- prefix)
+  local pm2_name="abl-$target"
+  if [[ "$target" == abl-* ]]; then
+    pm2_name="$target"
+  fi
+
+  if echo "$APPS_ALL" | grep -qw "$pm2_name"; then
+    ensure_pm2
+    echo -e "${BOLD}${BLUE}Restarting $pm2_name...${NC}"
+    "$PM2" restart "$pm2_name"
+    return
+  fi
+
+  # Check if it's a docker group
+  if is_group "$target"; then
+    local services
+    services=$(resolve_group "$target")
+    echo -e "${BOLD}${BLUE}Restarting group: $target${NC}"
+    # shellcheck disable=SC2086
+    docker compose restart $services
+    return
+  fi
+
+  # Treat as raw docker service name
+  echo -e "${BOLD}${BLUE}Restarting $target...${NC}"
+  docker compose restart "$target"
+}
+
+cmd_logs() {
+  local target="${1:-}"
+  local extra_args=("${@:2}")
+
+  if [[ -z "$target" ]]; then
+    # Show combined docker + PM2 logs
+    echo -e "${DIM}Showing Docker logs (Ctrl+C to stop)...${NC}"
+    docker compose logs -f --tail=50
+    return
+  fi
+
+  # Check PM2 apps
+  local pm2_name="abl-$target"
+  if [[ "$target" == abl-* ]]; then
+    pm2_name="$target"
+  fi
+
+  if echo "$APPS_ALL" | grep -qw "$pm2_name"; then
+    ensure_pm2
+    "$PM2" logs "$pm2_name" --lines 50 "${extra_args[@]}"
+    return
+  fi
+
+  # Check docker groups
+  if is_group "$target"; then
+    local services
+    services=$(resolve_group "$target")
+    # shellcheck disable=SC2086
+    docker compose logs -f --tail=50 $services
+    return
+  fi
+
+  # Raw docker service
+  docker compose logs -f --tail=50 "$target"
+}
+
+cmd_status() {
+  echo -e "${BOLD}${CYAN}=== Agent Platform v2 Status ===${NC}"
+  echo ""
+
+  # Docker services
+  echo -e "${BOLD}Docker Services${NC}"
+  echo -e "${DIM}─────────────────────────────────────────────────────${NC}"
+
+  local docker_services
+  docker_services=$(docker compose ps --format json 2>/dev/null || echo "")
+
+  if [[ -z "$docker_services" ]]; then
+    echo -e "  ${DIM}No Docker services running${NC}"
+  else
+    # Print header
+    printf "  ${BOLD}%-25s %-12s %-15s %s${NC}\n" "SERVICE" "STATE" "HEALTH" "PORTS"
+    echo "$docker_services" | while IFS= read -r line; do
+      local name state health port_display
+      name=$(echo "$line" | python3 -c "import sys,json; print(json.load(sys.stdin).get('Name',''))" 2>/dev/null || echo "?")
+      state=$(echo "$line" | python3 -c "import sys,json; print(json.load(sys.stdin).get('State',''))" 2>/dev/null || echo "?")
+      health=$(echo "$line" | python3 -c "import sys,json; print(json.load(sys.stdin).get('Health',''))" 2>/dev/null || echo "")
+
+      # Extract simplified port display from Ports string
+      port_display=$(echo "$line" | python3 -c "
+import sys, json
+try:
+    data = json.load(sys.stdin)
+    ports = data.get('Ports', '')
+    if ports:
+        parts = []
+        for p in ports.split(', '):
+            if '[::]' in p: continue
+            p = p.replace('0.0.0.0:', '').replace('127.0.0.1:', '').replace('/tcp', '').replace('/udp', '')
+            if p and p not in parts: parts.append(p)
+        print(', '.join(parts))
+    else:
+        print('')
+except: print('')
+" 2>/dev/null || echo "")
+
+      # Color state
+      local state_color="$RED"
+      if [[ "$state" == "running" ]]; then
+        state_color="$GREEN"
+      elif [[ "$state" == "exited" ]]; then
+        state_color="$DIM"
+      fi
+
+      # Color health
+      local health_color="$DIM"
+      local health_display="${health:-—}"
+      if [[ "$health" == "healthy" ]]; then
+        health_color="$GREEN"
+      elif [[ "$health" == "unhealthy" ]]; then
+        health_color="$RED"
+      elif [[ "$health" == "starting" ]]; then
+        health_color="$YELLOW"
+      fi
+
+      printf "  %-25s ${state_color}%-12s${NC} ${health_color}%-15s${NC} ${DIM}%s${NC}\n" \
+        "$name" "$state" "$health_display" "$port_display"
+    done
+  fi
+
+  echo ""
+
+  # PM2 apps
+  echo -e "${BOLD}App Services (PM2)${NC}"
+  echo -e "${DIM}─────────────────────────────────────────────────────${NC}"
+
+  if [[ -x "$PM2" ]] && "$PM2" ping 2>/dev/null | grep -q "pong"; then
+    "$PM2" status 2>/dev/null || echo -e "  ${DIM}PM2 not running${NC}"
+  else
+    echo -e "  ${DIM}PM2 not running. Start with: apx up apps${NC}"
+  fi
+
+  echo ""
+}
+
+cmd_build() {
+  local targets=()
+  local unknown=()
+  for arg in "$@"; do
+    if is_app_shortname "$arg"; then
+      targets+=("$arg")
+    else
+      unknown+=("$arg")
+    fi
+  done
+
+  if [[ ${#unknown[@]} -gt 0 ]]; then
+    echo -e "${RED}Unknown build target(s): ${unknown[*]}${NC}"
+    echo "  Valid targets: $APP_SHORTNAMES"
+    exit 1
+  fi
+
+  if [[ ${#targets[@]} -eq 0 ]]; then
+    echo -e "${BOLD}${BLUE}Building all packages...${NC}"
+    pnpm build
+  else
+    local filter_args
+    filter_args=$(build_filter_args "${targets[@]}")
+    echo -e "${BOLD}${BLUE}Building packages (filtered: ${targets[*]})...${NC}"
+    # shellcheck disable=SC2086
+    pnpm build $filter_args
+  fi
+  echo -e "${GREEN}Build complete.${NC}"
+}
+
+# Clear all build caches: .next, .turbo, turbo cache
+_clear_caches() {
+  echo -e "${BOLD}${YELLOW}Clearing build caches (.next, .turbo, turbo cache)...${NC}"
+  # Next.js caches
+  find "$ROOT/apps" -maxdepth 2 -name ".next" -type d -exec rm -rf {} + 2>/dev/null || true
+  # Turbo per-package caches
+  find "$ROOT" -maxdepth 3 -name ".turbo" -type d -exec rm -rf {} + 2>/dev/null || true
+  # Turbo global cache in node_modules
+  rm -rf "$ROOT/node_modules/.cache/turbo" 2>/dev/null || true
+  echo -e "${GREEN}Caches cleared.${NC}"
+}
+
+cmd_rebuild() {
+  local target="${1:-}"
+
+  # Always clear caches before rebuild
+  _clear_caches
+
+  # No target = clean build everything
+  if [[ -z "$target" ]]; then
+    echo -e "${BOLD}${BLUE}Rebuilding all packages (clean)...${NC}"
+    pnpm build
+    echo -e "${GREEN}Rebuild complete.${NC}"
+    return
+  fi
+
+  # PM2 app
+  local pm2_name="abl-$target"
+  if [[ "$target" == abl-* ]]; then
+    pm2_name="$target"
+  fi
+
+  if echo "$APPS_ALL" | grep -qw "$pm2_name"; then
+    echo -e "${BOLD}${BLUE}Building...${NC}"
+    pnpm build
+    ensure_pm2
+    echo -e "${BOLD}${BLUE}Restarting $pm2_name...${NC}"
+    "$PM2" restart "$pm2_name"
+    return
+  fi
+
+  # Docker service — rebuild image + recreate
+  echo -e "${BOLD}${BLUE}Rebuilding Docker service: $target...${NC}"
+  docker compose build "$target"
+  docker compose up -d "$target"
+}
+
+cmd_health() {
+  echo -e "${BOLD}${CYAN}Running health checks...${NC}"
+  echo ""
+
+  local checks=(
+    "mongo|27018|tcp"
+    "redis|6380|tcp"
+    "clickhouse|8124|http://localhost:8124/ping"
+    "kafka|19092|tcp"
+    "restate|9070|http://localhost:9070/health"
+    "workflow-engine|9080|http://localhost:9080/health"
+    "pipeline-engine|9082|tcp"
+    "nlu-sidecar|8092|http://localhost:8092/health"
+    "runtime|3112|http://localhost:3112/health"
+    "search-ai|3005|http://localhost:3005/health"
+    "search-ai-runtime|3004|http://localhost:3004/health"
+    "studio|5173|http://localhost:5173"
+    "admin|3003|http://localhost:3003"
+    "docs-internal|3007|http://localhost:3007"
+  )
+
+  for check in "${checks[@]}"; do
+    IFS='|' read -r name port url <<< "$check"
+    local status
+    if [[ "$url" == http* ]]; then
+      if curl -sf --max-time 2 "$url" > /dev/null 2>&1; then
+        status="${GREEN}healthy${NC}"
+      else
+        status="${RED}unreachable${NC}"
+      fi
+    elif [[ "$url" == "tcp" ]]; then
+      if nc -z localhost "$port" 2>/dev/null; then
+        status="${GREEN}listening${NC}"
+      else
+        status="${RED}unreachable${NC}"
+      fi
+    else
+      if nc -z localhost "$port" 2>/dev/null; then
+        status="${GREEN}listening${NC}"
+      else
+        status="${RED}unreachable${NC}"
+      fi
+    fi
+    printf "  %-22s %-6s %b\n" "$name" ":$port" "$status"
+  done
+  echo ""
+}
+
+cmd_help() {
+  echo -e "${BOLD}${CYAN}apx${NC} — Agent Platform v2 CLI"
+  echo ""
+  echo -e "${BOLD}USAGE${NC}"
+  echo "  apx <command> [args...]"
+  echo ""
+  echo -e "${BOLD}COMMANDS${NC}"
+  echo "  up [group...]          Start services (default: infra + apps)"
+  echo "  down [group...]        Stop services (default: all)"
+  echo "  restart <service>      Restart a service or group"
+  echo "  logs [service]         Tail logs (all or specific)"
+  echo "  status                 Show running services"
+  echo "  health                 Run health checks on all endpoints"
+  echo "  doctor [flags]         Check repo readiness across config, deploy, integration, health"
+  echo "  build [target...]      Build all packages, or filter to runtime/studio/etc"
+  echo "  rebuild [service]      Clear caches + build (+ restart if service given)"
+  echo ""
+  echo -e "${BOLD}GROUPS${NC}"
+  echo "  core           mongo, redis, clickhouse"
+  echo "  streaming      kafka"
+  echo "  orchestration  restate, workflow-engine, pipeline-engine"
+  echo "  nlu            nlu-sidecar"
+  echo "  search         opensearch, bge-m3, preprocessing"
+  echo "  docs           docling-service"
+  echo "  sandbox        codetool-sandbox"
+  echo "  graph          neo4j, qdrant"
+  echo "  infra          core + streaming + orchestration + nlu"
+  echo "  apps           runtime, studio, admin, docs-internal (dev servers + HMR)"
+  echo "  apps:build     same as apps but built artifacts (NODE_ENV=production)"
+  echo "  search-apps    search-ai, search-ai-runtime"
+  echo "  apps:all       all app services"
+  echo ""
+  echo -e "${BOLD}RELEASE${NC}"
+  echo "  release cut           Create release branch from develop"
+  echo "  release finalize      Merge release to main, tag, update Jira"
+  echo "  release status        Show current release state"
+  echo "  release changelog     Generate CHANGELOG from commits + Jira"
+  echo "  hotfix create         Branch from main for urgent fix"
+  echo "  hotfix finalize       Merge hotfix to main + develop, tag"
+  echo ""
+  echo -e "${BOLD}EXAMPLES${NC}"
+  echo "  apx up                          Start daily driver (infra + apps, dev mode)"
+  echo "  apx up apps:build               Start all apps from built artifacts (prod)"
+  echo "  apx up apps:build runtime studio  Build + start only runtime and studio"
+  echo "  apx up apps runtime             Start only runtime in dev mode"
+  echo "  apx build runtime studio        Build only runtime + studio (and deps)"
+  echo "  apx up infra                    Start only Docker infra"
+  echo "  apx up core apps                Start core DB + app services"
+  echo "  apx up search          Start OpenSearch + BGE-M3 + preprocessing"
+  echo "  apx up search-apps     Start search-ai + search-ai-runtime"
+  echo "  apx down               Stop everything"
+  echo "  apx restart runtime    Restart the runtime service"
+  echo "  apx restart core       Restart mongo, redis, clickhouse"
+  echo "  apx logs runtime       Tail runtime logs"
+  echo "  apx logs kafka         Tail Kafka logs"
+  echo "  apx status             Show what's running"
+  echo "  apx health             Check all service endpoints"
+  echo "  apx doctor --no-live   Validate repo contracts without probing live endpoints"
+}
+
+# ── Main ───────────────────────────────────────────────────────────────────
+
+cmd="${1:-help}"
+shift || true
+
+case "$cmd" in
+  up)      cmd_up "$@" ;;
+  down)    cmd_down "$@" ;;
+  restart) cmd_restart "$@" ;;
+  logs)    cmd_logs "$@" ;;
+  status)  cmd_status ;;
+  health)  cmd_health ;;
+  doctor)  exec pnpm exec tsx "$ROOT/tools/apx-doctor.ts" "$@" ;;
+  build)   cmd_build "$@" ;;
+  rebuild) cmd_rebuild "$@" ;;
+  release) shift; exec npx tsx "$ROOT/scripts/release.ts" "$@" ;;
+  hotfix)  shift; exec npx tsx "$ROOT/scripts/release.ts" hotfix "$@" ;;
+  help|-h|--help) cmd_help ;;
+  *)
+    echo -e "${RED}Unknown command: $cmd${NC}"
+    echo "Run 'apx help' for usage."
+    exit 1
+    ;;
+esac

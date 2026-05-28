@@ -1,0 +1,11 @@
+{
+  "agent": "Repair_And_Warranty",
+  "locale": "en",
+  "strings": {
+    "invalid_serial": "That doesn't look like a valid serial number. Apple serial numbers are 10-12 alphanumeric characters.",
+    "future_date_required": "Please select a future date for your appointment.",
+    "date_within_30": "Please select a date within the next 30 days.",
+    "appointment_confirmed": "Your appointment is all set. Is there anything else I can help with?",
+    "mail_in_submitted": "Your mail-in repair is set up. Is there anything else I can help with?"
+  }
+}

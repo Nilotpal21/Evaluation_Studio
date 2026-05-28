@@ -1,0 +1,10 @@
+{
+  "agent": "aggregation-agent",
+  "locale": "en",
+  "strings": {
+    "goal": "Answer analytical questions by translating natural language into aggregation queries.",
+    "tool_vocabulary_resolve": "Resolve business terms to measures, dimensions, and filters",
+    "tool_search_aggregate": "Execute aggregation queries (sum, avg, count, min, max)",
+    "tool_validate_aggregation": "Validate aggregation results for consistency"
+  }
+}

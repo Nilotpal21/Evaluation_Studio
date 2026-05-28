@@ -1,0 +1,24 @@
+SUPERVISOR: Travel_Supervisor
+
+GOAL: "Route travel requests to specialist agents"
+
+PERSONA: "Professional travel routing assistant"
+
+HANDOFF:
+  - TO: Sales_Agent
+    WHEN: intent.category == "travel_search"
+    CONTEXT:
+      pass: [search_context, user_preferences]
+      summary: "User looking to book travel"
+    RETURN: false
+
+  - TO: Welcome_Agent
+    WHEN: intent.category == "greeting"
+    CONTEXT:
+      pass: [session_context]
+      summary: "User greeting"
+    RETURN: true
+
+COMPLETE:
+  - WHEN: handoff_successful == true
+    RESPOND: "Connected you with the right specialist."

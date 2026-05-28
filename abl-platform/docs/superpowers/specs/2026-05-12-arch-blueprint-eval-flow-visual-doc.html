@@ -1,0 +1,1356 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Arch AI Blueprint + Eval Flow</title>
+    <style>
+      :root {
+        --bg: #f6f6f3;
+        --paper: #ffffff;
+        --ink: #171717;
+        --muted: #5f5f5a;
+        --soft: #8b8b84;
+        --line: #deded7;
+        --panel: #efefeb;
+        --green: #168047;
+        --green-soft: #eaf6ef;
+        --amber: #9b6300;
+        --amber-soft: #fff2d9;
+        --red: #bf2f2f;
+        --red-soft: #fae8e8;
+        --blue: #285ec5;
+        --blue-soft: #eaf0ff;
+        --purple: #6741b8;
+        --purple-soft: #f1ebfb;
+        --shadow: 0 18px 48px rgba(0, 0, 0, 0.08);
+        --mono:
+          ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New',
+          monospace;
+        --sans:
+          Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html {
+        scroll-behavior: smooth;
+      }
+
+      body {
+        margin: 0;
+        background:
+          radial-gradient(circle at top left, rgba(40, 94, 197, 0.07), transparent 28rem),
+          linear-gradient(180deg, #fbfbfa 0%, var(--bg) 60%, #ecece8 100%);
+        color: var(--ink);
+        font-family: var(--sans);
+        line-height: 1.45;
+      }
+
+      .page {
+        display: grid;
+        grid-template-columns: 280px minmax(0, 1fr);
+        min-height: 100vh;
+      }
+
+      nav {
+        position: sticky;
+        top: 0;
+        height: 100vh;
+        padding: 28px 22px;
+        border-right: 1px solid var(--line);
+        background: rgba(255, 255, 255, 0.78);
+        backdrop-filter: blur(14px);
+        overflow: auto;
+      }
+
+      nav .brand {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 24px;
+        font-weight: 700;
+      }
+
+      .mark {
+        width: 27px;
+        height: 27px;
+        border: 2px solid var(--ink);
+        border-radius: 50%;
+        position: relative;
+      }
+
+      .mark:after {
+        content: '';
+        position: absolute;
+        inset: 5px;
+        border: 5px solid var(--ink);
+        border-left-color: transparent;
+        border-radius: 50%;
+      }
+
+      .eyebrow {
+        margin: 22px 0 8px;
+        color: var(--soft);
+        font-family: var(--mono);
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+
+      nav a {
+        display: block;
+        padding: 7px 8px;
+        border-radius: 6px;
+        color: #444;
+        font-size: 13px;
+        text-decoration: none;
+      }
+
+      nav a:hover {
+        background: var(--panel);
+        color: var(--ink);
+      }
+
+      main {
+        padding: 42px 48px 80px;
+      }
+
+      .hero,
+      section {
+        max-width: 1180px;
+        margin: 0 auto 24px;
+      }
+
+      .hero {
+        padding: 38px 42px;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        background: var(--paper);
+        box-shadow: var(--shadow);
+      }
+
+      .kicker {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 16px;
+        color: var(--blue);
+        font-family: var(--mono);
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+
+      .kicker:before {
+        content: '';
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: var(--blue);
+      }
+
+      h1 {
+        max-width: 940px;
+        margin: 0;
+        font-size: clamp(40px, 5vw, 74px);
+        line-height: 0.94;
+        letter-spacing: -0.055em;
+      }
+
+      .hero p {
+        max-width: 850px;
+        margin: 20px 0 0;
+        color: #454541;
+        font-size: 18px;
+      }
+
+      .meta-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 26px;
+      }
+
+      .pill {
+        min-height: 28px;
+        padding: 5px 10px;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        background: #fafafa;
+        color: #41413d;
+        font-size: 12px;
+      }
+
+      .pill strong {
+        color: var(--ink);
+      }
+
+      .card {
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.94);
+        overflow: hidden;
+      }
+
+      .section-head {
+        display: flex;
+        gap: 16px;
+        padding: 24px 28px 18px;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .num {
+        flex: 0 0 auto;
+        width: 34px;
+        height: 34px;
+        border-radius: 8px;
+        background: var(--ink);
+        color: #fff;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-family: var(--mono);
+        font-size: 12px;
+        font-weight: 800;
+      }
+
+      h2 {
+        margin: 0;
+        font-size: 24px;
+        letter-spacing: -0.03em;
+      }
+
+      .section-head p {
+        max-width: 850px;
+        margin: 6px 0 0;
+        color: var(--muted);
+      }
+
+      .body {
+        padding: 24px 28px 30px;
+      }
+
+      .grid-2,
+      .grid-3,
+      .grid-4 {
+        display: grid;
+        gap: 14px;
+      }
+
+      .grid-2 {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .grid-3 {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .grid-4 {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+      }
+
+      .mini-card {
+        min-height: 104px;
+        padding: 16px;
+        border: 1px solid var(--line);
+        border-radius: 9px;
+        background: #fff;
+      }
+
+      .mini-card h3 {
+        margin: 0 0 8px;
+        font-size: 15px;
+        letter-spacing: -0.02em;
+      }
+
+      .mini-card p,
+      .mini-card li {
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      .mini-card p {
+        margin: 0;
+      }
+
+      .mini-card ul {
+        margin: 8px 0 0;
+        padding-left: 18px;
+      }
+
+      .tag {
+        display: inline-flex;
+        margin-bottom: 10px;
+        padding: 2px 8px;
+        border-radius: 999px;
+        background: var(--panel);
+        color: #454541;
+        font-family: var(--mono);
+        font-size: 10px;
+        font-weight: 800;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+      }
+
+      .tag.green {
+        background: var(--green-soft);
+        color: var(--green);
+      }
+
+      .tag.amber {
+        background: var(--amber-soft);
+        color: var(--amber);
+      }
+
+      .tag.red {
+        background: var(--red-soft);
+        color: var(--red);
+      }
+
+      .tag.blue {
+        background: var(--blue-soft);
+        color: var(--blue);
+      }
+
+      .tag.purple {
+        background: var(--purple-soft);
+        color: var(--purple);
+      }
+
+      .flow {
+        display: grid;
+        grid-template-columns: repeat(8, minmax(135px, 1fr));
+        gap: 10px;
+        overflow-x: auto;
+        padding-bottom: 4px;
+      }
+
+      .flow-step {
+        position: relative;
+        min-width: 135px;
+        padding: 14px 12px 12px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: #fff;
+      }
+
+      .flow-step:after {
+        content: '->';
+        position: absolute;
+        top: 50%;
+        right: -18px;
+        transform: translateY(-50%);
+        color: var(--soft);
+        font-family: var(--mono);
+        font-weight: 800;
+      }
+
+      .flow-step:last-child:after {
+        content: '';
+      }
+
+      .flow-step strong {
+        display: block;
+        margin-bottom: 8px;
+        color: var(--soft);
+        font-family: var(--mono);
+        font-size: 10px;
+      }
+
+      .flow-step h3 {
+        margin: 0 0 6px;
+        font-size: 14px;
+      }
+
+      .flow-step p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: #fff;
+        overflow: hidden;
+      }
+
+      th,
+      td {
+        padding: 11px 12px;
+        border-right: 1px solid var(--line);
+        border-bottom: 1px solid var(--line);
+        text-align: left;
+        vertical-align: top;
+        font-size: 13px;
+      }
+
+      th {
+        background: var(--panel);
+        color: #333;
+        font-size: 11px;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+      }
+
+      tr:last-child td {
+        border-bottom: none;
+      }
+
+      th:last-child,
+      td:last-child {
+        border-right: none;
+      }
+
+      .ok {
+        color: var(--green);
+        font-weight: 800;
+      }
+
+      .warn {
+        color: var(--amber);
+        font-weight: 800;
+      }
+
+      .bad {
+        color: var(--red);
+        font-weight: 800;
+      }
+
+      .callout {
+        margin: 18px 0;
+        padding: 16px 18px;
+        border: 1px solid var(--line);
+        border-left: 5px solid var(--ink);
+        border-radius: 8px;
+        background: #fff;
+      }
+
+      .callout h3 {
+        margin: 0 0 6px;
+        font-size: 15px;
+      }
+
+      .callout p {
+        margin: 0;
+        color: #454541;
+        font-size: 13px;
+      }
+
+      .callout.green {
+        border-left-color: var(--green);
+        background: var(--green-soft);
+      }
+
+      .callout.amber {
+        border-left-color: var(--amber);
+        background: var(--amber-soft);
+      }
+
+      .callout.blue {
+        border-left-color: var(--blue);
+        background: var(--blue-soft);
+      }
+
+      .callout.red {
+        border-left-color: var(--red);
+        background: var(--red-soft);
+      }
+
+      .mono,
+      code {
+        font-family: var(--mono);
+      }
+
+      .code {
+        white-space: pre-wrap;
+        padding: 14px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: #111;
+        color: #f2f2f2;
+        font-family: var(--mono);
+        font-size: 12px;
+        line-height: 1.55;
+        overflow: auto;
+      }
+
+      .timeline {
+        position: relative;
+        display: grid;
+        gap: 12px;
+      }
+
+      .timeline:before {
+        content: '';
+        position: absolute;
+        top: 10px;
+        bottom: 10px;
+        left: 13px;
+        width: 2px;
+        background: var(--line);
+      }
+
+      .time-item {
+        position: relative;
+        display: grid;
+        grid-template-columns: 32px minmax(0, 1fr);
+        gap: 12px;
+      }
+
+      .time-dot {
+        position: relative;
+        z-index: 1;
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        background: var(--ink);
+        color: #fff;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-family: var(--mono);
+        font-size: 11px;
+        font-weight: 800;
+      }
+
+      .time-card {
+        padding: 12px 14px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: #fff;
+      }
+
+      .time-card h3 {
+        margin: 0 0 5px;
+        font-size: 14px;
+      }
+
+      .time-card p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      .footer-note {
+        max-width: 1180px;
+        margin: 28px auto 0;
+        color: var(--soft);
+        font-size: 12px;
+      }
+
+      @media (max-width: 1100px) {
+        .page {
+          grid-template-columns: 1fr;
+        }
+
+        nav {
+          position: static;
+          height: auto;
+          border-right: none;
+          border-bottom: 1px solid var(--line);
+        }
+
+        main {
+          padding: 24px;
+        }
+
+        .grid-2,
+        .grid-3,
+        .grid-4 {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <nav aria-label="Document navigation">
+        <div class="brand"><span class="mark" aria-hidden="true"></span>Agent Platform</div>
+        <div class="eyebrow">Blueprint + Eval</div>
+        <a href="#summary">Executive Summary</a>
+        <a href="#strategy">Strategic Recommendation</a>
+        <a href="#problem">Why This Change</a>
+        <a href="#target-flow">Target Flow</a>
+        <a href="#alternatives">Eval Flow Alternatives</a>
+        <a href="#artifact-contract">Artifact Contract</a>
+        <a href="#eval-pack">Eval Pack Design</a>
+        <a href="#god-mode">God Mode Continuation</a>
+        <a href="#in-project">In-Project Arch</a>
+        <a href="#data-flow">Data Flow Audit</a>
+        <a href="#risks">Risks and Controls</a>
+        <a href="#rollout">Rollout Plan</a>
+        <a href="#decisions">Decisions Needed</a>
+      </nav>
+
+      <main>
+        <article class="hero" id="summary">
+          <div class="kicker">Manager Visual Design Doc</div>
+          <h1>Arch AI Blueprint, Eval Pack, and God Mode Quality Loop</h1>
+          <p>
+            A proposal for turning project creation into a governed design-to-quality pipeline:
+            blueprint captures intent, eval pack captures success, project creation persists the
+            implementation, and God Mode continues optimization after the project exists.
+          </p>
+          <div class="meta-row">
+            <span class="pill"><strong>Status</strong> proposal for review</span>
+            <span class="pill"><strong>Date</strong> 2026-05-12</span>
+            <span class="pill"><strong>Audience</strong> product, engineering, leadership</span>
+            <span class="pill"><strong>Recommendation</strong> progressive quality flow</span>
+          </div>
+        </article>
+
+        <section id="strategy" class="card">
+          <div class="section-head">
+            <span class="num">00</span>
+            <div>
+              <h2>Strategic Recommendation</h2>
+              <p>
+                My strongest recommendation is not to make evals a single yes/no feature. Treat
+                evals as a progressive quality system with three lanes: fast creation, guided
+                confidence, and autonomous improvement.
+              </p>
+            </div>
+          </div>
+          <div class="body">
+            <div class="callout green">
+              <h3>What I would pitch</h3>
+              <p>
+                Make <strong>guided confidence</strong> the default: Arch drafts an eval pack before
+                project creation, creates the project only after health is clean, then offers a
+                post-create baseline run and improvement loop. Keep a fast lane for demos and a
+                power lane for God Mode. This avoids forcing every user into long eval runs while
+                still making quality a first-class part of Arch.
+              </p>
+            </div>
+
+            <table>
+              <thead>
+                <tr>
+                  <th>Pitch</th>
+                  <th>Product promise</th>
+                  <th>Flow</th>
+                  <th>Best for</th>
+                  <th>Tradeoff</th>
+                  <th>My view</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>1. Fast Create</strong></td>
+                  <td>Create a working project with clean syntax and health.</td>
+                  <td>Blueprint -> Build -> Health -> Create. Evals are optional later.</td>
+                  <td>Demos, prototypes, low-risk internal tools.</td>
+                  <td>Fast, but weak behavioral proof.</td>
+                  <td>Keep it as a lane, but do not make this the flagship enterprise story.</td>
+                </tr>
+                <tr>
+                  <td><strong>2. Guided Confidence</strong></td>
+                  <td>Create a project plus the tests that prove the design.</td>
+                  <td>
+                    Blueprint -> Build -> Health -> Draft Eval Pack -> Create -> Optional Baseline.
+                  </td>
+                  <td>Most onboarding, sales demos, serious first-time project creation.</td>
+                  <td>Moderate review step, but much higher trust.</td>
+                  <td>
+                    <span class="ok">Best default.</span> Strongest balance of speed,
+                    explainability, and quality.
+                  </td>
+                </tr>
+                <tr>
+                  <td><strong>3. God Mode Launch</strong></td>
+                  <td>Create, test, improve, and ship the best version Arch can produce.</td>
+                  <td>
+                    Guided Confidence -> Baseline -> Failure clusters -> Patch loop -> Regression
+                    gate -> Accept.
+                  </td>
+                  <td>
+                    Production-minded customers, complex multi-agent systems, executive demos.
+                  </td>
+                  <td>Takes time and budget; requires clear stop controls.</td>
+                  <td>Make it a premium/power action, not an invisible default.</td>
+                </tr>
+                <tr>
+                  <td><strong>4. Eval-First Design</strong></td>
+                  <td>Define success before architecture; Arch designs to pass tests.</td>
+                  <td>Goals + scenarios -> Blueprint -> Build -> Create -> Baseline.</td>
+                  <td>Regulated workflows, known SOPs, high-risk support flows.</td>
+                  <td>Best rigor, highest upfront effort.</td>
+                  <td>
+                    Very strong for enterprise templates, but too heavy for generic onboarding.
+                  </td>
+                </tr>
+                <tr>
+                  <td><strong>5. Observe-Then-Evaluate</strong></td>
+                  <td>Start with real usage, then generate evals from failures and transcripts.</td>
+                  <td>Create -> Pilot sessions -> Mine failures -> Generate evals -> Improve.</td>
+                  <td>Ambiguous domains where users do not know scenarios yet.</td>
+                  <td>Realistic, but quality comes after exposure.</td>
+                  <td>Excellent in-project capability, not enough as the initial quality story.</td>
+                </tr>
+              </tbody>
+            </table>
+
+            <div class="grid-3" style="margin-top: 18px">
+              <div class="mini-card">
+                <span class="tag green">Default</span>
+                <h3>Guided Confidence</h3>
+                <p>
+                  Generate the eval pack before create, run real evals after create. This is the
+                  main recommendation.
+                </p>
+              </div>
+              <div class="mini-card">
+                <span class="tag blue">Fallback</span>
+                <h3>Fast Create</h3>
+                <p>
+                  Keep a quick path for simple projects, but label evals as skipped quality
+                  coverage.
+                </p>
+              </div>
+              <div class="mini-card">
+                <span class="tag purple">Power</span>
+                <h3>God Mode Launch</h3>
+                <p>
+                  Use budgeted autonomous loops when the user explicitly wants Arch to improve the
+                  project after creation.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="problem" class="card">
+          <div class="section-head">
+            <span class="num">01</span>
+            <div>
+              <h2>Why This Change</h2>
+              <p>
+                Arch currently proves syntax before it proves behavior. That is not enough for a
+                multi-agent project where routing, handoffs, tool calls, completion, escalation, and
+                business rules can all fail while the UI still looks "created."
+              </p>
+            </div>
+          </div>
+          <div class="body">
+            <div class="grid-3">
+              <div class="mini-card">
+                <span class="tag red">Current risk</span>
+                <h3>Blueprint can be too thin</h3>
+                <p>
+                  A topology can look correct while generated agent DSL contains dead conditions,
+                  invalid calls, wrong return behavior, or hallucinated tool assumptions.
+                </p>
+              </div>
+              <div class="mini-card">
+                <span class="tag amber">Current risk</span>
+                <h3>Health arrives too late</h3>
+                <p>
+                  If critical findings appear after create, users see "project ready" and "project
+                  broken" at the same time.
+                </p>
+              </div>
+              <div class="mini-card">
+                <span class="tag blue">Opportunity</span>
+                <h3>Eval becomes the contract</h3>
+                <p>
+                  The blueprint should describe not only what to build, but what must be true for
+                  the project to be considered good.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="target-flow" class="card">
+          <div class="section-head">
+            <span class="num">02</span>
+            <div>
+              <h2>Target Flow</h2>
+              <p>
+                The flow separates design, generation, validation, persistence, and optimization.
+                Eval pack drafting can happen before create; real eval runs should happen after
+                create.
+              </p>
+            </div>
+          </div>
+          <div class="body">
+            <div class="flow">
+              <div class="flow-step">
+                <strong>01</strong>
+                <h3>Concept</h3>
+                <p>User describes project, users, channels, tools, and outcomes.</p>
+              </div>
+              <div class="flow-step">
+                <strong>02</strong>
+                <h3>Blueprint</h3>
+                <p>Arch creates architecture, topology, assumptions, and success dimensions.</p>
+              </div>
+              <div class="flow-step">
+                <strong>03</strong>
+                <h3>Build</h3>
+                <p>Blueprint compiles into agents, tools, memory, flows, and handoffs.</p>
+              </div>
+              <div class="flow-step">
+                <strong>04</strong>
+                <h3>Health Gate</h3>
+                <p>Compile, semantic, cross-agent, and lifecycle checks block criticals.</p>
+              </div>
+              <div class="flow-step">
+                <strong>05</strong>
+                <h3>Eval Pack</h3>
+                <p>Optional draft of personas, scenarios, paths, assertions, and fixtures.</p>
+              </div>
+              <div class="flow-step">
+                <strong>06</strong>
+                <h3>Create</h3>
+                <p>Persist project, agents, tools, blueprint link, and eval pack draft.</p>
+              </div>
+              <div class="flow-step">
+                <strong>07</strong>
+                <h3>Baseline</h3>
+                <p>Optional eval run against real runtime, real project, and real versions.</p>
+              </div>
+              <div class="flow-step">
+                <strong>08</strong>
+                <h3>God Mode</h3>
+                <p>Improve with proposed patches, regression checks, budget, and approval.</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="alternatives" class="card">
+          <div class="section-head">
+            <span class="num">03</span>
+            <div>
+              <h2>Eval Flow Alternatives</h2>
+              <p>
+                We should not assume the first eval idea is the best product shape. The right design
+                depends on friction, runtime truth, and how much autonomous mutation we want Arch to
+                perform during onboarding.
+              </p>
+            </div>
+          </div>
+          <div class="body">
+            <div class="callout green">
+              <h3>My opinion</h3>
+              <p>
+                The best default is <strong>progressive quality</strong>: generate an eval pack
+                draft before project creation, create the project once health is clean, then offer a
+                baseline eval and improvement loop immediately after creation. Full God Mode
+                auto-optimization should exist as an explicit power mode with budget, regression
+                checks, and approval controls.
+              </p>
+            </div>
+
+            <table>
+              <thead>
+                <tr>
+                  <th>Option</th>
+                  <th>Pitch</th>
+                  <th>Where evals happen</th>
+                  <th>User friction</th>
+                  <th>Quality signal</th>
+                  <th>Risk</th>
+                  <th>Verdict</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>A. Health gate only</strong></td>
+                  <td>Keep onboarding fast. Only compile and run semantic health checks.</td>
+                  <td>No eval pack in onboarding; evals only later inside project.</td>
+                  <td class="ok">Low</td>
+                  <td class="warn">Medium</td>
+                  <td>Misses behavioral failures: wrong answer, weak tone, missing edge cases.</td>
+                  <td>Good for demos, too shallow as the main production-ready promise.</td>
+                </tr>
+                <tr>
+                  <td><strong>B. Blueprint eval intent only</strong></td>
+                  <td>
+                    Blueprint lists quality dimensions, scenario families, and business rules, but
+                    does not generate concrete cases.
+                  </td>
+                  <td>During blueprint as advisory sections.</td>
+                  <td class="ok">Low</td>
+                  <td class="warn">Medium</td>
+                  <td>Looks strategic, but does not create runnable proof or coverage pressure.</td>
+                  <td>Useful foundation. Not enough by itself.</td>
+                </tr>
+                <tr>
+                  <td><strong>C. Eval pack draft before create</strong></td>
+                  <td>
+                    Arch drafts personas, scenarios, expected paths, assertions, and fixtures as an
+                    optional artifact.
+                  </td>
+                  <td>After health gate, before create; runnable after project is created.</td>
+                  <td class="warn">Medium</td>
+                  <td class="ok">High</td>
+                  <td>Can feel like extra review unless compact and skippable.</td>
+                  <td>
+                    <span class="ok">Recommended default.</span> Best balance of confidence and
+                    speed.
+                  </td>
+                </tr>
+                <tr>
+                  <td><strong>D. Required pre-create eval run</strong></td>
+                  <td>
+                    Project cannot be created until generated agents pass a baseline eval suite.
+                  </td>
+                  <td>Before create, using a temporary runtime sandbox.</td>
+                  <td class="bad">High</td>
+                  <td class="ok">High if real</td>
+                  <td>
+                    Needs fake project IDs, temporary tool bindings, temporary versioning, and
+                    cleanup. This creates lifecycle drift.
+                  </td>
+                  <td><span class="bad">Avoid for v1.</span> Too much complexity.</td>
+                </tr>
+                <tr>
+                  <td><strong>E. Post-create baseline plus improve</strong></td>
+                  <td>
+                    Create project first, then immediately offer "Run baseline and improve" using
+                    real runtime, tools, and versions.
+                  </td>
+                  <td>After create as onboarding continuation.</td>
+                  <td class="warn">Medium to high</td>
+                  <td class="ok">Very high</td>
+                  <td>Can take time and cost money; needs visible budget and stop controls.</td>
+                  <td>
+                    <span class="ok">Recommended power path.</span> Best place to run real evals.
+                  </td>
+                </tr>
+                <tr>
+                  <td><strong>F. In-project only</strong></td>
+                  <td>
+                    Keep onboarding about creation. Let users generate and run evals later from the
+                    project, agent editor, or Arch overlay.
+                  </td>
+                  <td>Only after project creation, on demand.</td>
+                  <td class="ok">Low during onboarding</td>
+                  <td class="warn">Depends on user follow-through</td>
+                  <td>Most users may never run evals, so weak projects ship silently.</td>
+                  <td>Good fallback, weaker than guided continuation.</td>
+                </tr>
+              </tbody>
+            </table>
+
+            <div class="grid-3" style="margin-top: 18px">
+              <div class="mini-card">
+                <span class="tag green">Best default</span>
+                <h3>C + E together</h3>
+                <p>
+                  Draft the eval pack before create, then run baseline and improve after create.
+                  This keeps artifact quality and runtime truth in the right places.
+                </p>
+              </div>
+              <div class="mini-card">
+                <span class="tag blue">Fast lane</span>
+                <h3>A + B for simple demos</h3>
+                <p>
+                  For a quick prototype, require clean health, capture eval intent in the blueprint,
+                  and let the user skip eval-pack generation.
+                </p>
+              </div>
+              <div class="mini-card">
+                <span class="tag purple">Power lane</span>
+                <h3>C + E with auto-loop</h3>
+                <p>
+                  For serious projects, run God Mode with an explicit budget, regression guard, and
+                  approval mode. This is Arch's strongest enterprise story.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="artifact-contract" class="card">
+          <div class="section-head">
+            <span class="num">04</span>
+            <div>
+              <h2>Artifact Contract</h2>
+              <p>
+                The design succeeds only if each artifact has a single owner, clear lifecycle
+                status, and deterministic downstream translation.
+              </p>
+            </div>
+          </div>
+          <div class="body">
+            <div class="grid-2">
+              <div class="mini-card">
+                <span class="tag blue">Design source</span>
+                <h3>BlueprintOutput</h3>
+                <div class="code">
+                  metadata specification topology perAgentSpecs toolPlan memoryPlan handoffContracts
+                  guardrails completionContracts successDimensions evalIntent validationReport
+                  status: draft | locked | linked
+                </div>
+              </div>
+              <div class="mini-card">
+                <span class="tag purple">Quality source</span>
+                <h3>EvalPackDraft</h3>
+                <div class="code">
+                  goals dimensions personas scenarioFamilies cases expectedPaths businessAssertions
+                  fixturePlan evaluatorPlan coverageMatrix gaps status: proposed | accepted | linked
+                  | runnable
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="eval-pack" class="card">
+          <div class="section-head">
+            <span class="num">05</span>
+            <div>
+              <h2>Eval Pack Design</h2>
+              <p>
+                The eval pack translates blueprint intent into concrete quality checks. It should be
+                generated before create as a draft and made runnable only after create.
+              </p>
+            </div>
+          </div>
+          <div class="body">
+            <div class="grid-4">
+              <div class="mini-card">
+                <span class="tag">Dimension</span>
+                <h3>Routing accuracy</h3>
+                <p>Expected agent path, no dead routes, no duplicate catch-all handoffs.</p>
+              </div>
+              <div class="mini-card">
+                <span class="tag">Dimension</span>
+                <h3>Field discipline</h3>
+                <p>Gather only useful fields, populate completion fields, avoid stale names.</p>
+              </div>
+              <div class="mini-card">
+                <span class="tag">Dimension</span>
+                <h3>Tool correctness</h3>
+                <p>Valid tool references, correct argument shapes, and realistic fixtures.</p>
+              </div>
+              <div class="mini-card">
+                <span class="tag">Dimension</span>
+                <h3>Return lifecycle</h3>
+                <p>Returnable specialists complete; they do not handoff back to parent.</p>
+              </div>
+            </div>
+
+            <div class="callout amber">
+              <h3>Important constraint</h3>
+              <p>
+                Eval pack generation should be optional and skippable. Project creation should not
+                require eval authoring for simple demos, but production-ready onboarding should
+                strongly recommend it when health or coverage is weak.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <section id="god-mode" class="card">
+          <div class="section-head">
+            <span class="num">06</span>
+            <div>
+              <h2>God Mode Continuation</h2>
+              <p>
+                God Mode is not a separate creation path. It is the quality loop that continues
+                after project creation, using the blueprint and eval pack as source material.
+              </p>
+            </div>
+          </div>
+          <div class="body">
+            <div class="timeline">
+              <div class="time-item">
+                <span class="time-dot">0</span>
+                <div class="time-card">
+                  <h3>Baseline run</h3>
+                  <p>
+                    Run the accepted eval pack against the created project and store the baseline.
+                  </p>
+                </div>
+              </div>
+              <div class="time-item">
+                <span class="time-dot">1</span>
+                <div class="time-card">
+                  <h3>Failure clustering</h3>
+                  <p>
+                    Cluster failures by routing, handoff, gather, tool, business rule, and safety.
+                  </p>
+                </div>
+              </div>
+              <div class="time-item">
+                <span class="time-dot">2</span>
+                <div class="time-card">
+                  <h3>Patch proposal</h3>
+                  <p>
+                    Produce a hypothesis, target agent, diff, expected impact, and regression risk.
+                  </p>
+                </div>
+              </div>
+              <div class="time-item">
+                <span class="time-dot">3</span>
+                <div class="time-card">
+                  <h3>Verification run</h3>
+                  <p>Run focused cases plus regression cases before accepting the patch.</p>
+                </div>
+              </div>
+              <div class="time-item">
+                <span class="time-dot">4</span>
+                <div class="time-card">
+                  <h3>Versioned accept</h3>
+                  <p>Accept only if targets improve and no blocking regression appears.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="in-project" class="card">
+          <div class="section-head">
+            <span class="num">07</span>
+            <div>
+              <h2>In-Project Arch Capability</h2>
+              <p>
+                Once the project exists, Arch should use the same blueprint and eval artifacts to
+                explain, modify, test, and improve the system from inside Studio.
+              </p>
+            </div>
+          </div>
+          <div class="body">
+            <div class="grid-3">
+              <div class="mini-card">
+                <span class="tag blue">Ask</span>
+                <h3>"Why is health bad?"</h3>
+                <p>
+                  Arch reads health findings, agent DSL, blueprint contracts, and eval failures.
+                </p>
+              </div>
+              <div class="mini-card">
+                <span class="tag blue">Ask</span>
+                <h3>"Improve routing"</h3>
+                <p>Arch compares expected paths from eval pack against actual traces.</p>
+              </div>
+              <div class="mini-card">
+                <span class="tag blue">Ask</span>
+                <h3>"Add a workflow"</h3>
+                <p>Arch edits blueprint first, regenerates DSL, and updates eval coverage.</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="data-flow" class="card">
+          <div class="section-head">
+            <span class="num">08</span>
+            <div>
+              <h2>Data Flow Audit</h2>
+              <p>
+                Every field that appears in the blueprint or eval pack must either translate
+                deterministically downstream or be marked advisory.
+              </p>
+            </div>
+          </div>
+          <div class="body">
+            <table>
+              <thead>
+                <tr>
+                  <th>Field family</th>
+                  <th>Blueprint</th>
+                  <th>Build</th>
+                  <th>Create project</th>
+                  <th>Eval pack</th>
+                  <th>God Mode</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>Agent topology</strong></td>
+                  <td class="ok">Source</td>
+                  <td class="ok">Renders handoffs</td>
+                  <td class="ok">Persists agents</td>
+                  <td class="ok">Expected paths</td>
+                  <td class="ok">Routing regressions</td>
+                </tr>
+                <tr>
+                  <td><strong>Gather fields</strong></td>
+                  <td class="ok">Declared</td>
+                  <td class="ok">GATHER + COMPLETE</td>
+                  <td class="ok">Agent DSL</td>
+                  <td class="ok">Required-field assertions</td>
+                  <td class="ok">Field patch proposals</td>
+                </tr>
+                <tr>
+                  <td><strong>Tools</strong></td>
+                  <td class="ok">Tool intent</td>
+                  <td class="ok">Tool signatures</td>
+                  <td class="warn">Only real/linkable tools</td>
+                  <td class="ok">Tool-call expectations</td>
+                  <td class="ok">Failure diagnosis</td>
+                </tr>
+                <tr>
+                  <td><strong>Handoffs</strong></td>
+                  <td class="ok">Conditions + return contract</td>
+                  <td class="ok">Raw CEL, no quoted expression</td>
+                  <td class="ok">Agent DSL</td>
+                  <td class="ok">Expected trajectory</td>
+                  <td class="ok">Dead route fixes</td>
+                </tr>
+                <tr>
+                  <td><strong>Success dimensions</strong></td>
+                  <td class="ok">Targets</td>
+                  <td class="warn">Advisory, not DSL</td>
+                  <td class="ok">Project quality config</td>
+                  <td class="ok">Evaluator dimensions</td>
+                  <td class="ok">Loop stop criteria</td>
+                </tr>
+              </tbody>
+            </table>
+
+            <div class="callout red">
+              <h3>Known anti-pattern to block</h3>
+              <p>
+                A returnable child agent should not end with unconditional
+                <code>HANDOFF WHEN: true RETURN: true</code> back to the parent. The child should
+                complete; runtime returns through the existing handoff stack.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <section id="risks" class="card">
+          <div class="section-head">
+            <span class="num">09</span>
+            <div>
+              <h2>Risks and Controls</h2>
+              <p>
+                The main risk is not adding evals. The main risk is adding evals without a strict
+                lifecycle contract, which would create more state drift.
+              </p>
+            </div>
+          </div>
+          <div class="body">
+            <table>
+              <thead>
+                <tr>
+                  <th>Risk</th>
+                  <th>Impact</th>
+                  <th>Control</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Eval runs before real project exists</td>
+                  <td>Fake confidence, no durable version, no real tools</td>
+                  <td>Only draft eval packs pre-create; runnable status only after create</td>
+                </tr>
+                <tr>
+                  <td>Blueprint and generated DSL drift</td>
+                  <td>User approves one thing, runtime executes another</td>
+                  <td>Blueprint is canonical; DSL is generated and validated from it</td>
+                </tr>
+                <tr>
+                  <td>God Mode mutates blindly</td>
+                  <td>Regressions hidden behind aggregate score improvement</td>
+                  <td>Patch proposals require hypothesis, diff, focused run, regression run</td>
+                </tr>
+                <tr>
+                  <td>Reload resumes wrong phase</td>
+                  <td>Duplicate prompts, stale widgets, blocked streaming</td>
+                  <td>
+                    Persist phase, artifact statuses, active operation locks, and resumable job IDs
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section id="rollout" class="card">
+          <div class="section-head">
+            <span class="num">10</span>
+            <div>
+              <h2>Rollout Plan</h2>
+              <p>
+                Roll out in small increments so we get value early without a giant all-or-nothing
+                rewrite.
+              </p>
+            </div>
+          </div>
+          <div class="body">
+            <div class="grid-4">
+              <div class="mini-card">
+                <span class="tag blue">Phase 1</span>
+                <h3>Blueprint eval intent</h3>
+                <p>Add success dimensions, scenario families, and quality gates to blueprint.</p>
+              </div>
+              <div class="mini-card">
+                <span class="tag blue">Phase 2</span>
+                <h3>Eval pack draft</h3>
+                <p>Generate optional personas, expected paths, assertions, and coverage gaps.</p>
+              </div>
+              <div class="mini-card">
+                <span class="tag blue">Phase 3</span>
+                <h3>Post-create baseline</h3>
+                <p>Persist eval pack and run baseline evals against the real project runtime.</p>
+              </div>
+              <div class="mini-card">
+                <span class="tag blue">Phase 4</span>
+                <h3>God Mode loop</h3>
+                <p>
+                  Add patch proposals, focused reruns, regressions, budgets, and accept controls.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="decisions" class="card">
+          <div class="section-head">
+            <span class="num">11</span>
+            <div>
+              <h2>Decisions Needed</h2>
+              <p>These are the decisions to take to product and engineering review.</p>
+            </div>
+          </div>
+          <div class="body">
+            <div class="grid-2">
+              <div class="mini-card">
+                <span class="tag green">Recommendation</span>
+                <h3>Make eval pack generation optional but prominent</h3>
+                <p>Default to generating an eval pack for multi-agent projects; allow skip.</p>
+              </div>
+              <div class="mini-card">
+                <span class="tag green">Recommendation</span>
+                <h3>Run evals only after project creation</h3>
+                <p>
+                  Baseline evals need project versioning, runtime sessions, and durable results.
+                </p>
+              </div>
+              <div class="mini-card">
+                <span class="tag green">Recommendation</span>
+                <h3>Let God Mode continue from onboarding</h3>
+                <p>After create, offer "Run baseline and improve" as the natural next step.</p>
+              </div>
+              <div class="mini-card">
+                <span class="tag amber">Open decision</span>
+                <h3>Auto-apply or approval-first?</h3>
+                <p>Suggested v1 default: approval-first. Add bounded auto-apply later.</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <p class="footer-note">
+          Standalone HTML artifact. Source inputs: current Arch blueprint design, Studio redesign
+          God Mode screens, and generated ABL health-review findings.
+        </p>
+      </main>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,11 @@
+{
+  "agent": "OS_Upgrade_Coordinator",
+  "locale": "en",
+  "strings": {
+    "approval_required": "Upgrade requires explicit approval before execution.",
+    "canary_executing": "Executing canary batch (5 sites)...",
+    "health_check_passed": "Canary Health Check: PASSED. Proceeding with general rollout...",
+    "health_check_failed": "Canary Health Check: FAILED. Rolling back canary sites...",
+    "tool_error": "Upgrade system error. Pausing all activities for safety."
+  }
+}

@@ -1,0 +1,98 @@
+{
+  "moduleId": "identity-authentication",
+  "passThreshold": 0.8,
+  "questions": [
+    {
+      "id": "ida-q1",
+      "type": "mcq",
+      "stem": "An agent has a `check-balance` tool with `identityTierRequired: 2` and a `store-locator` tool with no identityTierRequired set. An anonymous user (T0) calls the store-locator tool. What happens?",
+      "options": [
+        {
+          "id": "a",
+          "text": "The call is blocked because the session has an anonymous user"
+        },
+        {
+          "id": "b",
+          "text": "The call succeeds because tools without identityTierRequired are accessible to all users regardless of tier",
+          "correct": true
+        },
+        {
+          "id": "c",
+          "text": "The call succeeds but the response is redacted to remove sensitive data"
+        }
+      ],
+      "explanation": "If identityTierRequired is not set on a tool, the tool is accessible to all users regardless of identity tier. The store-locator has no tier requirement, so anonymous users can call it. The check-balance tool requires tier 2 (verified), so an anonymous user would receive an IDENTITY_TIER_INSUFFICIENT error."
+    },
+    {
+      "id": "ida-q2",
+      "type": "mcq",
+      "stem": "A user at identity tier T1 (Recognized) attempts to access a tool requiring T2 (Verified). Which verification method would promote them to T2?",
+      "options": [
+        {
+          "id": "a",
+          "text": "Provider assertion, which uses the channel provider's identity claim"
+        },
+        {
+          "id": "b",
+          "text": "Webhook challenge, which verifies identity between the platform and a backend server"
+        },
+        {
+          "id": "c",
+          "text": "OTP verification, which requires the user to submit a 6-digit one-time code delivered via email or SMS",
+          "correct": true
+        }
+      ],
+      "explanation": "Provider assertion and webhook challenge only grant T1, which the user already has. To reach T2 (Verified), the user needs a cryptographic identity proof: HMAC signature, OTP code, OAuth with PKCE, or email magic link. OTP is a two-step method where the platform generates a 6-digit code delivered to the user, who then submits it to complete verification."
+    },
+    {
+      "id": "ida-q3",
+      "type": "fill-blank",
+      "stem": "In the Agent Platform, cross-tenant access attempts return a '________' response rather than 'access denied' to prevent information leakage about whether a resource exists in another tenant.",
+      "answer": "not found",
+      "explanation": "The platform returns 'not found' (HTTP 404) for cross-tenant access attempts instead of 'access denied' (HTTP 403). This prevents information leakage — an attacker cannot even confirm whether a resource exists in another tenant. This same pattern applies to insufficient permissions within a tenant.",
+      "acceptAlternatives": ["not found", "404", "not found (404)"]
+    },
+    {
+      "id": "ida-q4",
+      "type": "mcq",
+      "stem": "Your organization wants to require all workspace members to authenticate through your corporate Okta instance. After configuring SAML 2.0 SSO and verifying your domain, you enable 'Force SSO.' Which statement is true about Force SSO behavior?",
+      "options": [
+        {
+          "id": "a",
+          "text": "All users including the workspace Owner must use SSO with no exceptions"
+        },
+        {
+          "id": "b",
+          "text": "The workspace Owner always retains password-based login as a fallback, and members with emails outside the verified domain are unaffected",
+          "correct": true
+        },
+        {
+          "id": "c",
+          "text": "Force SSO disables API key authentication for all programmatic access"
+        }
+      ],
+      "explanation": "When Force SSO is enabled, members with a verified domain email must authenticate through SSO, and password-based login is disabled for those users. However, the workspace Owner always retains password-based login as a fallback regardless of the Force SSO setting, and members with email addresses outside the verified domain are unaffected."
+    },
+    {
+      "id": "ida-q5",
+      "type": "mcq",
+      "stem": "An API key is created for a web chat widget that only needs to send messages and receive responses. Following the security documentation's guidance, which permission scope should be assigned?",
+      "options": [
+        {
+          "id": "a",
+          "text": "Admin, to ensure the widget can handle all possible scenarios"
+        },
+        {
+          "id": "b",
+          "text": "Chat only, following the principle of least privilege",
+          "correct": true
+        },
+        {
+          "id": "c",
+          "text": "Chat and Read, since the widget may need to display session history"
+        }
+      ],
+      "explanation": "The documentation explicitly states to follow the principle of least privilege and gives the example that a web chat widget only needs Chat permission. API keys carry three permission levels: Chat (send/receive messages), Read (access session history and analytics), and Admin (manage agents and deployments). Assigning only the Chat scope limits the blast radius if the key is compromised."
+    }
+  ]
+}

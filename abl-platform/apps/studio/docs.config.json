@@ -1,0 +1,19 @@
+{
+  "siteName": "Agent Platform — Documentation",
+  "sections": [
+    { "slug": "getting-started", "title": "Getting Started" },
+    { "slug": "guides", "title": "Guides" },
+    { "slug": "tutorials", "title": "Tutorials" },
+    { "slug": "abl-reference", "title": "ABL Reference" },
+    { "slug": "studio", "title": "Studio" },
+    { "slug": "admin", "title": "Administration" },
+    { "slug": "api-reference", "title": "API Reference" },
+    { "slug": "product", "title": "Product" },
+    { "slug": "enterprise", "title": "Enterprise" },
+    { "slug": "examples", "title": "Examples" },
+    { "slug": "glossary", "title": "Glossary" },
+    { "slug": "faq", "title": "FAQ" },
+    { "slug": "features", "title": "Features" },
+    { "slug": "testing", "title": "Testing" }
+  ]
+}

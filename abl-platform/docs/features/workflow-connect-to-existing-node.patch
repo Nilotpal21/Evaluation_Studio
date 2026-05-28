@@ -1,0 +1,1871 @@
+diff --git a/apps/studio/e2e/workflows/agents.md b/apps/studio/e2e/workflows/agents.md
+index 5d90996b5..0a0ade48e 100644
+--- a/apps/studio/e2e/workflows/agents.md
++++ b/apps/studio/e2e/workflows/agents.md
+@@ -212,24 +212,25 @@ Prefer `[data-testid="..."]` over text selectors. If a component lacks a testid:
+ 
+ **Existing testids** (update this list when adding new ones):
+ 
+-| Area         | Testids                                                                                                                                                                                                                                                                                                                                                                  |
+-| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+-| Canvas       | `workflow-canvas-page`, `workflow-canvas`, `workflow-node-start`, `config-panel`, `config-panel-close`, `assets-sidebar`                                                                                                                                                                                                                                                 |
+-| Node config  | `config-url`, `condition-config`, `add-condition-btn`, `text-to-text-config`, `config-system-prompt`, `config-human-prompt`, `config-temperature`, `config-settings-link`                                                                                                                                                                                                |
+-| Tool config  | `tool-node-config`, `tool-empty-state`, `tool-create-link`, `tool-add-param`, `tool-param-row-{i}`, `tool-param-remove-{i}` (Select id: `#tool-select`)                                                                                                                                                                                                                  |
+-| Agent config | `agent-node-config`, `agent-empty-state`, `agent-create-link` (Select id: `#agent-select`)                                                                                                                                                                                                                                                                               |
+-| Integration  | `integration-node-config`, `integration-select-button`, `integration-selection-button`, `create-connection-link`, `manage-connections-link`                                                                                                                                                                                                                              |
+-| Run          | `toolbar-run-btn`, `run-dialog`, `run-input-{name}`, `run-execute-btn`                                                                                                                                                                                                                                                                                                   |
+-| Debug        | `execution-debug-panel`, `debug-code-toggle`                                                                                                                                                                                                                                                                                                                             |
+-| Monitor      | `monitor-kpi-bar`, `monitor-status-filter`, `monitor-execution-row-{id8}`                                                                                                                                                                                                                                                                                                |
+-| Triggers     | `trigger-creation-form`, `trigger-type-{type}`, `trigger-async-push-toggle`, `trigger-create-btn`, `trigger-card-{type}`, `add-trigger-btn`                                                                                                                                                                                                                              |
+-| Snippets     | `snippet-tab-{mode}` (sync, async, async_poll, async_push)                                                                                                                                                                                                                                                                                                               |
+-| Versioning   | `workflow-version-badge`, `workflow-state-badge`, `served-via-caption`                                                                                                                                                                                                                                                                                                   |
+-| Toolbar      | `canvas-toolbar`                                                                                                                                                                                                                                                                                                                                                         |
+-| Handles      | `handle-plus-{handleId}`, `handle-plus-menu`, `plus-menu-{nodeType}`                                                                                                                                                                                                                                                                                                     |
+-| Edges        | `edge-delete-{edgeId}`                                                                                                                                                                                                                                                                                                                                                   |
+-| Inbox        | `unified-inbox-page`, `unified-inbox-filter-bar` (with `data-active-mailbox` / `data-active-type`), `unified-inbox-empty`, `unified-inbox-loading`, `unified-inbox-error`, `unified-inbox-list`, `unified-inbox-total-active`, `unified-inbox-load-more`, `inbox-type-filter-{key}` (key ∈ `all` / `approval` / `data_entry` / `escalation`, with `data-active` boolean) |
+-| Task Card    | `human-task-card` (with `data-task-id` / `data-task-type` / `data-task-status`), `human-task-card-toggle`, `human-task-approval-panel`, `human-task-notes`, `human-task-approve`, `human-task-reject`                                                                                                                                                                    |
++| Area                | Testids                                                                                                                                                                                                                                                                                                                                                                  |
++| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
++| Canvas              | `workflow-canvas-page`, `workflow-canvas`, `workflow-node-start`, `config-panel`, `config-panel-close`, `assets-sidebar`                                                                                                                                                                                                                                                 |
++| Node config         | `config-url`, `condition-config`, `add-condition-btn`, `text-to-text-config`, `config-system-prompt`, `config-human-prompt`, `config-temperature`, `config-settings-link`                                                                                                                                                                                                |
++| Tool config         | `tool-node-config`, `tool-empty-state`, `tool-create-link`, `tool-add-param`, `tool-param-row-{i}`, `tool-param-remove-{i}` (Select id: `#tool-select`)                                                                                                                                                                                                                  |
++| Agent config        | `agent-node-config`, `agent-empty-state`, `agent-create-link` (Select id: `#agent-select`)                                                                                                                                                                                                                                                                               |
++| Integration         | `integration-node-config`, `integration-select-button`, `integration-selection-button`, `create-connection-link`, `manage-connections-link`                                                                                                                                                                                                                              |
++| Run                 | `toolbar-run-btn`, `run-dialog`, `run-input-{name}`, `run-execute-btn`                                                                                                                                                                                                                                                                                                   |
++| Debug               | `execution-debug-panel`, `debug-code-toggle`                                                                                                                                                                                                                                                                                                                             |
++| Monitor             | `monitor-kpi-bar`, `monitor-status-filter`, `monitor-execution-row-{id8}`                                                                                                                                                                                                                                                                                                |
++| Triggers            | `trigger-creation-form`, `trigger-type-{type}`, `trigger-async-push-toggle`, `trigger-create-btn`, `trigger-card-{type}`, `add-trigger-btn`                                                                                                                                                                                                                              |
++| Snippets            | `snippet-tab-{mode}` (sync, async, async_poll, async_push)                                                                                                                                                                                                                                                                                                               |
++| Versioning          | `workflow-version-badge`, `workflow-state-badge`, `served-via-caption`                                                                                                                                                                                                                                                                                                   |
++| Toolbar             | `canvas-toolbar`                                                                                                                                                                                                                                                                                                                                                         |
++| Handles             | `handle-plus-{handleId}`, `handle-plus-menu`, `plus-menu-{nodeType}`                                                                                                                                                                                                                                                                                                     |
++| Edges               | `edge-delete-{edgeId}`                                                                                                                                                                                                                                                                                                                                                   |
++| Inbox               | `unified-inbox-page`, `unified-inbox-filter-bar` (with `data-active-mailbox` / `data-active-type`), `unified-inbox-empty`, `unified-inbox-loading`, `unified-inbox-error`, `unified-inbox-list`, `unified-inbox-total-active`, `unified-inbox-load-more`, `inbox-type-filter-{key}` (key ∈ `all` / `approval` / `data_entry` / `escalation`, with `data-active` boolean) |
++| Task Card           | `human-task-card` (with `data-task-id` / `data-task-type` / `data-task-status`), `human-task-card-toggle`, `human-task-approval-panel`, `human-task-notes`, `human-task-approve`, `human-task-reject`                                                                                                                                                                    |
++| Connect-to-existing | `connect-to-existing-section`, `connect-to-existing-search`, `connect-to-existing-row-{nodeId}`, `connect-to-existing-empty`, `connect-to-existing-no-matches`, `merger-node-config`                                                                                                                                                                                     |
+ 
+ ### 4. Test structure — phases with clear section comments
+ 
+diff --git a/apps/studio/e2e/workflows/workflow-canvas-uat.spec.ts b/apps/studio/e2e/workflows/workflow-canvas-uat.spec.ts
+index f62cfb2b0..6a2d59c96 100644
+--- a/apps/studio/e2e/workflows/workflow-canvas-uat.spec.ts
++++ b/apps/studio/e2e/workflows/workflow-canvas-uat.spec.ts
+@@ -904,4 +904,428 @@ test.describe('Workflow Canvas UAT', () => {
+       });
+     });
+   });
++
++  // ─── UAT-11: Connect to Existing Node ─────────────────────────────────────
++  //
++  // Feature spec: docs/features/workflow-connect-to-existing-node.md
++  // Test spec:    docs/testing/sub-features/workflow-connect-to-existing-node.md
++  //
++  // The HandlePlusMenu's bottom-most section lets a user route a handle to a
++  // node that already exists on the canvas instead of creating a new one. The
++  // section reuses `onConnect` so cycle/scope/duplicate/fan-out guards stay
++  // consistent with drag-to-connect.
++
++  test.describe('UAT-11: Connect to Existing Node (HandlePlusMenu)', () => {
++    test('UAT-11.1 (E2E-3): Empty-state on fresh canvas (only Start exists)', async ({ page }) => {
++      test.setTimeout(60000);
++
++      await loginAndSetup(page);
++      await navigateToWorkflows(page);
++      await createWorkflowViaUI(page, `ConnectExisting_Empty_${Date.now()}`);
++      await waitForCanvasReady(page);
++
++      // Open the HandlePlusMenu from Start's on_success handle
++      await page.locator('[data-testid="handle-plus-on_success"]').first().click();
++      await expect(page.locator('[data-testid="handle-plus-menu"]')).toBeVisible({
++        timeout: 5000,
++      });
++
++      // The new section is always rendered; with only Start on canvas, the
++      // empty-state message is shown (no eligible targets — Start is self).
++      await expect(page.locator('[data-testid="connect-to-existing-section"]')).toBeVisible();
++      await expect(page.locator('[data-testid="connect-to-existing-empty"]')).toBeVisible();
++
++      // No row elements at all
++      const rowCount = await page.locator('[data-testid^="connect-to-existing-row-"]').count();
++      expect(rowCount).toBe(0);
++    });
++
++    test('UAT-11.2 (E2E-1): Diamond convergence — both Condition branches connect to shared End', async ({
++      page,
++    }) => {
++      test.setTimeout(120000);
++
++      await loginAndSetup(page);
++      await navigateToWorkflows(page);
++      await createWorkflowViaUI(page, `ConnectExisting_Diamond_${Date.now()}`);
++      await waitForCanvasReady(page);
++
++      // Build the canvas via Zustand store: Start → Condition, plus a stand-alone End
++      // (no edges yet from Condition's branches). Per agents.md Writing Rule #2, use
++      // the store for setup — viewport-fragile UI clicks are reserved for the picker.
++      const { conditionId, endId } = await page.evaluate(() => {
++        const w = window as unknown as {
++          __zustandStores?: { workflowCanvas?: { getState: () => unknown } };
++        };
++        const store = w.__zustandStores?.workflowCanvas;
++        if (!store) throw new Error('canvas store not exposed on window');
++        const state = store.getState() as {
++          nodes: Array<{ id: string; data: { nodeType: string } }>;
++          addNode: (
++            nodeType: string,
++            pos: { x: number; y: number },
++            src?: { nodeId: string; handleId: string },
++          ) => void;
++        };
++        const startNode = state.nodes.find((n) => n.data.nodeType === 'start');
++        if (!startNode) throw new Error('start node missing');
++        state.addNode(
++          'condition',
++          { x: 400, y: 200 },
++          { nodeId: startNode.id, handleId: 'on_success' },
++        );
++        // Refresh state to find the new Condition node
++        const next = store.getState() as typeof state;
++        const condition = next.nodes.find((n) => n.data.nodeType === 'condition');
++        if (!condition) throw new Error('condition node missing after addNode');
++        // Place End sibling-style — NOT connected yet
++        state.addNode('end', { x: 800, y: 400 });
++        const last = store.getState() as typeof state;
++        const end = last.nodes.find((n) => n.data.nodeType === 'end');
++        if (!end) throw new Error('end node missing after addNode');
++        return { conditionId: condition.id, endId: end.id };
++      });
++
++      // Branch 1: connect Condition.on_success_if_0 → End via the picker
++      await page.locator(`[data-testid="handle-plus-on_success_if_0"]`).first().click();
++      await expect(page.locator('[data-testid="handle-plus-menu"]')).toBeVisible({
++        timeout: 5000,
++      });
++      await page.locator(`[data-testid="connect-to-existing-row-${endId}"]`).click();
++      // Menu should close
++      await expect(page.locator('[data-testid="handle-plus-menu"]')).not.toBeVisible({
++        timeout: 3000,
++      });
++
++      // Branch 2: connect Condition.on_success_else → End via the picker
++      await page.locator(`[data-testid="handle-plus-on_success_else"]`).first().click();
++      await expect(page.locator('[data-testid="handle-plus-menu"]')).toBeVisible({
++        timeout: 5000,
++      });
++      await page.locator(`[data-testid="connect-to-existing-row-${endId}"]`).click();
++      await expect(page.locator('[data-testid="handle-plus-menu"]')).not.toBeVisible({
++        timeout: 3000,
++      });
++
++      // Assert diamond shape: End has 2 incoming edges, both sourced from Condition
++      // on the two branch handles.
++      const incoming = await page.evaluate(
++        ({ condId, eId }) => {
++          const w = window as unknown as {
++            __zustandStores?: { workflowCanvas?: { getState: () => unknown } };
++          };
++          const state = w.__zustandStores!.workflowCanvas!.getState() as {
++            edges: Array<{ source: string; sourceHandle: string | null; target: string }>;
++          };
++          return state.edges
++            .filter((e) => e.target === eId && e.source === condId)
++            .map((e) => e.sourceHandle ?? '');
++        },
++        { condId: conditionId, eId: endId },
++      );
++
++      expect(incoming).toHaveLength(2);
++      expect(incoming).toEqual(expect.arrayContaining(['on_success_if_0', 'on_success_else']));
++    });
++
++    test('UAT-11.3 (E2E-2): Mid-flow fan-in — picker connects new branch to existing Function; MergerNodeConfig auto-engages', async ({
++      page,
++    }) => {
++      test.setTimeout(120000);
++
++      await loginAndSetup(page);
++      await navigateToWorkflows(page);
++      await createWorkflowViaUI(page, `ConnectExisting_FanIn_${Date.now()}`);
++      await waitForCanvasReady(page);
++
++      // Build: Start -> FnA -> FnTarget (sequential).
++      // Plus FnB placed sibling-style with no incoming edge yet.
++      // Picker action: connect FnB.on_success -> FnTarget. After save, FnTarget
++      // has in-degree 2 and MergerNodeConfig should render in its config panel.
++      const { fnTargetId } = await page.evaluate(() => {
++        const w = window as unknown as {
++          __zustandStores?: { workflowCanvas?: { getState: () => unknown } };
++        };
++        const store = w.__zustandStores?.workflowCanvas;
++        if (!store) throw new Error('canvas store not exposed');
++        type N = { id: string; data: { nodeType: string } };
++        type S = {
++          nodes: N[];
++          addNode: (
++            t: string,
++            p: { x: number; y: number },
++            src?: { nodeId: string; handleId: string },
++          ) => void;
++        };
++        let s = store.getState() as S;
++        const start = s.nodes.find((n) => n.data.nodeType === 'start');
++        if (!start) throw new Error('start missing');
++        // FnA from Start
++        s.addNode('function', { x: 400, y: 200 }, { nodeId: start.id, handleId: 'on_success' });
++        s = store.getState() as S;
++        const fnA = s.nodes.filter((n) => n.data.nodeType === 'function')[0];
++        // FnTarget after FnA
++        s.addNode('function', { x: 700, y: 200 }, { nodeId: fnA.id, handleId: 'on_success' });
++        s = store.getState() as S;
++        const fnTarget = s.nodes.filter((n) => n.data.nodeType === 'function')[1];
++        // FnB sibling, no incoming
++        s.addNode('function', { x: 400, y: 500 });
++        return { fnTargetId: fnTarget.id };
++      });
++
++      // Open HandlePlusMenu from FnB's on_success handle.
++      // There are now 3 function nodes; FnB is the most recently added.
++      // Each handle-plus button is on a specific node — locate FnB visually
++      // is awkward; use a Zustand-driven approach via testid + nth selector.
++      // Simpler: open menus until we find one whose Connect-to-existing list
++      // contains FnTarget (any of the three could route there in principle —
++      // but FnA wouldn't because it's already connected to FnTarget, and
++      // FnTarget itself is the source — so the only valid source is FnB).
++      const handlePlusButtons = page.locator('[data-testid="handle-plus-on_success"]');
++      const handleCount = await handlePlusButtons.count();
++      let opened = false;
++      for (let i = 0; i < handleCount; i++) {
++        await handlePlusButtons.nth(i).click();
++        const menu = page.locator('[data-testid="handle-plus-menu"]');
++        if (await menu.isVisible({ timeout: 2000 }).catch(() => false)) {
++          const targetRow = page.locator(`[data-testid="connect-to-existing-row-${fnTargetId}"]`);
++          if (await targetRow.isVisible({ timeout: 1000 }).catch(() => false)) {
++            await targetRow.click();
++            opened = true;
++            break;
++          }
++          // Wrong handle — close and try next
++          await page.keyboard.press('Escape');
++          await page.waitForTimeout(200);
++        }
++      }
++      expect(opened).toBe(true);
++
++      // Verify FnTarget now has in-degree 2 in the store
++      const inDegree = await page.evaluate((id) => {
++        const w = window as unknown as {
++          __zustandStores?: { workflowCanvas?: { getState: () => unknown } };
++        };
++        const s = w.__zustandStores!.workflowCanvas!.getState() as {
++          edges: Array<{ target: string }>;
++        };
++        return s.edges.filter((e) => e.target === id).length;
++      }, fnTargetId);
++      expect(inDegree).toBe(2);
++
++      // Open FnTarget's config panel — MergerNodeConfig should be visible
++      await page.evaluate((id) => {
++        const w = window as unknown as {
++          __zustandStores?: { workflowCanvas?: { getState: () => unknown } };
++        };
++        const s = w.__zustandStores!.workflowCanvas!.getState() as {
++          setSelectedNodeId: (nid: string | null) => void;
++        };
++        s.setSelectedNodeId(id);
++      }, fnTargetId);
++      await expect(page.locator('[data-testid="merger-node-config"]')).toBeVisible({
++        timeout: 5000,
++      });
++    });
++
++    test('UAT-11.4 (E2E-4): Search filter — by label and by type, with no-matches state', async ({
++      page,
++    }) => {
++      test.setTimeout(90000);
++
++      await loginAndSetup(page);
++      await navigateToWorkflows(page);
++      await createWorkflowViaUI(page, `ConnectExisting_Search_${Date.now()}`);
++      await waitForCanvasReady(page);
++
++      // Build canvas: Start + 3 typed nodes with distinctive labels.
++      await page.evaluate(() => {
++        const w = window as unknown as {
++          __zustandStores?: { workflowCanvas?: { getState: () => unknown } };
++        };
++        const store = w.__zustandStores?.workflowCanvas;
++        if (!store) throw new Error('store missing');
++        type S = {
++          nodes: Array<{ id: string; data: { nodeType: string; label: string } }>;
++          addNode: (t: string, p: { x: number; y: number }) => void;
++          updateNodeName: (id: string, name: string) => void;
++        };
++        const s = store.getState() as S;
++        s.addNode('function', { x: 300, y: 100 });
++        s.addNode('function', { x: 300, y: 300 });
++        s.addNode('agent', { x: 600, y: 200 });
++        const after = store.getState() as S;
++        const fns = after.nodes.filter((n) => n.data.nodeType === 'function');
++        const agents = after.nodes.filter((n) => n.data.nodeType === 'agent');
++        after.updateNodeName(fns[0].id, 'FormatResponse');
++        after.updateNodeName(fns[1].id, 'ComputeTax');
++        after.updateNodeName(agents[0].id, 'RefundAgent');
++      });
++
++      // Open the picker from Start.on_success
++      await page.locator('[data-testid="handle-plus-on_success"]').first().click();
++      await expect(page.locator('[data-testid="handle-plus-menu"]')).toBeVisible();
++
++      const search = page.locator('[data-testid="connect-to-existing-search"]');
++      await expect(search).toBeVisible();
++
++      // Initially: 3 rows
++      const allRows = page.locator('[data-testid^="connect-to-existing-row-"]');
++      await expect(allRows).toHaveCount(3);
++
++      // Type "format" → only FormatResponse
++      await search.fill('format');
++      await expect(allRows).toHaveCount(1);
++
++      // Clear → all 3 again
++      await search.fill('');
++      await expect(allRows).toHaveCount(3);
++
++      // Type "function" → both function nodes
++      await search.fill('function');
++      await expect(allRows).toHaveCount(2);
++
++      // Type "AGENT" (case-insensitive) → only RefundAgent
++      await search.fill('AGENT');
++      await expect(allRows).toHaveCount(1);
++
++      // No matches → empty row list + no-matches marker
++      await search.fill('xyz123nope');
++      await expect(allRows).toHaveCount(0);
++      await expect(page.locator('[data-testid="connect-to-existing-no-matches"]')).toBeVisible();
++    });
++
++    test('UAT-11.5 (E2E-5): Eligibility hides self, duplicate, cycle, and cross-loop targets', async ({
++      page,
++    }) => {
++      test.setTimeout(90000);
++
++      await loginAndSetup(page);
++      await navigateToWorkflows(page);
++      await createWorkflowViaUI(page, `ConnectExisting_Eligibility_${Date.now()}`);
++      await waitForCanvasReady(page);
++
++      // Build a graph where the picker from A.on_success must:
++      //   - exclude A itself
++      //   - exclude B (already connected from A.on_success)
++      //   - exclude Start (would create a cycle: Start -> A back-edge)
++      //   - exclude LoopChild (different parent / loop scope)
++      //   - include C, End (downstream, no cycle, same top-level scope)
++      const { aId, bId, cId, endId, loopChildId, startId } = await page.evaluate(() => {
++        const w = window as unknown as {
++          __zustandStores?: { workflowCanvas?: { getState: () => unknown } };
++        };
++        const store = w.__zustandStores!.workflowCanvas!;
++        type S = {
++          nodes: Array<{ id: string; data: { nodeType: string }; parentId?: string }>;
++          edges: Array<{ source: string; target: string }>;
++          addNode: (
++            t: string,
++            p: { x: number; y: number },
++            src?: { nodeId: string; handleId: string },
++          ) => void;
++        };
++        let s = store.getState() as S;
++        const start = s.nodes.find((n) => n.data.nodeType === 'start')!;
++        // Start → A → B → C linear chain
++        s.addNode('function', { x: 300, y: 100 }, { nodeId: start.id, handleId: 'on_success' });
++        s = store.getState() as S;
++        const a = s.nodes.filter((n) => n.data.nodeType === 'function')[0];
++        s.addNode('function', { x: 600, y: 100 }, { nodeId: a.id, handleId: 'on_success' });
++        s = store.getState() as S;
++        const b = s.nodes.filter((n) => n.data.nodeType === 'function')[1];
++        s.addNode('function', { x: 900, y: 100 }, { nodeId: b.id, handleId: 'on_success' });
++        s = store.getState() as S;
++        const c = s.nodes.filter((n) => n.data.nodeType === 'function')[2];
++        s.addNode('end', { x: 1200, y: 100 }, { nodeId: c.id, handleId: 'on_success' });
++        s = store.getState() as S;
++        const end = s.nodes.find((n) => n.data.nodeType === 'end')!;
++        // Loop sibling + its body child
++        s.addNode('loop', { x: 300, y: 400 });
++        s = store.getState() as S;
++        const loop = s.nodes.find((n) => n.data.nodeType === 'loop')!;
++        // Add a function INSIDE the loop body (parentId = loop.id is set by
++        // the store's loop body convention — adding via store with sourceInfo
++        // pointed at loop_start would be ideal but we can drop a function
++        // child directly by mutating state.)
++        store.setState((prev: S) => {
++          const childId = `loopchild-${Math.random().toString(36).slice(2, 8)}`;
++          return {
++            ...prev,
++            nodes: [
++              ...prev.nodes,
++              {
++                id: childId,
++                type: 'workflowNode',
++                position: { x: 400, y: 450 },
++                parentId: loop.id,
++                data: {
++                  nodeType: 'function',
++                  label: 'LoopChild',
++                  config: {},
++                  color: '#000',
++                  isStub: false,
++                  outputHandles: ['on_success'],
++                },
++              },
++            ],
++          };
++        });
++        const final = store.getState() as S;
++        const loopChild = final.nodes.find(
++          (n) => n.parentId === loop.id && n.data.nodeType === 'function',
++        )!;
++        return {
++          aId: a.id,
++          bId: b.id,
++          cId: c.id,
++          endId: end.id,
++          loopChildId: loopChild.id,
++          startId: start.id,
++        };
++      });
++
++      // Click on A's on_success handle.
++      // To target A specifically, locate via the React Flow node DOM. The
++      // `[data-testid="handle-plus-on_success"]` selector matches multiple
++      // nodes; filter by the node container's data attributes.
++      await page.evaluate((id) => {
++        const w = window as unknown as {
++          __zustandStores?: { workflowCanvas?: { getState: () => unknown } };
++        };
++        const s = w.__zustandStores!.workflowCanvas!.getState() as {
++          setSelectedNodeId: (nid: string | null) => void;
++        };
++        // Selecting A first ensures its handle is in viewport and clickable.
++        s.setSelectedNodeId(id);
++      }, aId);
++
++      // Find A's handle by scoping inside the node container
++      const aNodeHandle = page
++        .locator(`[data-id="${aId}"]`)
++        .locator('[data-testid="handle-plus-on_success"]');
++      await aNodeHandle.click();
++      await expect(page.locator('[data-testid="handle-plus-menu"]')).toBeVisible();
++
++      // Collect all visible row testids
++      const rowIds = await page
++        .locator('[data-testid^="connect-to-existing-row-"]')
++        .evaluateAll((els) =>
++          els
++            .map((el) => el.getAttribute('data-testid')?.replace('connect-to-existing-row-', ''))
++            .filter(Boolean),
++        );
++
++      // Must NOT include: A (self), B (already connected from A.on_success),
++      //                   Start (ancestor / cycle), LoopChild (cross-scope)
++      expect(rowIds).not.toContain(aId);
++      expect(rowIds).not.toContain(bId);
++      expect(rowIds).not.toContain(startId);
++      expect(rowIds).not.toContain(loopChildId);
++
++      // Must include: C and End (downstream, same scope)
++      expect(rowIds).toContain(cId);
++      expect(rowIds).toContain(endId);
++    });
++  });
+ });
+diff --git a/apps/studio/src/components/workflows/canvas/nodes/HandlePlusMenu.tsx b/apps/studio/src/components/workflows/canvas/nodes/HandlePlusMenu.tsx
+index c48c7ae0c..a7eaa6f0b 100644
+--- a/apps/studio/src/components/workflows/canvas/nodes/HandlePlusMenu.tsx
++++ b/apps/studio/src/components/workflows/canvas/nodes/HandlePlusMenu.tsx
+@@ -1,21 +1,8 @@
+ 'use client';
+ 
+-import { useState, useCallback, useRef } from 'react';
++import { useState, useCallback, useMemo, useRef } from 'react';
+ import { Handle, Position } from '@xyflow/react';
+-import {
+-  Plus,
+-  Square,
+-  GitBranch,
+-  Repeat,
+-  Clock,
+-  Code,
+-  Plug,
+-  Monitor,
+-  User,
+-  Bot,
+-  Wrench,
+-  ClipboardEdit,
+-} from 'lucide-react';
++import { Plus, Search, Link2, PlusSquare } from 'lucide-react';
+ import { clsx } from 'clsx';
+ import type { NodeType, NodeCategory } from '@agent-platform/shared-kernel/types';
+ import {
+@@ -25,26 +12,14 @@ import {
+ } from '@agent-platform/shared-kernel/types';
+ import { useWorkflowCanvasStore } from '../../../../store/workflow-canvas-store';
+ import { Dialog } from '../../../ui/Dialog';
++import { Tabs } from '../../../ui/Tabs';
++import { STEP_ICON_MAP, CATEGORY_ORDER, MENU_NODE_TYPES } from './handlePlusMenuIcons';
++import { ConnectToExistingSection } from './ConnectToExistingSection';
+ 
+ // =============================================================================
+ // Constants
+ // =============================================================================
+ 
+-/** Icon mapping for the add-step modal */
+-const STEP_ICON_MAP: Partial<Record<NodeType, React.ComponentType<{ className?: string }>>> = {
+-  agent: Bot,
+-  tool: Wrench,
+-  function: Code,
+-  integration: Plug,
+-  browser: Monitor,
+-  human: User,
+-  data_entry: ClipboardEdit,
+-  condition: GitBranch,
+-  loop: Repeat,
+-  delay: Clock,
+-  end: Square,
+-};
+-
+ /** Category labels */
+ const CATEGORY_LABELS: Partial<Record<NodeCategory, string>> = {
+   action: 'Actions',
+@@ -54,23 +29,6 @@ const CATEGORY_LABELS: Partial<Record<NodeCategory, string>> = {
+   human_in_loop: 'Human',
+ };
+ 
+-/** Category display order */
+-const CATEGORY_ORDER: NodeCategory[] = ['flow_control', 'action', 'agent', 'tool', 'human_in_loop'];
+-
+-/** Node types available in the add-step modal */
+-const MENU_NODE_TYPES: NodeType[] = [
+-  'integration',
+-  'function',
+-  'agent',
+-  'tool',
+-  'condition',
+-  'loop',
+-  'delay',
+-  'human',
+-  'data_entry',
+-  'end',
+-];
+-
+ /** Group menu node types by category */
+ function groupByCategory(): Map<NodeCategory, NodeType[]> {
+   const groups = new Map<NodeCategory, NodeType[]>();
+@@ -123,9 +81,36 @@ export function HandlePlusMenu({
+ }: HandlePlusMenuProps) {
+   const [open, setOpen] = useState(false);
+   const [hovered, setHovered] = useState(false);
++  const [tab, setTab] = useState<'new' | 'existing'>('new');
++  const [addNewQuery, setAddNewQuery] = useState('');
+   const addNode = useWorkflowCanvasStore((s) => s.addNode);
+   const nodes = useWorkflowCanvasStore((s) => s.nodes);
+ 
++  // Always open to "Add new" — reset whenever the modal closes. Also drop
++  // the search query so it doesn't carry over to the next invocation.
++  const closeMenu = useCallback(() => {
++    setOpen(false);
++    setTab('new');
++    setAddNewQuery('');
++  }, []);
++
++  // Filter the categorised node-type list by the search query. Categories
++  // with zero matching types disappear; everything is visible when query
++  // is empty.
++  const filteredGroups = useMemo(() => {
++    const q = addNewQuery.trim().toLowerCase();
++    return CATEGORY_ORDER.map((cat) => {
++      const allTypes = NODE_GROUPS.get(cat) ?? [];
++      const types = allTypes.filter((nt) => {
++        if (blockedTypes?.includes(nt)) return false;
++        if (!q) return true;
++        const label = NODE_DISPLAY_NAMES[nt]?.toLowerCase() ?? '';
++        return label.includes(q) || String(nt).toLowerCase().includes(q);
++      });
++      return { cat, types };
++    }).filter((g) => g.types.length > 0);
++  }, [addNewQuery, blockedTypes]);
++
+   const mouseDownPos = useRef<{ x: number; y: number } | null>(null);
+ 
+   const handleSelect = useCallback(
+@@ -139,9 +124,9 @@ export function HandlePlusMenu({
+         : undefined;
+ 
+       addNode(nodeType, position, { nodeId, handleId });
+-      setOpen(false);
++      closeMenu();
+     },
+-    [addNode, nodeId, handleId, nodes],
++    [addNode, nodeId, handleId, nodes, closeMenu],
+   );
+ 
+   const isDragging = useRef(false);
+@@ -255,54 +240,118 @@ export function HandlePlusMenu({
+       </div>
+ 
+       {/* Add Step Modal */}
+-      <Dialog open={open} onClose={() => setOpen(false)} title="Add Step" maxWidth="lg">
+-        <div className="space-y-5" data-testid="handle-plus-menu">
+-          {CATEGORY_ORDER.map((cat) => {
+-            const allTypes = NODE_GROUPS.get(cat);
+-            const types = allTypes?.filter((nt) => !blockedTypes?.includes(nt));
+-            if (!types || types.length === 0) return null;
+-            return (
+-              <div key={cat}>
+-                <div className="text-[11px] font-semibold uppercase tracking-wider text-foreground-muted mb-2">
+-                  {CATEGORY_LABELS[cat] ?? cat}
++      <Dialog open={open} onClose={closeMenu} title="Add Step" maxWidth="lg">
++        <div className="space-y-4" data-testid="handle-plus-menu">
++          {/* Tab bar — uses the shared Tabs component for icon + underline
++              indicator, matching the workflow detail page tab pattern. */}
++          <Tabs
++            tabs={[
++              {
++                id: 'new',
++                label: 'Add new',
++                icon: <PlusSquare className="w-4 h-4" />,
++                testid: 'add-step-tab-new',
++              },
++              {
++                id: 'existing',
++                label: 'Add existing',
++                icon: <Link2 className="w-4 h-4" />,
++                testid: 'add-step-tab-existing',
++              },
++            ]}
++            activeTab={tab}
++            onTabChange={(id) => setTab(id as 'new' | 'existing')}
++            layoutId="add-step-tab-indicator"
++          />
++
++          {/* Tab content. Fixed min-height so the modal does not collapse
++              when switching to "Add existing" — both tabs must keep the
++              same overall popup size. */}
++          <div className="min-h-[480px]">
++            {tab === 'existing' ? (
++              <ConnectToExistingSection
++                sourceNodeId={nodeId}
++                sourceHandle={handleId}
++                onClose={closeMenu}
++              />
++            ) : (
++              <div className="space-y-4">
++                {/* Search input — filters the categorised node-type list by
++                    label or type, mirroring the Add existing tab's search. */}
++                <div className="relative">
++                  <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-foreground-muted pointer-events-none" />
++                  <input
++                    type="text"
++                    value={addNewQuery}
++                    onChange={(e) => setAddNewQuery(e.target.value)}
++                    placeholder="Search node types…"
++                    className={clsx(
++                      'w-full rounded-lg border border-default bg-background-subtle text-foreground',
++                      'placeholder:text-subtle text-sm py-1.5 pl-8 pr-3',
++                      'transition-default focus:outline-none focus:ring-1',
++                      'focus:border-border-focus focus:ring-border-focus',
++                    )}
++                    data-testid="add-new-search"
++                  />
+                 </div>
+-                <div className="grid grid-cols-3 gap-2.5">
+-                  {types.map((nt) => {
+-                    const Icon = STEP_ICON_MAP[nt];
+-                    const isStub = STUB_NODE_TYPES.includes(nt);
+-                    return (
+-                      <button
+-                        key={nt}
+-                        type="button"
+-                        className={clsx(
+-                          'flex items-center gap-3 p-3 rounded-xl border border-default',
+-                          'text-left transition-all duration-150',
+-                          isStub
+-                            ? 'opacity-40 cursor-not-allowed'
+-                            : 'hover:border-accent/50 hover:shadow-md hover:bg-background-muted/50 cursor-pointer',
+-                        )}
+-                        onClick={() => !isStub && handleSelect(nt)}
+-                        disabled={isStub}
+-                        data-testid={`plus-menu-${nt}`}
+-                      >
+-                        <div className="w-9 h-9 rounded-lg bg-background-muted flex items-center justify-center shrink-0">
+-                          {Icon && <Icon className="w-4.5 h-4.5 text-foreground-muted" />}
++
++                {filteredGroups.length === 0 ? (
++                  <p
++                    className="text-xs text-foreground-muted py-2 px-1"
++                    data-testid="add-new-no-matches"
++                  >
++                    No matches.
++                  </p>
++                ) : (
++                  <div className="space-y-5">
++                    {filteredGroups.map(({ cat, types }) => (
++                      <div key={cat}>
++                        <div className="text-[11px] font-semibold uppercase tracking-wider text-foreground-muted mb-2">
++                          {CATEGORY_LABELS[cat] ?? cat}
+                         </div>
+-                        <div className="min-w-0">
+-                          <div className="text-sm font-medium text-foreground truncate">
+-                            {NODE_DISPLAY_NAMES[nt]}
+-                          </div>
+-                          {isStub && (
+-                            <span className="text-[10px] text-foreground-muted">Coming soon</span>
+-                          )}
++                        <div className="grid grid-cols-3 gap-2.5">
++                          {types.map((nt) => {
++                            const Icon = STEP_ICON_MAP[nt];
++                            const isStub = STUB_NODE_TYPES.includes(nt);
++                            return (
++                              <button
++                                key={nt}
++                                type="button"
++                                className={clsx(
++                                  'flex items-center gap-3 p-3 rounded-xl border border-default',
++                                  'text-left transition-all duration-150',
++                                  isStub
++                                    ? 'opacity-40 cursor-not-allowed'
++                                    : 'hover:border-accent/50 hover:shadow-md hover:bg-background-muted/50 cursor-pointer',
++                                )}
++                                onClick={() => !isStub && handleSelect(nt)}
++                                disabled={isStub}
++                                data-testid={`plus-menu-${nt}`}
++                              >
++                                <div className="w-9 h-9 rounded-lg bg-background-muted flex items-center justify-center shrink-0">
++                                  {Icon && <Icon className="w-4.5 h-4.5 text-foreground-muted" />}
++                                </div>
++                                <div className="min-w-0">
++                                  <div className="text-sm font-medium text-foreground truncate">
++                                    {NODE_DISPLAY_NAMES[nt]}
++                                  </div>
++                                  {isStub && (
++                                    <span className="text-[10px] text-foreground-muted">
++                                      Coming soon
++                                    </span>
++                                  )}
++                                </div>
++                              </button>
++                            );
++                          })}
+                         </div>
+-                      </button>
+-                    );
+-                  })}
+-                </div>
++                      </div>
++                    ))}
++                  </div>
++                )}
+               </div>
+-            );
+-          })}
++            )}
++          </div>
+         </div>
+       </Dialog>
+     </>
+diff --git a/apps/studio/src/store/workflow-canvas-helpers.ts b/apps/studio/src/store/workflow-canvas-helpers.ts
+index b7201714e..1584a0721 100644
+--- a/apps/studio/src/store/workflow-canvas-helpers.ts
++++ b/apps/studio/src/store/workflow-canvas-helpers.ts
+@@ -126,3 +126,61 @@ export function isValidWorkflowConnection(
+ 
+   return !wouldCreateCycle(edges, connection.source, connection.target, lookup, parentLookup);
+ }
++
++/**
++ * Returns the set of existing nodes that a source handle can legally connect
++ * to. The picker in HandlePlusMenu uses this to show only candidates that
++ * `onConnect` would accept — picker UX and store predicate must never drift.
++ *
++ * Eligibility composes the three sequential guards `onConnect` applies (see
++ * workflow-canvas-store.ts:790-822):
++ *   (a) duplicate-edge check — no existing edge with the same
++ *       (source, sourceHandle, target)
++ *   (b) fan-out cap — source handle has fewer than `maxFanOut` outgoing edges
++ *   (c) `isValidWorkflowConnection` — scope (parentId / Loop boundary) and
++ *       cycle detection
++ *
++ * Plus the trivial self-exclusion (candidate.id === sourceNodeId).
++ */
++export function getEligibleConnectTargets<TData extends { nodeType: NodeType }>(
++  nodes: Node<TData>[],
++  edges: Edge[],
++  sourceNodeId: string,
++  sourceHandle: string,
++  maxFanOut: number,
++): Node<TData>[] {
++  const fanOutCount = edges.filter(
++    (e) => e.source === sourceNodeId && e.sourceHandle === sourceHandle,
++  ).length;
++  if (fanOutCount >= maxFanOut) return [];
++
++  return nodes.filter((candidate) => {
++    if (candidate.id === sourceNodeId) return false;
++
++    // Start nodes are the workflow's entry point — they never accept
++    // incoming edges. Excluded unconditionally so the picker never
++    // surfaces them, even if isValidWorkflowConnection would technically
++    // allow it.
++    if (candidate.data.nodeType === 'start') return false;
++
++    // loop_start / loop_end are implementation-detail sockets inside a
++    // loop container. Users should pick the loop CONTAINER (which the
++    // picker remaps to loop_start at click time); these inner sockets
++    // must not appear as picker rows.
++    if (candidate.data.nodeType === 'loop_start') return false;
++    if (candidate.data.nodeType === 'loop_end') return false;
++
++    const isDuplicate = edges.some(
++      (e) =>
++        e.source === sourceNodeId && e.sourceHandle === sourceHandle && e.target === candidate.id,
++    );
++    if (isDuplicate) return false;
++
++    return isValidWorkflowConnection(edges, nodes, {
++      source: sourceNodeId,
++      sourceHandle,
++      target: candidate.id,
++      targetHandle: null,
++    });
++  });
++}
+diff --git a/apps/studio/src/store/workflow-canvas-store.ts b/apps/studio/src/store/workflow-canvas-store.ts
+index 50d43b578..3bd459a68 100644
+--- a/apps/studio/src/store/workflow-canvas-store.ts
++++ b/apps/studio/src/store/workflow-canvas-store.ts
+@@ -30,7 +30,7 @@ import { isValidWorkflowConnection, wouldCreateCycle } from './workflow-canvas-h
+ import { toast } from 'sonner';
+ 
+ /** Keep in sync with @abl/workflow-engine/constants MAX_PARALLEL_BRANCHES */
+-const MAX_FAN_OUT = 10;
++export const MAX_FAN_OUT = 10;
+ 
+ // =============================================================================
+ // TYPES
+diff --git a/docs/testing/sub-features/README.md b/docs/testing/sub-features/README.md
+index 37a46ea47..b35886dba 100644
+--- a/docs/testing/sub-features/README.md
++++ b/docs/testing/sub-features/README.md
+@@ -51,3 +51,4 @@ Matching test guides for the focused sub-features documented in `docs/features/s
+ | Helix Work-Item Bootstrap & Cross-Session Retrieval     | [helix-work-item-bootstrap.md](helix-work-item-bootstrap.md)                             |
+ | SOAP Tool Support                                       | [soap-tool-support.md](soap-tool-support.md)                                             |
+ | AWS Bedrock Provider                                    | [aws-bedrock-provider.md](aws-bedrock-provider.md)                                       |
++| Workflow Connect to Existing Node                       | [workflow-connect-to-existing-node.md](workflow-connect-to-existing-node.md)             |
+diff --git a/apps/studio/src/components/workflows/canvas/nodes/ConnectToExistingSection.tsx b/apps/studio/src/components/workflows/canvas/nodes/ConnectToExistingSection.tsx
+new file mode 100644
+index 000000000..e5841ce91
+--- /dev/null
++++ b/apps/studio/src/components/workflows/canvas/nodes/ConnectToExistingSection.tsx
+@@ -0,0 +1,261 @@
++'use client';
++
++/**
++ * ConnectToExistingSection
++ *
++ * Bottom-most section of the HandlePlusMenu modal. Lets the user route the
++ * current source handle to an existing downstream canvas node instead of
++ * creating a new one. The eligibility list is computed via
++ * `getEligibleConnectTargets`, which composes the same three guards
++ * `onConnect` applies — so the picker can never present an option the store
++ * would reject.
++ *
++ * Layout mirrors the Add-new tab: each distinct node TYPE on the canvas
++ * gets its own section (e.g. END, AGENT, FUNCTION), and within each
++ * section the eligible nodes render as 3-column cards using the same
++ * visual treatment as Add-new's node-type cards.
++ *
++ * The click handler calls `onConnect` directly; no new store action exists.
++ */
++
++import { useCallback, useMemo, useRef, useState } from 'react';
++import { Search } from 'lucide-react';
++import { clsx } from 'clsx';
++import type { NodeType } from '@agent-platform/shared-kernel/types';
++import { NODE_DISPLAY_NAMES, NODE_CATEGORY_MAP } from '@agent-platform/shared-kernel/types';
++import { useWorkflowCanvasStore, MAX_FAN_OUT } from '../../../../store/workflow-canvas-store';
++import { getEligibleConnectTargets } from '../../../../store/workflow-canvas-helpers';
++import type { WorkflowFlowNode } from '../../../../store/workflow-canvas-store';
++import { STEP_ICON_MAP, CATEGORY_ORDER, MENU_NODE_TYPES } from './handlePlusMenuIcons';
++
++interface ConnectToExistingSectionProps {
++  sourceNodeId: string;
++  sourceHandle: string;
++  onClose: () => void;
++}
++
++export function ConnectToExistingSection({
++  sourceNodeId,
++  sourceHandle,
++  onClose,
++}: ConnectToExistingSectionProps) {
++  const nodes = useWorkflowCanvasStore((s) => s.nodes);
++  const edges = useWorkflowCanvasStore((s) => s.edges);
++  const onConnect = useWorkflowCanvasStore((s) => s.onConnect);
++
++  const [query, setQuery] = useState('');
++  const [focusedIndex, setFocusedIndex] = useState<number | null>(null);
++  const cardRefs = useRef<(HTMLButtonElement | null)[]>([]);
++
++  const eligible = useMemo(() => {
++    const raw = getEligibleConnectTargets(nodes, edges, sourceNodeId, sourceHandle, MAX_FAN_OUT);
++    // Sort alphabetically by label (case-insensitive). Falls back to node id
++    // so ordering stays deterministic when two nodes share a label.
++    return [...raw].sort((a, b) => {
++      const aKey = (a.data.label || a.id).toLowerCase();
++      const bKey = (b.data.label || b.id).toLowerCase();
++      return aKey.localeCompare(bKey);
++    });
++  }, [nodes, edges, sourceNodeId, sourceHandle]);
++
++  const filtered = useMemo(() => {
++    const q = query.trim().toLowerCase();
++    if (!q) return eligible;
++    return eligible.filter((n) => {
++      const label = (n.data.label || '').toLowerCase();
++      const type = String(n.data.nodeType).toLowerCase();
++      return label.includes(q) || type.includes(q);
++    });
++  }, [eligible, query]);
++
++  // Group filtered nodes by node type, then order the resulting type
++  // sections per the Add-new tab's canonical type order (categories in
++  // CATEGORY_ORDER → types in MENU_NODE_TYPES order within each category).
++  // Types present on canvas but not in MENU_NODE_TYPES are appended at
++  // the end so nothing silently disappears from the picker.
++  const groupedSections = useMemo(() => {
++    const groups = new Map<NodeType, WorkflowFlowNode[]>();
++    for (const node of filtered) {
++      const t = node.data.nodeType as NodeType;
++      const list = groups.get(t);
++      if (list) list.push(node);
++      else groups.set(t, [node]);
++    }
++
++    const ordered: { type: NodeType; nodes: WorkflowFlowNode[] }[] = [];
++    const seen = new Set<NodeType>();
++    for (const cat of CATEGORY_ORDER) {
++      for (const t of MENU_NODE_TYPES) {
++        if (NODE_CATEGORY_MAP[t] === cat && groups.has(t) && !seen.has(t)) {
++          ordered.push({ type: t, nodes: groups.get(t)! });
++          seen.add(t);
++        }
++      }
++    }
++    // Safety net: include any unknown types on the canvas.
++    for (const [t, list] of groups) {
++      if (!seen.has(t)) ordered.push({ type: t, nodes: list });
++    }
++    return ordered;
++  }, [filtered]);
++
++  // Flat list of cards in render order — used for keyboard navigation so
++  // arrow keys walk through cards across section boundaries.
++  const flatOrder = useMemo(() => groupedSections.flatMap((g) => g.nodes), [groupedSections]);
++
++  const handlePick = useCallback(
++    (targetNodeId: string) => {
++      // Loop containers are picked by the user, but the actual engine
++      // target is the loop's internal `loop_start` socket — that's the
++      // node `onConnect` expects (and the one the validator's outer→
++      // loop_start carve-out allows). Resolve the container to its
++      // loop_start child here so the picker UX hides the implementation
++      // detail completely.
++      const picked = nodes.find((n) => n.id === targetNodeId);
++      let resolvedTarget = targetNodeId;
++      if (picked?.data.nodeType === 'loop') {
++        const loopStart = nodes.find(
++          (n) => n.parentId === picked.id && n.data.nodeType === 'loop_start',
++        );
++        if (loopStart) resolvedTarget = loopStart.id;
++      }
++
++      onConnect({
++        source: sourceNodeId,
++        sourceHandle,
++        target: resolvedTarget,
++        targetHandle: null,
++      });
++      onClose();
++    },
++    [onConnect, sourceNodeId, sourceHandle, onClose, nodes],
++  );
++
++  const handleKeyDown = useCallback(
++    (e: React.KeyboardEvent) => {
++      if (flatOrder.length === 0) return;
++      if (e.key === 'ArrowDown' || e.key === 'ArrowRight') {
++        e.preventDefault();
++        const next = focusedIndex === null ? 0 : Math.min(focusedIndex + 1, flatOrder.length - 1);
++        setFocusedIndex(next);
++        cardRefs.current[next]?.focus();
++      } else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') {
++        e.preventDefault();
++        const next = focusedIndex === null ? 0 : Math.max(focusedIndex - 1, 0);
++        setFocusedIndex(next);
++        cardRefs.current[next]?.focus();
++      } else if (e.key === 'Enter' && focusedIndex !== null) {
++        e.preventDefault();
++        handlePick(flatOrder[focusedIndex].id);
++      }
++    },
++    [flatOrder, focusedIndex, handlePick],
++  );
++
++  if (eligible.length === 0) {
++    return (
++      <div data-testid="connect-to-existing-section">
++        <p
++          className="text-xs text-foreground-muted py-2 px-1"
++          data-testid="connect-to-existing-empty"
++        >
++          No connectable nodes yet. Add a new step first or build out the flow before joining
++          branches.
++        </p>
++      </div>
++    );
++  }
++
++  return (
++    <div data-testid="connect-to-existing-section" onKeyDown={handleKeyDown}>
++      <div className="relative mb-4">
++        <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-foreground-muted pointer-events-none" />
++        <input
++          type="text"
++          value={query}
++          onChange={(e) => {
++            setQuery(e.target.value);
++            setFocusedIndex(null);
++          }}
++          placeholder="Search nodes by name or type…"
++          className={clsx(
++            'w-full rounded-lg border border-default bg-background-subtle text-foreground',
++            'placeholder:text-subtle text-sm py-1.5 pl-8 pr-3',
++            'transition-default focus:outline-none focus:ring-1',
++            'focus:border-border-focus focus:ring-border-focus',
++          )}
++          data-testid="connect-to-existing-search"
++        />
++      </div>
++
++      {groupedSections.length === 0 ? (
++        <p
++          className="text-xs text-foreground-muted py-2 px-1"
++          data-testid="connect-to-existing-no-matches"
++        >
++          No matches.
++        </p>
++      ) : (
++        <div className="space-y-5">
++          {(() => {
++            // Render every section. We track a flat index across all
++            // sections so card refs align with `flatOrder` for keyboard
++            // navigation.
++            let flatIdx = -1;
++            return groupedSections.map(({ type, nodes: typeNodes }) => {
++              const Icon = STEP_ICON_MAP[type];
++              const typeLabel = NODE_DISPLAY_NAMES[type] ?? String(type);
++              return (
++                <div key={type} data-testid={`connect-to-existing-group-${type}`}>
++                  <div className="text-[11px] font-semibold uppercase tracking-wider text-foreground-muted mb-2">
++                    {typeLabel}
++                  </div>
++                  <div className="grid grid-cols-3 gap-2.5">
++                    {typeNodes.map((node) => {
++                      flatIdx += 1;
++                      const refIdx = flatIdx;
++                      const cardLabel = node.data.label || typeLabel;
++                      return (
++                        <button
++                          key={node.id}
++                          ref={(el) => {
++                            cardRefs.current[refIdx] = el;
++                          }}
++                          type="button"
++                          // Native title attribute — surfaces the full node
++                          // name on hover when the label truncates inside
++                          // the card. Browsers + screen readers handle it
++                          // without needing a Tooltip provider wrap.
++                          title={cardLabel}
++                          aria-label={cardLabel}
++                          className={clsx(
++                            'flex items-center gap-3 p-3 rounded-xl border border-default',
++                            'text-left transition-all duration-150',
++                            'hover:border-accent/50 hover:shadow-md hover:bg-background-muted/50 cursor-pointer',
++                            'focus:outline-none focus:border-accent focus:ring-1 focus:ring-border-focus',
++                          )}
++                          onClick={() => handlePick(node.id)}
++                          onFocus={() => setFocusedIndex(refIdx)}
++                          data-testid={`connect-to-existing-row-${node.id}`}
++                        >
++                          <div className="w-9 h-9 rounded-lg bg-background-muted flex items-center justify-center shrink-0">
++                            {Icon && <Icon className="w-4.5 h-4.5 text-foreground-muted" />}
++                          </div>
++                          <div className="min-w-0">
++                            <div className="text-sm font-medium text-foreground truncate">
++                              {cardLabel}
++                            </div>
++                          </div>
++                        </button>
++                      );
++                    })}
++                  </div>
++                </div>
++              );
++            });
++          })()}
++        </div>
++      )}
++    </div>
++  );
++}
+diff --git a/apps/studio/src/components/workflows/canvas/nodes/handlePlusMenuIcons.ts b/apps/studio/src/components/workflows/canvas/nodes/handlePlusMenuIcons.ts
+new file mode 100644
+index 000000000..8cd83a023
+--- /dev/null
++++ b/apps/studio/src/components/workflows/canvas/nodes/handlePlusMenuIcons.ts
+@@ -0,0 +1,61 @@
++/**
++ * Shared constants for the HandlePlusMenu and its "Connect to existing"
++ * section. Centralised here so the two surfaces cannot drift on icon
++ * mapping, the canonical type list, or category ordering — keeping the
++ * Add-new and Add-existing tabs visually and structurally consistent.
++ */
++
++import {
++  Square,
++  GitBranch,
++  Repeat,
++  Clock,
++  Code,
++  Plug,
++  Monitor,
++  User,
++  Bot,
++  Wrench,
++  ClipboardEdit,
++} from 'lucide-react';
++import type { NodeType, NodeCategory } from '@agent-platform/shared-kernel/types';
++
++export const STEP_ICON_MAP: Partial<Record<NodeType, React.ComponentType<{ className?: string }>>> =
++  {
++    agent: Bot,
++    tool: Wrench,
++    function: Code,
++    integration: Plug,
++    browser: Monitor,
++    human: User,
++    data_entry: ClipboardEdit,
++    condition: GitBranch,
++    loop: Repeat,
++    delay: Clock,
++    end: Square,
++  };
++
++/** Category display order used by both the Add-new and Add-existing tabs. */
++export const CATEGORY_ORDER: NodeCategory[] = [
++  'flow_control',
++  'action',
++  'agent',
++  'tool',
++  'human_in_loop',
++];
++
++/** Canonical node-type order within categories. Add-new renders these
++ * cards in this order; Add-existing uses the same order to sort its
++ * per-type sections so users see a consistent mental layout. */
++export const MENU_NODE_TYPES: NodeType[] = [
++  'integration',
++  'function',
++  'agent',
++  'tool',
++  'condition',
++  'loop',
++  'delay',
++  'human',
++  'data_entry',
++  'end',
++];
+diff --git a/apps/studio/src/store/__tests__/get-eligible-connect-targets.test.ts b/apps/studio/src/store/__tests__/get-eligible-connect-targets.test.ts
+new file mode 100644
+index 000000000..8545d54b4
+--- /dev/null
++++ b/apps/studio/src/store/__tests__/get-eligible-connect-targets.test.ts
+@@ -0,0 +1,235 @@
++/**
++ * Unit tests for `getEligibleConnectTargets` — the eligibility predicate that
++ * powers the HandlePlusMenu's "Connect to existing" section.
++ *
++ * Covers:
++ *   UT-1  Empty workflow (only Start) → empty list
++ *   UT-2  Excludes source node itself
++ *   UT-3  Excludes nodes already connected from this source handle
++ *   UT-4  Per-handle duplicate rule (different handle on same source allowed)
++ *   UT-5  Excludes ancestors (cycle prevention)
++ *   UT-6  Excludes nodes in a different Loop scope (parentId comparison)
++ *   UT-7  Includes End / Agent / Function / Integration when filter passes
++ *   UT-8  Cross-branch convergence is allowed (Q1 (a) decision)
++ *   UT-9  Fan-out cap (10 per handle) returns empty list when reached
++ *   UT-10 Deterministic / stable order across calls
++ *
++ * Pure function tests — no React, no Zustand, no mocks.
++ */
++
++import { describe, test, expect } from 'vitest';
++import type { Edge, Node } from '@xyflow/react';
++import type { NodeType } from '@agent-platform/shared-kernel/types';
++import { getEligibleConnectTargets } from '../workflow-canvas-helpers';
++
++type TestNodeData = { nodeType: NodeType; label: string };
++type TestNode = Node<TestNodeData>;
++
++const MAX_FAN_OUT = 10;
++
++function makeNode(
++  id: string,
++  nodeType: NodeType = 'function',
++  parentId?: string,
++  label?: string,
++): TestNode {
++  return {
++    id,
++    type: 'workflowNode',
++    position: { x: 0, y: 0 },
++    parentId,
++    data: { nodeType, label: label ?? id },
++  };
++}
++
++function makeEdge(source: string, target: string, sourceHandle = 'on_success'): Edge {
++  return { id: `${source}-${sourceHandle}-${target}`, source, target, sourceHandle };
++}
++
++describe('getEligibleConnectTargets', () => {
++  test('UT-1: empty workflow (only Start) returns empty list', () => {
++    const start = makeNode('start', 'start');
++    const result = getEligibleConnectTargets([start], [], 'start', 'on_success', MAX_FAN_OUT);
++    expect(result).toEqual([]);
++  });
++
++  test('UT-2: excludes the source node itself', () => {
++    const start = makeNode('start', 'start');
++    const a = makeNode('A', 'function');
++    const result = getEligibleConnectTargets(
++      [start, a],
++      [makeEdge('start', 'A')],
++      'A',
++      'on_success',
++      MAX_FAN_OUT,
++    );
++    expect(result.map((n) => n.id)).not.toContain('A');
++  });
++
++  test('UT-3: excludes nodes already connected from this source handle', () => {
++    const a = makeNode('A', 'function');
++    const b = makeNode('B', 'function');
++    const c = makeNode('C', 'end');
++    // A.on_success already points at B
++    const edges = [makeEdge('A', 'B', 'on_success')];
++    const result = getEligibleConnectTargets([a, b, c], edges, 'A', 'on_success', MAX_FAN_OUT);
++    expect(result.map((n) => n.id)).toEqual(['C']);
++  });
++
++  test('UT-4: per-handle duplicate rule — different handle on same source IS allowed', () => {
++    // Condition has two outgoing handles. Edge on_success_if_0 → End exists.
++    // Querying on_success_else for End should include End.
++    const cond = makeNode('cond', 'condition');
++    const end = makeNode('end', 'end');
++    const edges = [makeEdge('cond', 'end', 'on_success_if_0')];
++    const result = getEligibleConnectTargets(
++      [cond, end],
++      edges,
++      'cond',
++      'on_success_else',
++      MAX_FAN_OUT,
++    );
++    expect(result.map((n) => n.id)).toContain('end');
++  });
++
++  test('UT-5: excludes ancestors (would create cycle)', () => {
++    // Start → A → B → C; from C, none of {Start, A, B} should be eligible.
++    const start = makeNode('start', 'start');
++    const a = makeNode('A', 'function');
++    const b = makeNode('B', 'function');
++    const c = makeNode('C', 'function');
++    const edges = [makeEdge('start', 'A'), makeEdge('A', 'B'), makeEdge('B', 'C')];
++    const result = getEligibleConnectTargets(
++      [start, a, b, c],
++      edges,
++      'C',
++      'on_success',
++      MAX_FAN_OUT,
++    );
++    expect(result.map((n) => n.id)).toEqual([]);
++  });
++
++  test('UT-6: excludes loop-body children (parentId mismatch); loop_start carve-out allowed', () => {
++    // Top-level: Start, A. Loop body: LoopChild + loop_end (parentId = loop-1).
++    // From A (top-level scope, no parentId):
++    //   - LoopChild is in a different scope → EXCLUDED
++    //   - loop_end is in a different scope → EXCLUDED
++    //   - loop_start is the legal "enter the loop" entry — outer→loop_start
++    //     is explicitly allowed by isValidWorkflowConnection (see
++    //     workflow-canvas-helpers.ts:102 — `isOuterToLoopStart` carve-out)
++    //   - the Loop container node itself is a top-level sibling → INCLUDED
++    // The picker must match this predicate exactly so a user can wire A into
++    // the loop (the same way drag-to-connect already supports).
++    const start = makeNode('start', 'start');
++    const a = makeNode('A', 'function');
++    const loop = makeNode('loop-1', 'loop');
++    const loopStart = makeNode('loop-start-1', 'loop_start', 'loop-1');
++    const loopEnd = makeNode('loop-end-1', 'loop_end', 'loop-1');
++    const loopChild = makeNode('LoopChild', 'function', 'loop-1');
++    const edges = [makeEdge('start', 'A')];
++    const result = getEligibleConnectTargets(
++      [start, a, loop, loopStart, loopEnd, loopChild],
++      edges,
++      'A',
++      'on_success',
++      MAX_FAN_OUT,
++    );
++    const ids = result.map((n) => n.id);
++    expect(ids).not.toContain('LoopChild');
++    expect(ids).not.toContain('loop-end-1');
++    expect(ids).toContain('loop-start-1');
++    expect(ids).toContain('loop-1');
++  });
++
++  test('UT-6b: source INSIDE a loop body cannot connect to nodes OUTSIDE the loop', () => {
++    // Inside-the-loop source (parentId = loop-1). Outside candidate (top-level)
++    // must be excluded — different scope, no carve-out applies.
++    const outsideStart = makeNode('start', 'start');
++    const outsideEnd = makeNode('OutsideEnd', 'end');
++    const loop = makeNode('loop-1', 'loop');
++    const insideSource = makeNode('InsideSource', 'function', 'loop-1');
++    const insideSibling = makeNode('InsideSibling', 'function', 'loop-1');
++    const edges: Edge[] = [];
++    const result = getEligibleConnectTargets(
++      [outsideStart, outsideEnd, loop, insideSource, insideSibling],
++      edges,
++      'InsideSource',
++      'on_success',
++      MAX_FAN_OUT,
++    );
++    const ids = result.map((n) => n.id);
++    expect(ids).not.toContain('OutsideEnd');
++    expect(ids).not.toContain('start');
++    expect(ids).not.toContain('loop-1');
++    expect(ids).toContain('InsideSibling');
++  });
++
++  test('UT-7: includes End, Agent, Function, Integration when downstream and eligible', () => {
++    // Start → A; downstream End, Agent, Function, Integration placed sibling
++    const start = makeNode('start', 'start');
++    const a = makeNode('A', 'function');
++    const end = makeNode('end', 'end');
++    const agent = makeNode('agent-1', 'agent');
++    const fn = makeNode('fn-1', 'function');
++    const intg = makeNode('intg-1', 'integration');
++    const edges = [makeEdge('start', 'A')];
++    const result = getEligibleConnectTargets(
++      [start, a, end, agent, fn, intg],
++      edges,
++      'A',
++      'on_success',
++      MAX_FAN_OUT,
++    );
++    const ids = result.map((n) => n.id).sort();
++    expect(ids).toEqual(['agent-1', 'end', 'fn-1', 'intg-1']);
++  });
++
++  test('UT-8: cross-branch convergence is allowed (Q1 (a))', () => {
++    // Start → Condition → if_0 branch (X), else branch (Y).
++    // From X (inside if_0 branch), Y must be eligible (cross-branch allowed).
++    const start = makeNode('start', 'start');
++    const cond = makeNode('cond', 'condition');
++    const x = makeNode('X', 'function');
++    const y = makeNode('Y', 'function');
++    const edges = [
++      makeEdge('start', 'cond'),
++      makeEdge('cond', 'X', 'on_success_if_0'),
++      makeEdge('cond', 'Y', 'on_success_else'),
++    ];
++    const result = getEligibleConnectTargets(
++      [start, cond, x, y],
++      edges,
++      'X',
++      'on_success',
++      MAX_FAN_OUT,
++    );
++    expect(result.map((n) => n.id)).toContain('Y');
++  });
++
++  test('UT-9: fan-out cap reached on source handle returns empty list', () => {
++    const source = makeNode('A', 'function');
++    const downstream = Array.from({ length: 12 }, (_, i) => makeNode(`T${i}`, 'function'));
++    // 10 edges already attached to A.on_success
++    const edges = Array.from({ length: 10 }, (_, i) => makeEdge('A', `T${i}`));
++    const result = getEligibleConnectTargets(
++      [source, ...downstream],
++      edges,
++      'A',
++      'on_success',
++      MAX_FAN_OUT,
++    );
++    expect(result).toEqual([]);
++  });
++
++  test('UT-10: deterministic / stable order across repeated calls', () => {
++    const start = makeNode('start', 'start');
++    const a = makeNode('A', 'function');
++    const b = makeNode('B', 'agent');
++    const c = makeNode('C', 'end');
++    const nodes = [start, a, b, c];
++    const edges = [makeEdge('start', 'A')];
++    const r1 = getEligibleConnectTargets(nodes, edges, 'A', 'on_success', MAX_FAN_OUT);
++    const r2 = getEligibleConnectTargets(nodes, edges, 'A', 'on_success', MAX_FAN_OUT);
++    expect(r1.map((n) => n.id)).toEqual(r2.map((n) => n.id));
++  });
++});
+diff --git a/apps/studio/src/__tests__/connect-to-existing.integration.test.tsx b/apps/studio/src/__tests__/connect-to-existing.integration.test.tsx
+new file mode 100644
+index 000000000..0f6087f85
+--- /dev/null
++++ b/apps/studio/src/__tests__/connect-to-existing.integration.test.tsx
+@@ -0,0 +1,427 @@
++/**
++ * Connect-to-existing — integration tests
++ *
++ * Component + real Zustand store (no mocks of platform components).
++ *
++ * Covers:
++ *   INT-1  ConnectToExistingSection renders the eligibility-filtered list
++ *   INT-2  Clicking a row dispatches onConnect with correct payload + closes
++ *   INT-3  Eligibility / onConnect predicate parity (6 graph fixtures)
++ *   INT-4  Search filter — by label + type + case-insensitive + no-matches
++ *   INT-5  Keyboard navigation — arrow keys + Enter
++ *   INT-6  MergerNodeConfig auto-engages after picker creates 2nd incoming edge
++ *
++ * @vitest-environment happy-dom
++ */
++
++import { describe, test, expect, beforeEach, vi } from 'vitest';
++import { render, screen, fireEvent } from '@testing-library/react';
++import userEvent from '@testing-library/user-event';
++import { ReactFlowProvider } from '@xyflow/react';
++import { useWorkflowCanvasStore, MAX_FAN_OUT } from '../store/workflow-canvas-store';
++import {
++  getEligibleConnectTargets,
++  isValidWorkflowConnection,
++} from '../store/workflow-canvas-helpers';
++import { ConnectToExistingSection } from '../components/workflows/canvas/nodes/ConnectToExistingSection';
++import { MergerNodeConfig } from '../components/workflows/canvas/config/MergerNodeConfig';
++import type { WorkflowFlowNode, WorkflowFlowEdge } from '../store/workflow-canvas-store';
++import type { NodeType } from '@agent-platform/shared-kernel/types';
++
++// =============================================================================
++// Helpers
++// =============================================================================
++
++function makeNode(
++  id: string,
++  nodeType: NodeType = 'function',
++  label?: string,
++  parentId?: string,
++): WorkflowFlowNode {
++  return {
++    id,
++    type: 'workflowNode',
++    position: { x: 0, y: 0 },
++    parentId,
++    data: {
++      nodeType,
++      label: label ?? id,
++      config: {},
++      color: '#000',
++      isStub: false,
++      outputHandles: ['on_success'],
++    },
++  };
++}
++
++function makeEdge(source: string, target: string, sourceHandle = 'on_success'): WorkflowFlowEdge {
++  return {
++    id: `${source}-${sourceHandle}-${target}`,
++    source,
++    target,
++    sourceHandle,
++    type: 'workflowEdge',
++  };
++}
++
++function renderSection(props: {
++  sourceNodeId: string;
++  sourceHandle: string;
++  onClose?: () => void;
++}) {
++  const onClose = props.onClose ?? vi.fn();
++  return {
++    onClose,
++    ...render(
++      <ReactFlowProvider>
++        <ConnectToExistingSection
++          sourceNodeId={props.sourceNodeId}
++          sourceHandle={props.sourceHandle}
++          onClose={onClose}
++        />
++      </ReactFlowProvider>,
++    ),
++  };
++}
++
++// =============================================================================
++// INT-1: Renders eligibility-filtered list
++// =============================================================================
++
++describe('ConnectToExistingSection — INT-1 renders filtered list', () => {
++  beforeEach(() => {
++    useWorkflowCanvasStore.setState({
++      nodes: [
++        makeNode('start', 'start'),
++        makeNode('cond', 'condition'),
++        makeNode('agent-1', 'agent', 'Refund Agent'),
++        makeNode('end', 'end'),
++      ],
++      edges: [makeEdge('start', 'cond')],
++      isDirty: false,
++      changeVersion: 0,
++    });
++  });
++
++  test('renders exactly the eligible nodes — agent + end, not start (cycle) or self', () => {
++    renderSection({ sourceNodeId: 'cond', sourceHandle: 'on_success_if_0' });
++
++    const rows = screen.queryAllByTestId(/^connect-to-existing-row-/);
++    const ids = rows.map((r) =>
++      r.getAttribute('data-testid')?.replace('connect-to-existing-row-', ''),
++    );
++
++    expect(ids).toContain('agent-1');
++    expect(ids).toContain('end');
++    expect(ids).not.toContain('cond'); // self
++    expect(ids).not.toContain('start'); // would cycle
++  });
++});
++
++// =============================================================================
++// INT-2: Click dispatches onConnect with correct payload + closes modal
++// =============================================================================
++
++describe('ConnectToExistingSection — INT-2 click-to-connect', () => {
++  beforeEach(() => {
++    useWorkflowCanvasStore.setState({
++      nodes: [makeNode('A', 'function'), makeNode('B', 'agent'), makeNode('C', 'end')],
++      edges: [],
++      isDirty: false,
++      changeVersion: 0,
++    });
++  });
++
++  test('clicking a row creates the edge and calls onClose', () => {
++    const { onClose } = renderSection({ sourceNodeId: 'A', sourceHandle: 'on_success' });
++
++    fireEvent.click(screen.getByTestId('connect-to-existing-row-B'));
++
++    const { edges } = useWorkflowCanvasStore.getState();
++    expect(edges).toHaveLength(1);
++    expect(edges[0]).toMatchObject({
++      source: 'A',
++      sourceHandle: 'on_success',
++      target: 'B',
++    });
++    expect(onClose).toHaveBeenCalledTimes(1);
++  });
++});
++
++// =============================================================================
++// INT-3: Predicate parity (eligibility filter ↔ onConnect three guards)
++// =============================================================================
++
++describe('ConnectToExistingSection — INT-3 picker/onConnect parity', () => {
++  /**
++   * For each fixture: compute eligible via getEligibleConnectTargets, and
++   * compute wouldAccept via the three-guard composite that onConnect applies:
++   *   (a) duplicate-edge check
++   *   (b) fan-out cap (MAX_FAN_OUT)
++   *   (c) isValidWorkflowConnection (scope + cycle)
++   * Assert the sets are identical.
++   */
++  function composeOnConnectPredicate(
++    nodes: WorkflowFlowNode[],
++    edges: WorkflowFlowEdge[],
++    source: string,
++    sourceHandle: string,
++  ): Set<string> {
++    const fanOutCount = edges.filter(
++      (e) => e.source === source && e.sourceHandle === sourceHandle,
++    ).length;
++    if (fanOutCount >= MAX_FAN_OUT) return new Set();
++
++    const accepted = new Set<string>();
++    for (const n of nodes) {
++      if (n.id === source) continue;
++      const isDuplicate = edges.some(
++        (e) => e.source === source && e.sourceHandle === sourceHandle && e.target === n.id,
++      );
++      if (isDuplicate) continue;
++      const valid = isValidWorkflowConnection(edges, nodes, {
++        source,
++        sourceHandle,
++        target: n.id,
++        targetHandle: null,
++      });
++      if (valid) accepted.add(n.id);
++    }
++    return accepted;
++  }
++
++  type Fixture = {
++    name: string;
++    nodes: WorkflowFlowNode[];
++    edges: WorkflowFlowEdge[];
++    source: string;
++    sourceHandle: string;
++  };
++
++  const fixtures: Fixture[] = [
++    {
++      name: 'F1 single Start',
++      nodes: [makeNode('start', 'start')],
++      edges: [],
++      source: 'start',
++      sourceHandle: 'on_success',
++    },
++    {
++      name: 'F2 linear chain Start→A→B→End',
++      nodes: [
++        makeNode('start', 'start'),
++        makeNode('A', 'function'),
++        makeNode('B', 'function'),
++        makeNode('End', 'end'),
++      ],
++      edges: [makeEdge('start', 'A'), makeEdge('A', 'B'), makeEdge('B', 'End')],
++      source: 'A',
++      sourceHandle: 'on_success',
++    },
++    {
++      name: 'F3 diamond half-built',
++      nodes: [makeNode('start', 'start'), makeNode('cond', 'condition'), makeNode('End', 'end')],
++      edges: [makeEdge('start', 'cond')],
++      source: 'cond',
++      sourceHandle: 'on_success_if_0',
++    },
++    {
++      name: 'F4 source handle at fan-out cap (10)',
++      nodes: [
++        makeNode('A', 'function'),
++        ...Array.from({ length: 12 }, (_, i) => makeNode(`T${i}`, 'function')),
++      ],
++      edges: Array.from({ length: 10 }, (_, i) => makeEdge('A', `T${i}`)),
++      source: 'A',
++      sourceHandle: 'on_success',
++    },
++    {
++      name: 'F5 source inside Loop body',
++      nodes: [
++        makeNode('start', 'start'),
++        makeNode('OutsideEnd', 'end'),
++        makeNode('loop-1', 'loop'),
++        makeNode('InsideSource', 'function', undefined, 'loop-1'),
++        makeNode('InsideSibling', 'function', undefined, 'loop-1'),
++      ],
++      edges: [],
++      source: 'InsideSource',
++      sourceHandle: 'on_success',
++    },
++    {
++      name: 'F6 pre-existing duplicate edge from source handle',
++      nodes: [makeNode('A', 'function'), makeNode('B', 'function'), makeNode('C', 'end')],
++      edges: [makeEdge('A', 'B', 'on_success')],
++      source: 'A',
++      sourceHandle: 'on_success',
++    },
++  ];
++
++  test.each(fixtures)('parity holds for $name', (fx) => {
++    const eligible = getEligibleConnectTargets(
++      fx.nodes,
++      fx.edges,
++      fx.source,
++      fx.sourceHandle,
++      MAX_FAN_OUT,
++    );
++    const eligibleIds = new Set(eligible.map((n) => n.id));
++    const wouldAccept = composeOnConnectPredicate(fx.nodes, fx.edges, fx.source, fx.sourceHandle);
++    expect(eligibleIds).toEqual(wouldAccept);
++  });
++});
++
++// =============================================================================
++// INT-4: Search filter
++// =============================================================================
++
++describe('ConnectToExistingSection — INT-4 search filter', () => {
++  beforeEach(() => {
++    useWorkflowCanvasStore.setState({
++      nodes: [
++        makeNode('start', 'start'),
++        makeNode('fn-format', 'function', 'Format Response'),
++        makeNode('fn-tax', 'function', 'Compute Tax'),
++        makeNode('agent-refund', 'agent', 'Refund Agent'),
++        makeNode('end', 'end', 'End'),
++      ],
++      edges: [],
++      isDirty: false,
++      changeVersion: 0,
++    });
++  });
++
++  test('matches by label substring; case-insensitive; renders no-matches state', async () => {
++    renderSection({ sourceNodeId: 'start', sourceHandle: 'on_success' });
++
++    // All 4 candidates visible initially
++    expect(screen.queryAllByTestId(/^connect-to-existing-row-/)).toHaveLength(4);
++
++    const search = screen.getByTestId('connect-to-existing-search') as HTMLInputElement;
++
++    // Label match: "format" → only fn-format
++    await userEvent.type(search, 'format');
++    let visible = screen.queryAllByTestId(/^connect-to-existing-row-/);
++    expect(visible.map((r) => r.getAttribute('data-testid'))).toEqual([
++      'connect-to-existing-row-fn-format',
++    ]);
++
++    // Clear → all visible again
++    await userEvent.clear(search);
++    expect(screen.queryAllByTestId(/^connect-to-existing-row-/)).toHaveLength(4);
++
++    // Type match: "function" → both function nodes
++    await userEvent.type(search, 'function');
++    visible = screen.queryAllByTestId(/^connect-to-existing-row-/);
++    expect(visible.map((r) => r.getAttribute('data-testid'))).toEqual(
++      expect.arrayContaining([
++        'connect-to-existing-row-fn-format',
++        'connect-to-existing-row-fn-tax',
++      ]),
++    );
++    expect(visible).toHaveLength(2);
++
++    // Case-insensitive: "AGENT" → matches agent-refund (both label and type)
++    await userEvent.clear(search);
++    await userEvent.type(search, 'AGENT');
++    visible = screen.queryAllByTestId(/^connect-to-existing-row-/);
++    expect(visible).toHaveLength(1);
++    expect(visible[0].getAttribute('data-testid')).toBe('connect-to-existing-row-agent-refund');
++
++    // No matches → empty row list + no-matches marker
++    await userEvent.clear(search);
++    await userEvent.type(search, 'xyz123nope');
++    expect(screen.queryAllByTestId(/^connect-to-existing-row-/)).toHaveLength(0);
++    expect(screen.getByTestId('connect-to-existing-no-matches')).toBeTruthy();
++  });
++});
++
++// =============================================================================
++// INT-5: Keyboard navigation
++// =============================================================================
++
++describe('ConnectToExistingSection — INT-5 keyboard navigation', () => {
++  beforeEach(() => {
++    useWorkflowCanvasStore.setState({
++      nodes: [
++        makeNode('start', 'start'),
++        makeNode('A', 'function', 'NodeA'),
++        makeNode('B', 'function', 'NodeB'),
++        makeNode('C', 'end', 'NodeC'),
++      ],
++      edges: [],
++      isDirty: false,
++      changeVersion: 0,
++    });
++  });
++
++  test('ArrowDown moves focus through rows; Enter triggers pick on focused row', () => {
++    const onClose = vi.fn();
++    renderSection({ sourceNodeId: 'start', sourceHandle: 'on_success', onClose });
++
++    const search = screen.getByTestId('connect-to-existing-search');
++    search.focus();
++    fireEvent.keyDown(search, { key: 'ArrowDown' });
++
++    // First row should now be focused (rowRefs[0])
++    const firstRow = screen.getByTestId('connect-to-existing-row-A');
++    expect(document.activeElement).toBe(firstRow);
++
++    // ArrowDown again → row 2
++    fireEvent.keyDown(firstRow, { key: 'ArrowDown' });
++    const secondRow = screen.getByTestId('connect-to-existing-row-B');
++    expect(document.activeElement).toBe(secondRow);
++
++    // Enter on focused row triggers pick + close
++    fireEvent.keyDown(secondRow, { key: 'Enter' });
++    const { edges } = useWorkflowCanvasStore.getState();
++    expect(edges.some((e) => e.source === 'start' && e.target === 'B')).toBe(true);
++    expect(onClose).toHaveBeenCalled();
++  });
++});
++
++// =============================================================================
++// INT-6: MergerNodeConfig auto-engages after picker creates 2nd incoming edge
++// =============================================================================
++
++describe('ConnectToExistingSection — INT-6 MergerNodeConfig auto-engagement', () => {
++  beforeEach(() => {
++    // Setup: Function target already has 1 incoming edge from A. Picker source is B.
++    useWorkflowCanvasStore.setState({
++      nodes: [
++        makeNode('A', 'function', 'NodeA'),
++        makeNode('B', 'function', 'NodeB'),
++        makeNode('target', 'function', 'TargetFn'),
++      ],
++      edges: [makeEdge('A', 'target')],
++      isDirty: false,
++      changeVersion: 0,
++    });
++  });
++
++  test('after picker connects B→target, MergerNodeConfig renders for the target', () => {
++    // Mount MergerNodeConfig for `target` (in-degree starts at 1 → renders null)
++    const { rerender } = render(
++      <ReactFlowProvider>
++        <MergerNodeConfig nodeId="target" config={{}} onUpdate={() => {}} />
++      </ReactFlowProvider>,
++    );
++    expect(screen.queryByTestId('merger-node-config')).toBeNull();
++
++    // Render picker and pick `target` from source B → creates B.on_success→target
++    render(
++      <ReactFlowProvider>
++        <ConnectToExistingSection sourceNodeId="B" sourceHandle="on_success" onClose={() => {}} />
++      </ReactFlowProvider>,
++    );
++    fireEvent.click(screen.getByTestId('connect-to-existing-row-target'));
++
++    // Re-render MergerNodeConfig — target now has in-degree 2 from A and B
++    rerender(
++      <ReactFlowProvider>
++        <MergerNodeConfig nodeId="target" config={{}} onUpdate={() => {}} />
++      </ReactFlowProvider>,
++    );
++    expect(screen.getByTestId('merger-node-config')).toBeTruthy();
++  });
++});

@@ -1,0 +1,7 @@
+[
+  {
+    "key": "EXTERNAL_AGENT_URL",
+    "value": "http://localhost:4010/api/a2a",
+    "description": "A2A endpoint for the externally hosted agent"
+  }
+]

@@ -1,0 +1,1565 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>OUTPUT — Deep Dive</title>
+    <style>
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      :root {
+        --bg: #0c0c0c;
+        --bg2: #141414;
+        --bg3: #1c1c1c;
+        --bg4: #252525;
+        --fg: #e8e8e8;
+        --fg2: #aaa;
+        --fg3: #777;
+        --fg4: #555;
+        --border: #1e1e1e;
+        --border2: #2a2a2a;
+        --mono: 'Berkeley Mono', 'JetBrains Mono', 'SF Mono', 'Fira Code', monospace;
+        --sans: 'Inter', -apple-system, sans-serif;
+      }
+      body {
+        font-family: var(--sans);
+        background: var(--bg);
+        color: var(--fg);
+        line-height: 1.65;
+        -webkit-font-smoothing: antialiased;
+      }
+      a {
+        color: #7090c0;
+        text-decoration: none;
+      }
+      a:hover {
+        text-decoration: underline;
+      }
+      header {
+        padding: 40px 32px 36px;
+        border-bottom: 1px solid var(--border);
+      }
+      header .back {
+        font-size: 0.78rem;
+        color: var(--fg4);
+        margin-bottom: 8px;
+        display: block;
+      }
+      header h1 {
+        font-size: 1.6rem;
+        font-weight: 600;
+        letter-spacing: -0.02em;
+      }
+      header .sub {
+        font-size: 0.92rem;
+        color: var(--fg3);
+        margin-top: 4px;
+      }
+      .quick-stats {
+        display: flex;
+        gap: 24px;
+        margin-top: 16px;
+        flex-wrap: wrap;
+      }
+      .qs {
+        padding: 8px 14px;
+        background: var(--bg2);
+        border: 1px solid var(--border);
+        border-radius: 5px;
+        font-size: 0.78rem;
+      }
+      .qs .n {
+        font-weight: 600;
+        color: var(--fg);
+      }
+      .qs .l {
+        color: var(--fg3);
+        margin-left: 4px;
+      }
+      .container {
+        max-width: 820px;
+        margin: 0 auto;
+        padding: 32px 24px 80px;
+      }
+      .section {
+        margin-bottom: 44px;
+      }
+      .section-title {
+        font-size: 0.74rem;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: var(--fg4);
+        margin-bottom: 14px;
+        padding-bottom: 8px;
+        border-bottom: 1px solid var(--border);
+      }
+      .card {
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        margin-bottom: 8px;
+        background: var(--bg2);
+        overflow: hidden;
+      }
+      .card-head {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 16px;
+        cursor: pointer;
+        user-select: none;
+      }
+      .card-head .label {
+        font-family: var(--mono);
+        font-size: 0.88rem;
+        font-weight: 600;
+        color: var(--fg);
+      }
+      .card-head .meta {
+        font-size: 0.8rem;
+        color: var(--fg3);
+        margin-left: auto;
+      }
+      .card-head .arrow {
+        color: var(--fg4);
+        font-size: 0.85rem;
+        transition: transform 0.2s;
+        flex-shrink: 0;
+        margin-left: 8px;
+      }
+      .card-body {
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.35s ease;
+      }
+      .card.open .card-body {
+        max-height: 6000px;
+      }
+      .card.open .arrow {
+        transform: rotate(90deg);
+      }
+      .card-inner {
+        padding: 2px 16px 16px;
+        border-top: 1px solid var(--border);
+      }
+      pre.y {
+        background: var(--bg);
+        border: 1px solid var(--border);
+        border-radius: 5px;
+        padding: 14px 16px;
+        font-family: var(--mono);
+        font-size: 0.78rem;
+        line-height: 1.7;
+        overflow-x: auto;
+        color: var(--fg3);
+        margin: 10px 0;
+        white-space: pre;
+      }
+      .k {
+        color: #8a8aff;
+        font-weight: 500;
+      }
+      .s {
+        color: #b8a070;
+      }
+      .t {
+        color: #70b080;
+      }
+      .c {
+        color: #444;
+        font-style: italic;
+      }
+      .n {
+        color: #7090c0;
+      }
+      .v {
+        color: #a080a0;
+      }
+      .tbl {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.78rem;
+        margin: 10px 0;
+      }
+      .tbl th {
+        text-align: left;
+        padding: 6px 10px;
+        border-bottom: 1px solid var(--border2);
+        color: var(--fg4);
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 0.66rem;
+        letter-spacing: 0.06em;
+      }
+      .tbl td {
+        padding: 5px 10px;
+        border-bottom: 1px solid var(--border);
+        color: var(--fg3);
+        vertical-align: top;
+      }
+      .tbl td:first-child {
+        font-family: var(--mono);
+        color: var(--fg2);
+        font-size: 0.76rem;
+      }
+      .tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px;
+        margin: 8px 0;
+      }
+      .tag {
+        font-size: 0.68rem;
+        padding: 3px 8px;
+        border-radius: 3px;
+        font-weight: 500;
+        background: var(--bg3);
+        border: 1px solid var(--border2);
+        color: var(--fg3);
+      }
+      .box {
+        border-radius: 5px;
+        padding: 10px 14px;
+        font-size: 0.78rem;
+        color: var(--fg3);
+        margin: 8px 0;
+        border: 1px solid var(--border);
+        line-height: 1.55;
+      }
+      .box.rt {
+        border-left: 2px solid #506040;
+      }
+      .box.rt::before {
+        content: 'Runtime  ';
+        font-weight: 600;
+        color: #7a9a6a;
+      }
+      .box.vl {
+        border-left: 2px solid #805050;
+      }
+      .box.vl::before {
+        content: 'Validation  ';
+        font-weight: 600;
+        color: #b07070;
+      }
+      .box.ed {
+        border-left: 2px solid #506080;
+      }
+      .box.ed::before {
+        content: 'Editor  ';
+        font-weight: 600;
+        color: #7090b0;
+      }
+      .box.tip {
+        border-left: 2px solid #806040;
+      }
+      .box.tip::before {
+        content: 'Tip  ';
+        font-weight: 600;
+        color: #b09060;
+      }
+      .box.key {
+        border-left: 2px solid #605080;
+      }
+      .box.key::before {
+        content: 'Key Concept  ';
+        font-weight: 600;
+        color: #9080b0;
+      }
+      .box.warn {
+        border-left: 2px solid #805040;
+      }
+      .box.warn::before {
+        content: 'Warning  ';
+        font-weight: 600;
+        color: #c07050;
+      }
+      .sub {
+        font-size: 0.72rem;
+        font-weight: 600;
+        color: var(--fg4);
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        margin: 14px 0 6px;
+      }
+      .compare {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+        margin: 10px 0;
+      }
+      .compare-item {
+        background: var(--bg3);
+        border: 1px solid var(--border2);
+        border-radius: 5px;
+        padding: 12px 14px;
+      }
+      .compare-item h4 {
+        font-size: 0.78rem;
+        font-weight: 600;
+        margin-bottom: 6px;
+        color: var(--fg2);
+      }
+      .compare-item p {
+        font-size: 0.74rem;
+        color: var(--fg3);
+        line-height: 1.5;
+      }
+      .flow-diagram {
+        background: var(--bg3);
+        border: 1px solid var(--border2);
+        border-radius: 6px;
+        padding: 20px;
+        margin: 12px 0;
+        overflow-x: auto;
+      }
+      .flow-row {
+        display: flex;
+        align-items: center;
+        gap: 0;
+        flex-wrap: nowrap;
+        min-width: max-content;
+      }
+      .flow-step {
+        padding: 7px 14px;
+        border-radius: 5px;
+        font-size: 0.72rem;
+        font-weight: 500;
+        white-space: nowrap;
+        border: 1px solid var(--border2);
+        background: var(--bg4);
+        color: var(--fg2);
+      }
+      .flow-arrow {
+        color: var(--fg4);
+        padding: 0 4px;
+        font-size: 0.78rem;
+        flex-shrink: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <nav
+      style="
+        position: sticky;
+        top: 0;
+        z-index: 50;
+        background: var(--bg);
+        border-bottom: 1px solid var(--border);
+        padding: 6px 16px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        overflow-x: auto;
+        flex-wrap: nowrap;
+      "
+    >
+      <a
+        href="index.html"
+        style="
+          font-size: 0.72rem;
+          color: var(--fg3);
+          text-decoration: none;
+          padding: 4px 8px;
+          border-radius: 4px;
+          white-space: nowrap;
+        "
+        >Overview</a
+      >
+      <a
+        href="tools.html"
+        style="
+          font-size: 0.68rem;
+          color: var(--fg3);
+          text-decoration: none;
+          padding: 4px 8px;
+          border-radius: 4px;
+          white-space: nowrap;
+        "
+        >Tools</a
+      >
+      <a
+        href="flow.html"
+        style="
+          font-size: 0.68rem;
+          color: var(--fg3);
+          text-decoration: none;
+          padding: 4px 8px;
+          border-radius: 4px;
+          white-space: nowrap;
+        "
+        >Flow</a
+      >
+      <a
+        href="guardrails.html"
+        style="
+          font-size: 0.68rem;
+          color: var(--fg3);
+          text-decoration: none;
+          padding: 4px 8px;
+          border-radius: 4px;
+          white-space: nowrap;
+        "
+        >Guardrails</a
+      >
+      <a
+        href="gather.html"
+        style="
+          font-size: 0.68rem;
+          color: var(--fg3);
+          text-decoration: none;
+          padding: 4px 8px;
+          border-radius: 4px;
+          white-space: nowrap;
+        "
+        >Gather</a
+      >
+      <a
+        href="templates.html"
+        style="
+          font-size: 0.68rem;
+          color: var(--fg3);
+          text-decoration: none;
+          padding: 4px 8px;
+          border-radius: 4px;
+          white-space: nowrap;
+        "
+        >Templates</a
+      >
+      <a
+        href="memory.html"
+        style="
+          font-size: 0.68rem;
+          color: var(--fg3);
+          text-decoration: none;
+          padding: 4px 8px;
+          border-radius: 4px;
+          white-space: nowrap;
+        "
+        >Memory</a
+      >
+      <a
+        href="coordination.html"
+        style="
+          font-size: 0.68rem;
+          color: var(--fg3);
+          text-decoration: none;
+          padding: 4px 8px;
+          border-radius: 4px;
+          white-space: nowrap;
+        "
+        >Coordination</a
+      >
+      <a
+        href="lifecycle.html"
+        style="
+          font-size: 0.68rem;
+          color: var(--fg3);
+          text-decoration: none;
+          padding: 4px 8px;
+          border-radius: 4px;
+          white-space: nowrap;
+        "
+        >Lifecycle</a
+      >
+      <a
+        href="output.html"
+        style="
+          font-size: 0.68rem;
+          font-weight: 600;
+          color: var(--fg);
+          text-decoration: none;
+          padding: 4px 10px;
+          border-radius: 4px;
+          white-space: nowrap;
+          background: var(--bg3);
+          border: 1px solid var(--border2);
+        "
+        >Output</a
+      >
+      <a
+        href="execution.html"
+        style="
+          font-size: 0.68rem;
+          color: var(--fg3);
+          text-decoration: none;
+          padding: 4px 8px;
+          border-radius: 4px;
+          white-space: nowrap;
+        "
+        >Execution</a
+      >
+      <a
+        href="advanced.html"
+        style="
+          font-size: 0.68rem;
+          color: var(--fg3);
+          text-decoration: none;
+          padding: 4px 8px;
+          border-radius: 4px;
+          white-space: nowrap;
+        "
+        >Advanced</a
+      >
+      <span style="color: var(--border2); margin: 0 2px">|</span>
+      <a
+        href="workflows.html"
+        style="
+          font-size: 0.68rem;
+          color: var(--fg3);
+          text-decoration: none;
+          padding: 4px 8px;
+          border-radius: 4px;
+          white-space: nowrap;
+        "
+        >Workflows</a
+      >
+      <a
+        href="monaco-editor-wireframe.html"
+        style="
+          font-size: 0.68rem;
+          color: var(--fg3);
+          text-decoration: none;
+          padding: 4px 8px;
+          border-radius: 4px;
+          white-space: nowrap;
+        "
+        >Editor</a
+      >
+      <a
+        href="rich-text-fields.html"
+        style="
+          font-size: 0.68rem;
+          color: var(--fg3);
+          text-decoration: none;
+          padding: 4px 8px;
+          border-radius: 4px;
+          white-space: nowrap;
+        "
+        >Rich Text + AI</a
+      >
+    </nav>
+
+    <style id="theme-auto">
+      @media (prefers-color-scheme: light) {
+        :root {
+          --bg: #fafafa !important;
+          --bg2: #f4f4f5 !important;
+          --bg3: #e4e4e7 !important;
+          --bg4: #d4d4d8 !important;
+          --fg: #18181b !important;
+          --fg2: #52525b !important;
+          --fg3: #71717a !important;
+          --fg4: #a1a1aa !important;
+          --border: #e4e4e7 !important;
+          --border2: #d4d4d8 !important;
+        }
+        pre,
+        pre.y,
+        pre.pc,
+        .code-block,
+        pre.preview-code {
+          background: #f4f4f5 !important;
+          border-color: #e4e4e7 !important;
+        }
+        .kw,
+        .k {
+          color: #6366f1 !important;
+        }
+        .str,
+        .s {
+          color: #b45309 !important;
+        }
+        .typ,
+        .t,
+        .type {
+          color: #059669 !important;
+        }
+        .num,
+        .n {
+          color: #2563eb !important;
+        }
+        .vr,
+        .v,
+        .var {
+          color: #9333ea !important;
+        }
+        .cmt,
+        .c,
+        .comment {
+          color: #a1a1aa !important;
+        }
+        nav {
+          background: #fafafa !important;
+          border-bottom-color: #e4e4e7 !important;
+        }
+        nav a {
+          color: #52525b !important;
+        }
+      }
+    </style>
+
+    <nav
+      style="
+        position: sticky;
+        top: 0;
+        z-index: 50;
+        background: #0c0c0c;
+        border-bottom: 1px solid #1e1e1e;
+        padding: 6px 16px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        overflow-x: auto;
+        flex-wrap: nowrap;
+      "
+    >
+      <a
+        href="index.html"
+        style="
+          font-size: 0.72rem;
+          font-weight: 600;
+          color: #aaa;
+          text-decoration: none;
+          padding: 4px 10px;
+          border-radius: 4px;
+          white-space: nowrap;
+        "
+        >Overview</a
+      >
+      <a
+        href="tools.html"
+        style="
+          font-size: 0.68rem;
+          color: #aaa;
+          text-decoration: none;
+          padding: 4px 8px;
+          border-radius: 4px;
+          white-space: nowrap;
+        "
+        onmouseover="this.style.background = '#1c1c1c'"
+        onmouseout="this.style.background = ''"
+        >Tools</a
+      >
+      <a
+        href="flow.html"
+        style="
+          font-size: 0.68rem;
+          color: #aaa;
+          text-decoration: none;
+          padding: 4px 8px;
+          border-radius: 4px;
+          white-space: nowrap;
+        "
+        onmouseover="this.style.background = '#1c1c1c'"
+        onmouseout="this.style.background = ''"
+        >Flow</a
+      >
+      <a
+        href="guardrails.html"
+        style="
+          font-size: 0.68rem;
+          color: #aaa;
+          text-decoration: none;
+          padding: 4px 8px;
+          border-radius: 4px;
+          white-space: nowrap;
+        "
+        onmouseover="this.style.background = '#1c1c1c'"
+        onmouseout="this.style.background = ''"
+        >Guardrails</a
+      >
+      <a
+        href="gather.html"
+        style="
+          font-size: 0.68rem;
+          color: #aaa;
+          text-decoration: none;
+          padding: 4px 8px;
+          border-radius: 4px;
+          white-space: nowrap;
+        "
+        onmouseover="this.style.background = '#1c1c1c'"
+        onmouseout="this.style.background = ''"
+        >Gather</a
+      >
+      <a
+        href="templates.html"
+        style="
+          font-size: 0.68rem;
+          color: #aaa;
+          text-decoration: none;
+          padding: 4px 8px;
+          border-radius: 4px;
+          white-space: nowrap;
+        "
+        onmouseover="this.style.background = '#1c1c1c'"
+        onmouseout="this.style.background = ''"
+        >Templates</a
+      >
+      <a
+        href="memory.html"
+        style="
+          font-size: 0.68rem;
+          color: #aaa;
+          text-decoration: none;
+          padding: 4px 8px;
+          border-radius: 4px;
+          white-space: nowrap;
+        "
+        onmouseover="this.style.background = '#1c1c1c'"
+        onmouseout="this.style.background = ''"
+        >Memory</a
+      >
+      <a
+        href="coordination.html"
+        style="
+          font-size: 0.68rem;
+          color: #aaa;
+          text-decoration: none;
+          padding: 4px 8px;
+          border-radius: 4px;
+          white-space: nowrap;
+        "
+        onmouseover="this.style.background = '#1c1c1c'"
+        onmouseout="this.style.background = ''"
+        >Coordination</a
+      >
+      <a
+        href="lifecycle.html"
+        style="
+          font-size: 0.68rem;
+          color: #aaa;
+          text-decoration: none;
+          padding: 4px 8px;
+          border-radius: 4px;
+          white-space: nowrap;
+        "
+        onmouseover="this.style.background = '#1c1c1c'"
+        onmouseout="this.style.background = ''"
+        >Lifecycle</a
+      >
+      <a
+        href="output.html"
+        style="
+          font-size: 0.68rem;
+          color: #e8e8e8;
+          background: #1c1c1c;
+          border: 1px solid #2a2a2a;
+          text-decoration: none;
+          padding: 4px 8px;
+          border-radius: 4px;
+          white-space: nowrap;
+        "
+        onmouseover="this.style.background = '#1c1c1c'"
+        onmouseout="this.style.background = ''"
+        >Output</a
+      >
+      <a
+        href="execution.html"
+        style="
+          font-size: 0.68rem;
+          color: #aaa;
+          text-decoration: none;
+          padding: 4px 8px;
+          border-radius: 4px;
+          white-space: nowrap;
+        "
+        onmouseover="this.style.background = '#1c1c1c'"
+        onmouseout="this.style.background = ''"
+        >Execution</a
+      >
+      <a
+        href="advanced.html"
+        style="
+          font-size: 0.68rem;
+          color: #aaa;
+          text-decoration: none;
+          padding: 4px 8px;
+          border-radius: 4px;
+          white-space: nowrap;
+        "
+        onmouseover="this.style.background = '#1c1c1c'"
+        onmouseout="this.style.background = ''"
+        >Advanced</a
+      >
+      <span style="color: #2a2a2a; margin: 0 2px">|</span>
+      <a
+        href="workflows.html"
+        style="
+          font-size: 0.68rem;
+          color: #aaa;
+          text-decoration: none;
+          padding: 4px 8px;
+          border-radius: 4px;
+          white-space: nowrap;
+        "
+        onmouseover="this.style.background = '#1c1c1c'"
+        onmouseout="this.style.background = ''"
+        >Workflows</a
+      >
+      <a
+        href="monaco-editor-wireframe.html"
+        style="
+          font-size: 0.68rem;
+          color: #7090c0;
+          text-decoration: none;
+          padding: 4px 8px;
+          border-radius: 4px;
+          white-space: nowrap;
+        "
+        onmouseover="this.style.background = '#1c1c1c'"
+        onmouseout="this.style.background = ''"
+        >Editor</a
+      >
+    </nav>
+
+    <header>
+      <a class="back" href="#">&larr; Back to Agent Anatomy</a>
+      <h1>OUTPUT</h1>
+      <div class="sub">
+        Response formatting, message overrides, custom system prompts. Control how the agent speaks
+        across channels.
+      </div>
+      <div class="quick-stats">
+        <div class="qs"><span class="n">3</span><span class="l">Output Blocks</span></div>
+        <div class="qs"><span class="n">6</span><span class="l">Template Formats</span></div>
+        <div class="qs"><span class="n">10+</span><span class="l">Message Overrides</span></div>
+        <div class="qs"><span class="n">1</span><span class="l">System Prompt Override</span></div>
+      </div>
+    </header>
+
+    <div class="container">
+      <!-- HOW OUTPUT WORKS -->
+      <div class="section">
+        <div class="section-title">How Output Works</div>
+
+        <div class="box key">
+          OUTPUT controls what the agent says and how it says it. TEMPLATES define reusable response
+          formats with interpolation. MESSAGES override built-in system messages. SYSTEM_PROMPT
+          replaces the auto-generated prompt entirely. Together they give full control over agent
+          voice across chat, voice, Slack, WhatsApp, and more.
+        </div>
+
+        <div class="flow-diagram">
+          <div style="font-size: 0.66rem; color: var(--fg4); margin-bottom: 12px">
+            Response Resolution Pipeline
+          </div>
+          <div class="flow-row">
+            <div class="flow-step">Agent Decision</div>
+            <div class="flow-arrow">&rarr;</div>
+            <div class="flow-step">
+              Template Lookup<br /><span style="font-size: 0.6rem">by name + channel</span>
+            </div>
+            <div class="flow-arrow">&rarr;</div>
+            <div class="flow-step">
+              Format Selection<br /><span style="font-size: 0.6rem">markdown / voice / html</span>
+            </div>
+            <div class="flow-arrow">&rarr;</div>
+            <div class="flow-step">
+              Interpolation<br /><span style="font-size: 0.6rem">Handlebars {{vars}}</span>
+            </div>
+            <div class="flow-arrow">&rarr;</div>
+            <div class="flow-step">
+              Action Buttons<br /><span style="font-size: 0.6rem">optional ACTIONS</span>
+            </div>
+            <div class="flow-arrow">&rarr;</div>
+            <div class="flow-step">Rendered Output</div>
+          </div>
+        </div>
+
+        <div class="compare">
+          <div class="compare-item">
+            <h4>TEMPLATES</h4>
+            <p>
+              Named, reusable response templates with <code>{{interpolation}}</code>, multi-format
+              variants (markdown, voice, html, slack), and optional ACTIONS for interactive buttons.
+            </p>
+          </div>
+          <div class="compare-item">
+            <h4>MESSAGES + SYSTEM_PROMPT</h4>
+            <p>
+              MESSAGES override built-in agent messages (errors, prompts, escalations).
+              SYSTEM_PROMPT replaces the entire auto-generated system prompt for full control.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- TEMPLATES -->
+      <div class="section">
+        <div class="section-title">TEMPLATES &mdash; Named Response Templates</div>
+
+        <div class="card open">
+          <div class="card-head" onclick="toggle(this)">
+            <span class="label">Basic Template</span>
+            <span class="meta">Content with {{interpolation}}</span>
+            <span class="arrow">&rsaquo;</span>
+          </div>
+          <div class="card-body">
+            <div class="card-inner">
+              <pre class="y"><span class="k">TEMPLATES:</span>
+  <span class="t">claim_confirmation</span>:
+    content: |
+      Claim <span class="v">{{claim_id}}</span> submitted successfully.
+      Status: <span class="v">{{claim_status}}</span>.
+      Expected resolution: <span class="v">{{resolution_date}}</span>.
+
+  <span class="t">booking_summary</span>:
+    content: |
+      Your booking is confirmed!
+      Hotel: <span class="v">{{hotel_name}}</span>
+      Check-in: <span class="v">{{checkin_date}}</span>
+      Check-out: <span class="v">{{checkout_date}}</span>
+      Guests: <span class="v">{{num_guests}}</span></pre>
+              <div class="box rt">
+                Templates are rendered with Handlebars. Variables come from GATHER fields, tool
+                results, and session state. Use <code>content</code> for the default format.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-head" onclick="toggle(this)">
+            <span class="label">Multi-Format Templates</span>
+            <span class="meta">6 format variants per template</span>
+            <span class="arrow">&rsaquo;</span>
+          </div>
+          <div class="card-body">
+            <div class="card-inner">
+              <pre class="y"><span class="k">TEMPLATES:</span>
+  <span class="t">claim_confirmation</span>:
+    content: |
+      Claim <span class="v">{{claim_id}}</span> submitted. Status: <span class="v">{{claim_status}}</span>.
+    formats:
+      <span class="t">markdown</span>: |
+        ## Claim Submitted
+        **ID:** <span class="v">{{claim_id}}</span>
+        **Status:** <span class="v">{{claim_status}}</span>
+      <span class="t">voice</span>: |
+        Your claim has been submitted successfully.
+        The reference number is <span class="v">{{claim_id}}</span>.
+      <span class="t">html</span>: |
+        &lt;div class="claim-card"&gt;&lt;h2&gt;Claim <span class="v">{{claim_id}}</span>&lt;/h2&gt;&lt;/div&gt;
+      <span class="t">slack</span>: |
+        :white_check_mark: *Claim <span class="v">{{claim_id}}</span>* submitted
+        Status: `<span class="v">{{claim_status}}</span>`
+      <span class="t">whatsapp</span>: |
+        *Claim <span class="v">{{claim_id}}</span>* submitted
+        Status: <span class="v">{{claim_status}}</span>
+      <span class="t">adaptiveCard</span>: |
+        {
+          "type": "AdaptiveCard",
+          "body": [{"type": "TextBlock", "text": "Claim <span class="v">{{claim_id}}</span>"}]
+        }</pre>
+
+              <table class="tbl">
+                <tr>
+                  <th>Format</th>
+                  <th>Channel</th>
+                  <th>Use Case</th>
+                </tr>
+                <tr>
+                  <td>default</td>
+                  <td>Any</td>
+                  <td>Plain text fallback when no format matches</td>
+                </tr>
+                <tr>
+                  <td>markdown</td>
+                  <td>Chat / Web</td>
+                  <td>Rich text with headers, bold, lists</td>
+                </tr>
+                <tr>
+                  <td>html</td>
+                  <td>Email / Web embed</td>
+                  <td>Full HTML rendering</td>
+                </tr>
+                <tr>
+                  <td>voice</td>
+                  <td>Phone / Voice</td>
+                  <td>Short, spoken-friendly text (no visual formatting)</td>
+                </tr>
+                <tr>
+                  <td>slack</td>
+                  <td>Slack</td>
+                  <td>Slack mrkdwn with emoji shortcodes</td>
+                </tr>
+                <tr>
+                  <td>whatsapp</td>
+                  <td>WhatsApp</td>
+                  <td>WhatsApp-flavored markdown</td>
+                </tr>
+                <tr>
+                  <td>adaptiveCard</td>
+                  <td>Teams / Webchat</td>
+                  <td>Microsoft Adaptive Card JSON</td>
+                </tr>
+              </table>
+              <div class="box rt">
+                The runtime selects the format based on the active channel. If the specific format
+                is missing, it falls back to <code>content</code> (default). Voice format should
+                avoid markdown symbols and keep sentences short.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-head" onclick="toggle(this)">
+            <span class="label">ACTIONS in Templates</span>
+            <span class="meta">Interactive buttons and quick replies</span>
+            <span class="arrow">&rsaquo;</span>
+          </div>
+          <div class="card-body">
+            <div class="card-inner">
+              <pre class="y"><span class="k">TEMPLATES:</span>
+  <span class="t">claim_next_steps</span>:
+    content: |
+      Your claim <span class="v">{{claim_id}}</span> is ready for review.
+      What would you like to do next?
+    <span class="k">ACTIONS:</span>
+      - label: <span class="s">"Upload Documents"</span>
+        action: <span class="t">upload_documents</span>
+        style: <span class="v">primary</span>
+      - label: <span class="s">"Check Status"</span>
+        action: <span class="t">check_claim_status</span>
+        style: <span class="v">secondary</span>
+      - label: <span class="s">"Talk to Agent"</span>
+        action: <span class="t">escalate_to_human</span>
+        style: <span class="v">outline</span>
+
+  <span class="t">rating_request</span>:
+    content: <span class="s">"How was your experience?"</span>
+    <span class="k">ACTIONS:</span>
+      - label: <span class="s">"Great"</span>
+        action: <span class="t">rate_positive</span>
+      - label: <span class="s">"Okay"</span>
+        action: <span class="t">rate_neutral</span>
+      - label: <span class="s">"Poor"</span>
+        action: <span class="t">rate_negative</span></pre>
+              <div class="box rt">
+                ACTIONS render as buttons in web/chat channels and as numbered options in voice. The
+                <code>action</code> value maps to a tool call or flow step transition. Styles:
+                <code>primary</code>, <code>secondary</code>, <code>outline</code>,
+                <code>danger</code>.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-head" onclick="toggle(this)">
+            <span class="label">Handlebars Helpers</span>
+            <span class="meta">Conditionals, loops, formatting</span>
+            <span class="arrow">&rsaquo;</span>
+          </div>
+          <div class="card-body">
+            <div class="card-inner">
+              <pre class="y"><span class="k">TEMPLATES:</span>
+  <span class="t">order_summary</span>:
+    content: |
+      <span class="c">{{!-- Conditional --}}</span>
+      <span class="v">{{#if premium_member}}</span>Thank you, Premium member!<span class="v">{{else}}</span>Thank you!<span class="v">{{/if}}</span>
+
+      Your items:
+      <span class="c">{{!-- Loop --}}</span>
+      <span class="v">{{#each items}}</span>
+      - <span class="v">{{this.name}}</span>: $<span class="v">{{this.price}}</span>
+      <span class="v">{{/each}}</span>
+
+      Total: $<span class="v">{{total}}</span>
+      <span class="c">{{!-- Unless --}}</span>
+      <span class="v">{{#unless discount_applied}}</span>No discounts applied.<span class="v">{{/unless}}</span></pre>
+              <div class="box tip">
+                Handlebars supports <code>{{#if}}</code>, <code>{{#each}}</code>,
+                <code>{{#unless}}</code>, and custom helpers. Variables are auto-escaped in HTML
+                format. Use <code>{{{triple}}}</code> for raw HTML.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- MESSAGES -->
+      <div class="section">
+        <div class="section-title">MESSAGES &mdash; Override Built-in Messages</div>
+
+        <div class="card open">
+          <div class="card-head" onclick="toggle(this)">
+            <span class="label">Default Message Keys</span>
+            <span class="meta">10 built-in overrides</span>
+            <span class="arrow">&rsaquo;</span>
+          </div>
+          <div class="card-body">
+            <div class="card-inner">
+              <pre class="y"><span class="k">MESSAGES:</span>
+  <span class="t">error_default</span>: <span class="s">"Oops! Something went wrong. Let me try again."</span>
+  <span class="t">constraint_blocked</span>: <span class="s">"I can't do that due to our policy."</span>
+  <span class="t">gather_prompt</span>: <span class="s">"I need a bit more information:"</span>
+  <span class="t">conversation_complete</span>: <span class="s">"All done! Anything else?"</span>
+  <span class="t">escalation_format</span>: <span class="s">"Connecting you with a specialist..."</span>
+  <span class="t">invalid_handoff</span>: <span class="s">"Sorry, I can't transfer you to that department."</span>
+  <span class="t">self_handoff</span>: <span class="s">"I'm already the right agent for this."</span>
+  <span class="t">tool_fallback_desc</span>: <span class="s">"Processing your request..."</span></pre>
+
+              <table class="tbl">
+                <tr>
+                  <th>Key</th>
+                  <th>When Used</th>
+                  <th>Default</th>
+                </tr>
+                <tr>
+                  <td>error_default</td>
+                  <td>Unhandled error during execution</td>
+                  <td>"I'm sorry, something went wrong."</td>
+                </tr>
+                <tr>
+                  <td>constraint_blocked</td>
+                  <td>Guardrail blocks an action</td>
+                  <td>"I'm not able to do that."</td>
+                </tr>
+                <tr>
+                  <td>gather_prompt</td>
+                  <td>Prefixed when asking for missing fields</td>
+                  <td>"I need some information:"</td>
+                </tr>
+                <tr>
+                  <td>conversation_complete</td>
+                  <td>All goals met, conversation ending</td>
+                  <td>"Is there anything else I can help with?"</td>
+                </tr>
+                <tr>
+                  <td>escalation_format</td>
+                  <td>Handing off to human agent</td>
+                  <td>"Let me connect you with a human agent."</td>
+                </tr>
+                <tr>
+                  <td>invalid_handoff</td>
+                  <td>Requested handoff target doesn't exist</td>
+                  <td>"I can't transfer to that agent."</td>
+                </tr>
+                <tr>
+                  <td>self_handoff</td>
+                  <td>Agent tries to hand off to itself</td>
+                  <td>"I'm already handling this."</td>
+                </tr>
+                <tr>
+                  <td>tool_fallback_desc</td>
+                  <td>Tool running, shown as status</td>
+                  <td>"Working on it..."</td>
+                </tr>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-head" onclick="toggle(this)">
+            <span class="label">Custom Message Keys</span>
+            <span class="meta">Extensible with any key name</span>
+            <span class="arrow">&rsaquo;</span>
+          </div>
+          <div class="card-body">
+            <div class="card-inner">
+              <pre class="y"><span class="k">MESSAGES:</span>
+  <span class="c"># Built-in overrides</span>
+  <span class="t">error_default</span>: <span class="s">"Oops! Something went wrong. Let me try again."</span>
+
+  <span class="c"># Custom keys — reference anywhere</span>
+  <span class="t">custom_greeting</span>: <span class="s">"Welcome back, {{customer_name}}!"</span>
+  <span class="t">after_hours</span>: <span class="s">"Our office is closed. Hours: Mon-Fri 9am-5pm EST."</span>
+  <span class="t">maintenance_notice</span>: <span class="s">"We're doing scheduled maintenance. Back in {{eta}} minutes."</span>
+  <span class="t">premium_upsell</span>: <span class="s">"Upgrade to Premium for priority support!"</span></pre>
+              <div class="box rt">
+                Custom keys are stored alongside built-in keys. Reference them in FLOW steps with
+                <code>respond: messages.custom_greeting</code> or in tool responses. Supports
+                <code>{{interpolation}}</code> just like templates.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-head" onclick="toggle(this)">
+            <span class="label">Resolution Chain</span>
+            <span class="meta">DB override, PromptCatalog fallback</span>
+            <span class="arrow">&rsaquo;</span>
+          </div>
+          <div class="card-body">
+            <div class="card-inner">
+              <div class="flow-diagram">
+                <div style="font-size: 0.66rem; color: var(--fg4); margin-bottom: 12px">
+                  Message Resolution Order
+                </div>
+                <div class="flow-row">
+                  <div class="flow-step">
+                    Agent MESSAGES<br /><span style="font-size: 0.6rem">ABL definition</span>
+                  </div>
+                  <div class="flow-arrow">&rarr;</div>
+                  <div class="flow-step">
+                    DB Override<br /><span style="font-size: 0.6rem">per-tenant customization</span>
+                  </div>
+                  <div class="flow-arrow">&rarr;</div>
+                  <div class="flow-step">
+                    PromptCatalog<br /><span style="font-size: 0.6rem">framework defaults</span>
+                  </div>
+                  <div class="flow-arrow">&rarr;</div>
+                  <div class="flow-step">
+                    Hardcoded Fallback<br /><span style="font-size: 0.6rem">last resort</span>
+                  </div>
+                </div>
+              </div>
+              <div class="box rt">
+                Messages resolve via chain: ABL-defined MESSAGES take highest priority. If not
+                found, checks DB overrides (per-tenant). Then falls back to PromptCatalog defaults.
+                This lets tenants customize messages without touching ABL.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SYSTEM_PROMPT -->
+      <div class="section">
+        <div class="section-title">SYSTEM_PROMPT &mdash; Full Prompt Override</div>
+
+        <div class="card open">
+          <div class="card-head" onclick="toggle(this)">
+            <span class="label">SYSTEM_PROMPT</span>
+            <span class="meta">Replaces auto-generated prompt</span>
+            <span class="arrow">&rsaquo;</span>
+          </div>
+          <div class="card-body">
+            <div class="card-inner">
+              <pre class="y"><span class="k">SYSTEM_PROMPT:</span> |
+  You are a claims specialist for ABC Insurance.
+  Rules:
+  1. Always verify policy number first
+  2. Never approve claims over $50,000
+  3. Be empathetic but professional
+  4. If unsure, escalate to a supervisor
+  5. Always summarize the claim before submitting
+
+  Tone: Warm but concise. Use the customer's name.
+  Language: English only. Simple, clear sentences.</pre>
+              <div class="box warn">
+                SYSTEM_PROMPT replaces the <strong>entire</strong> auto-generated system prompt. You
+                lose framework features like auto-injected tool descriptions, guardrail reminders,
+                gather instructions, and persona synthesis. Use only when you need complete control.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-head" onclick="toggle(this)">
+            <span class="label">What Auto-Gen Includes</span>
+            <span class="meta">Features lost when overriding</span>
+            <span class="arrow">&rsaquo;</span>
+          </div>
+          <div class="card-body">
+            <div class="card-inner">
+              <table class="tbl">
+                <tr>
+                  <th>Auto-Generated Section</th>
+                  <th>Purpose</th>
+                  <th>Lost on Override?</th>
+                </tr>
+                <tr>
+                  <td>Persona synthesis</td>
+                  <td>Combines agent name, description, instructions</td>
+                  <td>Yes</td>
+                </tr>
+                <tr>
+                  <td>Tool descriptions</td>
+                  <td>Tells LLM what tools are available and how to use them</td>
+                  <td>Yes</td>
+                </tr>
+                <tr>
+                  <td>Guardrail reminders</td>
+                  <td>Inline constraint summaries for the LLM</td>
+                  <td>Yes</td>
+                </tr>
+                <tr>
+                  <td>Gather instructions</td>
+                  <td>Tells LLM which fields to collect</td>
+                  <td>Yes</td>
+                </tr>
+                <tr>
+                  <td>Flow context</td>
+                  <td>Current step, transitions, goals</td>
+                  <td>Yes</td>
+                </tr>
+                <tr>
+                  <td>Channel adaptation</td>
+                  <td>Voice/chat-specific instructions</td>
+                  <td>Yes</td>
+                </tr>
+              </table>
+              <div class="box tip">
+                Prefer using <code>instructions</code> (top-level) to add behavior guidance. The
+                framework merges it into the auto-generated prompt. Reserve SYSTEM_PROMPT for cases
+                where auto-gen doesn't work (e.g., strict compliance templates, legacy prompt
+                migration).
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="compare">
+          <div class="compare-item">
+            <h4>instructions (recommended)</h4>
+            <p>
+              Merged into the auto-generated prompt. Keeps tool descriptions, guardrails, and gather
+              context. Safe, additive.
+            </p>
+          </div>
+          <div class="compare-item">
+            <h4>SYSTEM_PROMPT (advanced)</h4>
+            <p>
+              Replaces everything. Full control but you must manually include tool usage rules,
+              constraints, and field collection logic.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- RUNTIME -->
+      <div class="section">
+        <div class="section-title">Runtime Behavior</div>
+
+        <div class="box rt">
+          Templates are rendered with Handlebars at response time. The runtime resolves the template
+          by name, selects the format matching the active channel, interpolates variables from
+          session state, and appends any ACTIONS as interactive elements.
+        </div>
+
+        <div class="box rt">
+          Messages resolve via a priority chain: ABL MESSAGES block (highest) &rarr; DB override
+          (per-tenant) &rarr; PromptCatalog fallback (framework default). Custom keys are stored in
+          the same map and accessible from FLOW respond steps and tool responses.
+        </div>
+
+        <div class="box rt">
+          SYSTEM_PROMPT, when set, completely replaces the auto-generated system prompt. The runtime
+          skips persona synthesis, tool description injection, guardrail merging, and gather
+          instruction generation. The raw string is sent as-is to the LLM.
+        </div>
+      </div>
+
+      <!-- PATTERNS -->
+      <div class="section">
+        <div class="section-title">Common Patterns</div>
+
+        <div class="card">
+          <div class="card-head" onclick="toggle(this)">
+            <span class="label">Multi-Channel Templates</span>
+            <span class="meta">Same content, optimized per channel</span>
+            <span class="arrow">&rsaquo;</span>
+          </div>
+          <div class="card-body">
+            <div class="card-inner">
+              <pre class="y"><span class="k">TEMPLATES:</span>
+  <span class="t">appointment_confirmed</span>:
+    content: |
+      Appointment confirmed for <span class="v">{{date}}</span> at <span class="v">{{time}}</span>.
+    formats:
+      <span class="t">markdown</span>: |
+        ## Appointment Confirmed
+        **Date:** <span class="v">{{date}}</span>
+        **Time:** <span class="v">{{time}}</span>
+        **Location:** <span class="v">{{location}}</span>
+      <span class="t">voice</span>: |
+        Your appointment is confirmed for <span class="v">{{date}}</span> at <span class="v">{{time}}</span>.
+        That's at <span class="v">{{location}}</span>. See you then!
+      <span class="t">slack</span>: |
+        :calendar: *Appointment Confirmed*
+        Date: <span class="v">{{date}}</span> | Time: <span class="v">{{time}}</span> | Location: <span class="v">{{location}}</span></pre>
+              <div class="box tip">
+                Voice format uses conversational phrasing, no visual formatting. Slack uses mrkdwn
+                with emoji. Markdown uses headers and bold for scannability.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-head" onclick="toggle(this)">
+            <span class="label">Voice-Optimized Responses</span>
+            <span class="meta">Short, spoken-friendly text</span>
+            <span class="arrow">&rsaquo;</span>
+          </div>
+          <div class="card-body">
+            <div class="card-inner">
+              <pre class="y"><span class="k">TEMPLATES:</span>
+  <span class="t">claim_status_voice</span>:
+    content: |
+      Claim <span class="v">{{claim_id}}</span> status: <span class="v">{{status}}</span>.
+    formats:
+      <span class="t">voice</span>: |
+        Your claim is currently <span class="v">{{status}}</span>.
+        <span class="v">{{#if estimated_date}}</span>We expect it to be resolved by <span class="v">{{estimated_date}}</span>.<span class="v">{{/if}}</span>
+        Would you like me to send you an email update?</pre>
+              <div class="box tip">
+                Voice responses should: (1) avoid abbreviations and symbols, (2) keep sentences
+                under 15 words, (3) use natural pauses with periods, (4) end with a clear
+                call-to-action or question.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-head" onclick="toggle(this)">
+            <span class="label">Branded Error Messages</span>
+            <span class="meta">On-brand error handling</span>
+            <span class="arrow">&rsaquo;</span>
+          </div>
+          <div class="card-body">
+            <div class="card-inner">
+              <pre class="y"><span class="k">MESSAGES:</span>
+  <span class="t">error_default</span>: <span class="s">"Hmm, I hit a snag. Let me try a different approach."</span>
+  <span class="t">constraint_blocked</span>: <span class="s">"I'd love to help with that, but it's outside what I'm able to do. Can I help with something else?"</span>
+  <span class="t">escalation_format</span>: <span class="s">"Let me bring in someone who can help you better. One moment!"</span>
+  <span class="t">conversation_complete</span>: <span class="s">"Glad I could help! Have a wonderful day."</span></pre>
+              <div class="box tip">
+                Match your brand voice. Friendly brands use informal language. Enterprise brands use
+                professional tone. Always end blocked actions with an alternative offer.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ANTI-PATTERNS -->
+      <div class="section">
+        <div class="section-title">Anti-Patterns</div>
+        <div class="compare">
+          <div class="compare-item">
+            <h4 style="color: #b07070">SYSTEM_PROMPT without tool descriptions</h4>
+            <p>
+              Overriding the system prompt without listing available tools. The LLM won't know it
+              can call tools, breaking agent functionality.
+            </p>
+          </div>
+          <div class="compare-item">
+            <h4 style="color: #b07070">No voice format for voice agents</h4>
+            <p>
+              Using markdown templates on a voice channel. The agent reads out "asterisk asterisk
+              bold asterisk asterisk" instead of spoken text.
+            </p>
+          </div>
+          <div class="compare-item">
+            <h4 style="color: #b07070">Hardcoded strings instead of MESSAGES</h4>
+            <p>
+              Putting error text directly in FLOW respond steps. Tenants can't customize them and
+              they're scattered across the ABL.
+            </p>
+          </div>
+          <div class="compare-item">
+            <h4 style="color: #b07070">Missing fallback content</h4>
+            <p>
+              Templates with only <code>formats:</code> and no <code>content:</code>. If the channel
+              doesn't match any format, the response is empty.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- VALIDATION RULES -->
+      <div class="section">
+        <div class="section-title">Validation Rules</div>
+
+        <table class="tbl">
+          <tr>
+            <th>Rule</th>
+            <th>Level</th>
+            <th>Source</th>
+          </tr>
+          <tr>
+            <td>Unreferenced template</td>
+            <td style="color: #7090c0">Info</td>
+            <td>Analyzer &mdash; template defined but never used in FLOW respond or ACTIONS</td>
+          </tr>
+          <tr>
+            <td>Missing content fallback</td>
+            <td style="color: #b8a070">Warning</td>
+            <td>Language service &mdash; template has formats but no default content</td>
+          </tr>
+          <tr>
+            <td>Invalid interpolation var</td>
+            <td style="color: #b07070">Error</td>
+            <td>
+              Parser &mdash; <code>{{var}}</code> references undefined GATHER field or tool result
+            </td>
+          </tr>
+          <tr>
+            <td>Unknown message key</td>
+            <td style="color: #7090c0">Info</td>
+            <td>Analyzer &mdash; custom key defined but never referenced</td>
+          </tr>
+        </table>
+      </div>
+
+      <!-- EDITOR PLAN -->
+      <div class="section">
+        <div class="section-title">Editor Assistance Plan</div>
+        <table class="tbl">
+          <tr>
+            <th>Feature</th>
+            <th>Implementation</th>
+          </tr>
+          <tr>
+            <td>/template</td>
+            <td>Insert named template with content block and optional formats.</td>
+          </tr>
+          <tr>
+            <td>Format tabs</td>
+            <td>
+              Tab UI to switch between default, markdown, voice, html, slack, whatsapp,
+              adaptiveCard.
+            </td>
+          </tr>
+          <tr>
+            <td>Variable autocomplete</td>
+            <td>
+              Inside <code>{{}}</code>, suggest GATHER fields, tool result keys, session vars.
+            </td>
+          </tr>
+          <tr>
+            <td>Message override autocomplete</td>
+            <td>
+              In MESSAGES block, suggest all built-in keys (error_default, constraint_blocked,
+              etc.).
+            </td>
+          </tr>
+          <tr>
+            <td>Template preview</td>
+            <td>Live preview of template rendering with sample data per format.</td>
+          </tr>
+          <tr>
+            <td>SYSTEM_PROMPT warning</td>
+            <td>
+              Show warning banner when SYSTEM_PROMPT is defined: "Auto-generated features disabled."
+            </td>
+          </tr>
+          <tr>
+            <td>Action builder</td>
+            <td>Visual builder for ACTIONS: label, action target, style picker.</td>
+          </tr>
+        </table>
+      </div>
+    </div>
+
+    <script>
+      function toggle(h) {
+        h.parentElement.classList.toggle('open');
+      }
+    </script>
+  </body>
+</html>

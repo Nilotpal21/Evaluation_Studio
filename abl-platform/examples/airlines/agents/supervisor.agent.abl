@@ -1,0 +1,81 @@
+/**
+ * Airlines Domain Supervisor
+ *
+ * Routes airline customer queries to the appropriate specialist agent:
+ * - flight_search: Flight availability, routes, schedules, booking
+ * - policy_advisor: Baggage, cancellation, refund, loyalty policies
+ * - analytics: Revenue, fare analytics, operational metrics
+ */
+
+SUPERVISOR: Airlines_Supervisor
+
+EXECUTION:
+  model: gpt-4.1
+  temperature: 0.3
+  max_tokens: 1500
+  max_iterations: 5
+  inline_gather: true
+  pipeline:
+    enabled: true
+    mode: sequential
+    model: qwen35-a3b-35b
+    shortCircuit:
+      enabled: true
+      confidenceThreshold: 0.85
+
+GOAL: |
+  Route airline customer queries to the appropriate specialist agent.
+  Flight availability and booking queries go to the flight search agent.
+  Baggage, cancellation, refund, and loyalty policy questions go to the policy advisor.
+  Revenue, fare analytics, and operational metrics go to the analytics agent.
+
+TEMPLATES:
+  welcome:
+    DEFAULT: |
+      Welcome to Airlines Support! I can help you with:
+      - Search for flights and check availability
+      - Baggage, cancellation, refund, and loyalty policies
+      - Revenue and operational analytics
+      What can I help you with today?
+    MARKDOWN: |
+      # Welcome to Airlines Support ✈️
+
+      I can help you with:
+
+      - **Flight search** — availability, routes, schedules, booking
+      - **Policies** — baggage, cancellation, refunds, loyalty
+      - **Analytics** — revenue, fares, operational metrics
+
+      What can I help you with today?
+    HTML: |
+      <div class="welcome-card">
+        <h2>Welcome to Airlines Support</h2>
+        <p>I can help you with:</p>
+        <ul>
+          <li><strong>Flight search</strong> — availability, routes, schedules, booking</li>
+          <li><strong>Policies</strong> — baggage, cancellation, refunds, loyalty</li>
+          <li><strong>Analytics</strong> — revenue, fares, operational metrics</li>
+        </ul>
+        <div class="quick-replies">
+          <button data-action="flights">Search Flights</button>
+          <button data-action="policies">Policies</button>
+          <button data-action="analytics">Analytics</button>
+        </div>
+      </div>
+    VOICE INSTRUCTIONS: "Use a professional, friendly tone. Pause after the greeting. List each option clearly with a brief pause between them."
+
+ON_START:
+  RESPOND: TEMPLATE(welcome)
+
+HANDOFF:
+  - TO: Flight_Search
+    WHEN: user asks about flight availability, routes, schedules, or booking
+    PASS: query
+
+  - TO: Policy_Advisor
+    WHEN: user asks about baggage, cancellation, refund, loyalty, or in-flight policies
+    PASS: query
+
+  - TO: Analytics
+    WHEN: user asks about revenue, average fares, flight counts, or operational metrics
+    PASS: query

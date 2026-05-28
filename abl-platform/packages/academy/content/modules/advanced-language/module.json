@@ -1,0 +1,30 @@
+{
+  "id": "advanced-language",
+  "title": "Advanced Language Features",
+  "lessons": [
+    {
+      "id": "01-rich-content",
+      "title": "Rich Content, Expressions & 12 Templates",
+      "sourceFile": "reference/abl/11-rich-content-and-expressions.md",
+      "minutes": 35
+    },
+    {
+      "id": "02-lifecycle-hooks",
+      "title": "Lifecycle Hooks & Advanced Execution",
+      "sourceFile": "reference/abl/10-lifecycle-and-hooks.md",
+      "minutes": 12
+    },
+    {
+      "id": "03-nlu",
+      "title": "NLU & Intent Handling",
+      "sourceFile": "reference/abl/09-nlu.md",
+      "minutes": 12
+    },
+    {
+      "id": "04-data-types",
+      "title": "Data Types, Utilities & Lookup Tables",
+      "sourceFile": "reference/abl/12-data-types-and-utilities.md",
+      "minutes": 27
+    }
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "agent": "NOC_Supervisor",
+  "locale": "en",
+  "strings": {
+    "routing_failure": "I'm having difficulty routing this alarm. Let me try an alternative approach.",
+    "tool_timeout": "Network management system is responding slowly. Retrying...",
+    "incident_resolved": "Incident resolved.",
+    "handoff_success": "Routed to specialist for handling."
+  }
+}

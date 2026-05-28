@@ -1,0 +1,47 @@
+version: '3.8'
+
+services:
+  preprocessing-service:
+    build: .
+    container_name: preprocessing-service
+    ports:
+      - '8003:8003'
+    environment:
+      - FLASK_ENV=development
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - LOG_LEVEL=INFO
+    depends_on:
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ['CMD-SHELL', 'curl -f http://localhost:8003/health || exit 1']
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    networks:
+      - preprocessing-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: preprocessing-redis
+    ports:
+      - '6379:6379'
+    command: redis-server --appendonly yes
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - preprocessing-network
+
+networks:
+  preprocessing-network:
+    driver: bridge
+
+volumes:
+  redis-data:

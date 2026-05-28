@@ -1,0 +1,1004 @@
+#!/bin/bash
+
+# =============================================================================
+# Pre-Push Gate — Modular, trackable, debuggable
+# =============================================================================
+#
+# Structure:
+#   Step 1: Branch protection
+#   Step 2: Independent checks (Dockerfile + lint + lockfile + config + security — parallel)
+#   Step 3: Mock export drift check
+#   Step 4: Architecture fitness gate (shared-kernel + boundary-check)
+#   Step 5: Build verification (diff-aware)
+#   Step 6: Typecheck (affected packages)
+#   Step 7: Domain-aware runtime/studio tests
+#   Step 8: Heavy package tests (solo packages — avoids OOM / contention)
+#   Step 9: Remaining package tests (everything else)
+#
+# Performance optimizations over v1:
+#   - Diff-aware build: turbo --filter="...[$REF]" instead of full monorepo
+#   - Parallel independent checks: Dockerfile, lint, config run concurrently
+#   - Timeouts on all slow steps: prevents zombie vitest workers from hanging
+#   - Portable timeout: uses timeout/gtimeout when available, otherwise an
+#     internal watchdog on stock macOS
+#
+# Each step reports: [PASS], [FAIL], [SKIP], or [TIMEOUT] with duration.
+# On failure, the failing step is clearly identified.
+#
+# Skip controls (env vars):
+#   SKIP_PRE_PUSH=1        — skip everything (emergency escape hatch)
+#   SKIP_DOCKER_CHECK=1    — skip Dockerfile validation
+#   SKIP_ARCHITECTURE=1    — skip architecture fitness + boundary-check
+#   SKIP_BUILD=1           — skip build verification
+#   SKIP_TYPECHECK=1       — skip typecheck
+#   SKIP_LINT=1            — skip tenant isolation lint + config validation
+#   SKIP_MOCK_DRIFT=1      — skip mock export drift detection
+#   SKIP_SECURITY_SCAN=1   — skip conditional semgrep scan
+#   SKIP_TESTS=1           — skip all tests (steps 7+8+9)
+#
+# Memory controls (env vars):
+#   LOW_MEM=1              — use low-memory build/test mode (concurrency=1, higher NODE_OPTIONS, 15min timeouts)
+#
+# Timeout controls (env vars, in seconds):
+#   TIMEOUT_ARCHITECTURE=300 — architecture gate timeout (default 5 min, 10 min with LOW_MEM=1)
+#   TIMEOUT_BUILD=900        — build step timeout (default 15 min, 30 min with LOW_MEM=1)
+#   TIMEOUT_TYPECHECK=180    — typecheck timeout (default 3 min)
+#   TIMEOUT_TEST=900         — per-test-step timeout (default 15 min, 30 min with LOW_MEM=1)
+#   TIMEOUT_LINT=60          — per-lint-step timeout (default 1 min)
+#   TIMEOUT_SECURITY=300     — semgrep timeout (default 5 min)
+# =============================================================================
+
+set -euo pipefail
+
+# ── Emergency escape hatch ───────────────────────────────────────────────────
+if [ "${SKIP_PRE_PUSH:-}" = "1" ]; then
+  echo "⚡ SKIP_PRE_PUSH=1 — skipping all pre-push checks"
+  exit 0
+fi
+
+# ── Ensure nvm is loaded (husky runs bare bash, not login zsh) ──────────────
+export NVM_DIR="${NVM_DIR:-$HOME/.nvm}"
+if [ -s "$NVM_DIR/nvm.sh" ]; then
+  . "$NVM_DIR/nvm.sh" --no-use
+  # Use Node 22 — required by Vite 7.x (crypto.getRandomValues needs Node ≥19)
+  nvm use 22 --silent 2>/dev/null || true
+fi
+
+# ── Helpers ──────────────────────────────────────────────────────────────────
+ROOT=$(git rev-parse --show-toplevel)
+# Use the shared `.git` directory (resolves to the actual gitdir in worktrees
+# where `$ROOT/.git` is a gitfile pointer, not a directory we can mkdir into).
+HOOK_LOG_DIR="$(git rev-parse --git-common-dir)/pre-push-logs"
+STEP_COUNT=0
+FAILED_STEPS=()
+STEP_START=0
+
+mkdir -p "$HOOK_LOG_DIR"
+
+step_start() {
+  STEP_COUNT=$((STEP_COUNT + 1))
+  STEP_START=$(date +%s)
+  echo ""
+  echo "━━━ Step $STEP_COUNT: $1 ━━━"
+}
+
+step_pass() {
+  local elapsed=$(($(date +%s) - STEP_START))
+  echo "  ✓ PASS ($1) [${elapsed}s]"
+}
+
+step_fail() {
+  local elapsed=$(($(date +%s) - STEP_START))
+  echo "  ✗ FAIL ($1) [${elapsed}s]"
+  FAILED_STEPS+=("Step $STEP_COUNT: $1")
+}
+
+step_skip() {
+  echo "  ○ SKIP ($1)"
+}
+
+step_timeout() {
+  local elapsed=$(($(date +%s) - STEP_START))
+  echo "  ⏱ TIMEOUT ($1) [${elapsed}s]"
+  FAILED_STEPS+=("Step $STEP_COUNT: $1 (TIMEOUT)")
+}
+
+# ── Portable timeout ────────────────────────────────────────────────────────
+# macOS doesn't ship `timeout`; coreutils provides `gtimeout`.
+# When neither binary exists, fall back to an internal watchdog so hooks do not
+# run unbounded on stock macOS.
+if command -v timeout &> /dev/null; then
+  TIMEOUT_CMD="timeout"
+elif command -v gtimeout &> /dev/null; then
+  TIMEOUT_CMD="gtimeout"
+else
+  TIMEOUT_CMD=""
+fi
+
+kill_process_tree() {
+  local signal=$1
+  local pid=$2
+  local child
+  local children=""
+
+  if ! kill -0 "$pid" 2> /dev/null; then
+    return 0
+  fi
+
+  children="$(pgrep -P "$pid" 2> /dev/null || true)"
+  for child in $children; do
+    kill_process_tree "$signal" "$child"
+  done
+
+  kill "-$signal" "$pid" 2> /dev/null || kill "$signal" "$pid" 2> /dev/null || true
+}
+
+# run_with_timeout <seconds> <command...>
+# Returns 124 on timeout (matches GNU timeout convention)
+run_with_timeout() {
+  local seconds=$1
+  shift
+
+  if [ -n "$TIMEOUT_CMD" ]; then
+    $TIMEOUT_CMD --kill-after=15s "${seconds}s" "$@"
+    return $?
+  fi
+
+  local timeout_flag
+  local cmd_pid
+  local watchdog_pid
+  local cmd_status
+  local errexit_was_enabled=0
+
+  case $- in
+    *e*) errexit_was_enabled=1 ;;
+  esac
+
+  timeout_flag="$(mktemp "${TMPDIR:-/tmp}/pre-push-timeout.XXXXXX")"
+  rm -f "$timeout_flag"
+
+  "$@" &
+  cmd_pid=$!
+
+  (
+    sleep "$seconds"
+    if kill -0 "$cmd_pid" 2> /dev/null; then
+      : > "$timeout_flag"
+      kill_process_tree TERM "$cmd_pid"
+      sleep 15
+      kill_process_tree KILL "$cmd_pid"
+    fi
+  ) &
+  watchdog_pid=$!
+
+  set +e
+  wait "$cmd_pid" 2> /dev/null
+  cmd_status=$?
+  if [ "$errexit_was_enabled" -eq 1 ]; then
+    set -e
+  else
+    set +e
+  fi
+
+  kill "$watchdog_pid" 2> /dev/null || true
+  wait "$watchdog_pid" 2> /dev/null || true
+
+  if [ -f "$timeout_flag" ]; then
+    rm -f "$timeout_flag"
+    return 124
+  fi
+
+  rm -f "$timeout_flag"
+  return "$cmd_status"
+}
+
+run_with_timeout_logged() {
+  local seconds=$1
+  local tail_lines=$2
+  shift 2
+
+  local log_file
+  local saved_log
+  local cmd_status
+  local command_slug
+  local timestamp
+
+  log_file="$(mktemp "${TMPDIR:-/tmp}/pre-push-log.XXXXXX")"
+  timestamp="$(date +%Y%m%d-%H%M%S)"
+  command_slug="$(printf '%s\n' "$*" | tr ' /:' '---' | tr -cd '[:alnum:]-' | cut -c1-80)"
+  saved_log="$HOOK_LOG_DIR/step-${STEP_COUNT}-${timestamp}-${command_slug:-command}.log"
+
+  run_with_timeout "$seconds" "$@" >"$log_file" 2>&1
+  cmd_status=$?
+
+  if [ -s "$log_file" ]; then
+    tail -n "$tail_lines" "$log_file"
+  fi
+
+  if [ "$cmd_status" -eq 0 ]; then
+    rm -f "$log_file"
+  else
+    mv "$log_file" "$saved_log"
+    echo "  ↳ Full log: $saved_log"
+    echo "  ↳ Command: $*"
+  fi
+
+  return "$cmd_status"
+}
+
+append_unique() {
+  local array_name=$1
+  local value=$2
+  local item
+  local count
+
+  [ -z "$value" ] && return 0
+
+  eval "count=\${#${array_name}[@]}"
+  if [ "$count" -gt 0 ]; then
+    eval "for item in \"\${${array_name}[@]}\"; do
+      if [ \"\$item\" = \"\$value\" ]; then
+        return 0
+      fi
+    done"
+  fi
+
+  eval "$array_name+=(\"\$value\")"
+}
+
+map_runtime_domain() {
+  local path=$1
+
+  case "$path" in
+    apps/runtime/src/__tests__/execution/* | apps/runtime/src/contexts/* | apps/runtime/src/*reasoning* | apps/runtime/src/*flow* | apps/runtime/src/*runtime-executor* | apps/runtime/src/*guardrail* | apps/runtime/src/*event-bus*)
+      echo "execution"
+      ;;
+    apps/runtime/src/__tests__/channels/* | apps/runtime/src/*channel* | apps/runtime/src/*voice* | apps/runtime/src/*webhook* | apps/runtime/src/*websocket* | apps/runtime/src/*livekit* | apps/runtime/src/*omnichannel* | apps/runtime/src/adapters/* | apps/runtime/src/services/agent-transfer/*)
+      echo "channels"
+      ;;
+    apps/runtime/src/__tests__/auth/* | apps/runtime/src/*auth* | apps/runtime/src/*sdk* | apps/runtime/src/*kms* | apps/runtime/src/*encryption* | apps/runtime/src/middleware/*)
+      echo "auth"
+      ;;
+    apps/runtime/src/__tests__/extraction/* | apps/runtime/src/*extract* | apps/runtime/src/*constraint* | apps/runtime/src/*gather* | apps/runtime/src/*field*)
+      echo "extraction"
+      ;;
+    apps/runtime/src/__tests__/routing/* | apps/runtime/src/*routing* | apps/runtime/src/*delegate* | apps/runtime/src/*fan-out* | apps/runtime/src/*prompt-builder*)
+      echo "routing"
+      ;;
+    apps/runtime/src/__tests__/sessions/* | apps/runtime/src/*session* | apps/runtime/src/*repo* | apps/runtime/src/*store* | apps/runtime/src/*migration*)
+      echo "sessions"
+      ;;
+    apps/runtime/src/__tests__/tools-deployment/* | apps/runtime/src/*attachment* | apps/runtime/src/*tool* | apps/runtime/src/*deployment* | apps/runtime/src/*module*)
+      echo "tools-deployment"
+      ;;
+    apps/runtime/src/__tests__/observability/* | apps/runtime/src/*trace* | apps/runtime/src/*observ* | apps/runtime/src/*clickhouse* | apps/runtime/src/*circuit-breaker*)
+      echo "observability"
+      ;;
+    *)
+      echo ""
+      ;;
+  esac
+}
+
+map_studio_target() {
+  local path=$1
+
+  case "$path" in
+    apps/studio/src/__tests__/api-routes/* | apps/studio/src/app/api/*)
+      echo "node:api-routes"
+      ;;
+    apps/studio/src/__tests__/e2e/*)
+      echo "node:e2e"
+      ;;
+    apps/studio/src/__tests__/integration/*)
+      echo "node:integration"
+      ;;
+    apps/studio/src/__tests__/search-ai/* | apps/studio/src/components/search-ai/* | apps/studio/src/app/search-ai/* | apps/studio/src/lib/*search* | apps/studio/src/lib/*crawl*)
+      echo "split:search-ai"
+      ;;
+    apps/studio/src/__tests__/arch-ai/* | apps/studio/src/app/arch-ai/* | apps/studio/src/lib/arch*)
+      echo "split:arch-ai"
+      ;;
+    apps/studio/src/__tests__/components/* | apps/studio/src/components/*)
+      echo "split:components"
+      ;;
+    apps/studio/src/__tests__/hooks/* | apps/studio/src/hooks/*)
+      echo "split:hooks"
+      ;;
+    apps/studio/src/__tests__/stores/* | apps/studio/src/store/* | apps/studio/src/lib/*)
+      echo "split:stores"
+      ;;
+    *)
+      echo ""
+      ;;
+  esac
+}
+
+# ── Timeout defaults (override via env vars) ────────────────────────────────
+TIMEOUT_ARCHITECTURE="${TIMEOUT_ARCHITECTURE:-300}"
+TIMEOUT_BUILD="${TIMEOUT_BUILD:-900}"
+TIMEOUT_TYPECHECK="${TIMEOUT_TYPECHECK:-180}"
+TIMEOUT_TEST="${TIMEOUT_TEST:-900}"
+TIMEOUT_LINT="${TIMEOUT_LINT:-60}"
+TIMEOUT_SECURITY="${TIMEOUT_SECURITY:-300}"
+
+# ── Low-memory mode increases timeouts (concurrency=1 is slower) ────────────
+if [ "${LOW_MEM:-}" = "1" ]; then
+  TIMEOUT_ARCHITECTURE=600 # shared-kernel gate is slower with lower memory
+  TIMEOUT_BUILD=1800 # 30 minutes for low-mem builds
+  TIMEOUT_TEST=1800  # 30 minutes for low-mem tests
+fi
+
+STUDIO_TARGETED=0
+
+# ── Resolve remote ref ───────────────────────────────────────────────────────
+REMOTE_REF=$(git rev-parse @{upstream} 2> /dev/null || git rev-parse origin/develop 2> /dev/null || echo "")
+CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
+
+echo "╔══════════════════════════════════════════════════╗"
+echo "║           Pre-Push Gate — $CURRENT_BRANCH"
+echo "╚══════════════════════════════════════════════════╝"
+if [ -n "$REMOTE_REF" ]; then
+  AHEAD=$(git rev-list --count "$REMOTE_REF"..HEAD 2> /dev/null || echo "?")
+  echo "  Remote ref: $(echo "$REMOTE_REF" | head -c 10)... ($AHEAD commits ahead)"
+fi
+
+# =============================================================================
+# Step 1: Branch protection
+# =============================================================================
+step_start "Branch protection"
+
+if [[ "$CURRENT_BRANCH" == "main" || "$CURRENT_BRANCH" == release/* ]] && [[ "${ABL_RELEASE:-}" != "1" ]]; then
+  step_fail "Direct push to $CURRENT_BRANCH is blocked"
+  echo "  Use 'apx release finalize' or 'apx hotfix finalize'."
+  exit 1
+fi
+step_pass "Branch $CURRENT_BRANCH allowed"
+
+# =============================================================================
+# Step 2: Independent checks (parallel)
+# — Dockerfile validation, tenant isolation lint, config validation, security scan
+# — These don't depend on the build, so run them concurrently
+# =============================================================================
+step_start "Independent checks (parallel)"
+
+PARALLEL_TMPDIR=$(mktemp -d)
+trap "rm -rf '$PARALLEL_TMPDIR'" EXIT
+
+PARALLEL_LAUNCHED=0
+
+# ── 2a: Dockerfile validation ──
+if [ "${SKIP_DOCKER_CHECK:-}" = "1" ]; then
+  echo "  ○ Dockerfile check: SKIP (SKIP_DOCKER_CHECK=1)"
+elif [ -z "$REMOTE_REF" ]; then
+  echo "  ○ Dockerfile check: SKIP (no remote ref)"
+else
+  DOCKERFILE_CHANGED=$(git diff --name-only "$REMOTE_REF"...HEAD -- '**/Dockerfile' '**/package.json' 'pnpm-workspace.yaml' 2> /dev/null || echo "")
+  if [ -z "$DOCKERFILE_CHANGED" ]; then
+    echo "  ○ Dockerfile check: SKIP (no changes)"
+  else
+    PARALLEL_LAUNCHED=$((PARALLEL_LAUNCHED + 1))
+    (
+      set +e
+      run_with_timeout "$TIMEOUT_LINT" bash "$ROOT/tools/verify-dockerfile-copies.sh" > /dev/null 2>&1
+      rc=$?
+      if [ "$rc" -eq 0 ]; then echo "pass"; elif [ "$rc" -eq 124 ]; then echo "timeout"; else echo "fail"; fi
+    ) > "$PARALLEL_TMPDIR/dockerfile" &
+  fi
+fi
+
+# ── 2b: Tenant isolation lint ──
+if [ "${SKIP_LINT:-}" = "1" ]; then
+  echo "  ○ Tenant isolation lint: SKIP (SKIP_LINT=1)"
+else
+  PARALLEL_LAUNCHED=$((PARALLEL_LAUNCHED + 1))
+  (
+    set +e
+    run_with_timeout "$TIMEOUT_LINT" bash "$ROOT/tools/tenant-isolation-lint.sh" > /dev/null 2>&1
+    rc=$?
+    if [ "$rc" -eq 0 ]; then echo "pass"; elif [ "$rc" -eq 124 ]; then echo "timeout"; else echo "fail"; fi
+  ) > "$PARALLEL_TMPDIR/lint" &
+fi
+
+# ── 2c: Lockfile consistency ──
+# Catches package.json edits that forgot to run `pnpm install`.
+# CI uses --frozen-lockfile which would fail; catch it here first.
+if [ "${SKIP_LINT:-}" = "1" ]; then
+  echo "  ○ Lockfile check: SKIP (SKIP_LINT=1)"
+else
+  PARALLEL_LAUNCHED=$((PARALLEL_LAUNCHED + 1))
+  (
+    set +e
+    run_with_timeout "$TIMEOUT_LINT" pnpm install --frozen-lockfile --ignore-scripts > /dev/null 2>&1
+    rc=$?
+    if [ "$rc" -eq 0 ]; then echo "pass"; elif [ "$rc" -eq 124 ]; then echo "timeout"; else echo "fail:lockfile"; fi
+  ) > "$PARALLEL_TMPDIR/lockfile" &
+fi
+
+# ── 2d: Config policy & model registry validation ──
+if [ "${SKIP_LINT:-}" = "1" ]; then
+  echo "  ○ Config validation: SKIP (SKIP_LINT=1)"
+else
+  PARALLEL_LAUNCHED=$((PARALLEL_LAUNCHED + 1))
+  (
+    set +e
+    CFAIL=0
+    run_with_timeout "$TIMEOUT_LINT" npx tsx "$ROOT/scripts/validate-config-policies.ts" > /dev/null 2>&1
+    rc=$?
+    if [ "$rc" -eq 124 ]; then
+      echo "timeout"
+      exit 0
+    fi
+    [ "$rc" -ne 0 ] && CFAIL=1
+
+    if [ -f "$ROOT/scripts/validate-model-registry.ts" ]; then
+      run_with_timeout "$TIMEOUT_LINT" npx tsx "$ROOT/scripts/validate-model-registry.ts" > /dev/null 2>&1
+      rc=$?
+      if [ "$rc" -eq 124 ]; then
+        echo "timeout"
+        exit 0
+      fi
+      [ "$rc" -ne 0 ] && CFAIL=1
+    fi
+
+    if [ "$CFAIL" -eq 0 ]; then echo "pass"; else echo "fail"; fi
+  ) > "$PARALLEL_TMPDIR/config" &
+fi
+
+# ── 2e: Semgrep security scan (security-sensitive changed files only) ──
+if [ "${SKIP_SECURITY_SCAN:-}" = "1" ]; then
+  echo "  ○ Security scan: SKIP (SKIP_SECURITY_SCAN=1)"
+elif [ -z "$REMOTE_REF" ]; then
+  echo "  ○ Security scan: SKIP (no remote ref)"
+else
+  SECURITY_SCAN_TARGETS=()
+  while IFS= read -r target; do
+    [ -n "$target" ] && SECURITY_SCAN_TARGETS+=("$target")
+  done < <(
+    git diff --diff-filter=ACMR --name-only "$REMOTE_REF"...HEAD -- '*.ts' '*.tsx' '*.js' '*.jsx' 2> /dev/null \
+      | grep -E '(^apps/[^/]+/src/routes/|^apps/[^/]+/src/middleware/|^apps/studio/src/app/api/|/(auth|security|encrypt|crypto|credential|secret|token|kms|validator|schema|guardrail|webhook)(/|[-_.]))' \
+      | sort -u || true
+  )
+
+  if [ "${#SECURITY_SCAN_TARGETS[@]}" -eq 0 ]; then
+    echo "  ○ Security scan: SKIP (no security-sensitive changes)"
+  else
+    PARALLEL_LAUNCHED=$((PARALLEL_LAUNCHED + 1))
+    (
+      set +e
+      run_with_timeout "$TIMEOUT_SECURITY" "$ROOT/tools/run-semgrep.sh" "${SECURITY_SCAN_TARGETS[@]}" > /dev/null 2>&1
+      rc=$?
+      if [ "$rc" -eq 0 ]; then echo "pass"; elif [ "$rc" -eq 124 ]; then echo "timeout"; else echo "fail"; fi
+    ) > "$PARALLEL_TMPDIR/security" &
+  fi
+fi
+
+# Wait for all parallel checks (don't exit on failure — results are in temp files)
+if [ "$PARALLEL_LAUNCHED" -gt 0 ]; then
+  wait 2> /dev/null || true
+fi
+
+# Collect results
+PARALLEL_FAILURES=0
+for check_name in dockerfile lint lockfile config security; do
+  result_file="$PARALLEL_TMPDIR/$check_name"
+  if [ -f "$result_file" ]; then
+    result=$(cat "$result_file")
+    case "$result" in
+      pass) echo "  ✓ $check_name: PASS" ;;
+      timeout)
+        echo "  ⏱ $check_name: TIMEOUT"
+        PARALLEL_FAILURES=$((PARALLEL_FAILURES + 1))
+        ;;
+      fail:lockfile)
+        echo "  ✗ $check_name: FAIL — run 'pnpm install' to sync lockfile"
+        PARALLEL_FAILURES=$((PARALLEL_FAILURES + 1))
+        ;;
+      *)
+        echo "  ✗ $check_name: FAIL"
+        PARALLEL_FAILURES=$((PARALLEL_FAILURES + 1))
+        ;;
+    esac
+  fi
+done
+
+if [ "$PARALLEL_FAILURES" -gt 0 ]; then
+  step_fail "Independent checks ($PARALLEL_FAILURES failed)"
+else
+  step_pass "Independent checks"
+fi
+
+# =============================================================================
+# Step 3: Mock export drift check
+# — Diff-scoped detector for newly added value exports / named imports that
+# — can break relative internal vi.mock factories without running long lanes.
+# =============================================================================
+step_start "Mock export drift check"
+
+if [ "${SKIP_MOCK_DRIFT:-}" = "1" ]; then
+  step_skip "SKIP_MOCK_DRIFT=1"
+elif [ -z "$REMOTE_REF" ]; then
+  step_skip "No remote ref"
+elif [ ! -f "$ROOT/tools/mock-export-drift-check.mjs" ]; then
+  step_skip "Detector not present"
+else
+  MOCK_DRIFT_CHANGED=$(git diff --name-only "$REMOTE_REF"...HEAD -- '*.ts' '*.tsx' 2> /dev/null || echo "")
+  if [ -z "$MOCK_DRIFT_CHANGED" ]; then
+    step_skip "No TypeScript source/test changes"
+  else
+    set +e
+    run_with_timeout_logged "$TIMEOUT_LINT" 20 node "$ROOT/tools/mock-export-drift-check.mjs" --base "$REMOTE_REF"
+    EXIT_CODE=$?
+    set -e
+    if [ "$EXIT_CODE" -eq 0 ]; then
+      step_pass "Mock export drift check"
+    elif [ "$EXIT_CODE" -eq 124 ]; then
+      step_timeout "Mock export drift check — exceeded ${TIMEOUT_LINT}s"
+    else
+      step_fail "Mock export drift check"
+    fi
+  fi
+fi
+
+# =============================================================================
+# Step 4: Architecture fitness gate (mirrors CI)
+# — Runs shared-kernel test:fast plus boundary-check on every push.
+# — Keeps local push behavior aligned with the CI release gate.
+# =============================================================================
+step_start "Architecture fitness gate"
+
+if [ "${SKIP_ARCHITECTURE:-}" = "1" ]; then
+  step_skip "SKIP_ARCHITECTURE=1"
+else
+  set +e
+  run_with_timeout_logged "$TIMEOUT_ARCHITECTURE" 20 env ROOT="$ROOT" NVM_DIR="${NVM_DIR:-$HOME/.nvm}" bash -lc '
+    set -euo pipefail
+    # Ensure nvm is available in the subshell
+    if [ -s "$NVM_DIR/nvm.sh" ]; then
+      . "$NVM_DIR/nvm.sh" --no-use
+      nvm use 22 --silent 2>/dev/null || true
+    fi
+    cd "$ROOT"
+    echo "Running shared-kernel architecture fitness..."
+    pnpm turbo test:fast --filter=@agent-platform/shared-kernel --concurrency=1
+    echo ""
+    echo "Running boundary check..."
+    pnpm boundary-check
+  '
+  EXIT_CODE=$?
+  set -e
+  if [ "$EXIT_CODE" -eq 0 ]; then
+    step_pass "Architecture fitness + boundary-check"
+  elif [ "$EXIT_CODE" -eq 124 ]; then
+    step_timeout "Architecture fitness gate — exceeded ${TIMEOUT_ARCHITECTURE}s"
+  else
+    step_fail "Architecture fitness gate"
+  fi
+fi
+
+# =============================================================================
+# Step 5: Build verification (diff-aware)
+# — Only builds packages affected by changes since the remote ref.
+# — Falls back to full build only when there's no remote ref.
+# =============================================================================
+step_start "Build verification (diff-aware)"
+
+if [ "${SKIP_BUILD:-}" = "1" ]; then
+  step_skip "SKIP_BUILD=1"
+elif [ -z "$REMOTE_REF" ]; then
+  echo "  No remote ref — running full build"
+  set +e
+  if [ "${LOW_MEM:-}" = "1" ]; then
+    echo "  LOW_MEM=1 — using low-mem build configuration"
+    run_with_timeout_logged "$TIMEOUT_BUILD" 5 pnpm build:low-mem
+  else
+    run_with_timeout_logged "$TIMEOUT_BUILD" 5 pnpm build
+  fi
+  EXIT_CODE=$?
+  set -e
+  if [ "$EXIT_CODE" -eq 0 ]; then
+    step_pass "pnpm build (full)"
+  elif [ "$EXIT_CODE" -eq 124 ]; then
+    step_timeout "pnpm build (full) — exceeded ${TIMEOUT_BUILD}s"
+  else
+    step_fail "pnpm build (full)"
+  fi
+else
+  AFFECTED_BUILD=$(pnpm turbo build --filter="...[$REMOTE_REF]" --dry-run 2> /dev/null | grep -c "build" || true)
+  if [ "$AFFECTED_BUILD" -eq 0 ] 2> /dev/null || [ "$AFFECTED_BUILD" = "0" ]; then
+    step_skip "No affected packages to build"
+  else
+    echo "  Building $AFFECTED_BUILD affected packages..."
+    set +e
+    if [ "${LOW_MEM:-}" = "1" ]; then
+      echo "  LOW_MEM=1 — using concurrency=1 with NODE_OPTIONS"
+      NODE_OPTIONS="--expose-gc --max-old-space-size=7168" run_with_timeout_logged "$TIMEOUT_BUILD" 5 pnpm turbo build --filter="...[$REMOTE_REF]" --concurrency=1
+    else
+      run_with_timeout_logged "$TIMEOUT_BUILD" 5 pnpm turbo build --filter="...[$REMOTE_REF]" --concurrency=4
+    fi
+    EXIT_CODE=$?
+    set -e
+    if [ "$EXIT_CODE" -eq 0 ]; then
+      step_pass "pnpm build ($AFFECTED_BUILD packages)"
+    elif [ "$EXIT_CODE" -eq 124 ]; then
+      step_timeout "pnpm build — exceeded ${TIMEOUT_BUILD}s"
+    else
+      step_fail "pnpm build"
+    fi
+  fi
+fi
+
+# =============================================================================
+# Step 6: Typecheck (affected packages)
+# =============================================================================
+step_start "Typecheck"
+
+if [ "${SKIP_TYPECHECK:-}" = "1" ]; then
+  step_skip "SKIP_TYPECHECK=1"
+elif [ "${SKIP_BUILD:-}" = "1" ]; then
+  step_skip "Build skipped — typecheck requires build"
+elif [ -z "$REMOTE_REF" ]; then
+  step_skip "No remote ref"
+else
+  AFFECTED_TC=$(pnpm turbo typecheck --filter="...[$REMOTE_REF]" --dry-run 2> /dev/null | grep -c "typecheck" || true)
+  if [ "$AFFECTED_TC" -eq 0 ] 2> /dev/null || [ "$AFFECTED_TC" = "0" ]; then
+    step_skip "No affected packages"
+  else
+    set +e
+    run_with_timeout_logged "$TIMEOUT_TYPECHECK" 10 pnpm turbo typecheck --filter="...[$REMOTE_REF]" --concurrency=3
+    EXIT_CODE=$?
+    set -e
+    if [ "$EXIT_CODE" -eq 0 ]; then
+      step_pass "Typecheck ($AFFECTED_TC packages)"
+    elif [ "$EXIT_CODE" -eq 124 ]; then
+      step_timeout "Typecheck — exceeded ${TIMEOUT_TYPECHECK}s"
+    else
+      step_fail "Typecheck"
+    fi
+  fi
+fi
+
+# =============================================================================
+# Step 7: Domain-aware runtime/studio tests
+# =============================================================================
+step_start "Domain-aware runtime/studio tests"
+
+if [ "${SKIP_TESTS:-}" = "1" ]; then
+  step_skip "SKIP_TESTS=1"
+elif [ -z "$REMOTE_REF" ]; then
+  echo "  No remote ref — running runtime smoke fallback"
+  set +e
+  run_with_timeout_logged "$TIMEOUT_TEST" 10 pnpm --dir apps/runtime test:smoke
+  EXIT_CODE=$?
+  set -e
+  if [ "$EXIT_CODE" -eq 0 ]; then
+    step_pass "Runtime smoke fallback"
+  elif [ "$EXIT_CODE" -eq 124 ]; then
+    step_timeout "Runtime smoke fallback — exceeded ${TIMEOUT_TEST}s"
+  else
+    step_fail "Runtime smoke fallback"
+  fi
+else
+  # Check if runtime is affected
+  HAS_RUNTIME=0
+  HAS_STUDIO=0
+  if pnpm turbo test:smoke --filter="...[$REMOTE_REF]" --dry-run --output-logs=none 2> /dev/null | grep -qw '@agent-platform/runtime'; then
+    HAS_RUNTIME=1
+  fi
+  if pnpm turbo test:fast --filter="...[$REMOTE_REF]" --dry-run --output-logs=none 2> /dev/null | grep -qw '@agent-platform/studio'; then
+    HAS_STUDIO=1
+  fi
+
+  # Also check WebSocket caller roots
+  RUNTIME_WS_GUARD_CHANGED=$(git diff --name-only "$REMOTE_REF"...HEAD -- \
+    'apps/runtime/test-session-api.mjs' \
+    'apps/studio/src' \
+    'apps/studio/public' \
+    'benchmarks' \
+    'packages/kore-platform-cli/src' \
+    'packages/mcp-debug/src' \
+    'packages/web-sdk/src' \
+    'scripts' 2> /dev/null || echo "")
+
+  if [ -n "$RUNTIME_WS_GUARD_CHANGED" ]; then
+    HAS_RUNTIME=1
+  fi
+
+  if [ "$HAS_RUNTIME" = "0" ] && [ "$HAS_STUDIO" = "0" ]; then
+    step_skip "Runtime and Studio not affected"
+  else
+    CHANGED_APP_PATHS=$(git diff --name-only "$REMOTE_REF"...HEAD -- \
+      'apps/runtime/**' \
+      'apps/studio/**' \
+      'packages/web-sdk/src/**' \
+      'packages/mcp-debug/src/**' \
+      'packages/kore-platform-cli/src/**' \
+      'benchmarks/**' \
+      'scripts/**' 2> /dev/null || echo "")
+
+    runtime_domains=()
+    runtime_domain_filters=()
+    studio_split_domains=()
+    studio_split_filters=()
+    studio_node_domains=()
+    studio_node_filters=()
+    RUNTIME_MAPPING_AMBIGUOUS=0
+    STUDIO_MAPPING_AMBIGUOUS=0
+
+    for changed_path in $CHANGED_APP_PATHS; do
+      RUNTIME_DOMAIN=$(map_runtime_domain "$changed_path")
+      if [ -n "$RUNTIME_DOMAIN" ]; then
+        append_unique runtime_domains "$RUNTIME_DOMAIN"
+        append_unique runtime_domain_filters "apps/runtime/src/__tests__/$RUNTIME_DOMAIN/"
+      elif [[ "$changed_path" == apps/runtime/* ]] || [[ "$changed_path" == packages/web-sdk/src/* ]] || [[ "$changed_path" == packages/mcp-debug/src/* ]] || [[ "$changed_path" == packages/kore-platform-cli/src/* ]] || [[ "$changed_path" == benchmarks/* ]] || [[ "$changed_path" == scripts/* ]]; then
+        RUNTIME_MAPPING_AMBIGUOUS=1
+      fi
+
+      STUDIO_TARGET=$(map_studio_target "$changed_path")
+      if [ -n "$STUDIO_TARGET" ]; then
+        case "$STUDIO_TARGET" in
+          split:*)
+            STUDIO_DOMAIN=${STUDIO_TARGET#split:}
+            append_unique studio_split_domains "$STUDIO_DOMAIN"
+            append_unique studio_split_filters "src/__tests__/$STUDIO_DOMAIN/"
+            ;;
+          node:*)
+            STUDIO_DOMAIN=${STUDIO_TARGET#node:}
+            append_unique studio_node_domains "$STUDIO_DOMAIN"
+            append_unique studio_node_filters "src/__tests__/$STUDIO_DOMAIN/"
+            ;;
+        esac
+      elif [[ "$changed_path" == apps/studio/* ]] || [[ "$changed_path" == packages/web-sdk/src/* ]]; then
+        STUDIO_MAPPING_AMBIGUOUS=1
+      fi
+    done
+
+    STEP5_RAN=0
+    STEP5_FAILED=0
+    STEP5_TIMED_OUT=0
+
+    if [ "$HAS_RUNTIME" = "1" ]; then
+      STEP5_RAN=1
+      if [ "${#runtime_domains[@]}" -gt 0 ] && [ "$RUNTIME_MAPPING_AMBIGUOUS" = "0" ]; then
+        echo "  Runtime domains: ${runtime_domains[*]}"
+      else
+        echo "  Runtime mapping ambiguous — smoke only fallback"
+      fi
+
+      set +e
+      run_with_timeout_logged "$TIMEOUT_TEST" 10 pnpm --dir apps/runtime test:smoke
+      EXIT_CODE=$?
+      set -e
+      if [ "$EXIT_CODE" -eq 0 ]; then
+        echo "    ✓ Runtime smoke"
+      elif [ "$EXIT_CODE" -eq 124 ]; then
+        echo "    ⏱ Runtime smoke timed out"
+        STEP5_FAILED=1
+        STEP5_TIMED_OUT=1
+      else
+        echo "    ✗ Runtime smoke failed"
+        STEP5_FAILED=1
+      fi
+
+      if [ "${#runtime_domain_filters[@]}" -gt 0 ] && [ "$RUNTIME_MAPPING_AMBIGUOUS" = "0" ]; then
+        set +e
+        run_with_timeout_logged "$TIMEOUT_TEST" 20 pnpm --dir apps/runtime exec vitest run --config vitest.fast.config.ts "${runtime_domain_filters[@]}" --passWithNoTests
+        EXIT_CODE=$?
+        set -e
+        if [ "$EXIT_CODE" -eq 0 ]; then
+          echo "    ✓ Runtime fast domains"
+        elif [ "$EXIT_CODE" -eq 124 ]; then
+          echo "    ⏱ Runtime fast domains timed out"
+          STEP5_FAILED=1
+          STEP5_TIMED_OUT=1
+        else
+          echo "    ✗ Runtime fast domains failed"
+          STEP5_FAILED=1
+        fi
+      fi
+    fi
+
+    if [ "$HAS_STUDIO" = "1" ]; then
+      if [ "$STUDIO_MAPPING_AMBIGUOUS" = "0" ] && { [ "${#studio_split_filters[@]}" -gt 0 ] || [ "${#studio_node_filters[@]}" -gt 0 ]; }; then
+        STEP5_RAN=1
+        STUDIO_TARGETED=1
+
+        if [ "${#studio_split_domains[@]}" -gt 0 ]; then
+          echo "  Studio split domains: ${studio_split_domains[*]}"
+          set +e
+          run_with_timeout_logged "$TIMEOUT_TEST" 20 pnpm --dir apps/studio test:fast -- "${studio_split_filters[@]}" --passWithNoTests
+          EXIT_CODE=$?
+          set -e
+          if [ "$EXIT_CODE" -eq 0 ]; then
+            echo "    ✓ Studio split-runner domains"
+          elif [ "$EXIT_CODE" -eq 124 ]; then
+            echo "    ⏱ Studio split-runner domains timed out"
+            STEP5_FAILED=1
+            STEP5_TIMED_OUT=1
+          else
+            echo "    ✗ Studio split-runner domains failed"
+            STEP5_FAILED=1
+          fi
+        fi
+
+        if [ "${#studio_node_domains[@]}" -gt 0 ]; then
+          echo "  Studio node domains: ${studio_node_domains[*]}"
+          set +e
+          run_with_timeout_logged "$TIMEOUT_TEST" 20 pnpm --dir apps/studio exec vitest run --config vitest.node.config.ts "${studio_node_filters[@]}" --passWithNoTests
+          EXIT_CODE=$?
+          set -e
+          if [ "$EXIT_CODE" -eq 0 ]; then
+            echo "    ✓ Studio node domains"
+          elif [ "$EXIT_CODE" -eq 124 ]; then
+            echo "    ⏱ Studio node domains timed out"
+            STEP5_FAILED=1
+            STEP5_TIMED_OUT=1
+          else
+            echo "    ✗ Studio node domains failed"
+            STEP5_FAILED=1
+          fi
+        fi
+      else
+        STEP5_RAN=1
+        STUDIO_TARGETED=1
+        echo "  Studio mapping ambiguous — running full @agent-platform/studio test:fast"
+        set +e
+        run_with_timeout_logged "$TIMEOUT_TEST" 20 pnpm --dir apps/studio test:fast
+        EXIT_CODE=$?
+        set -e
+        if [ "$EXIT_CODE" -eq 0 ]; then
+          echo "    ✓ Studio full fallback"
+        elif [ "$EXIT_CODE" -eq 124 ]; then
+          echo "    ⏱ Studio full fallback timed out"
+          STEP5_FAILED=1
+          STEP5_TIMED_OUT=1
+        else
+          echo "    ✗ Studio full fallback failed"
+          STEP5_FAILED=1
+        fi
+      fi
+    fi
+
+    if [ "$STEP5_RAN" = "0" ]; then
+      step_skip "No domain-safe runtime/studio targets"
+    elif [ "$STEP5_FAILED" = "1" ] && [ "$STEP5_TIMED_OUT" = "1" ]; then
+      step_timeout "Domain-aware runtime/studio tests — exceeded ${TIMEOUT_TEST}s"
+    elif [ "$STEP5_FAILED" = "1" ]; then
+      step_fail "Domain-aware runtime/studio tests"
+    else
+      step_pass "Domain-aware runtime/studio tests"
+    fi
+  fi
+fi
+
+# =============================================================================
+# Step 8: Heavy package tests (runs solo to avoid OOM / worker contention)
+# =============================================================================
+# search-ai tests consume ~4GB+ RAM. multimodal-service spins up local Mongo
+# instances and image/video pipelines. web-sdk's React entry/import tests and
+# Studio's split Vitest runner are both stable in isolation but noisy in the
+# broad package pool. Run these first, alone.
+step_start "Heavy package tests (solo packages)"
+
+HEAVY_PACKAGES="@agent-platform/search-ai @agent-platform/multimodal-service @agent-platform/web-sdk @agent-platform/studio"
+
+if [ "${SKIP_TESTS:-}" = "1" ]; then
+  step_skip "SKIP_TESTS=1"
+elif [ -z "$REMOTE_REF" ]; then
+  step_skip "No remote ref"
+else
+  HAS_HEAVY=0
+  for pkg in $HEAVY_PACKAGES; do
+    if pnpm turbo test:fast --filter="$pkg...[$REMOTE_REF]" --dry-run 2> /dev/null | grep -qw "$pkg"; then
+      HAS_HEAVY=1
+      break
+    fi
+  done
+
+  if [ "$HAS_HEAVY" = "0" ]; then
+    step_skip "No heavy packages affected"
+  else
+    HEAVY_FILTERS=""
+    for pkg in $HEAVY_PACKAGES; do
+      HEAVY_FILTERS="$HEAVY_FILTERS --filter=$pkg"
+    done
+    set +e
+    run_with_timeout_logged "$TIMEOUT_TEST" 10 env NODE_OPTIONS="--max-old-space-size=8192" pnpm turbo test:fast $HEAVY_FILTERS --concurrency=1
+    EXIT_CODE=$?
+    set -e
+    if [ "$EXIT_CODE" -eq 0 ]; then
+      step_pass "Heavy package tests"
+    elif [ "$EXIT_CODE" -eq 124 ]; then
+      step_timeout "Heavy package tests — exceeded ${TIMEOUT_TEST}s"
+    else
+      step_fail "Heavy package tests"
+    fi
+  fi
+fi
+
+# =============================================================================
+# Step 9: Remaining package tests (excluding runtime, targeted studio, and heavy packages)
+# =============================================================================
+step_start "Remaining package tests"
+
+if [ "${SKIP_TESTS:-}" = "1" ]; then
+  step_skip "SKIP_TESTS=1"
+elif [ -z "$REMOTE_REF" ]; then
+  step_skip "No remote ref"
+else
+  EXCLUDE_FILTERS="--filter=!@agent-platform/runtime"
+  if [ "${STUDIO_TARGETED:-0}" = "1" ]; then
+    EXCLUDE_FILTERS="$EXCLUDE_FILTERS --filter=!@agent-platform/studio"
+  fi
+  for pkg in $HEAVY_PACKAGES; do
+    EXCLUDE_FILTERS="$EXCLUDE_FILTERS --filter=!$pkg"
+  done
+
+  AFFECTED=$(pnpm turbo test:fast --filter="...[$REMOTE_REF]" $EXCLUDE_FILTERS --dry-run 2> /dev/null | grep -c "test:fast" || true)
+  echo "  Affected packages: $AFFECTED"
+
+  if [ "$AFFECTED" -eq 0 ] 2> /dev/null || [ "$AFFECTED" = "0" ]; then
+    step_skip "No affected packages"
+  else
+    set +e
+    if [ "${LOW_MEM:-}" = "1" ]; then
+      echo "  LOW_MEM=1 — using concurrency=1 with NODE_OPTIONS"
+      NODE_OPTIONS="--max-old-space-size=6144" run_with_timeout_logged "$TIMEOUT_TEST" 20 pnpm turbo test:fast --filter="...[$REMOTE_REF]" $EXCLUDE_FILTERS --concurrency=1
+    else
+      run_with_timeout_logged "$TIMEOUT_TEST" 20 pnpm turbo test:fast --filter="...[$REMOTE_REF]" $EXCLUDE_FILTERS --concurrency=3
+    fi
+    EXIT_CODE=$?
+    set -e
+    if [ "$EXIT_CODE" -eq 0 ]; then
+      step_pass "Package tests ($AFFECTED packages)"
+    elif [ "$EXIT_CODE" -eq 124 ]; then
+      step_timeout "Package tests — exceeded ${TIMEOUT_TEST}s"
+    else
+      step_fail "Package tests"
+    fi
+  fi
+fi
+
+# ── TODO: Additional pre-push checks to wire ────────────────────────────
+# 1. Secrets completeness (scripts/validate-secrets-completeness.ts)
+#    - Needs vault/secret store access. Can't run locally without credentials.
+#
+# 2. Encryption audit (tools/encryption-audit.sh)
+#    - Validates encryption-at-rest patterns. Fast, no infra needed.
+#    - Wire as parallel check in Step 2 under SKIP_LINT control.
+#
+# 3. Gitleaks on full push diff
+#    - Pre-commit runs on staged changes only. A multi-commit push
+#      could slip secrets that weren't individually staged.
+#    - Consider: gitleaks detect --source=. --log-opts="$REMOTE_REF..HEAD"
+# ─────────────────────────────────────────────────────────────────────────
+
+# =============================================================================
+# Summary
+# =============================================================================
+echo ""
+echo "╔══════════════════════════════════════════════════╗"
+if [ ${#FAILED_STEPS[@]} -eq 0 ]; then
+  echo "║  ✓ All $STEP_COUNT steps passed                       ║"
+  echo "╚══════════════════════════════════════════════════╝"
+  exit 0
+else
+  echo "║  ✗ ${#FAILED_STEPS[@]} of $STEP_COUNT steps failed                        ║"
+  echo "╚══════════════════════════════════════════════════╝"
+  echo ""
+  echo "Failed steps:"
+  for step in "${FAILED_STEPS[@]}"; do
+    echo "  ✗ $step"
+  done
+  echo ""
+  echo "To skip and push anyway:  SKIP_PRE_PUSH=1 git push origin develop"
+  echo "To skip architecture:     SKIP_ARCHITECTURE=1 git push origin develop"
+  echo "To skip just tests:       SKIP_TESTS=1 git push origin develop"
+  echo "To skip just build:       SKIP_BUILD=1 git push origin develop"
+  echo "To skip just typecheck:   SKIP_TYPECHECK=1 git push origin develop"
+  echo "To skip lint+validation:  SKIP_LINT=1 git push origin develop"
+  echo "To skip mock drift:       SKIP_MOCK_DRIFT=1 git push origin develop"
+  echo "To skip security scan:    SKIP_SECURITY_SCAN=1 git push origin develop"
+  echo "To use low-mem mode:      LOW_MEM=1 git push origin develop"
+  exit 1
+fi

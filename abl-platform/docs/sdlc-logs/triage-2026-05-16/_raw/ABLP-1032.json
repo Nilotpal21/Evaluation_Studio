@@ -1,0 +1,2240 @@
+{
+  "issue": {
+    "expand": "renderedFields,names,schema,operations,editmeta,changelog,versionedRepresentations",
+    "id": "549770",
+    "self": "https://koreteam.atlassian.net/rest/api/3/issue/549770",
+    "key": "ABLP-1032",
+    "renderedFields": {
+      "statuscategorychangedate": "Tuesday 8:34 PM",
+      "issuetype": null,
+      "timespent": null,
+      "project": null,
+      "fixVersions": null,
+      "aggregatetimespent": null,
+      "statusCategory": null,
+      "resolution": null,
+      "customfield_13700": null,
+      "customfield_15205": null,
+      "resolutiondate": null,
+      "workratio": null,
+      "issuerestriction": null,
+      "watches": null,
+      "lastViewed": "Tuesday 10:34 PM",
+      "created": "Tuesday 8:34 PM",
+      "customfield_15279": null,
+      "priority": null,
+      "customfield_15514": null,
+      "labels": null,
+      "customfield_15508": null,
+      "timeestimate": null,
+      "aggregatetimeoriginalestimate": null,
+      "versions": null,
+      "issuelinks": null,
+      "assignee": null,
+      "updated": "Tuesday 9:02 PM",
+      "status": null,
+      "components": null,
+      "timeoriginalestimate": null,
+      "description": "<h3><a name=\"Summary\"></a>Summary</h3>\n\n<p>When the same top-level DSL section (e.g. <tt>DELEGATE:</tt>, <tt>HANDOFF:</tt>, <tt>TOOLS:</tt>, <tt>MEMORY:</tt>, <tt>CONSTRAINTS:</tt>) is written more than once in an agent file, the parser silently overwrites the first occurrence with the last. No error is raised, no warning is emitted. The missing content is only discoverable by inspecting the raw LLM payload in logs — the compiled agent behaves as if the first block never existed.</p>\n\n<h3><a name=\"StepstoReproduce%3A\"></a>Steps to Reproduce : </h3>\n\n<p>Write two <tt>DELEGATE:</tt> blocks in a single agent file:</p>\n\n<div class=\"preformatted panel\" style=\"border-width: 1px;\"><div class=\"preformattedContent panelContent\">\n<pre>DELEGATE:\n  - AGENT: SummaryAgent\n    WHEN: user asks for a summary\n    PURPOSE: \"Summarize the conversation\"\n    INPUT: {}\n    RETURNS: {}\n    USE_RESULT: \"Use the summary in your reply\"\n\nDELEGATE:\n  - AGENT: BillingAgent\n    WHEN: user asks about billing\n    PURPOSE: \"Handle billing queries\"\n    INPUT: {}\n    RETURNS: {}\n    USE_RESULT: \"Answer based on billing result\"\n</pre>\n</div></div>\n\n<p><b>Expected:</b> Both <tt>delegate_to_SummaryAgent</tt> and <tt>delegate_to_BillingAgent</tt> tools are available to the LLM.</p>\n\n<p><b>Actual:</b> Only <tt>delegate_to_BillingAgent</tt> exists. <tt>SummaryAgent</tt> is silently dropped. The LLM never sees a tool to reach it. </p>\n\n<p><b>No compilation error. No warning. The agent appears to compile and deploy normally.</b></p>\n\n\n\n<h3><a name=\"AffectedTopLevelSections\"></a>Affected Top-Level Sections</h3>\n\n<p>Every direct-assignment section in the dispatch loop is affected. This includes at minimum:</p>\n\n<div class='table-wrap'>\n<table class='confluenceTable'><tbody>\n<tr>\n<th class='confluenceTh'>Section</th>\n<th class='confluenceTh'>Field overwritten</th>\n</tr>\n<tr>\n<td class='confluenceTd'><tt>DELEGATE:</tt></td>\n<td class='confluenceTd'><tt>doc.delegate</tt></td>\n</tr>\n<tr>\n<td class='confluenceTd'><tt>HANDOFF:</tt></td>\n<td class='confluenceTd'><tt>doc.handoff</tt></td>\n</tr>\n<tr>\n<td class='confluenceTd'><tt>RETURN_HANDLERS:</tt></td>\n<td class='confluenceTd'><tt>doc.returnHandlers</tt></td>\n</tr>\n<tr>\n<td class='confluenceTd'><tt>TOOLS:</tt></td>\n<td class='confluenceTd'><tt>doc.tools</tt></td>\n</tr>\n<tr>\n<td class='confluenceTd'><tt>MEMORY:</tt></td>\n<td class='confluenceTd'><tt>doc.memory</tt></td>\n</tr>\n<tr>\n<td class='confluenceTd'><tt>CONSTRAINTS:</tt></td>\n<td class='confluenceTd'><tt>doc.constraints</tt></td>\n</tr>\n<tr>\n<td class='confluenceTd'><tt>FLOW:</tt> / <tt>STEPS:</tt></td>\n<td class='confluenceTd'><tt>doc.flow</tt></td>\n</tr>\n<tr>\n<td class='confluenceTd'><tt>CONVERSATION:</tt></td>\n<td class='confluenceTd'><tt>doc.conversation</tt></td>\n</tr>\n<tr>\n<td class='confluenceTd'><tt>GATHER:</tt></td>\n<td class='confluenceTd'><tt>doc.gather</tt></td>\n</tr>\n<tr>\n<td class='confluenceTd'><tt>ON_START:</tt></td>\n<td class='confluenceTd'><tt>doc.onStart</tt></td>\n</tr>\n<tr>\n<td class='confluenceTd'><tt>ON_ERROR:</tt></td>\n<td class='confluenceTd'><tt>doc.onError</tt></td>\n</tr>\n<tr>\n<td class='confluenceTd'><tt>GUARDRAILS:</tt></td>\n<td class='confluenceTd'><tt>doc.guardrails</tt></td>\n</tr>\n<tr>\n<td class='confluenceTd'><tt>ESCALATE:</tt></td>\n<td class='confluenceTd'><tt>doc.escalate</tt></td>\n</tr>\n<tr>\n<td class='confluenceTd'><tt>HOOKS:</tt></td>\n<td class='confluenceTd'><tt>doc.hooks</tt></td>\n</tr>\n<tr>\n<td class='confluenceTd'><tt>MESSAGES:</tt></td>\n<td class='confluenceTd'><tt>doc.messages</tt></td>\n</tr>\n<tr>\n<td class='confluenceTd'><tt>EXECUTION:</tt></td>\n<td class='confluenceTd'><tt>doc.execution</tt></td>\n</tr>\n<tr>\n<td class='confluenceTd'><tt>ACTION_HANDLERS:</tt></td>\n<td class='confluenceTd'><tt>doc.actionHandlers</tt></td>\n</tr>\n<tr>\n<td class='confluenceTd'><tt>GOAL:</tt> / <tt>PERSONA:</tt> / <tt>LIMITATIONS:</tt></td>\n<td class='confluenceTd'><tt>doc.goal</tt> / <tt>doc.persona</tt> / <tt>doc.limitations</tt></td>\n</tr>\n</tbody></table>\n</div>\n\n\n<p><tt>TEMPLATES:</tt> is the only exception — it correctly spreads into an accumulator.</p>\n\n<hr />\n\n<h3><a name=\"WhyThisIsHardtoDetect\"></a>Why This Is Hard to Detect</h3>\n\n<ol>\n\t<li><b>Compilation succeeds.</b> The parser produces a valid AST and the IR compiles without error. There is nothing structurally wrong from the compiler's perspective — one valid <tt>DELEGATE:</tt> block was found.</li>\n\t<li><b>No warning at the discard site.</b> The old value is overwritten by a plain assignment. The parser never checks whether <tt>doc.delegate</tt> was already populated before writing.</li>\n\t<li><b>The symptom is behavioral, not structural.</b> The agent runs. It just cannot reach the dropped agents. The developer sees no <tt>delegate_to_SummaryAgent</tt> in the LLM tool list and has no immediate signal as to why.</li>\n\t<li><b>Diagnosis requires log inspection.</b> The only reliable way to discover missing delegates/handoffs today is to enable debug logging and inspect the raw LLM payload to see which <tt>delegate_to_<b></tt> or <tt>handoff_to_</b></tt> tools were injected.</li>\n</ol>\n\n\n<hr />\n\n<h3><a name=\"Impact\"></a>Impact</h3>\n\n<ul>\n\t<li><b>Silent data loss during authoring.</b> A developer splitting <tt>DELEGATE:</tt> into multiple blocks (e.g. for readability, or after copying a block from another agent) loses all but the last without any indication.</li>\n\t<li><b>Debugging cost.</b> Root-causing requires knowing to look at the LLM payload, not the DSL or the compilation output.</li>\n\t<li><b>Affects coordination correctness.</b> For <tt>DELEGATE</tt> and <tt>HANDOFF</tt> specifically, the dropped entries mean entire agent-routing paths are inaccessible at runtime — a functional regression with no observable compile-time signal.</li>\n\t<li><b>Scope.</b> Any of the affected sections above can silently lose content, meaning the issue is not limited to coordination constructs.</li>\n</ul>\n",
+      "customfield_15225": "",
+      "customfield_11300": null,
+      "timetracking": {},
+      "security": null,
+      "attachment": [],
+      "aggregatetimeestimate": null,
+      "summary": null,
+      "creator": null,
+      "subtasks": null,
+      "reporter": null,
+      "aggregateprogress": null,
+      "customfield_10002": null,
+      "customfield_10400": null,
+      "customfield_13900": null,
+      "environment": "",
+      "duedate": null,
+      "progress": null,
+      "votes": null,
+      "comment": {
+        "comments": [],
+        "self": "https://koreteam.atlassian.net/rest/api/3/issue/549770/comment",
+        "maxResults": 0,
+        "total": 0,
+        "startAt": 0
+      },
+      "worklog": {
+        "startAt": 0,
+        "maxResults": 20,
+        "total": 0,
+        "worklogs": []
+      }
+    },
+    "changelog": {
+      "startAt": 0,
+      "maxResults": 4,
+      "total": 4,
+      "histories": [
+        {
+          "id": "6165788",
+          "author": {
+            "self": "https://koreteam.atlassian.net/rest/api/3/user?accountId=712020%3A91136b8e-3e83-401e-8f10-8b73bf0fb5c4",
+            "accountId": "712020:91136b8e-3e83-401e-8f10-8b73bf0fb5c4",
+            "avatarUrls": {
+              "48x48": "https://secure.gravatar.com/avatar/b21fb0701436f5fa5b9a0b19b7c2d6d2?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FPG-6.png",
+              "24x24": "https://secure.gravatar.com/avatar/b21fb0701436f5fa5b9a0b19b7c2d6d2?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FPG-6.png",
+              "16x16": "https://secure.gravatar.com/avatar/b21fb0701436f5fa5b9a0b19b7c2d6d2?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FPG-6.png",
+              "32x32": "https://secure.gravatar.com/avatar/b21fb0701436f5fa5b9a0b19b7c2d6d2?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FPG-6.png"
+            },
+            "displayName": "Prathyusha Gopavaram",
+            "active": true,
+            "timeZone": "Asia/Kolkata",
+            "accountType": "atlassian"
+          },
+          "created": "2026-05-12T21:02:27.285+0530",
+          "items": [
+            {
+              "field": "description",
+              "fieldtype": "jira",
+              "fieldId": "description",
+              "from": null,
+              "fromString": "h3. Summary\n\nWhen the same top-level DSL section (e.g. {{DELEGATE:}}, {{HANDOFF:}}, {{TOOLS:}}, {{MEMORY:}}, {{CONSTRAINTS:}}) is written more than once in an agent file, the parser silently overwrites the first occurrence with the last. No error is raised, no warning is emitted. The missing content is only discoverable by inspecting the raw LLM payload in logs — the compiled agent behaves as if the first block never existed.\n\nh3. Steps to Reproduce : \n\nWrite two {{DELEGATE:}} blocks in a single agent file:\n\n{noformat}DELEGATE:\n  - AGENT: SummaryAgent\n    WHEN: user asks for a summary\n    PURPOSE: \"Summarize the conversation\"\n    INPUT: {}\n    RETURNS: {}\n    USE_RESULT: \"Use the summary in your reply\"\n\nDELEGATE:\n  - AGENT: BillingAgent\n    WHEN: user asks about billing\n    PURPOSE: \"Handle billing queries\"\n    INPUT: {}\n    RETURNS: {}\n    USE_RESULT: \"Answer based on billing result\"\n{noformat}\n\n*Expected:* Both {{delegate_to_SummaryAgent}} and {{delegate_to_BillingAgent}} tools are available to the LLM.\n\n*Actual:* Only {{delegate_to_BillingAgent}} exists. {{SummaryAgent}} is silently dropped. The LLM never sees a tool to reach it. \n\n*No compilation error. No warning. The agent appears to compile and deploy normally.*",
+              "to": null,
+              "toString": "h3. Summary\n\nWhen the same top-level DSL section (e.g. {{DELEGATE:}}, {{HANDOFF:}}, {{TOOLS:}}, {{MEMORY:}}, {{CONSTRAINTS:}}) is written more than once in an agent file, the parser silently overwrites the first occurrence with the last. No error is raised, no warning is emitted. The missing content is only discoverable by inspecting the raw LLM payload in logs — the compiled agent behaves as if the first block never existed.\n\nh3. Steps to Reproduce : \n\nWrite two {{DELEGATE:}} blocks in a single agent file:\n\n{noformat}DELEGATE:\n  - AGENT: SummaryAgent\n    WHEN: user asks for a summary\n    PURPOSE: \"Summarize the conversation\"\n    INPUT: {}\n    RETURNS: {}\n    USE_RESULT: \"Use the summary in your reply\"\n\nDELEGATE:\n  - AGENT: BillingAgent\n    WHEN: user asks about billing\n    PURPOSE: \"Handle billing queries\"\n    INPUT: {}\n    RETURNS: {}\n    USE_RESULT: \"Answer based on billing result\"\n{noformat}\n\n*Expected:* Both {{delegate_to_SummaryAgent}} and {{delegate_to_BillingAgent}} tools are available to the LLM.\n\n*Actual:* Only {{delegate_to_BillingAgent}} exists. {{SummaryAgent}} is silently dropped. The LLM never sees a tool to reach it. \n\n*No compilation error. No warning. The agent appears to compile and deploy normally.*\n\n\n\nh3. Affected Top-Level Sections\n\nEvery direct-assignment section in the dispatch loop is affected. This includes at minimum:\n\n||Section||Field overwritten||\n|{{DELEGATE:}}|{{doc.delegate}}|\n|{{HANDOFF:}}|{{doc.handoff}}|\n|{{RETURN_HANDLERS:}}|{{doc.returnHandlers}}|\n|{{TOOLS:}}|{{doc.tools}}|\n|{{MEMORY:}}|{{doc.memory}}|\n|{{CONSTRAINTS:}}|{{doc.constraints}}|\n|{{FLOW:}} / {{STEPS:}}|{{doc.flow}}|\n|{{CONVERSATION:}}|{{doc.conversation}}|\n|{{GATHER:}}|{{doc.gather}}|\n|{{ON_START:}}|{{doc.onStart}}|\n|{{ON_ERROR:}}|{{doc.onError}}|\n|{{GUARDRAILS:}}|{{doc.guardrails}}|\n|{{ESCALATE:}}|{{doc.escalate}}|\n|{{HOOKS:}}|{{doc.hooks}}|\n|{{MESSAGES:}}|{{doc.messages}}|\n|{{EXECUTION:}}|{{doc.execution}}|\n|{{ACTION_HANDLERS:}}|{{doc.actionHandlers}}|\n|{{GOAL:}} / {{PERSONA:}} / {{LIMITATIONS:}}|{{doc.goal}} / {{doc.persona}} / {{doc.limitations}}|\n\n{{TEMPLATES:}} is the only exception — it correctly spreads into an accumulator.\n\n----\n\nh3. Why This Is Hard to Detect\n\n# *Compilation succeeds.* The parser produces a valid AST and the IR compiles without error. There is nothing structurally wrong from the compiler's perspective — one valid {{DELEGATE:}} block was found.\n# *No warning at the discard site.* The old value is overwritten by a plain assignment. The parser never checks whether {{doc.delegate}} was already populated before writing.\n# *The symptom is behavioral, not structural.* The agent runs. It just cannot reach the dropped agents. The developer sees no {{delegate_to_SummaryAgent}} in the LLM tool list and has no immediate signal as to why.\n# *Diagnosis requires log inspection.* The only reliable way to discover missing delegates/handoffs today is to enable debug logging and inspect the raw LLM payload to see which {{delegate_to_*}} or {{handoff_to_*}} tools were injected.\n\n----\n\nh3. Impact\n\n* *Silent data loss during authoring.* A developer splitting {{DELEGATE:}} into multiple blocks (e.g. for readability, or after copying a block from another agent) loses all but the last without any indication.\n* *Debugging cost.* Root-causing requires knowing to look at the LLM payload, not the DSL or the compilation output.\n* *Affects coordination correctness.* For {{DELEGATE}} and {{HANDOFF}} specifically, the dropped entries mean entire agent-routing paths are inaccessible at runtime — a functional regression with no observable compile-time signal.\n* *Scope.* Any of the affected sections above can silently lose content, meaning the issue is not limited to coordination constructs."
+            }
+          ]
+        },
+        {
+          "id": "6165781",
+          "author": {
+            "self": "https://koreteam.atlassian.net/rest/api/3/user?accountId=5bffb42b9bb006551dcaa6a2",
+            "accountId": "5bffb42b9bb006551dcaa6a2",
+            "emailAddress": "prakash.rochkari@kore.com",
+            "avatarUrls": {
+              "48x48": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/5bffb42b9bb006551dcaa6a2/3ab7ce28-d194-469b-8a9d-f5f271361956/48",
+              "24x24": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/5bffb42b9bb006551dcaa6a2/3ab7ce28-d194-469b-8a9d-f5f271361956/24",
+              "16x16": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/5bffb42b9bb006551dcaa6a2/3ab7ce28-d194-469b-8a9d-f5f271361956/16",
+              "32x32": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/5bffb42b9bb006551dcaa6a2/3ab7ce28-d194-469b-8a9d-f5f271361956/32"
+            },
+            "displayName": "Prakash Rochkari",
+            "active": true,
+            "timeZone": "Asia/Calcutta",
+            "accountType": "atlassian"
+          },
+          "created": "2026-05-12T20:54:39.609+0530",
+          "items": [
+            {
+              "field": "assignee",
+              "fieldtype": "jira",
+              "fieldId": "assignee",
+              "from": "5bffb42b9bb006551dcaa6a2",
+              "fromString": "Prakash Rochkari",
+              "to": "557058:19965570-a9cd-4d76-b059-6af5ae4fdca7",
+              "toString": "Prasanna Arikala",
+              "tmpFromAccountId": null,
+              "tmpToAccountId": "557058:19965570-a9cd-4d76-b059-6af5ae4fdca7"
+            }
+          ]
+        },
+        {
+          "id": "6165725",
+          "author": {
+            "self": "https://koreteam.atlassian.net/rest/api/3/user?accountId=712020%3A91136b8e-3e83-401e-8f10-8b73bf0fb5c4",
+            "accountId": "712020:91136b8e-3e83-401e-8f10-8b73bf0fb5c4",
+            "avatarUrls": {
+              "48x48": "https://secure.gravatar.com/avatar/b21fb0701436f5fa5b9a0b19b7c2d6d2?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FPG-6.png",
+              "24x24": "https://secure.gravatar.com/avatar/b21fb0701436f5fa5b9a0b19b7c2d6d2?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FPG-6.png",
+              "16x16": "https://secure.gravatar.com/avatar/b21fb0701436f5fa5b9a0b19b7c2d6d2?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FPG-6.png",
+              "32x32": "https://secure.gravatar.com/avatar/b21fb0701436f5fa5b9a0b19b7c2d6d2?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FPG-6.png"
+            },
+            "displayName": "Prathyusha Gopavaram",
+            "active": true,
+            "timeZone": "Asia/Kolkata",
+            "accountType": "atlassian"
+          },
+          "created": "2026-05-12T20:35:40.073+0530",
+          "items": [
+            {
+              "field": "assignee",
+              "fieldtype": "jira",
+              "fieldId": "assignee",
+              "from": null,
+              "fromString": null,
+              "to": "5bffb42b9bb006551dcaa6a2",
+              "toString": "Prakash Rochkari",
+              "tmpFromAccountId": null,
+              "tmpToAccountId": "5bffb42b9bb006551dcaa6a2"
+            }
+          ]
+        },
+        {
+          "id": "6165722",
+          "author": {
+            "self": "https://koreteam.atlassian.net/rest/api/3/user?accountId=712020%3A91136b8e-3e83-401e-8f10-8b73bf0fb5c4",
+            "accountId": "712020:91136b8e-3e83-401e-8f10-8b73bf0fb5c4",
+            "avatarUrls": {
+              "48x48": "https://secure.gravatar.com/avatar/b21fb0701436f5fa5b9a0b19b7c2d6d2?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FPG-6.png",
+              "24x24": "https://secure.gravatar.com/avatar/b21fb0701436f5fa5b9a0b19b7c2d6d2?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FPG-6.png",
+              "16x16": "https://secure.gravatar.com/avatar/b21fb0701436f5fa5b9a0b19b7c2d6d2?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FPG-6.png",
+              "32x32": "https://secure.gravatar.com/avatar/b21fb0701436f5fa5b9a0b19b7c2d6d2?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FPG-6.png"
+            },
+            "displayName": "Prathyusha Gopavaram",
+            "active": true,
+            "timeZone": "Asia/Kolkata",
+            "accountType": "atlassian"
+          },
+          "created": "2026-05-12T20:35:31.420+0530",
+          "items": [
+            {
+              "field": "description",
+              "fieldtype": "jira",
+              "fieldId": "description",
+              "from": null,
+              "fromString": null,
+              "to": null,
+              "toString": "h3. Summary\n\nWhen the same top-level DSL section (e.g. {{DELEGATE:}}, {{HANDOFF:}}, {{TOOLS:}}, {{MEMORY:}}, {{CONSTRAINTS:}}) is written more than once in an agent file, the parser silently overwrites the first occurrence with the last. No error is raised, no warning is emitted. The missing content is only discoverable by inspecting the raw LLM payload in logs — the compiled agent behaves as if the first block never existed.\n\nh3. Steps to Reproduce : \n\nWrite two {{DELEGATE:}} blocks in a single agent file:\n\n{noformat}DELEGATE:\n  - AGENT: SummaryAgent\n    WHEN: user asks for a summary\n    PURPOSE: \"Summarize the conversation\"\n    INPUT: {}\n    RETURNS: {}\n    USE_RESULT: \"Use the summary in your reply\"\n\nDELEGATE:\n  - AGENT: BillingAgent\n    WHEN: user asks about billing\n    PURPOSE: \"Handle billing queries\"\n    INPUT: {}\n    RETURNS: {}\n    USE_RESULT: \"Answer based on billing result\"\n{noformat}\n\n*Expected:* Both {{delegate_to_SummaryAgent}} and {{delegate_to_BillingAgent}} tools are available to the LLM.\n\n*Actual:* Only {{delegate_to_BillingAgent}} exists. {{SummaryAgent}} is silently dropped. The LLM never sees a tool to reach it. \n\n*No compilation error. No warning. The agent appears to compile and deploy normally.*"
+            }
+          ]
+        }
+      ]
+    },
+    "fields": {
+      "statuscategorychangedate": "2026-05-12T20:34:24.872+0530",
+      "issuetype": {
+        "self": "https://koreteam.atlassian.net/rest/api/3/issuetype/13402",
+        "id": "13402",
+        "description": "",
+        "iconUrl": "https://koreteam.atlassian.net/rest/api/2/universal_avatar/view/type/issuetype/avatar/10703?size=medium",
+        "name": "Bug",
+        "subtask": false,
+        "avatarId": 10703,
+        "entityId": "ffe81e74-168d-44e4-b40a-87293f5b8180",
+        "hierarchyLevel": 0
+      },
+      "timespent": null,
+      "project": {
+        "self": "https://koreteam.atlassian.net/rest/api/3/project/17286",
+        "id": "17286",
+        "key": "ABLP",
+        "name": "Agent-Platform-v2",
+        "projectTypeKey": "software",
+        "simplified": true,
+        "avatarUrls": {
+          "48x48": "https://koreteam.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/15404",
+          "24x24": "https://koreteam.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/15404?size=small",
+          "16x16": "https://koreteam.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/15404?size=xsmall",
+          "32x32": "https://koreteam.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/15404?size=medium"
+        }
+      },
+      "fixVersions": [],
+      "aggregatetimespent": null,
+      "statusCategory": {
+        "self": "https://koreteam.atlassian.net/rest/api/3/statuscategory/2",
+        "id": 2,
+        "key": "new",
+        "colorName": "blue-gray",
+        "name": "To Do"
+      },
+      "resolution": null,
+      "customfield_13700": "{}",
+      "customfield_15205": null,
+      "resolutiondate": null,
+      "workratio": -1,
+      "issuerestriction": {
+        "issuerestrictions": {},
+        "shouldDisplay": true
+      },
+      "watches": {
+        "self": "https://koreteam.atlassian.net/rest/api/3/issue/ABLP-1032/watchers",
+        "watchCount": 1,
+        "isWatching": false
+      },
+      "lastViewed": "2026-05-12T22:34:55.832+0530",
+      "created": "2026-05-12T20:34:24.531+0530",
+      "customfield_15279": null,
+      "priority": {
+        "self": "https://koreteam.atlassian.net/rest/api/3/priority/10200",
+        "iconUrl": "https://koreteam.atlassian.net/images/icons/priorities/trivial_new.svg",
+        "name": "None",
+        "id": "10200"
+      },
+      "customfield_15514": null,
+      "labels": [],
+      "customfield_15508": null,
+      "timeestimate": null,
+      "aggregatetimeoriginalestimate": null,
+      "versions": [],
+      "issuelinks": [],
+      "assignee": {
+        "self": "https://koreteam.atlassian.net/rest/api/3/user?accountId=557058%3A19965570-a9cd-4d76-b059-6af5ae4fdca7",
+        "accountId": "557058:19965570-a9cd-4d76-b059-6af5ae4fdca7",
+        "emailAddress": "prasanna@kore.com",
+        "avatarUrls": {
+          "48x48": "https://secure.gravatar.com/avatar/84aa6c5f7ca4865903e52515ef5499c4?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FPA-6.png",
+          "24x24": "https://secure.gravatar.com/avatar/84aa6c5f7ca4865903e52515ef5499c4?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FPA-6.png",
+          "16x16": "https://secure.gravatar.com/avatar/84aa6c5f7ca4865903e52515ef5499c4?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FPA-6.png",
+          "32x32": "https://secure.gravatar.com/avatar/84aa6c5f7ca4865903e52515ef5499c4?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FPA-6.png"
+        },
+        "displayName": "Prasanna Arikala",
+        "active": true,
+        "timeZone": "Asia/Kolkata",
+        "accountType": "atlassian"
+      },
+      "updated": "2026-05-12T21:02:27.285+0530",
+      "status": {
+        "self": "https://koreteam.atlassian.net/rest/api/3/status/13811",
+        "description": "",
+        "iconUrl": "https://koreteam.atlassian.net/images/icons/statuses/generic.png",
+        "name": "To Do",
+        "id": "13811",
+        "statusCategory": {
+          "self": "https://koreteam.atlassian.net/rest/api/3/statuscategory/2",
+          "id": 2,
+          "key": "new",
+          "colorName": "blue-gray",
+          "name": "To Do"
+        }
+      },
+      "components": [],
+      "timeoriginalestimate": null,
+      "description": {
+        "type": "doc",
+        "version": 1,
+        "content": [
+          {
+            "type": "heading",
+            "attrs": {
+              "level": 3,
+              "localId": "f7b9b0b07455"
+            },
+            "content": [
+              {
+                "type": "text",
+                "text": "Summary"
+              }
+            ]
+          },
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "type": "text",
+                "text": "When the same top-level DSL section (e.g. "
+              },
+              {
+                "type": "text",
+                "text": "DELEGATE:",
+                "marks": [
+                  {
+                    "type": "code"
+                  }
+                ]
+              },
+              {
+                "type": "text",
+                "text": ", "
+              },
+              {
+                "type": "text",
+                "text": "HANDOFF:",
+                "marks": [
+                  {
+                    "type": "code"
+                  }
+                ]
+              },
+              {
+                "type": "text",
+                "text": ", "
+              },
+              {
+                "type": "text",
+                "text": "TOOLS:",
+                "marks": [
+                  {
+                    "type": "code"
+                  }
+                ]
+              },
+              {
+                "type": "text",
+                "text": ", "
+              },
+              {
+                "type": "text",
+                "text": "MEMORY:",
+                "marks": [
+                  {
+                    "type": "code"
+                  }
+                ]
+              },
+              {
+                "type": "text",
+                "text": ", "
+              },
+              {
+                "type": "text",
+                "text": "CONSTRAINTS:",
+                "marks": [
+                  {
+                    "type": "code"
+                  }
+                ]
+              },
+              {
+                "type": "text",
+                "text": ") is written more than once in an agent file, the parser silently overwrites the first occurrence with the last. No error is raised, no warning is emitted. The missing content is only discoverable by inspecting the raw LLM payload in logs — the compiled agent behaves as if the first block never existed."
+              }
+            ],
+            "attrs": {
+              "localId": "c7e3e8dc9a76"
+            }
+          },
+          {
+            "type": "heading",
+            "attrs": {
+              "level": 3,
+              "localId": "605a67e1b5ed"
+            },
+            "content": [
+              {
+                "type": "text",
+                "text": "Steps to Reproduce : "
+              }
+            ]
+          },
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "type": "text",
+                "text": "Write two "
+              },
+              {
+                "type": "text",
+                "text": "DELEGATE:",
+                "marks": [
+                  {
+                    "type": "code"
+                  }
+                ]
+              },
+              {
+                "type": "text",
+                "text": " blocks in a single agent file:"
+              }
+            ],
+            "attrs": {
+              "localId": "ea49a4537473"
+            }
+          },
+          {
+            "type": "codeBlock",
+            "attrs": {
+              "localId": "27f200406625"
+            },
+            "content": [
+              {
+                "type": "text",
+                "text": "DELEGATE:\n  - AGENT: SummaryAgent\n    WHEN: user asks for a summary\n    PURPOSE: \"Summarize the conversation\"\n    INPUT: {}\n    RETURNS: {}\n    USE_RESULT: \"Use the summary in your reply\"\n\nDELEGATE:\n  - AGENT: BillingAgent\n    WHEN: user asks about billing\n    PURPOSE: \"Handle billing queries\"\n    INPUT: {}\n    RETURNS: {}\n    USE_RESULT: \"Answer based on billing result\"\n"
+              }
+            ]
+          },
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "type": "text",
+                "text": "Expected:",
+                "marks": [
+                  {
+                    "type": "strong"
+                  }
+                ]
+              },
+              {
+                "type": "text",
+                "text": " Both "
+              },
+              {
+                "type": "text",
+                "text": "delegate_to_SummaryAgent",
+                "marks": [
+                  {
+                    "type": "code"
+                  }
+                ]
+              },
+              {
+                "type": "text",
+                "text": " and "
+              },
+              {
+                "type": "text",
+                "text": "delegate_to_BillingAgent",
+                "marks": [
+                  {
+                    "type": "code"
+                  }
+                ]
+              },
+              {
+                "type": "text",
+                "text": " tools are available to the LLM."
+              }
+            ],
+            "attrs": {
+              "localId": "2beb8800c244"
+            }
+          },
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "type": "text",
+                "text": "Actual:",
+                "marks": [
+                  {
+                    "type": "strong"
+                  }
+                ]
+              },
+              {
+                "type": "text",
+                "text": " Only "
+              },
+              {
+                "type": "text",
+                "text": "delegate_to_BillingAgent",
+                "marks": [
+                  {
+                    "type": "code"
+                  }
+                ]
+              },
+              {
+                "type": "text",
+                "text": " exists. "
+              },
+              {
+                "type": "text",
+                "text": "SummaryAgent",
+                "marks": [
+                  {
+                    "type": "code"
+                  }
+                ]
+              },
+              {
+                "type": "text",
+                "text": " is silently dropped. The LLM never sees a tool to reach it. "
+              }
+            ],
+            "attrs": {
+              "localId": "ba2d97182106"
+            }
+          },
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "type": "text",
+                "text": "No compilation error. No warning. The agent appears to compile and deploy normally.",
+                "marks": [
+                  {
+                    "type": "strong"
+                  }
+                ]
+              },
+              {
+                "type": "hardBreak"
+              },
+              {
+                "type": "hardBreak"
+              }
+            ],
+            "attrs": {
+              "localId": "ba2d97182106"
+            }
+          },
+          {
+            "type": "heading",
+            "attrs": {
+              "level": 3,
+              "localId": "69b58eeb531f"
+            },
+            "content": [
+              {
+                "type": "text",
+                "text": "Affected Top-Level Sections"
+              }
+            ]
+          },
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "type": "text",
+                "text": "Every direct-assignment section in the dispatch loop is affected. This includes at minimum:"
+              }
+            ],
+            "attrs": {
+              "localId": "d76e5a01abe7"
+            }
+          },
+          {
+            "type": "table",
+            "attrs": {
+              "isNumberColumnEnabled": false,
+              "layout": "center",
+              "localId": "2ecac7b0-f907-4b8c-9a4a-9518e3219bef"
+            },
+            "content": [
+              {
+                "type": "tableRow",
+                "attrs": {
+                  "localId": "8e7b7f5c734f"
+                },
+                "content": [
+                  {
+                    "type": "tableHeader",
+                    "attrs": {
+                      "localId": "f4b653dec64b"
+                    },
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "Section"
+                          }
+                        ],
+                        "attrs": {
+                          "localId": "975396111f60"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "type": "tableHeader",
+                    "attrs": {
+                      "localId": "0f3d5b039b5c"
+                    },
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "Field overwritten"
+                          }
+                        ],
+                        "attrs": {
+                          "localId": "807080fd325d"
+                        }
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "type": "tableRow",
+                "attrs": {
+                  "localId": "085b68bb4fe4"
+                },
+                "content": [
+                  {
+                    "type": "tableCell",
+                    "attrs": {
+                      "localId": "882fbdf4fdc9"
+                    },
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "DELEGATE:",
+                            "marks": [
+                              {
+                                "type": "code"
+                              }
+                            ]
+                          }
+                        ],
+                        "attrs": {
+                          "localId": "baf07df95995"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "type": "tableCell",
+                    "attrs": {
+                      "localId": "273a030bea1c"
+                    },
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "doc.delegate",
+                            "marks": [
+                              {
+                                "type": "code"
+                              }
+                            ]
+                          }
+                        ],
+                        "attrs": {
+                          "localId": "590084c4cf0b"
+                        }
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "type": "tableRow",
+                "attrs": {
+                  "localId": "4c1caca45ff8"
+                },
+                "content": [
+                  {
+                    "type": "tableCell",
+                    "attrs": {
+                      "localId": "d7393d775e4e"
+                    },
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "HANDOFF:",
+                            "marks": [
+                              {
+                                "type": "code"
+                              }
+                            ]
+                          }
+                        ],
+                        "attrs": {
+                          "localId": "1e6cbad31f38"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "type": "tableCell",
+                    "attrs": {
+                      "localId": "8c448a2729f4"
+                    },
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "doc.handoff",
+                            "marks": [
+                              {
+                                "type": "code"
+                              }
+                            ]
+                          }
+                        ],
+                        "attrs": {
+                          "localId": "a14b506e3a27"
+                        }
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "type": "tableRow",
+                "attrs": {
+                  "localId": "aac93756aa45"
+                },
+                "content": [
+                  {
+                    "type": "tableCell",
+                    "attrs": {
+                      "localId": "76542706fd3d"
+                    },
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "RETURN_HANDLERS:",
+                            "marks": [
+                              {
+                                "type": "code"
+                              }
+                            ]
+                          }
+                        ],
+                        "attrs": {
+                          "localId": "4f9afef55c54"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "type": "tableCell",
+                    "attrs": {
+                      "localId": "5c1d75d4b004"
+                    },
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "doc.returnHandlers",
+                            "marks": [
+                              {
+                                "type": "code"
+                              }
+                            ]
+                          }
+                        ],
+                        "attrs": {
+                          "localId": "1909ca39d630"
+                        }
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "type": "tableRow",
+                "attrs": {
+                  "localId": "3b63d357746a"
+                },
+                "content": [
+                  {
+                    "type": "tableCell",
+                    "attrs": {
+                      "localId": "df5a13bed881"
+                    },
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "TOOLS:",
+                            "marks": [
+                              {
+                                "type": "code"
+                              }
+                            ]
+                          }
+                        ],
+                        "attrs": {
+                          "localId": "c1a53c95e08b"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "type": "tableCell",
+                    "attrs": {
+                      "localId": "940555c88b0d"
+                    },
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "doc.tools",
+                            "marks": [
+                              {
+                                "type": "code"
+                              }
+                            ]
+                          }
+                        ],
+                        "attrs": {
+                          "localId": "6c82466c8fce"
+                        }
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "type": "tableRow",
+                "attrs": {
+                  "localId": "6affae5f1ec9"
+                },
+                "content": [
+                  {
+                    "type": "tableCell",
+                    "attrs": {
+                      "localId": "573a2d566450"
+                    },
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "MEMORY:",
+                            "marks": [
+                              {
+                                "type": "code"
+                              }
+                            ]
+                          }
+                        ],
+                        "attrs": {
+                          "localId": "7bd71a3d259a"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "type": "tableCell",
+                    "attrs": {
+                      "localId": "b15b510fe915"
+                    },
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "doc.memory",
+                            "marks": [
+                              {
+                                "type": "code"
+                              }
+                            ]
+                          }
+                        ],
+                        "attrs": {
+                          "localId": "0986982d2a78"
+                        }
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "type": "tableRow",
+                "attrs": {
+                  "localId": "032065bfc828"
+                },
+                "content": [
+                  {
+                    "type": "tableCell",
+                    "attrs": {
+                      "localId": "514a555e2b6a"
+                    },
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "CONSTRAINTS:",
+                            "marks": [
+                              {
+                                "type": "code"
+                              }
+                            ]
+                          }
+                        ],
+                        "attrs": {
+                          "localId": "1595449dc752"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "type": "tableCell",
+                    "attrs": {
+                      "localId": "d3a66817f393"
+                    },
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "doc.constraints",
+                            "marks": [
+                              {
+                                "type": "code"
+                              }
+                            ]
+                          }
+                        ],
+                        "attrs": {
+                          "localId": "7b05c21bb8eb"
+                        }
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "type": "tableRow",
+                "attrs": {
+                  "localId": "902723527b87"
+                },
+                "content": [
+                  {
+                    "type": "tableCell",
+                    "attrs": {
+                      "localId": "eb9eea2f7486"
+                    },
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "FLOW:",
+                            "marks": [
+                              {
+                                "type": "code"
+                              }
+                            ]
+                          },
+                          {
+                            "type": "text",
+                            "text": " / "
+                          },
+                          {
+                            "type": "text",
+                            "text": "STEPS:",
+                            "marks": [
+                              {
+                                "type": "code"
+                              }
+                            ]
+                          }
+                        ],
+                        "attrs": {
+                          "localId": "6bad60ac42cb"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "type": "tableCell",
+                    "attrs": {
+                      "localId": "18b19413c9d9"
+                    },
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "doc.flow",
+                            "marks": [
+                              {
+                                "type": "code"
+                              }
+                            ]
+                          }
+                        ],
+                        "attrs": {
+                          "localId": "da3827dfac2f"
+                        }
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "type": "tableRow",
+                "attrs": {
+                  "localId": "8b0357262ddc"
+                },
+                "content": [
+                  {
+                    "type": "tableCell",
+                    "attrs": {
+                      "localId": "e7c65c98a5d9"
+                    },
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "CONVERSATION:",
+                            "marks": [
+                              {
+                                "type": "code"
+                              }
+                            ]
+                          }
+                        ],
+                        "attrs": {
+                          "localId": "f147fbe9673b"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "type": "tableCell",
+                    "attrs": {
+                      "localId": "b1f961f44e23"
+                    },
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "doc.conversation",
+                            "marks": [
+                              {
+                                "type": "code"
+                              }
+                            ]
+                          }
+                        ],
+                        "attrs": {
+                          "localId": "8e2df25496e3"
+                        }
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "type": "tableRow",
+                "attrs": {
+                  "localId": "02ad25b71869"
+                },
+                "content": [
+                  {
+                    "type": "tableCell",
+                    "attrs": {
+                      "localId": "bc67320b39da"
+                    },
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "GATHER:",
+                            "marks": [
+                              {
+                                "type": "code"
+                              }
+                            ]
+                          }
+                        ],
+                        "attrs": {
+                          "localId": "8d9b4892fd21"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "type": "tableCell",
+                    "attrs": {
+                      "localId": "7b2747adb428"
+                    },
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "doc.gather",
+                            "marks": [
+                              {
+                                "type": "code"
+                              }
+                            ]
+                          }
+                        ],
+                        "attrs": {
+                          "localId": "0a1592cb0429"
+                        }
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "type": "tableRow",
+                "attrs": {
+                  "localId": "af99e1b0c81c"
+                },
+                "content": [
+                  {
+                    "type": "tableCell",
+                    "attrs": {
+                      "localId": "309c5934cc03"
+                    },
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "ON_START:",
+                            "marks": [
+                              {
+                                "type": "code"
+                              }
+                            ]
+                          }
+                        ],
+                        "attrs": {
+                          "localId": "74ed6280f495"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "type": "tableCell",
+                    "attrs": {
+                      "localId": "01f2b5823d21"
+                    },
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "doc.onStart",
+                            "marks": [
+                              {
+                                "type": "code"
+                              }
+                            ]
+                          }
+                        ],
+                        "attrs": {
+                          "localId": "1d28716ac524"
+                        }
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "type": "tableRow",
+                "attrs": {
+                  "localId": "db01b3b433c3"
+                },
+                "content": [
+                  {
+                    "type": "tableCell",
+                    "attrs": {
+                      "localId": "5a25263367eb"
+                    },
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "ON_ERROR:",
+                            "marks": [
+                              {
+                                "type": "code"
+                              }
+                            ]
+                          }
+                        ],
+                        "attrs": {
+                          "localId": "15e0d5abe580"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "type": "tableCell",
+                    "attrs": {
+                      "localId": "4cb1c2d08555"
+                    },
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "doc.onError",
+                            "marks": [
+                              {
+                                "type": "code"
+                              }
+                            ]
+                          }
+                        ],
+                        "attrs": {
+                          "localId": "dc90d1b706f0"
+                        }
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "type": "tableRow",
+                "attrs": {
+                  "localId": "08aa5ce569f3"
+                },
+                "content": [
+                  {
+                    "type": "tableCell",
+                    "attrs": {
+                      "localId": "588d654bc512"
+                    },
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "GUARDRAILS:",
+                            "marks": [
+                              {
+                                "type": "code"
+                              }
+                            ]
+                          }
+                        ],
+                        "attrs": {
+                          "localId": "cae74d60aea4"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "type": "tableCell",
+                    "attrs": {
+                      "localId": "940ea0b84c31"
+                    },
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "doc.guardrails",
+                            "marks": [
+                              {
+                                "type": "code"
+                              }
+                            ]
+                          }
+                        ],
+                        "attrs": {
+                          "localId": "6ce77f34cb16"
+                        }
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "type": "tableRow",
+                "attrs": {
+                  "localId": "c482d6d23118"
+                },
+                "content": [
+                  {
+                    "type": "tableCell",
+                    "attrs": {
+                      "localId": "9f116b9d9320"
+                    },
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "ESCALATE:",
+                            "marks": [
+                              {
+                                "type": "code"
+                              }
+                            ]
+                          }
+                        ],
+                        "attrs": {
+                          "localId": "ad8049a1fb2b"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "type": "tableCell",
+                    "attrs": {
+                      "localId": "c683dbbb7894"
+                    },
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "doc.escalate",
+                            "marks": [
+                              {
+                                "type": "code"
+                              }
+                            ]
+                          }
+                        ],
+                        "attrs": {
+                          "localId": "1ec60e9ad9d9"
+                        }
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "type": "tableRow",
+                "attrs": {
+                  "localId": "4bc4b042fbd5"
+                },
+                "content": [
+                  {
+                    "type": "tableCell",
+                    "attrs": {
+                      "localId": "e946bd1422fc"
+                    },
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "HOOKS:",
+                            "marks": [
+                              {
+                                "type": "code"
+                              }
+                            ]
+                          }
+                        ],
+                        "attrs": {
+                          "localId": "7c53d648a5bc"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "type": "tableCell",
+                    "attrs": {
+                      "localId": "6504ddbf0ae0"
+                    },
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "doc.hooks",
+                            "marks": [
+                              {
+                                "type": "code"
+                              }
+                            ]
+                          }
+                        ],
+                        "attrs": {
+                          "localId": "824a3424cf87"
+                        }
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "type": "tableRow",
+                "attrs": {
+                  "localId": "28a0553f250a"
+                },
+                "content": [
+                  {
+                    "type": "tableCell",
+                    "attrs": {
+                      "localId": "5ebbc73ae6b3"
+                    },
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "MESSAGES:",
+                            "marks": [
+                              {
+                                "type": "code"
+                              }
+                            ]
+                          }
+                        ],
+                        "attrs": {
+                          "localId": "c6bc1fa50d47"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "type": "tableCell",
+                    "attrs": {
+                      "localId": "f70faca4189f"
+                    },
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "doc.messages",
+                            "marks": [
+                              {
+                                "type": "code"
+                              }
+                            ]
+                          }
+                        ],
+                        "attrs": {
+                          "localId": "0873fe718235"
+                        }
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "type": "tableRow",
+                "attrs": {
+                  "localId": "14d22a43ca1e"
+                },
+                "content": [
+                  {
+                    "type": "tableCell",
+                    "attrs": {
+                      "localId": "c572cf7c4be4"
+                    },
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "EXECUTION:",
+                            "marks": [
+                              {
+                                "type": "code"
+                              }
+                            ]
+                          }
+                        ],
+                        "attrs": {
+                          "localId": "c6eb71c5eb8d"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "type": "tableCell",
+                    "attrs": {
+                      "localId": "d7dfde16cc4a"
+                    },
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "doc.execution",
+                            "marks": [
+                              {
+                                "type": "code"
+                              }
+                            ]
+                          }
+                        ],
+                        "attrs": {
+                          "localId": "87b2235c16a1"
+                        }
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "type": "tableRow",
+                "attrs": {
+                  "localId": "d37bcc31d983"
+                },
+                "content": [
+                  {
+                    "type": "tableCell",
+                    "attrs": {
+                      "localId": "c5f365c45778"
+                    },
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "ACTION_HANDLERS:",
+                            "marks": [
+                              {
+                                "type": "code"
+                              }
+                            ]
+                          }
+                        ],
+                        "attrs": {
+                          "localId": "d9014ad88f20"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "type": "tableCell",
+                    "attrs": {
+                      "localId": "420001ef668e"
+                    },
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "doc.actionHandlers",
+                            "marks": [
+                              {
+                                "type": "code"
+                              }
+                            ]
+                          }
+                        ],
+                        "attrs": {
+                          "localId": "33dac42a6907"
+                        }
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "type": "tableRow",
+                "attrs": {
+                  "localId": "03cb7f1c4d8f"
+                },
+                "content": [
+                  {
+                    "type": "tableCell",
+                    "attrs": {
+                      "localId": "1215b461d49e"
+                    },
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "GOAL:",
+                            "marks": [
+                              {
+                                "type": "code"
+                              }
+                            ]
+                          },
+                          {
+                            "type": "text",
+                            "text": " / "
+                          },
+                          {
+                            "type": "text",
+                            "text": "PERSONA:",
+                            "marks": [
+                              {
+                                "type": "code"
+                              }
+                            ]
+                          },
+                          {
+                            "type": "text",
+                            "text": " / "
+                          },
+                          {
+                            "type": "text",
+                            "text": "LIMITATIONS:",
+                            "marks": [
+                              {
+                                "type": "code"
+                              }
+                            ]
+                          }
+                        ],
+                        "attrs": {
+                          "localId": "1f126f90f598"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "type": "tableCell",
+                    "attrs": {
+                      "localId": "51e26603369c"
+                    },
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "doc.goal",
+                            "marks": [
+                              {
+                                "type": "code"
+                              }
+                            ]
+                          },
+                          {
+                            "type": "text",
+                            "text": " / "
+                          },
+                          {
+                            "type": "text",
+                            "text": "doc.persona",
+                            "marks": [
+                              {
+                                "type": "code"
+                              }
+                            ]
+                          },
+                          {
+                            "type": "text",
+                            "text": " / "
+                          },
+                          {
+                            "type": "text",
+                            "text": "doc.limitations",
+                            "marks": [
+                              {
+                                "type": "code"
+                              }
+                            ]
+                          }
+                        ],
+                        "attrs": {
+                          "localId": "2833039357de"
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "type": "text",
+                "text": "TEMPLATES:",
+                "marks": [
+                  {
+                    "type": "code"
+                  }
+                ]
+              },
+              {
+                "type": "text",
+                "text": " is the only exception — it correctly spreads into an accumulator."
+              }
+            ],
+            "attrs": {
+              "localId": "ea97af884e2f"
+            }
+          },
+          {
+            "type": "rule",
+            "attrs": {
+              "localId": "48ba662cc311"
+            }
+          },
+          {
+            "type": "heading",
+            "attrs": {
+              "level": 3,
+              "localId": "daf795e987f1"
+            },
+            "content": [
+              {
+                "type": "text",
+                "text": "Why This Is Hard to Detect"
+              }
+            ]
+          },
+          {
+            "type": "orderedList",
+            "attrs": {
+              "order": 1,
+              "localId": "ad98ffe03a9b"
+            },
+            "content": [
+              {
+                "type": "listItem",
+                "attrs": {
+                  "localId": "62802a554fb9"
+                },
+                "content": [
+                  {
+                    "type": "paragraph",
+                    "content": [
+                      {
+                        "type": "text",
+                        "text": "Compilation succeeds.",
+                        "marks": [
+                          {
+                            "type": "strong"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "text",
+                        "text": " The parser produces a valid AST and the IR compiles without error. There is nothing structurally wrong from the compiler's perspective — one valid "
+                      },
+                      {
+                        "type": "text",
+                        "text": "DELEGATE:",
+                        "marks": [
+                          {
+                            "type": "code"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "text",
+                        "text": " block was found."
+                      }
+                    ],
+                    "attrs": {
+                      "localId": "2fe7c1a47637"
+                    }
+                  }
+                ]
+              },
+              {
+                "type": "listItem",
+                "attrs": {
+                  "localId": "5cc0a5d504da"
+                },
+                "content": [
+                  {
+                    "type": "paragraph",
+                    "content": [
+                      {
+                        "type": "text",
+                        "text": "No warning at the discard site.",
+                        "marks": [
+                          {
+                            "type": "strong"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "text",
+                        "text": " The old value is overwritten by a plain assignment. The parser never checks whether "
+                      },
+                      {
+                        "type": "text",
+                        "text": "doc.delegate",
+                        "marks": [
+                          {
+                            "type": "code"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "text",
+                        "text": " was already populated before writing."
+                      }
+                    ],
+                    "attrs": {
+                      "localId": "9645d693cfc6"
+                    }
+                  }
+                ]
+              },
+              {
+                "type": "listItem",
+                "attrs": {
+                  "localId": "c1dd9d73320a"
+                },
+                "content": [
+                  {
+                    "type": "paragraph",
+                    "content": [
+                      {
+                        "type": "text",
+                        "text": "The symptom is behavioral, not structural.",
+                        "marks": [
+                          {
+                            "type": "strong"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "text",
+                        "text": " The agent runs. It just cannot reach the dropped agents. The developer sees no "
+                      },
+                      {
+                        "type": "text",
+                        "text": "delegate_to_SummaryAgent",
+                        "marks": [
+                          {
+                            "type": "code"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "text",
+                        "text": " in the LLM tool list and has no immediate signal as to why."
+                      }
+                    ],
+                    "attrs": {
+                      "localId": "d3d377da4226"
+                    }
+                  }
+                ]
+              },
+              {
+                "type": "listItem",
+                "attrs": {
+                  "localId": "e336601c0f2d"
+                },
+                "content": [
+                  {
+                    "type": "paragraph",
+                    "content": [
+                      {
+                        "type": "text",
+                        "text": "Diagnosis requires log inspection.",
+                        "marks": [
+                          {
+                            "type": "strong"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "text",
+                        "text": " The only reliable way to discover missing delegates/handoffs today is to enable debug logging and inspect the raw LLM payload to see which "
+                      },
+                      {
+                        "type": "text",
+                        "text": "delegate_to_*",
+                        "marks": [
+                          {
+                            "type": "code"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "text",
+                        "text": " or "
+                      },
+                      {
+                        "type": "text",
+                        "text": "handoff_to_*",
+                        "marks": [
+                          {
+                            "type": "code"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "text",
+                        "text": " tools were injected."
+                      }
+                    ],
+                    "attrs": {
+                      "localId": "438a786055b9"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "rule",
+            "attrs": {
+              "localId": "3d750a6d8353"
+            }
+          },
+          {
+            "type": "heading",
+            "attrs": {
+              "level": 3,
+              "localId": "11b18e25ad30"
+            },
+            "content": [
+              {
+                "type": "text",
+                "text": "Impact"
+              }
+            ]
+          },
+          {
+            "type": "bulletList",
+            "content": [
+              {
+                "type": "listItem",
+                "attrs": {
+                  "localId": "ce4aab776cf7"
+                },
+                "content": [
+                  {
+                    "type": "paragraph",
+                    "content": [
+                      {
+                        "type": "text",
+                        "text": "Silent data loss during authoring.",
+                        "marks": [
+                          {
+                            "type": "strong"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "text",
+                        "text": " A developer splitting "
+                      },
+                      {
+                        "type": "text",
+                        "text": "DELEGATE:",
+                        "marks": [
+                          {
+                            "type": "code"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "text",
+                        "text": " into multiple blocks (e.g. for readability, or after copying a block from another agent) loses all but the last without any indication."
+                      }
+                    ],
+                    "attrs": {
+                      "localId": "60ed1af0dcfd"
+                    }
+                  }
+                ]
+              },
+              {
+                "type": "listItem",
+                "attrs": {
+                  "localId": "f0056a195754"
+                },
+                "content": [
+                  {
+                    "type": "paragraph",
+                    "content": [
+                      {
+                        "type": "text",
+                        "text": "Debugging cost.",
+                        "marks": [
+                          {
+                            "type": "strong"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "text",
+                        "text": " Root-causing requires knowing to look at the LLM payload, not the DSL or the compilation output."
+                      }
+                    ],
+                    "attrs": {
+                      "localId": "8fe4e3cc145b"
+                    }
+                  }
+                ]
+              },
+              {
+                "type": "listItem",
+                "attrs": {
+                  "localId": "4471f95e94a9"
+                },
+                "content": [
+                  {
+                    "type": "paragraph",
+                    "content": [
+                      {
+                        "type": "text",
+                        "text": "Affects coordination correctness.",
+                        "marks": [
+                          {
+                            "type": "strong"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "text",
+                        "text": " For "
+                      },
+                      {
+                        "type": "text",
+                        "text": "DELEGATE",
+                        "marks": [
+                          {
+                            "type": "code"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "text",
+                        "text": " and "
+                      },
+                      {
+                        "type": "text",
+                        "text": "HANDOFF",
+                        "marks": [
+                          {
+                            "type": "code"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "text",
+                        "text": " specifically, the dropped entries mean entire agent-routing paths are inaccessible at runtime — a functional regression with no observable compile-time signal."
+                      }
+                    ],
+                    "attrs": {
+                      "localId": "4c06ef80fcaf"
+                    }
+                  }
+                ]
+              },
+              {
+                "type": "listItem",
+                "attrs": {
+                  "localId": "3d2c2189e6cf"
+                },
+                "content": [
+                  {
+                    "type": "paragraph",
+                    "content": [
+                      {
+                        "type": "text",
+                        "text": "Scope.",
+                        "marks": [
+                          {
+                            "type": "strong"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "text",
+                        "text": " Any of the affected sections above can silently lose content, meaning the issue is not limited to coordination constructs."
+                      }
+                    ],
+                    "attrs": {
+                      "localId": "cc7bd4080f67"
+                    }
+                  }
+                ]
+              }
+            ],
+            "attrs": {
+              "localId": "82e41f126e7d"
+            }
+          }
+        ]
+      },
+      "customfield_15225": null,
+      "customfield_11300": null,
+      "timetracking": {},
+      "security": null,
+      "attachment": [],
+      "aggregatetimeestimate": null,
+      "summary": "Duplicate top-level DSL sections silently discard all but the last — no compilation error or warning",
+      "creator": {
+        "self": "https://koreteam.atlassian.net/rest/api/3/user?accountId=712020%3A91136b8e-3e83-401e-8f10-8b73bf0fb5c4",
+        "accountId": "712020:91136b8e-3e83-401e-8f10-8b73bf0fb5c4",
+        "avatarUrls": {
+          "48x48": "https://secure.gravatar.com/avatar/b21fb0701436f5fa5b9a0b19b7c2d6d2?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FPG-6.png",
+          "24x24": "https://secure.gravatar.com/avatar/b21fb0701436f5fa5b9a0b19b7c2d6d2?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FPG-6.png",
+          "16x16": "https://secure.gravatar.com/avatar/b21fb0701436f5fa5b9a0b19b7c2d6d2?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FPG-6.png",
+          "32x32": "https://secure.gravatar.com/avatar/b21fb0701436f5fa5b9a0b19b7c2d6d2?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FPG-6.png"
+        },
+        "displayName": "Prathyusha Gopavaram",
+        "active": true,
+        "timeZone": "Asia/Kolkata",
+        "accountType": "atlassian"
+      },
+      "subtasks": [],
+      "reporter": {
+        "self": "https://koreteam.atlassian.net/rest/api/3/user?accountId=712020%3A91136b8e-3e83-401e-8f10-8b73bf0fb5c4",
+        "accountId": "712020:91136b8e-3e83-401e-8f10-8b73bf0fb5c4",
+        "avatarUrls": {
+          "48x48": "https://secure.gravatar.com/avatar/b21fb0701436f5fa5b9a0b19b7c2d6d2?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FPG-6.png",
+          "24x24": "https://secure.gravatar.com/avatar/b21fb0701436f5fa5b9a0b19b7c2d6d2?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FPG-6.png",
+          "16x16": "https://secure.gravatar.com/avatar/b21fb0701436f5fa5b9a0b19b7c2d6d2?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FPG-6.png",
+          "32x32": "https://secure.gravatar.com/avatar/b21fb0701436f5fa5b9a0b19b7c2d6d2?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FPG-6.png"
+        },
+        "displayName": "Prathyusha Gopavaram",
+        "active": true,
+        "timeZone": "Asia/Kolkata",
+        "accountType": "atlassian"
+      },
+      "aggregateprogress": {
+        "progress": 0,
+        "total": 0
+      },
+      "customfield_10002": null,
+      "customfield_10400": "1|i0hu4b:",
+      "customfield_13900": null,
+      "environment": null,
+      "duedate": null,
+      "progress": {
+        "progress": 0,
+        "total": 0
+      },
+      "votes": {
+        "self": "https://koreteam.atlassian.net/rest/api/3/issue/ABLP-1032/votes",
+        "votes": 0,
+        "hasVoted": false
+      },
+      "comment": {
+        "comments": [],
+        "self": "https://koreteam.atlassian.net/rest/api/3/issue/549770/comment",
+        "maxResults": 0,
+        "total": 0,
+        "startAt": 0
+      },
+      "worklog": {
+        "startAt": 0,
+        "maxResults": 20,
+        "total": 0,
+        "worklogs": []
+      }
+    }
+  },
+  "comments": {
+    "startAt": 0,
+    "maxResults": 100,
+    "total": 0,
+    "comments": []
+  }
+}

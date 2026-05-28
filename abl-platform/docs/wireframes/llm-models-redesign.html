@@ -1,0 +1,888 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>LLM Models Page — Redesign Wireframe</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        background: #0f1117;
+        color: #e1e4ea;
+        padding: 32px;
+        max-width: 860px;
+        margin: 0 auto;
+      }
+
+      /* ── Section Headers ─────────────────────────────── */
+      .section-title {
+        font-size: 16px;
+        font-weight: 600;
+        color: #f0f2f5;
+      }
+      .section-desc {
+        font-size: 12px;
+        color: #7a7f8a;
+        margin-top: 2px;
+      }
+      .section-gap {
+        margin-top: 28px;
+      }
+
+      /* ── Cards ───────────────────────────────────────── */
+      .card {
+        background: #181a20;
+        border: 1px solid #2a2d35;
+        border-radius: 10px;
+        padding: 16px;
+        margin-top: 10px;
+      }
+      .card-row {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 12px;
+      }
+      .card-left {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        flex: 1;
+        min-width: 0;
+      }
+
+      /* ── Icon Box ────────────────────────────────────── */
+      .icon-box {
+        width: 38px;
+        height: 38px;
+        border-radius: 8px;
+        background: #1e2a3a;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        font-size: 18px;
+      }
+      .icon-box.bot {
+        background: #1a2636;
+      }
+
+      /* ── Text ────────────────────────────────────────── */
+      .feature-name {
+        font-size: 13px;
+        font-weight: 600;
+        color: #f0f2f5;
+      }
+      .model-line {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        margin-top: 4px;
+        font-size: 11px;
+        color: #7a7f8a;
+        flex-wrap: wrap;
+      }
+      .dot {
+        color: #555;
+      }
+      .desc-text {
+        font-size: 11.5px;
+        color: #6b7080;
+        margin-top: 6px;
+        line-height: 1.4;
+      }
+      .resolution-msg {
+        font-size: 11px;
+        margin-top: 8px;
+      }
+      .resolution-msg.fallback {
+        color: #3b82f6;
+      }
+      .resolution-msg.active {
+        color: #22c55e;
+      }
+
+      /* ── Badges ──────────────────────────────────────── */
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        font-size: 10px;
+        font-weight: 600;
+        padding: 2px 7px;
+        border-radius: 4px;
+        white-space: nowrap;
+      }
+      .badge-active {
+        background: #162b1a;
+        color: #4ade80;
+      }
+      .badge-fallback {
+        background: #1a2236;
+        color: #60a5fa;
+      }
+      .badge-disabled {
+        background: #1f2029;
+        color: #6b7080;
+      }
+      .badge-info {
+        background: #1a2236;
+        color: #60a5fa;
+      }
+      .badge-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: #4ade80;
+        display: inline-block;
+      }
+
+      /* ── Controls ────────────────────────────────────── */
+      .controls {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-shrink: 0;
+      }
+      .btn-change {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 5px 12px;
+        font-size: 11px;
+        font-weight: 500;
+        color: #c8ccd4;
+        background: #23262e;
+        border: 1px solid #2e323a;
+        border-radius: 6px;
+        cursor: pointer;
+        white-space: nowrap;
+      }
+      .btn-change:hover {
+        background: #2a2e37;
+        border-color: #3a3e48;
+      }
+      .btn-change .arrow {
+        font-size: 9px;
+        margin-left: 2px;
+      }
+
+      /* Toggle row at bottom of card content */
+      .toggle-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-top: 8px;
+      }
+      .toggle-label {
+        font-size: 11px;
+        color: #7a7f8a;
+      }
+
+      /* Toggle Switch */
+      .toggle {
+        position: relative;
+        width: 36px;
+        height: 20px;
+        border-radius: 10px;
+        cursor: pointer;
+        transition: background 0.2s;
+        flex-shrink: 0;
+      }
+      .toggle.on {
+        background: #22c55e;
+      }
+      .toggle.off {
+        background: #2a2d35;
+      }
+      .toggle .knob {
+        position: absolute;
+        top: 3px;
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        background: #fff;
+        transition: left 0.2s;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+      }
+      .toggle.on .knob {
+        left: 19px;
+      }
+      .toggle.off .knob {
+        left: 3px;
+      }
+
+      /* ── Dividers & Spacing ──────────────────────────── */
+      .divider {
+        border-top: 1px solid #22252d;
+        margin: 24px 0;
+      }
+      .category-header {
+        margin-top: 20px;
+        margin-bottom: 4px;
+      }
+      .category-title {
+        font-size: 13px;
+        font-weight: 600;
+        color: #d0d4dc;
+      }
+      .category-desc {
+        font-size: 11px;
+        color: #6b7080;
+        margin-top: 2px;
+      }
+
+      /* ── Disabled State ──────────────────────────────── */
+      .card.disabled {
+        opacity: 0.5;
+      }
+      .card.disabled .feature-name,
+      .card.disabled .model-line,
+      .card.disabled .desc-text {
+        color: #555;
+      }
+
+      /* ── Comparison Layout ───────────────────────────── */
+      .comparison {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 32px;
+        margin-top: 40px;
+      }
+      .comparison-col h2 {
+        font-size: 14px;
+        font-weight: 600;
+        color: #f0f2f5;
+        margin-bottom: 4px;
+      }
+      .comparison-col .label {
+        font-size: 11px;
+        color: #7a7f8a;
+        margin-bottom: 12px;
+      }
+
+      /* ── Annotations ─────────────────────────────────── */
+      .annotation {
+        background: #1c1e26;
+        border-left: 3px solid #6366f1;
+        padding: 10px 14px;
+        margin-top: 16px;
+        border-radius: 0 6px 6px 0;
+        font-size: 11.5px;
+        color: #9ca0ab;
+        line-height: 1.5;
+      }
+      .annotation strong {
+        color: #c8ccd4;
+      }
+
+      h1 {
+        font-size: 22px;
+        font-weight: 700;
+        color: #f0f2f5;
+        margin-bottom: 6px;
+      }
+      .page-desc {
+        font-size: 13px;
+        color: #7a7f8a;
+        margin-bottom: 32px;
+      }
+
+      /* ── Tenant Models Bar ───────────────────────────── */
+      .tenant-bar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background: #181a20;
+        border: 1px solid #2a2d35;
+        border-radius: 10px;
+        padding: 14px 16px;
+        margin-top: 10px;
+      }
+      .tenant-bar-left {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
+      .tenant-bar-title {
+        font-size: 13px;
+        font-weight: 600;
+        color: #f0f2f5;
+      }
+      .tenant-bar-sub {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        font-size: 11px;
+        color: #7a7f8a;
+      }
+      .btn-configure {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 6px 14px;
+        font-size: 11.5px;
+        font-weight: 500;
+        color: #c8ccd4;
+        background: #23262e;
+        border: 1px solid #2e323a;
+        border-radius: 6px;
+        cursor: pointer;
+      }
+
+      /* Embedding section */
+      .embed-section {
+        margin-top: 16px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>LLM Models — Redesigned Wireframe</h1>
+    <p class="page-desc">
+      Unified card pattern: every feature matches the Query Pipeline LLM layout — one toggle, one
+      Change button, compact model info inline.
+    </p>
+
+    <!-- ════════════════════════════════════════════════════ -->
+    <!-- QUERY PIPELINE LLM (reference — stays the same)    -->
+    <!-- ════════════════════════════════════════════════════ -->
+
+    <div class="section-title">Query Pipeline LLM</div>
+    <div class="section-desc">Model used for vocabulary resolution and query classification</div>
+
+    <div class="card">
+      <div class="card-row">
+        <div class="card-left">
+          <div class="icon-box bot">🤖</div>
+          <div>
+            <div style="display: flex; align-items: center; gap: 8px">
+              <span class="feature-name">GPT-4o</span>
+              <span class="badge badge-active"><span class="badge-dot"></span> Active</span>
+              <div class="toggle on"><div class="knob"></div></div>
+            </div>
+            <div class="model-line">
+              <span>Tier: balanced</span>
+              <span class="dot">·</span>
+              <span>Provider: openai</span>
+            </div>
+            <div class="desc-text">Used for: Vocabulary resolution, Query type classification</div>
+          </div>
+        </div>
+        <div class="controls">
+          <button class="btn-change">Change <span class="arrow">▾</span></button>
+        </div>
+      </div>
+    </div>
+
+    <div class="annotation">
+      <strong>Reference pattern.</strong> This is the existing Query Pipeline LLM card — clean,
+      compact. The redesigned feature cards below follow this same pattern.
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- ════════════════════════════════════════════════════ -->
+    <!-- EMBEDDING MODELS (stays the same)                  -->
+    <!-- ════════════════════════════════════════════════════ -->
+
+    <div class="section-title">Embedding Models</div>
+    <div class="section-desc">Model used for document vectorization and semantic search</div>
+
+    <div class="card">
+      <div class="card-row">
+        <div class="card-left">
+          <div class="icon-box" style="background: #1a2a2a">📐</div>
+          <div>
+            <div style="display: flex; align-items: center; gap: 8px">
+              <span class="feature-name">text-embedding-3-small</span>
+              <span style="font-size: 11px; color: #7a7f8a">text-embedding-3-small</span>
+            </div>
+            <div class="model-line">
+              <span>Type: Cloud</span>
+              <span class="dot">·</span>
+              <span>Dimensions: 1536</span>
+              <span class="dot">·</span>
+              <span class="badge badge-active"><span class="badge-dot"></span> Active</span>
+            </div>
+            <div class="desc-text">Used for: Document embedding, Semantic search</div>
+            <button class="btn-change">Change model <span class="arrow">▾</span></button>
+          </div>
+        </div>
+        <div class="controls"></div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- ════════════════════════════════════════════════════ -->
+    <!-- LLM FEATURES                                       -->
+    <!-- ════════════════════════════════════════════════════ -->
+
+    <div class="section-title">LLM Features</div>
+    <div class="section-desc">
+      Configure AI-powered features for document processing and enrichment
+    </div>
+
+    <div class="tenant-bar" style="margin-top: 12px">
+      <div class="tenant-bar-left">
+        <div class="tenant-bar-title">Tenant Models</div>
+        <div class="tenant-bar-sub">
+          <span
+            class="badge-dot"
+            style="
+              width: 6px;
+              height: 6px;
+              border-radius: 50%;
+              background: #4ade80;
+              display: inline-block;
+            "
+          ></span>
+          9 Active
+        </div>
+      </div>
+      <button class="btn-configure">Configure Models ↗</button>
+    </div>
+
+    <!-- ── Core Features ──────────────────────────────── -->
+    <div class="category-header">
+      <div class="category-title">Core Features</div>
+      <div class="category-desc">Essential LLM-powered features enabled by default</div>
+    </div>
+
+    <!-- Feature: Progressive Summarization — ACTIVE -->
+    <div class="card">
+      <div class="card-row">
+        <div class="card-left">
+          <div class="icon-box">📄</div>
+          <div>
+            <div style="display: flex; align-items: center; gap: 8px">
+              <span class="feature-name">Progressive Summarization</span>
+              <span class="badge badge-active"><span class="badge-dot"></span> Active</span>
+              <div class="toggle on"><div class="knob"></div></div>
+            </div>
+            <div class="model-line">
+              <span>GPT-4o</span>
+              <span class="dot">·</span>
+              <span>Tier: balanced</span>
+              <span class="dot">·</span>
+              <span>Provider: openai</span>
+            </div>
+            <div class="desc-text">
+              Generate concise 2-3 sentence summaries per chunk with context from previous chunks
+            </div>
+          </div>
+        </div>
+        <div class="controls">
+          <button class="btn-change">Change <span class="arrow">▾</span></button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Feature: Question Synthesis — ACTIVE -->
+    <div class="card">
+      <div class="card-row">
+        <div class="card-left">
+          <div class="icon-box">❓</div>
+          <div>
+            <div style="display: flex; align-items: center; gap: 8px">
+              <span class="feature-name">Question Synthesis</span>
+              <span class="badge badge-active"><span class="badge-dot"></span> Active</span>
+              <div class="toggle on"><div class="knob"></div></div>
+            </div>
+            <div class="model-line">
+              <span>GPT-4o</span>
+              <span class="dot">·</span>
+              <span>Tier: balanced</span>
+              <span class="dot">·</span>
+              <span>Provider: openai</span>
+            </div>
+            <div class="desc-text">
+              Generate 3-5 answerable questions per chunk for improved retrieval
+            </div>
+          </div>
+        </div>
+        <div class="controls">
+          <button class="btn-change">Change <span class="arrow">▾</span></button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Feature: Tree Builder — ACTIVE -->
+    <div class="card">
+      <div class="card-row">
+        <div class="card-left">
+          <div class="icon-box">🌲</div>
+          <div>
+            <div style="display: flex; align-items: center; gap: 8px">
+              <span class="feature-name">Tree Builder</span>
+              <span class="badge badge-active"><span class="badge-dot"></span> Active</span>
+              <div class="toggle on"><div class="knob"></div></div>
+            </div>
+            <div class="model-line">
+              <span>GPT-4o</span>
+              <span class="dot">·</span>
+              <span>Tier: balanced</span>
+              <span class="dot">·</span>
+              <span>Provider: openai</span>
+            </div>
+            <div class="desc-text">
+              Hierarchical document tree structure for intelligent chunking
+            </div>
+          </div>
+        </div>
+        <div class="controls">
+          <button class="btn-change">Change <span class="arrow">▾</span></button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Enrichment Features ────────────────────────── -->
+    <div class="category-header" style="margin-top: 24px">
+      <div class="category-title">Enrichment Features</div>
+      <div class="category-desc">Additional features for content enrichment and metadata</div>
+    </div>
+
+    <!-- Feature: Knowledge Graph — ACTIVE -->
+    <div class="card">
+      <div class="card-row">
+        <div class="card-left">
+          <div class="icon-box" style="background: #1e2a2a">🕸️</div>
+          <div>
+            <div style="display: flex; align-items: center; gap: 8px">
+              <span class="feature-name">Knowledge Graph Extraction</span>
+              <span class="badge badge-active"><span class="badge-dot"></span> Active</span>
+              <div class="toggle on"><div class="knob"></div></div>
+            </div>
+            <div class="model-line">
+              <span>GPT-4o</span>
+              <span class="dot">·</span>
+              <span>Tier: balanced</span>
+              <span class="dot">·</span>
+              <span>Provider: openai</span>
+            </div>
+            <div class="desc-text">Extract entities and relationships to build knowledge graph</div>
+          </div>
+        </div>
+        <div class="controls">
+          <button class="btn-change">Change <span class="arrow">▾</span></button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Feature: Domain Vocabulary — FALLBACK example -->
+    <div class="card">
+      <div class="card-row">
+        <div class="card-left">
+          <div class="icon-box" style="background: #1e2030">📖</div>
+          <div>
+            <div style="display: flex; align-items: center; gap: 8px">
+              <span class="feature-name">Domain Vocabulary Generation</span>
+              <span class="badge badge-fallback">⟳ Fallback</span>
+              <div class="toggle on"><div class="knob"></div></div>
+            </div>
+            <div class="model-line">
+              <span>GPT-4o</span>
+              <span class="dot">·</span>
+              <span>Tier: balanced</span>
+              <span class="dot">·</span>
+              <span>Provider: openai</span>
+            </div>
+            <div class="desc-text">
+              Enrich domain vocabulary with aliases, descriptions, and capabilities
+            </div>
+            <div class="resolution-msg fallback">
+              Using balanced tier model (GPT-4o) as fallback for fast tier
+            </div>
+          </div>
+        </div>
+        <div class="controls">
+          <button class="btn-change">Change <span class="arrow">▾</span></button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Feature: Scope Classification — DISABLED example -->
+    <div class="card disabled">
+      <div class="card-row">
+        <div class="card-left">
+          <div class="icon-box" style="background: #1a1c22">📊</div>
+          <div>
+            <div style="display: flex; align-items: center; gap: 8px">
+              <span class="feature-name">Scope Classification</span>
+              <span class="badge badge-disabled">Disabled</span>
+              <div class="toggle off"><div class="knob"></div></div>
+            </div>
+            <div class="desc-text">
+              Classify content scope (chunk-level, document-level, global)
+            </div>
+          </div>
+        </div>
+        <div class="controls"></div>
+      </div>
+    </div>
+
+    <div class="annotation">
+      <strong>Disabled state:</strong> When toggled off, the model info line and Change button
+      disappear. Only the feature name, description, "Disabled" badge, and the toggle (off) remain.
+      Clean and minimal.
+    </div>
+
+    <!-- ── Advanced Features ──────────────────────────── -->
+    <div class="category-header" style="margin-top: 24px">
+      <div class="category-title">Advanced Features</div>
+      <div class="category-desc">Higher-cost features requiring explicit configuration</div>
+    </div>
+
+    <!-- Feature: Vision Analysis — ACTIVE -->
+    <div class="card">
+      <div class="card-row">
+        <div class="card-left">
+          <div class="icon-box" style="background: #2a1e2a">👁️</div>
+          <div>
+            <div style="display: flex; align-items: center; gap: 8px">
+              <span class="feature-name">Vision Analysis</span>
+              <span class="badge badge-active"><span class="badge-dot"></span> Active</span>
+              <div class="toggle on"><div class="knob"></div></div>
+            </div>
+            <div class="model-line">
+              <span>GPT-4o</span>
+              <span class="dot">·</span>
+              <span>Tier: balanced</span>
+              <span class="dot">·</span>
+              <span>Provider: openai</span>
+            </div>
+            <div class="desc-text">
+              Analyze page screenshots and images for visual content understanding
+            </div>
+          </div>
+        </div>
+        <div class="controls">
+          <button class="btn-change">Change <span class="arrow">▾</span></button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Feature: Multimodal — ACTIVE -->
+    <div class="card">
+      <div class="card-row">
+        <div class="card-left">
+          <div class="icon-box" style="background: #2a1e2a">🔍</div>
+          <div>
+            <div style="display: flex; align-items: center; gap: 8px">
+              <span class="feature-name">Multimodal Deep Analysis</span>
+              <span class="badge badge-active"><span class="badge-dot"></span> Active</span>
+              <div class="toggle on"><div class="knob"></div></div>
+            </div>
+            <div class="model-line">
+              <span>GPT-4o</span>
+              <span class="dot">·</span>
+              <span>Tier: balanced</span>
+              <span class="dot">·</span>
+              <span>Provider: openai</span>
+            </div>
+            <div class="desc-text">
+              Deep analysis of images, tables, and charts with data extraction
+            </div>
+          </div>
+        </div>
+        <div class="controls">
+          <button class="btn-change">Change <span class="arrow">▾</span></button>
+        </div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- ════════════════════════════════════════════════════ -->
+    <!-- BEFORE / AFTER COMPARISON                          -->
+    <!-- ════════════════════════════════════════════════════ -->
+
+    <h1 style="margin-top: 40px">Before → After Comparison</h1>
+
+    <div class="comparison">
+      <!-- BEFORE -->
+      <div class="comparison-col">
+        <h2>❌ Before (Current)</h2>
+        <p class="label">Nested model card, 2 toggles, cluttered</p>
+
+        <div class="card" style="padding: 12px">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start">
+            <div style="display: flex; gap: 8px; align-items: flex-start">
+              <div
+                style="
+                  width: 32px;
+                  height: 32px;
+                  border-radius: 6px;
+                  background: #1e2a3a;
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                  font-size: 14px;
+                "
+              >
+                📄
+              </div>
+              <div>
+                <div style="display: flex; gap: 6px; align-items: center">
+                  <span style="font-size: 12px; font-weight: 600; color: #f0f2f5"
+                    >Progressive Summarization</span
+                  >
+                  <span class="badge badge-fallback" style="font-size: 9px">⟳ Fallback</span>
+                </div>
+                <p style="font-size: 10px; color: #6b7080; margin-top: 3px">
+                  Generate summaries per chunk...
+                </p>
+              </div>
+            </div>
+            <!-- Toggle 1: enable/disable -->
+            <div class="toggle on" style="width: 30px; height: 16px">
+              <div class="knob" style="width: 11px; height: 11px; top: 2.5px"></div>
+            </div>
+          </div>
+
+          <!-- Nested model card -->
+          <div
+            style="
+              margin-top: 10px;
+              background: #12141a;
+              border: 1px solid #2a2d35;
+              border-radius: 6px;
+              padding: 10px;
+            "
+          >
+            <div style="display: flex; justify-content: space-between; align-items: flex-start">
+              <div>
+                <div style="display: flex; gap: 5px; align-items: center">
+                  <span style="font-size: 11px; font-weight: 600; color: #f0f2f5">GPT-4o</span>
+                  <span class="badge badge-info" style="font-size: 8px">auto-selected</span>
+                </div>
+                <div style="font-size: 9px; color: #7a7f8a; margin-top: 3px">
+                  Tier: balanced · Provider: openai · <span style="color: #4ade80">● Active</span>
+                </div>
+              </div>
+              <button class="btn-change" style="font-size: 9px; padding: 3px 8px">Change ▾</button>
+            </div>
+            <!-- Toggle 2: auto-select (was here before) -->
+            <div
+              style="
+                margin-top: 8px;
+                padding-top: 6px;
+                border-top: 1px solid #2a2d35;
+                display: flex;
+                gap: 6px;
+                align-items: center;
+              "
+            >
+              <div class="toggle on" style="width: 30px; height: 16px">
+                <div class="knob" style="width: 11px; height: 11px; top: 2.5px"></div>
+              </div>
+              <span style="font-size: 9px; color: #7a7f8a">Auto-select</span>
+            </div>
+          </div>
+          <div style="font-size: 9px; color: #3b82f6; margin-top: 6px">
+            Using balanced tier model (GPT-4o) as fallback
+          </div>
+        </div>
+
+        <div class="annotation" style="margin-top: 8px; font-size: 10px">
+          <strong>Problems:</strong> 2 toggles visible, nested card adds visual depth, auto-select
+          text wastes space, inconsistent with Query Pipeline LLM section.
+        </div>
+      </div>
+
+      <!-- AFTER -->
+      <div class="comparison-col">
+        <h2>✅ After (Redesigned)</h2>
+        <p class="label">Flat, single toggle, matches Query Pipeline LLM</p>
+
+        <div class="card" style="padding: 12px">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start">
+            <div style="display: flex; gap: 8px; align-items: flex-start">
+              <div
+                style="
+                  width: 32px;
+                  height: 32px;
+                  border-radius: 6px;
+                  background: #1e2a3a;
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                  font-size: 14px;
+                "
+              >
+                📄
+              </div>
+              <div>
+                <div style="display: flex; gap: 6px; align-items: center">
+                  <span style="font-size: 12px; font-weight: 600; color: #f0f2f5"
+                    >Progressive Summarization</span
+                  >
+                  <span class="badge badge-active" style="font-size: 9px"
+                    ><span class="badge-dot" style="width: 5px; height: 5px"></span> Active</span
+                  >
+                  <div class="toggle on" style="width: 30px; height: 16px">
+                    <div class="knob" style="width: 11px; height: 11px; top: 2.5px"></div>
+                  </div>
+                </div>
+                <div
+                  style="
+                    font-size: 10px;
+                    color: #7a7f8a;
+                    margin-top: 3px;
+                    display: flex;
+                    gap: 4px;
+                    align-items: center;
+                  "
+                >
+                  <span>GPT-4o</span>
+                  <span class="dot">·</span>
+                  <span>Tier: balanced</span>
+                  <span class="dot">·</span>
+                  <span>Provider: openai</span>
+                </div>
+                <p style="font-size: 10px; color: #6b7080; margin-top: 5px">
+                  Generate summaries per chunk...
+                </p>
+              </div>
+            </div>
+            <div style="display: flex; gap: 6px; align-items: center">
+              <button class="btn-change" style="font-size: 9px; padding: 3px 8px">Change ▾</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="annotation" style="margin-top: 8px; font-size: 10px">
+          <strong>Improvements:</strong> Toggle beside Active badge (same row as name), Change
+          button top-right, no nesting, auto-select hidden inside dialog.
+        </div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- ════════════════════════════════════════════════════ -->
+    <!-- INTERACTION NOTES                                  -->
+    <!-- ════════════════════════════════════════════════════ -->
+
+    <h1 style="margin-top: 24px">Interaction Behavior</h1>
+
+    <div class="annotation">
+      <strong>Toggle (below description):</strong> Enable/disable the feature. When ON, model
+      auto-resolves and model info line appears. When OFF, model info and Change button disappear —
+      only name + description + "Disabled" badge + toggle remain.<br /><br />
+      <strong>Change button (top-right):</strong> Opens the Model Selector Dialog (same as Query
+      Pipeline LLM). Auto-select toggle is <strong>inside</strong> the dialog — not visible on the
+      card. Only shown when feature is enabled.<br /><br />
+      <strong>Green colour / status styling:</strong> Active features keep the green status badge.
+      Card colours and styling remain the same as current design.<br /><br />
+      <strong>No "auto-selected" badge on card:</strong> Removed to save space. The auto-select
+      state is managed inside the dialog only. The status badge (Active/Fallback/Disabled) is the
+      only badge on the card.
+    </div>
+  </body>
+</html>

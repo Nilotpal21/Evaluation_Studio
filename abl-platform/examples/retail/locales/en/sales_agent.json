@@ -1,0 +1,13 @@
+{
+  "agent": "Sales_Agent",
+  "locale": "en",
+  "strings": {
+    "shipping_address_prompt": "What's your shipping address?",
+    "payment_method_prompt": "How would you like to pay? (credit card, debit card, PayPal, Apple Pay)",
+    "shipping_preference_prompt": "Which shipping method would you prefer?",
+    "cart_empty": "Your cart is empty. Would you like to browse our products?",
+    "promo_applied": "Promo code applied!",
+    "order_confirmed": "Order confirmed!",
+    "high_value_approval": "Orders over $500 require manager approval. Let me connect you with a manager."
+  }
+}

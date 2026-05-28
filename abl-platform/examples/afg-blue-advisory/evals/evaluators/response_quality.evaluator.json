@@ -1,0 +1,40 @@
+{
+  "name": "Response Quality",
+  "description": "Evaluates response accuracy, completeness, relevance, and customer-friendliness",
+  "type": "llm_judge",
+  "category": "quality",
+  "judgeModel": "gpt-4.1",
+  "chainOfThought": true,
+  "temperature": 0,
+  "scoringRubric": {
+    "scaleType": "1-5",
+    "points": [
+      {
+        "score": 5,
+        "label": "Excellent",
+        "description": "Response is accurate, complete, relevant, and customer-friendly. Addresses all aspects of the query."
+      },
+      {
+        "score": 4,
+        "label": "Good",
+        "description": "Response is mostly accurate and relevant with minor gaps."
+      },
+      {
+        "score": 3,
+        "label": "Adequate",
+        "description": "Response addresses the query but misses important details."
+      },
+      {
+        "score": 2,
+        "label": "Poor",
+        "description": "Response is partially relevant but contains errors or significant gaps."
+      },
+      {
+        "score": 1,
+        "label": "Failing",
+        "description": "Response is irrelevant, incorrect, or unhelpful."
+      }
+    ]
+  },
+  "judgePrompt": "Evaluate the agent's response quality in a retail advisory context. Consider:\n1. Accuracy: Does the response contain correct product/policy information?\n2. Completeness: Does it address all parts of the user's query?\n3. Relevance: Is the response on-topic and useful?\n4. Customer-friendliness: Is the tone appropriate for retail?\n5. Structure: Is the response well-organized and easy to follow?"
+}

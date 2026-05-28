@@ -1,0 +1,75 @@
+id: retention
+title: Retention and Right-to-Erasure
+enforcement: blocking
+severity_default: high
+rubric_concern: 9
+
+scope:
+  globs:
+    - apps/**/src/**/*.ts
+    - packages/**/src/**/*.ts
+  exclude:
+    - '**/__tests__/**'
+    - '**/*.test.ts'
+
+references:
+  docs:
+    - CLAUDE.md#core-invariants
+  related_concerns:
+    - encryption
+    - audit-log
+    - memory-discipline
+
+detectors:
+  - id: every-map-has-ttl-or-size-cap
+    kind: model-review
+    severity: high
+    guidance_ref: ../../prompts/map-ttl-lens.md
+    output_schema:
+      rule_id: every-map-has-ttl-or-size-cap
+      severity: high | medium
+      location:
+        file: string
+        line: number
+      claim: string
+      reality: string
+      options:
+        A: wrap in an LRU/TTL cache with explicit max-size and eviction
+        B: confirm Map is short-lived (request scope) and justify
+    message: |
+      Every in-memory Map that stores tenant/project/user/session data must
+      have a max size, TTL, and eviction policy. Unbounded Maps are a retention
+      violation and a memory leak.
+    fix_hint: |
+      Replace with an LRU cache (lru-cache package) or TTL-based cache.
+      Size cap + TTL are both required — size alone allows stale data to
+      linger past retention windows.
+
+  - id: right-to-erasure-cascade
+    kind: model-review
+    severity: critical
+    guidance_ref: ../../prompts/rte-cascade-lens.md
+    output_schema:
+      rule_id: right-to-erasure-cascade
+      severity: critical | high
+      location:
+        file: string
+        line: number
+      claim: string
+      reality: string
+      options:
+        A: add the missing collection/service to the erasure cascade
+        B: confirm data is aggregate/anonymized (cite the aggregation)
+    message: |
+      When a tenant/contact/user is deleted, derived data (sessions, traces,
+      audit logs, caches, vector stores) must be cascaded or tombstoned.
+      Missing cascade = compliance failure.
+    fix_hint: |
+      Register the deletion handler in the erasure coordinator. Tests must
+      verify both the primary delete and the cascade completion.
+
+stage_hooks:
+  - stage: implementation
+    inject_checklist: true
+  - stage: security-audit
+    as_review_lens: true

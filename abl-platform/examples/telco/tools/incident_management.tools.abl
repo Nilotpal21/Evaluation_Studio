@@ -1,0 +1,10 @@
+# Incident Management Tools
+# These tools are defined inline in the agent DSL files.
+# This file serves as a tool registry reference for the v2 export format.
+
+# Tools:
+#   create_incident — Create a new incident with SLA deadlines
+#   get_incident_timeline — Get the incident timeline and SLA status
+#   generate_rca — Generate root cause analysis for an incident
+#   update_incident_status — Update incident status
+#   get_customer_impact — Assess customer and revenue impact of an incident

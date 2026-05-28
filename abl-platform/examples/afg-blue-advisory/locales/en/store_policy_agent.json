@@ -1,0 +1,9 @@
+{
+  "agent": "Store_Policy_Agent",
+  "locale": "en",
+  "strings": {
+    "looking_up": "Let me look that up in our official policy knowledge base.",
+    "no_policy_found": "I could not find an official policy for that specific question.",
+    "anything_else": "Is there anything else about our store policies you'd like to know?"
+  }
+}

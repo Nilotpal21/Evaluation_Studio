@@ -1,0 +1,10 @@
+{
+  "agent": "Deals_Advisor",
+  "locale": "en",
+  "strings": {
+    "deal_type_prompt": "What type of deal are you looking for? (flights, hotels, packages)",
+    "destination_prompt": "Any specific destination in mind?",
+    "budget_prompt": "What's your budget?",
+    "results_found": "Here are the best deals I found for you."
+  }
+}

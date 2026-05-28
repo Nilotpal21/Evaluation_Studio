@@ -1,0 +1,31 @@
+{
+  "name": "@agent-platform/llm",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Shared LLM provider factory using Vercel AI SDK",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc -b",
+    "test": "vitest run --passWithNoTests",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@abl/compiler": "workspace:*",
+    "@ai-sdk/amazon-bedrock": "^4.0.106",
+    "@ai-sdk/anthropic": "^3.0.78",
+    "@ai-sdk/azure": "^3.0.34",
+    "@ai-sdk/cohere": "^3.0.21",
+    "@ai-sdk/google": "^3.0.31",
+    "@ai-sdk/google-vertex": "^4.0.63",
+    "@ai-sdk/openai": "^3.0.64",
+    "@aws-sdk/credential-providers": "^3.998.0",
+    "ai": "^6.0.183",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.0",
+    "vitest": "^4.1.4"
+  }
+}

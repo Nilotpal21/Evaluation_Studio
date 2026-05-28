@@ -1,0 +1,12 @@
+{
+  "agent": "GuardRail_Supervisor",
+  "model": "gpt-4.1",
+  "temperature": 0.3,
+  "max_tokens": 1000,
+  "pipeline": {
+    "enabled": true,
+    "model": "qwen35-a3b-35b",
+    "mode": "sequential",
+    "shortCircuit": { "enabled": true, "confidenceThreshold": 0.85 }
+  }
+}

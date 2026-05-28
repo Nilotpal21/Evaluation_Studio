@@ -1,0 +1,10 @@
+{
+  "agent": "Capacity_Planner",
+  "locale": "en",
+  "strings": {
+    "need_region": "I need a region to analyze capacity. Please specify the region.",
+    "high_risk_shift": "Traffic shift simulation shows HIGH risk. Cannot proceed - manual review required.",
+    "max_shift_exceeded": "Cannot shift more than 40% of traffic from a single site.",
+    "tool_timeout": "Analytics platform is responding slowly. Retrying..."
+  }
+}

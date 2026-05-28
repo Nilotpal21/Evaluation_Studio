@@ -1,0 +1,35 @@
+/**
+ * Saludsa OTP Tools
+ * MCP tools for OTP generation and validation.
+ */
+
+TOOLS:
+  auth: api_key
+  timeout: 45000
+  auth_config:
+    header_name: "Authorization"
+    api_key: "{{env.SALUDSA_MCP_AUTH}}"
+
+  generate_otp(sessionId: string) -> {success: boolean, message: string, isOtpVerified: boolean}
+    type: http
+    endpoint: "{{env.SALUDSA_MCP_ENDPOINT}}/otpGenerator"
+    method: POST
+    description: "Generate OTP for phone verification. Backend fetches phone from Redis session and sends OTP to registered number."
+
+  validate_otp(userProvidedCodigoOtp: string, sessionId: string) -> {success: boolean, otpValidated: boolean, message: string}
+    type: http
+    endpoint: "{{env.SALUDSA_MCP_ENDPOINT}}/otpValidator"
+    method: POST
+    description: "Validate OTP (broker flow). Used during Broker_Entry_Gateway validation."
+
+  validate_otp_client(codigoOtpGenerado: string, sessionId: string) -> {success: boolean, otpValidated: boolean, message: string}
+    type: http
+    endpoint: "{{env.SALUDSA_MCP_ENDPOINT}}/validate-otp-client"
+    method: POST
+    description: "Validate OTP (client flow). Used for payments and password reset."
+
+  pending_payment_otp(sessionId: string, userId: string = "") -> {success: boolean, message: string}
+    type: http
+    endpoint: "{{env.SALUDSA_MCP_ENDPOINT}}/pendingPaymentOtp"
+    method: POST
+    description: "Validate phone number for OTP in payment flow."

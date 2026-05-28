@@ -1,0 +1,334 @@
+{
+  "id": "technology",
+  "name": "Technology",
+  "version": "1.0.0",
+  "categories": [
+    {
+      "id": "cloud-services",
+      "name": "Cloud Services",
+      "department": "Cloud Infrastructure"
+    },
+    {
+      "id": "enterprise-software",
+      "name": "Enterprise Software",
+      "department": "Enterprise Solutions"
+    },
+    {
+      "id": "cybersecurity",
+      "name": "Cybersecurity",
+      "department": "Security Operations"
+    },
+    {
+      "id": "data-platform",
+      "name": "Data Platform",
+      "department": "Data Engineering"
+    }
+  ],
+  "products": [
+    {
+      "id": "compute-instance",
+      "name": "Compute Instance",
+      "categoryId": "cloud-services",
+      "department": "Cloud Infrastructure",
+      "subDepartment": "Compute",
+      "disambiguationKeywords": [
+        "virtual machine",
+        "VM",
+        "compute",
+        "instance",
+        "EC2",
+        "server",
+        "vCPU",
+        "cloud compute"
+      ]
+    },
+    {
+      "id": "object-storage",
+      "name": "Object Storage",
+      "categoryId": "cloud-services",
+      "department": "Cloud Infrastructure",
+      "subDepartment": "Storage",
+      "disambiguationKeywords": [
+        "object storage",
+        "S3",
+        "blob storage",
+        "bucket",
+        "cloud storage",
+        "data lake"
+      ]
+    },
+    {
+      "id": "managed-database",
+      "name": "Managed Database",
+      "categoryId": "cloud-services",
+      "department": "Cloud Infrastructure",
+      "subDepartment": "Database Services",
+      "disambiguationKeywords": [
+        "managed database",
+        "RDS",
+        "DBaaS",
+        "cloud database",
+        "database service",
+        "PostgreSQL",
+        "MySQL"
+      ]
+    },
+    {
+      "id": "crm-platform",
+      "name": "CRM Platform",
+      "categoryId": "enterprise-software",
+      "department": "Enterprise Solutions",
+      "subDepartment": "Customer Management",
+      "disambiguationKeywords": [
+        "CRM",
+        "customer relationship",
+        "Salesforce",
+        "sales pipeline",
+        "lead management",
+        "contact management"
+      ]
+    },
+    {
+      "id": "erp-system",
+      "name": "ERP System",
+      "categoryId": "enterprise-software",
+      "department": "Enterprise Solutions",
+      "subDepartment": "Business Operations",
+      "disambiguationKeywords": [
+        "ERP",
+        "enterprise resource planning",
+        "SAP",
+        "supply chain",
+        "financials",
+        "procurement"
+      ]
+    },
+    {
+      "id": "endpoint-protection",
+      "name": "Endpoint Protection",
+      "categoryId": "cybersecurity",
+      "department": "Security Operations",
+      "subDepartment": "Endpoint Security",
+      "disambiguationKeywords": [
+        "endpoint protection",
+        "antivirus",
+        "EDR",
+        "malware protection",
+        "endpoint detection",
+        "device security"
+      ]
+    },
+    {
+      "id": "siem-platform",
+      "name": "SIEM Platform",
+      "categoryId": "cybersecurity",
+      "department": "Security Operations",
+      "subDepartment": "Security Analytics",
+      "disambiguationKeywords": [
+        "SIEM",
+        "security information",
+        "event management",
+        "log analysis",
+        "threat detection",
+        "security monitoring"
+      ]
+    },
+    {
+      "id": "data-warehouse",
+      "name": "Data Warehouse",
+      "categoryId": "data-platform",
+      "department": "Data Engineering",
+      "subDepartment": "Analytics Infrastructure",
+      "disambiguationKeywords": [
+        "data warehouse",
+        "Snowflake",
+        "BigQuery",
+        "Redshift",
+        "OLAP",
+        "analytics",
+        "columnar"
+      ]
+    },
+    {
+      "id": "streaming-platform",
+      "name": "Streaming Platform",
+      "categoryId": "data-platform",
+      "department": "Data Engineering",
+      "subDepartment": "Real-Time Processing",
+      "disambiguationKeywords": [
+        "streaming",
+        "Kafka",
+        "event streaming",
+        "real-time",
+        "pub/sub",
+        "message queue",
+        "data pipeline"
+      ]
+    },
+    {
+      "id": "bi-tool",
+      "name": "BI Tool",
+      "categoryId": "data-platform",
+      "department": "Data Engineering",
+      "subDepartment": "Business Intelligence",
+      "disambiguationKeywords": [
+        "BI",
+        "business intelligence",
+        "dashboard",
+        "reporting",
+        "Tableau",
+        "Power BI",
+        "visualization"
+      ]
+    }
+  ],
+  "attributes": [
+    {
+      "id": "price_per_unit",
+      "name": "Price Per Unit",
+      "dataType": "currency",
+      "applicableTo": ["compute-instance", "object-storage", "managed-database"],
+      "extraction": {
+        "method": "regex",
+        "patterns": ["\\$[\\d.]+\\s*/\\s*(hour|month|GB)", "\\$[\\d.]+\\s*per\\s*(hour|month|GB)"],
+        "keywords": ["price", "cost", "per hour", "per month", "per GB", "pricing"]
+      }
+    },
+    {
+      "id": "uptime_sla",
+      "name": "Uptime SLA",
+      "dataType": "percentage",
+      "applicableTo": [
+        "compute-instance",
+        "managed-database",
+        "crm-platform",
+        "erp-system",
+        "siem-platform"
+      ],
+      "extraction": {
+        "method": "regex",
+        "patterns": [
+          "\\d{2,3}\\.\\d+%\\s*uptime",
+          "\\d{2,3}\\.\\d+%\\s*SLA",
+          "\\d{2,3}\\.\\d+%\\s*availability"
+        ],
+        "keywords": ["uptime", "SLA", "availability", "service level", "guaranteed uptime"]
+      }
+    },
+    {
+      "id": "storage_capacity",
+      "name": "Storage Capacity",
+      "dataType": "string",
+      "applicableTo": ["object-storage", "managed-database", "data-warehouse"],
+      "extraction": {
+        "method": "regex",
+        "patterns": ["\\d+\\s*(GB|TB|PB)", "up\\s*to\\s*\\d+\\s*(GB|TB|PB)"],
+        "keywords": ["storage", "capacity", "disk size", "volume size", "data limit"]
+      }
+    },
+    {
+      "id": "user_seats",
+      "name": "User Seats",
+      "dataType": "number",
+      "applicableTo": ["crm-platform", "erp-system", "siem-platform", "bi-tool"],
+      "extraction": {
+        "method": "regex",
+        "patterns": ["\\d+\\s*users?", "\\d+\\s*seats?", "up\\s*to\\s*\\d+\\s*licenses?"],
+        "keywords": ["users", "seats", "licenses", "per user", "user limit"]
+      }
+    },
+    {
+      "id": "throughput",
+      "name": "Throughput",
+      "dataType": "string",
+      "applicableTo": ["streaming-platform", "managed-database", "data-warehouse"],
+      "extraction": {
+        "method": "regex",
+        "patterns": [
+          "\\d+\\s*(MB|GB)/s",
+          "\\d+\\s*messages?/s",
+          "\\d+\\s*events?/s",
+          "\\d+\\s*QPS"
+        ],
+        "keywords": ["throughput", "messages per second", "events per second", "QPS", "bandwidth"]
+      }
+    },
+    {
+      "id": "response_time",
+      "name": "Response Time",
+      "dataType": "duration",
+      "applicableTo": ["compute-instance", "managed-database", "crm-platform"],
+      "extraction": {
+        "method": "regex",
+        "patterns": ["\\d+\\s*ms\\s*latency", "p99\\s*\\d+\\s*ms", "\\d+\\s*ms\\s*response"],
+        "keywords": ["latency", "response time", "p99", "p95", "milliseconds"]
+      }
+    },
+    {
+      "id": "compliance_cert",
+      "name": "Compliance Certification",
+      "dataType": "string",
+      "applicableTo": [
+        "compute-instance",
+        "object-storage",
+        "managed-database",
+        "endpoint-protection",
+        "siem-platform"
+      ],
+      "extraction": {
+        "method": "llm",
+        "keywords": ["SOC 2", "ISO 27001", "HIPAA", "PCI DSS", "FedRAMP", "GDPR", "compliance"]
+      }
+    },
+    {
+      "id": "api_rate_limit",
+      "name": "API Rate Limit",
+      "dataType": "number",
+      "applicableTo": ["crm-platform", "erp-system", "bi-tool"],
+      "extraction": {
+        "method": "regex",
+        "patterns": ["\\d+\\s*requests?\\s*/\\s*(min|hour|day)", "rate\\s*limit\\s*\\d+"],
+        "keywords": ["rate limit", "API limit", "requests per", "throttle", "quota"]
+      }
+    },
+    {
+      "id": "encryption_standard",
+      "name": "Encryption Standard",
+      "dataType": "string",
+      "applicableTo": [
+        "object-storage",
+        "managed-database",
+        "endpoint-protection",
+        "siem-platform"
+      ],
+      "extraction": {
+        "method": "llm",
+        "keywords": [
+          "AES-256",
+          "TLS 1.3",
+          "encryption at rest",
+          "encryption in transit",
+          "KMS",
+          "envelope encryption"
+        ]
+      }
+    }
+  ],
+  "departmentBoundaries": [
+    {
+      "product1": "managed-database",
+      "product2": "data-warehouse",
+      "reasoning": "Managed databases are operational OLTP stores (Cloud Infrastructure) while data warehouses are analytical OLAP stores (Data Engineering). Often data flows from managed databases into warehouses."
+    },
+    {
+      "product1": "endpoint-protection",
+      "product2": "siem-platform",
+      "reasoning": "Endpoint protection generates security events (Endpoint Security) that feed into SIEM for analysis (Security Analytics). Both are security products but serve different operational roles."
+    },
+    {
+      "product1": "compute-instance",
+      "product2": "crm-platform",
+      "reasoning": "CRM platforms may run on compute instances, but the compute is infrastructure (Cloud Infrastructure) while CRM is an application layer (Enterprise Solutions)."
+    }
+  ]
+}

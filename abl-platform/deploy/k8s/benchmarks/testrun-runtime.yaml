@@ -1,0 +1,455 @@
+# ============================================================================
+# TestRun CRD: Runtime Service Benchmark
+# ============================================================================
+# Runs the ABL Platform Runtime micro-benchmark with 4 parallel k6 runner
+# pods. Each pod receives an equal share of VUs for distributed load testing.
+#
+# Usage:
+#   1. Create the test script ConfigMap:
+#      kubectl create configmap runtime-benchmark-script \
+#        --from-file=runtime-benchmark.js=benchmarks/services/runtime/runtime-benchmark.ts \
+#        -n abl-benchmarks
+#
+#   2. Apply the Prometheus remote write config:
+#      kubectl apply -f prometheus-remote-write.yaml
+#
+#   3. Run the benchmark:
+#      kubectl apply -f testrun-runtime.yaml
+#
+#   4. Monitor progress:
+#      kubectl get testrun runtime-benchmark -n abl-benchmarks -w
+#
+#   5. View results in Grafana k6 dashboard (Prometheus data source)
+#
+# Prerequisites:
+#   - k6 Operator installed (see k6-operator.yaml)
+#   - Runtime service deployed and accessible at runtime.abl-platform.svc.cluster.local:3112
+#   - Prometheus endpoint available for remote write
+# ============================================================================
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: abl-benchmarks
+  labels:
+    app.kubernetes.io/part-of: abl-platform-benchmarks
+    purpose: load-testing
+---
+# ConfigMap holding the k6 test script
+# In production, replace this with the actual compiled benchmark script
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: runtime-benchmark-script
+  namespace: abl-benchmarks
+  labels:
+    app.kubernetes.io/name: runtime-benchmark
+    app.kubernetes.io/component: test-script
+data:
+  runtime-benchmark.js: |
+    /**
+     * ABL Platform Runtime Micro-Benchmark
+     *
+     * Scenarios:
+     *   1. single_turn    - Single message request/response
+     *   2. multi_turn     - 5-message conversation with context
+     *   3. tool_calling   - Agent with 3-5 tool calls per turn
+     *   4. parallel_conv  - Concurrent WebSocket conversations
+     *   5. streaming      - SSE streaming response latency (TTFT)
+     *
+     * Metrics exported via Prometheus remote write:
+     *   - http_req_duration (p50, p95, p99)
+     *   - http_reqs (RPS)
+     *   - ws_connecting, ws_msgs_received
+     *   - custom: ttft_duration, tool_call_count
+     */
+    import http from 'k6/http';
+    import ws from 'k6/ws';
+    import { check, sleep } from 'k6';
+    import { Trend, Counter } from 'k6/metrics';
+
+    // Custom metrics
+    const ttftDuration = new Trend('ttft_duration', true);
+    const toolCallCount = new Counter('tool_call_count');
+    const conversationErrors = new Counter('conversation_errors');
+
+    // Configuration from environment
+    const RUNTIME_URL = __ENV.RUNTIME_URL || 'http://runtime.abl-platform.svc.cluster.local:3112';
+    const RUNTIME_WS_URL = __ENV.RUNTIME_WS_URL || 'ws://runtime.abl-platform.svc.cluster.local:3112';
+    const API_KEY = __ENV.API_KEY || 'benchmark-api-key';
+    const TENANT_ID = __ENV.TENANT_ID || 'benchmark-tenant';
+    const AGENT_ID = __ENV.AGENT_ID || 'benchmark-agent';
+
+    export const options = {
+      scenarios: {
+        // Scenario 1: Single-turn request/response
+        single_turn: {
+          executor: 'ramping-vus',
+          startVUs: 0,
+          stages: [
+            { duration: '1m', target: 10 },
+            { duration: '3m', target: 50 },
+            { duration: '3m', target: 100 },
+            { duration: '2m', target: 50 },
+            { duration: '1m', target: 0 },
+          ],
+          exec: 'singleTurn',
+          tags: { scenario: 'single_turn' },
+        },
+
+        // Scenario 2: Multi-turn conversation (5 messages)
+        multi_turn: {
+          executor: 'constant-vus',
+          vus: 20,
+          duration: '5m',
+          startTime: '11m',
+          exec: 'multiTurn',
+          tags: { scenario: 'multi_turn' },
+        },
+
+        // Scenario 3: Tool-calling agent (3-5 tool calls)
+        tool_calling: {
+          executor: 'constant-arrival-rate',
+          rate: 10,
+          timeUnit: '1s',
+          duration: '5m',
+          preAllocatedVUs: 50,
+          maxVUs: 100,
+          startTime: '17m',
+          exec: 'toolCalling',
+          tags: { scenario: 'tool_calling' },
+        },
+
+        // Scenario 4: Parallel WebSocket conversations
+        parallel_conversations: {
+          executor: 'ramping-vus',
+          startVUs: 0,
+          stages: [
+            { duration: '1m', target: 50 },
+            { duration: '3m', target: 200 },
+            { duration: '1m', target: 0 },
+          ],
+          startTime: '23m',
+          exec: 'parallelConversations',
+          tags: { scenario: 'parallel_conversations' },
+        },
+
+        // Scenario 5: Streaming response (TTFT measurement)
+        streaming: {
+          executor: 'constant-vus',
+          vus: 30,
+          duration: '5m',
+          startTime: '28m',
+          exec: 'streaming',
+          tags: { scenario: 'streaming' },
+        },
+      },
+
+      thresholds: {
+        // Overall latency thresholds
+        'http_req_duration{scenario:single_turn}': ['p(95)<2000', 'p(99)<5000'],
+        'http_req_duration{scenario:multi_turn}': ['p(95)<3000', 'p(99)<8000'],
+        'http_req_duration{scenario:tool_calling}': ['p(95)<5000', 'p(99)<10000'],
+
+        // TTFT threshold for streaming
+        ttft_duration: ['p(95)<1000', 'p(99)<2000'],
+
+        // Error rate
+        'http_req_failed': ['rate<0.01'],
+        conversation_errors: ['count<10'],
+      },
+    };
+
+    const headers = {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${API_KEY}`,
+      'X-Tenant-Id': TENANT_ID,
+    };
+
+    // Scenario 1: Single-turn
+    export function singleTurn() {
+      const payload = JSON.stringify({
+        agentId: AGENT_ID,
+        message: 'What is the current status of my order #12345?',
+        conversationId: `bench-st-${__VU}-${__ITER}`,
+      });
+
+      const res = http.post(`${RUNTIME_URL}/api/v1/conversations/message`, payload, { headers });
+
+      check(res, {
+        'single_turn: status 200': (r) => r.status === 200,
+        'single_turn: has response': (r) => {
+          try {
+            const body = JSON.parse(r.body);
+            return body.response && body.response.length > 0;
+          } catch (e) {
+            return false;
+          }
+        },
+      }) || conversationErrors.add(1);
+
+      sleep(0.5);
+    }
+
+    // Scenario 2: Multi-turn (5-message conversation)
+    export function multiTurn() {
+      const conversationId = `bench-mt-${__VU}-${__ITER}`;
+      const messages = [
+        'I need help with my account settings.',
+        'I want to change my notification preferences.',
+        'Disable email notifications but keep SMS.',
+        'Also update my timezone to PST.',
+        'Can you confirm all the changes?',
+      ];
+
+      for (let i = 0; i < messages.length; i++) {
+        const payload = JSON.stringify({
+          agentId: AGENT_ID,
+          message: messages[i],
+          conversationId: conversationId,
+        });
+
+        const res = http.post(`${RUNTIME_URL}/api/v1/conversations/message`, payload, { headers });
+
+        const ok = check(res, {
+          [`multi_turn_msg_${i + 1}: status 200`]: (r) => r.status === 200,
+        });
+
+        if (!ok) {
+          conversationErrors.add(1);
+          return;
+        }
+
+        sleep(1);
+      }
+    }
+
+    // Scenario 3: Tool-calling agent
+    export function toolCalling() {
+      const payload = JSON.stringify({
+        agentId: `${AGENT_ID}-tools`,
+        message: 'Look up customer profile for user@example.com, check their subscription status, and generate a renewal quote.',
+        conversationId: `bench-tc-${__VU}-${__ITER}`,
+      });
+
+      const res = http.post(`${RUNTIME_URL}/api/v1/conversations/message`, payload, { headers });
+
+      check(res, {
+        'tool_calling: status 200': (r) => r.status === 200,
+        'tool_calling: has tool results': (r) => {
+          try {
+            const body = JSON.parse(r.body);
+            if (body.toolCalls) {
+              toolCallCount.add(body.toolCalls.length);
+            }
+            return body.response && body.response.length > 0;
+          } catch (e) {
+            return false;
+          }
+        },
+      }) || conversationErrors.add(1);
+    }
+
+    // Scenario 4: Parallel WebSocket conversations
+    export function parallelConversations() {
+      const conversationId = `bench-ws-${__VU}-${__ITER}`;
+
+      const res = ws.connect(
+        `${RUNTIME_WS_URL}/api/v1/ws?tenantId=${TENANT_ID}&conversationId=${conversationId}`,
+        { headers: { Authorization: `Bearer ${API_KEY}` } },
+        function (socket) {
+          socket.on('open', function () {
+            socket.send(
+              JSON.stringify({
+                type: 'message',
+                agentId: AGENT_ID,
+                message: 'Hello, I need assistance with my booking.',
+              })
+            );
+          });
+
+          socket.on('message', function (msg) {
+            try {
+              const data = JSON.parse(msg);
+              if (data.type === 'response' || data.type === 'complete') {
+                check(data, {
+                  'ws: received response': (d) => d.response && d.response.length > 0,
+                });
+                socket.close();
+              }
+            } catch (e) {
+              conversationErrors.add(1);
+            }
+          });
+
+          socket.on('error', function () {
+            conversationErrors.add(1);
+          });
+
+          socket.setTimeout(function () {
+            conversationErrors.add(1);
+            socket.close();
+          }, 30000);
+        }
+      );
+
+      check(res, {
+        'ws: connection successful': (r) => r && r.status === 101,
+      });
+
+      sleep(1);
+    }
+
+    // Scenario 5: Streaming (TTFT measurement)
+    export function streaming() {
+      const conversationId = `bench-stream-${__VU}-${__ITER}`;
+      const startTime = Date.now();
+      let firstTokenTime = null;
+
+      const payload = JSON.stringify({
+        agentId: AGENT_ID,
+        message: 'Explain the key benefits of our enterprise plan in detail.',
+        conversationId: conversationId,
+        stream: true,
+      });
+
+      const res = http.post(`${RUNTIME_URL}/api/v1/conversations/message`, payload, {
+        headers,
+        responseType: 'text',
+      });
+
+      // Parse SSE response for first token timing
+      if (res.body) {
+        const lines = res.body.split('\n');
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            try {
+              const data = JSON.parse(line.slice(6));
+              if (data.token && !firstTokenTime) {
+                firstTokenTime = Date.now();
+                ttftDuration.add(firstTokenTime - startTime);
+              }
+            } catch (e) {
+              // Skip non-JSON SSE lines
+            }
+          }
+        }
+      }
+
+      check(res, {
+        'streaming: status 200': (r) => r.status === 200,
+        'streaming: received tokens': () => firstTokenTime !== null,
+      }) || conversationErrors.add(1);
+
+      sleep(0.5);
+    }
+---
+# TestRun CRD - Distributed runtime benchmark with 4 parallel runners
+apiVersion: k6.io/v1alpha1
+kind: TestRun
+metadata:
+  name: runtime-benchmark
+  namespace: abl-benchmarks
+  labels:
+    app.kubernetes.io/name: runtime-benchmark
+    app.kubernetes.io/component: load-test
+    app.kubernetes.io/part-of: abl-platform-benchmarks
+    benchmark-tier: 'service'
+    benchmark-target: 'runtime'
+  annotations:
+    description: 'ABL Platform Runtime micro-benchmark: single-turn, multi-turn, tool-calling, parallel WS, streaming'
+spec:
+  parallelism: 4
+  script:
+    configMap:
+      name: runtime-benchmark-script
+      file: runtime-benchmark.js
+  separate: false
+  arguments: --out experimental-prometheus-rw
+  runner:
+    metadata:
+      labels:
+        app.kubernetes.io/name: runtime-benchmark-runner
+        sidecar.istio.io/inject: 'false'
+      annotations:
+        prometheus.io/scrape: 'false'
+    spec:
+      containers:
+        - name: k6
+          resources:
+            requests:
+              cpu: '1'
+              memory: 1Gi
+            limits:
+              cpu: '2'
+              memory: 2Gi
+          env:
+            - name: RUNTIME_URL
+              value: 'http://runtime.abl-platform.svc.cluster.local:3112'
+            - name: RUNTIME_WS_URL
+              value: 'ws://runtime.abl-platform.svc.cluster.local:3112'
+            - name: TENANT_ID
+              value: 'benchmark-tenant'
+            - name: AGENT_ID
+              value: 'benchmark-agent'
+            - name: API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: benchmark-secrets
+                  key: api-key
+                  optional: true
+            # Prometheus remote write config
+            - name: K6_PROMETHEUS_RW_SERVER_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: k6-prometheus-remote-write
+                  key: K6_PROMETHEUS_RW_SERVER_URL
+            - name: K6_PROMETHEUS_RW_PUSH_INTERVAL
+              valueFrom:
+                configMapKeyRef:
+                  name: k6-prometheus-remote-write
+                  key: K6_PROMETHEUS_RW_PUSH_INTERVAL
+            - name: K6_PROMETHEUS_RW_TREND_STATS
+              valueFrom:
+                configMapKeyRef:
+                  name: k6-prometheus-remote-write
+                  key: K6_PROMETHEUS_RW_TREND_STATS
+            - name: K6_PROMETHEUS_RW_STALE_MARKERS
+              valueFrom:
+                configMapKeyRef:
+                  name: k6-prometheus-remote-write
+                  key: K6_PROMETHEUS_RW_STALE_MARKERS
+      nodeSelector:
+        kubernetes.io/os: linux
+      tolerations:
+        - key: 'benchmark'
+          operator: 'Equal'
+          value: 'true'
+          effect: 'NoSchedule'
+  starter:
+    metadata:
+      labels:
+        app.kubernetes.io/name: runtime-benchmark-starter
+    spec:
+      containers:
+        - name: k6
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 200m
+              memory: 256Mi
+  cleanup: 'post'
+---
+# Secret for benchmark API key (create manually or via sealed-secrets)
+apiVersion: v1
+kind: Secret
+metadata:
+  name: benchmark-secrets
+  namespace: abl-benchmarks
+  labels:
+    app.kubernetes.io/name: runtime-benchmark
+type: Opaque
+stringData:
+  api-key: 'REPLACE_WITH_ACTUAL_API_KEY'

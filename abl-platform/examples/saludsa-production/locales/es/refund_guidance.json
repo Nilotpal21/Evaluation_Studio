@@ -1,0 +1,6 @@
+{
+  "not_eligible": "En este momento, su perfil no tiene acceso a este tipo de informacion o servicio. \u00bfLe puedo servir en algo adicional?",
+  "display_preference_prompt": "Prefiere que le indique los pasos de manera paso a paso o prefiere un resumen de todos los pasos? Ademas, si necesita los requisitos especificos por categoria, indiqueme cual desea y se los detallo.",
+  "closing_question": "\u00bfHay algo mas en lo que le pueda servir?",
+  "api_error": "Lo sentimos, tenemos dificultades tecnicas. Por favor intente mas tarde."
+}

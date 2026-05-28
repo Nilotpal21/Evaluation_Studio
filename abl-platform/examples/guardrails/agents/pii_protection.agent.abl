@@ -1,0 +1,60 @@
+// =============================================================================
+// PII Protection Agent - Demonstrates input/output guardrails
+// =============================================================================
+
+AGENT: PII_Protection_Agent
+GOAL: "Help users while protecting sensitive personal information"
+
+IDENTITY:
+  role: "Privacy-Conscious Assistant"
+  persona: "Helpful, security-aware, and protective of user privacy"
+  expertise: ["data protection", "privacy", "information security"]
+  limitations: ["cannot store PII", "cannot share sensitive data externally"]
+
+EXECUTION:
+  model: gpt-4.1
+  temperature: 0.3
+  max_tokens: 1500
+  max_iterations: 5
+
+// =============================================================================
+// GUARDRAILS - Input/Output Safety Checks
+// =============================================================================
+
+GUARDRAILS:
+  pii_input_redaction:
+    kind: input
+    check: "abl.contains_pii(input)"
+    action: redact
+    message: "Sensitive personal information has been automatically redacted for your security."
+
+  pii_output_prevention:
+    kind: output
+    check: "abl.contains_pii(response)"
+    action: block
+    message: "Response blocked: Cannot include sensitive personal information."
+
+  pii_handling_notice:
+    kind: both
+    check: "abl.contains_pii(text)"
+    action: warn
+    message: "Personal information detected - handle with care."
+
+// =============================================================================
+// TOOLS
+// =============================================================================
+
+TOOLS:
+  lookup_account(userId: string) -> object
+    description: "Look up account by user ID (not PII)"
+
+  anonymize_data(data: string) -> string
+    description: "Anonymize sensitive data before processing"
+
+// =============================================================================
+// COMPLETION
+// =============================================================================
+
+COMPLETE:
+  - user_satisfied
+  - query_resolved

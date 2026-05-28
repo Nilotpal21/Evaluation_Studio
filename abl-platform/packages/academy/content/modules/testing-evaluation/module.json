@@ -1,0 +1,12 @@
+{
+  "id": "testing-evaluation",
+  "title": "Testing & Evaluation",
+  "lessons": [
+    {
+      "id": "01-testing-guide",
+      "title": "Testing & Evaluation Framework",
+      "sourceFile": "guides/10-testing-and-evaluation.md",
+      "minutes": 21
+    }
+  ]
+}

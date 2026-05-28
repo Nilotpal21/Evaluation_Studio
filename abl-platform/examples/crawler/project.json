@@ -1,0 +1,26 @@
+{
+  "format_version": "2.0",
+  "name": "Web Crawler",
+  "slug": "crawler",
+  "description": "Intelligent web crawler agent with MCP browser tools and bulk crawl API for structured content extraction",
+  "abl_version": "1.0",
+  "exported_at": "2026-03-12T00:00:00.000Z",
+  "entry_agent": "WebCrawler",
+  "dsl_format": "legacy",
+  "layers_included": ["core"],
+  "agents": {
+    "WebCrawler": {
+      "path": "agents/web_crawler.agent.abl",
+      "type": "agent",
+      "description": "Navigate websites intelligently and extract structured content"
+    }
+  },
+  "tools": {},
+  "metadata": {
+    "entity_counts": {
+      "agents": 1,
+      "tools_files": 0
+    },
+    "required_env_vars": ["SEARCH_AI_API_URL", "API_KEY"]
+  }
+}

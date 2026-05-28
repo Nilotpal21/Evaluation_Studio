@@ -1,0 +1,42 @@
+{
+  "format_version": "2.0",
+  "name": "Unified Travel Assistant",
+  "slug": "unified-travel",
+  "description": "Lightweight multi-agent travel assistant with flight search, hotel search, deals advisor, support, and farewell agents.",
+  "abl_version": "1.0",
+  "exported_at": "2026-03-12T00:00:00.000Z",
+  "entry_agent": "Supervisor",
+  "dsl_format": "legacy",
+  "layers_included": ["core"],
+  "agents": {
+    "Supervisor": {
+      "path": "agents/supervisor.agent.abl",
+      "description": "Routes user requests to the appropriate specialist agent"
+    },
+    "Flight_Search": {
+      "path": "agents/flight_search.agent.abl",
+      "description": "Helps users find and book flights"
+    },
+    "Hotel_Search": {
+      "path": "agents/hotel_search.agent.abl",
+      "description": "Helps users find and book hotels"
+    },
+    "Deals_Advisor": {
+      "path": "agents/deals_advisor.agent.abl",
+      "description": "Finds the best travel deals and discounts"
+    },
+    "Support_Agent": {
+      "path": "agents/support.agent.abl",
+      "description": "Helps users with issues and problems"
+    },
+    "Farewell_Agent": {
+      "path": "agents/farewell.agent.abl",
+      "description": "Ends conversations gracefully with a warm goodbye"
+    }
+  },
+  "tools": {},
+  "metadata": {
+    "entity_counts": { "agents": 6, "tools": 0 },
+    "required_env_vars": []
+  }
+}

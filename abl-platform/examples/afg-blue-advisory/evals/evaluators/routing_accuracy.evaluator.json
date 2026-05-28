@@ -1,0 +1,22 @@
+{
+  "name": "Routing Accuracy",
+  "description": "Evaluates whether the supervisor correctly routes to the right agent and whether guard rails properly block out-of-scope requests",
+  "type": "trajectory",
+  "category": "efficiency",
+  "trajectoryMetrics": "handoff_correctness",
+  "scoringRubric": {
+    "scaleType": "pass-fail",
+    "points": [
+      {
+        "score": 1,
+        "label": "Pass",
+        "description": "Query routed to correct agent, or out-of-scope query properly declined."
+      },
+      {
+        "score": 0,
+        "label": "Fail",
+        "description": "Query misrouted, or out-of-scope query not caught by guard rails."
+      }
+    ]
+  }
+}

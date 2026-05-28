@@ -1,0 +1,12 @@
+{
+  "id": "sdk-transport",
+  "title": "SDK & Transport Layer",
+  "lessons": [
+    {
+      "id": "01-sdk-architecture",
+      "title": "Web SDK: Transport Architecture & React Components",
+      "sourceFile": "api/06-sdks.md",
+      "minutes": 30
+    }
+  ]
+}

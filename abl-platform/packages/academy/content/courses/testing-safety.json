@@ -1,0 +1,14 @@
+{
+  "id": "testing-safety",
+  "title": "Testing, Safety & Deployment",
+  "description": "Implement guardrails, constraints, evaluation frameworks, and memory management for production agents.",
+  "level": "intermediate-advanced",
+  "estimatedMinutes": 153,
+  "prerequisites": ["tools-data-collection"],
+  "modules": ["safety-guardrails", "testing-evaluation", "memory-state", "observability-tracing"],
+  "certification": {
+    "required": true,
+    "passCriteria": "all-modules-passed",
+    "badge": "course-testing-safety"
+  }
+}

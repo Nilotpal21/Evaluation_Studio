@@ -1,0 +1,45 @@
+{
+  "name": "@agent-platform/redis",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Shared Redis connection factory and BullMQ helpers for Agent Platform",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./bullmq": {
+      "import": "./dist/bullmq.js",
+      "types": "./dist/bullmq.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:fast": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "@agent-platform/config": "workspace:*",
+    "@agent-platform/shared-kernel": "workspace:*",
+    "@opentelemetry/api": "^1.9.0",
+    "ioredis": "^5.7.0"
+  },
+  "peerDependencies": {
+    "bullmq": "^5.0.0"
+  },
+  "peerDependenciesMeta": {
+    "bullmq": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "bullmq": "^5.0.0",
+    "typescript": "^5.3.0",
+    "vitest": "^4.1.4"
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "format_version": "2.0",
+  "name": "Agent Transfer",
+  "slug": "agent-transfer",
+  "description": "Demonstrates agent transfer patterns for chat and voice channels with pre-checks, availability validation, and IVR routing",
+  "abl_version": "1.0",
+  "exported_at": "2026-03-12T00:00:00.000Z",
+  "entry_agent": "Customer_Support",
+  "dsl_format": "legacy",
+  "layers_included": ["core"],
+  "agents": {
+    "Customer_Support": {
+      "path": "agents/customer-support.agent.abl",
+      "type": "agent",
+      "description": "Handles customer support issues and transfers to human agents when needed"
+    },
+    "IVR_Transfer": {
+      "path": "agents/ivr-transfer.agent.abl",
+      "type": "agent",
+      "description": "Routes voice callers to the appropriate human agent department"
+    }
+  },
+  "tools": {},
+  "metadata": {
+    "entity_counts": {
+      "agents": 2,
+      "tools": 0,
+      "locales": 2
+    },
+    "required_env_vars": []
+  }
+}

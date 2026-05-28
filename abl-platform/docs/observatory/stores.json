@@ -1,0 +1,134 @@
+{
+  "$schema": "observatory-spec",
+  "type": "store-architecture",
+  "version": "2026-03-10-v2",
+  "lastUpdated": "2026-03-10",
+  "clientStores": [
+    {
+      "name": "Observatory Store",
+      "file": "observatory-store.ts",
+      "framework": "Zustand",
+      "fields": [
+        {
+          "name": "spans",
+          "type": "Map<string, Span>",
+          "description": "Active and completed spans"
+        },
+        {
+          "name": "events",
+          "type": "ExtendedTraceEvent[]",
+          "description": "Bounded to 2,000 events"
+        },
+        {
+          "name": "activeSpanStack",
+          "type": "string[]",
+          "description": "Stack of active span IDs"
+        },
+        { "name": "flowNodes", "type": "AgentFlowNode[]", "description": "Agent flow graph nodes" },
+        { "name": "flowEdges", "type": "AgentFlowEdge[]", "description": "Agent flow graph edges" },
+        {
+          "name": "staticGraph",
+          "type": "StaticGraph | null",
+          "description": "Compiled state machine graph"
+        },
+        {
+          "name": "executionState",
+          "type": "Map<string, NodeExecutionState>",
+          "description": "Per-node visited state"
+        },
+        {
+          "name": "appStaticGraph",
+          "type": "AppStaticGraph | null",
+          "description": "Multi-agent app graph"
+        },
+        {
+          "name": "stepMetrics",
+          "type": "Map<string, StepMetrics>",
+          "description": "Per-step visit/duration/error"
+        },
+        {
+          "name": "constraintHistory",
+          "type": "ConstraintCheckResult[]",
+          "description": "Constraint check log"
+        },
+        { "name": "totalTokensIn", "type": "number", "description": "Aggregate input tokens" },
+        { "name": "totalTokensOut", "type": "number", "description": "Aggregate output tokens" },
+        { "name": "totalLLMCalls", "type": "number", "description": "Aggregate LLM call count" },
+        { "name": "totalToolCalls", "type": "number", "description": "Aggregate tool call count" },
+        {
+          "name": "pendingMessageStartTime",
+          "type": "number | null",
+          "description": "Client timing start"
+        },
+        {
+          "name": "lastVolleyClientMs",
+          "type": "number | null",
+          "description": "Last volley client latency"
+        },
+        {
+          "name": "avgVolleyClientMs",
+          "type": "number | null",
+          "description": "Average volley client latency"
+        },
+        { "name": "selectedSpanId", "type": "string | null", "description": "UI: selected span" },
+        { "name": "debugPanelTab", "type": "string", "description": "UI: active debug tab" },
+        {
+          "name": "debugPanelOpen",
+          "type": "boolean",
+          "description": "UI: debug panel visibility"
+        },
+        { "name": "canvasViewMode", "type": "string", "description": "UI: canvas view mode" }
+      ]
+    },
+    {
+      "name": "Session Store",
+      "file": "session-store.ts",
+      "framework": "Zustand",
+      "fields": [
+        { "name": "sessionId", "type": "string", "description": "Current session ID" },
+        { "name": "agent", "type": "AgentDetails", "description": "Agent metadata" },
+        { "name": "messages", "type": "SessionMessage[]", "description": "Conversation messages" },
+        {
+          "name": "state",
+          "type": "AgentState",
+          "description": "context, gatherProgress, constraintResults, flowState, etc."
+        }
+      ]
+    }
+  ],
+  "serverStores": [
+    {
+      "name": "In-Memory TraceStore",
+      "class": "TraceStore",
+      "role": "Hot cache for active sessions",
+      "config": {
+        "ringBufferSize": 500,
+        "ttlMinutes": 120,
+        "sessionTimeoutMinutes": 120,
+        "cleanupIntervalSeconds": 60
+      },
+      "features": ["WebSocket subscriber broadcast", "OTEL bridge forwarding"]
+    },
+    {
+      "name": "Redis TraceStore",
+      "description": "Alternative when Redis available, same interface, distributed persistence"
+    },
+    {
+      "name": "ClickHouse TraceStore",
+      "role": "Canonical persistent store",
+      "config": {
+        "bufferSize": 10000,
+        "flushIntervalSeconds": 5
+      },
+      "table": "abl_platform.traces",
+      "features": [
+        "Buffered writes (fire-and-forget, no per-event flush)",
+        "Encryption at rest (compress-then-encrypt)",
+        "Real span_id from traceEvent.id (matches in-memory store)",
+        "Auto-derived parent_span_id (tool_call → preceding llm_call)",
+        "Real agent_name from traceEvent.agentName",
+        "Cost field on all llm_call events (default 0)"
+      ]
+    }
+  ]
+}

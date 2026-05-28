@@ -1,0 +1,687 @@
+# ============================================================================
+# ABL Platform - Tier S (Starter) Helm Values
+# ============================================================================
+# Profile: 1-10 agents, <1K conversations/day, <10K documents
+# Cluster: 3-4 general + 1 compute + 2-3 data nodes
+# Monthly storage growth: ~5-15 GB
+# ============================================================================
+
+global:
+  tier: 'S'
+  clusterName: 'abl-platform-starter'
+  storageClass: 'gp3'
+  # Cloud provider: aws | azure | gcp | onprem
+  cloudProvider: 'aws'
+  # Image pull settings
+  imageRegistry: 'ghcr.io/koreai'
+  imagePullPolicy: IfNotPresent
+  imagePullSecrets:
+    - name: ghcr-credentials
+  # Networking
+  domain: 'abl.example.com'
+  tls:
+    enabled: true
+    issuer: 'letsencrypt-prod'
+  # Observability
+  monitoring:
+    enabled: true
+    prometheusEndpoint: 'http://prometheus.monitoring.svc:9090'
+  # Security
+  podSecurityStandard: 'restricted'
+
+# ============================================================================
+# Tier 1 - Compute-Intensive Services
+# ============================================================================
+
+runtime:
+  enabled: true
+  replicaCount: 2
+  image:
+    repository: 'ghcr.io/koreai/abl-runtime'
+    tag: 'latest'
+  resources:
+    requests:
+      cpu: '1'
+      memory: 2Gi
+    limits:
+      cpu: '2'
+      memory: 4Gi
+  ports:
+    http: 3112
+    ws: 3112
+  env:
+    NODE_ENV: 'production'
+    LOG_LEVEL: 'info'
+    MONGODB_URI: 'mongodb://mongodb-0.mongodb-headless.abl-data.svc:27017,mongodb-1.mongodb-headless.abl-data.svc:27017,mongodb-2.mongodb-headless.abl-data.svc:27017/abl?replicaSet=rs0&w=majority'
+    REDIS_URL: 'redis://redis-sentinel.abl-data.svc:26379'
+    CLICKHOUSE_URL: 'http://clickhouse.abl-data.svc:8123'
+    MESSAGE_PERSISTENCE_MAX_BATCH_SIZE: '25'
+    MESSAGE_PERSISTENCE_WORKER_CONCURRENCY: '2'
+  probes:
+    liveness:
+      path: /health
+      initialDelaySeconds: 15
+      periodSeconds: 20
+    readiness:
+      path: /health
+      initialDelaySeconds: 5
+      periodSeconds: 10
+  serviceAccount:
+    create: true
+  podDisruptionBudget:
+    minAvailable: 1
+  nodeSelector:
+    node-pool: general
+  topologySpreadConstraints:
+    - maxSkew: 1
+      topologyKey: topology.kubernetes.io/zone
+      whenUnsatisfiable: DoNotSchedule
+      labelSelector:
+        matchLabels:
+          app.kubernetes.io/name: runtime
+
+bgeM3:
+  enabled: true
+  replicaCount: 2
+  image:
+    repository: 'ghcr.io/huggingface/text-embeddings-inference'
+    tag: '1.2'
+  args:
+    - '--model-id'
+    - 'BAAI/bge-m3'
+    - '--port'
+    - '8001'
+    - '--max-batch-tokens'
+    - '16384'
+    - '--max-concurrent-requests'
+    - '64'
+  resources:
+    requests:
+      cpu: '2'
+      memory: 4Gi
+    limits:
+      cpu: '4'
+      memory: 8Gi
+  ports:
+    http: 8001
+  persistence:
+    enabled: true
+    storageClass: 'gp3'
+    size: 10Gi
+    mountPath: /data
+  probes:
+    liveness:
+      path: /health
+      initialDelaySeconds: 120
+      periodSeconds: 30
+    readiness:
+      path: /health
+      initialDelaySeconds: 60
+      periodSeconds: 10
+  nodeSelector:
+    node-pool: compute
+
+docling:
+  enabled: true
+  replicaCount: 1
+  image:
+    repository: 'ghcr.io/koreai/abl-docling'
+    tag: 'latest'
+  resources:
+    requests:
+      cpu: '1'
+      memory: 2Gi
+    limits:
+      cpu: '2'
+      memory: 4Gi
+  ports:
+    http: 8080
+  nodeSelector:
+    node-pool: general
+
+# Self-hosted LLM disabled for Tier S (use external APIs)
+selfHostedLlm:
+  enabled: false
+
+# ============================================================================
+# Tier 3 - Application Services
+# ============================================================================
+
+studio:
+  enabled: true
+  replicaCount: 2
+  image:
+    repository: 'ghcr.io/koreai/abl-studio'
+    tag: 'latest'
+  resources:
+    requests:
+      cpu: 500m
+      memory: 1Gi
+    limits:
+      cpu: '1'
+      memory: 2Gi
+  ports:
+    http: 5173
+  env:
+    NODE_ENV: 'production'
+    MONGODB_MANAGED: 'true'
+    MONGODB_MAX_POOL_SIZE: '10'
+  probes:
+    liveness:
+      path: /health
+      initialDelaySeconds: 30
+      periodSeconds: 20
+    readiness:
+      path: /health
+      initialDelaySeconds: 10
+      periodSeconds: 10
+  podDisruptionBudget:
+    minAvailable: 1
+  nodeSelector:
+    node-pool: general
+
+admin:
+  enabled: true
+  replicaCount: 1
+  image:
+    repository: 'ghcr.io/koreai/abl-admin'
+    tag: 'latest'
+  resources:
+    requests:
+      cpu: 500m
+      memory: 1Gi
+    limits:
+      cpu: '1'
+      memory: 2Gi
+  ports:
+    http: 3003
+  nodeSelector:
+    node-pool: general
+
+searchAi:
+  enabled: true
+  replicaCount: 1
+  image:
+    repository: 'ghcr.io/koreai/abl-search-ai'
+    tag: 'latest'
+  resources:
+    requests:
+      cpu: '1'
+      memory: 2Gi
+    limits:
+      cpu: '2'
+      memory: 4Gi
+  ports:
+    http: 3113
+  nodeSelector:
+    node-pool: general
+
+searchAiRuntime:
+  enabled: true
+  replicaCount: 2
+  image:
+    repository: 'ghcr.io/koreai/abl-search-ai-runtime'
+    tag: 'latest'
+  resources:
+    requests:
+      cpu: 500m
+      memory: 1Gi
+    limits:
+      cpu: '1'
+      memory: 2Gi
+  ports:
+    http: 3114
+  nodeSelector:
+    node-pool: general
+
+workflowEngine:
+  enabled: true
+  replicaCount: 2
+  image:
+    repository: 'ghcr.io/koreai/abl-workflow-engine'
+    tag: 'latest'
+  resources:
+    requests:
+      cpu: 500m
+      memory: 1Gi
+    limits:
+      cpu: '1'
+      memory: 2Gi
+  nodeSelector:
+    node-pool: general
+
+preprocessing:
+  enabled: true
+  replicaCount: 1
+  image:
+    repository: 'ghcr.io/koreai/abl-preprocessing'
+    tag: 'latest'
+  resources:
+    requests:
+      cpu: 500m
+      memory: 512Mi
+    limits:
+      cpu: '1'
+      memory: 1Gi
+  ports:
+    http: 8003
+  nodeSelector:
+    node-pool: general
+
+nluSidecar:
+  enabled: true
+  replicaCount: 1
+  image:
+    repository: 'ghcr.io/koreai/abl-nlu-sidecar'
+    tag: 'latest'
+  resources:
+    requests:
+      cpu: 500m
+      memory: 512Mi
+    limits:
+      cpu: '1'
+      memory: 1Gi
+  nodeSelector:
+    node-pool: general
+
+crawlerGo:
+  enabled: true
+  replicaCount: 1
+  image:
+    repository: 'ghcr.io/koreai/abl-crawler'
+    tag: 'latest'
+  resources:
+    requests:
+      cpu: 500m
+      memory: 512Mi
+    limits:
+      cpu: '1'
+      memory: 1Gi
+  nodeSelector:
+    node-pool: general
+
+# Crawler MCP not needed for Tier S
+crawlerMcp:
+  enabled: false
+
+multimodal:
+  enabled: true
+  replicaCount: 1
+  image:
+    repository: 'ghcr.io/koreai/abl-multimodal'
+    tag: 'latest'
+  resources:
+    requests:
+      cpu: '1'
+      memory: 1Gi
+    limits:
+      cpu: '2'
+      memory: 2Gi
+  nodeSelector:
+    node-pool: general
+
+# ============================================================================
+# Tier 2 - Stateful Data Stores
+# ============================================================================
+
+# MongoDB: 3-node Replica Set via Percona Operator
+mongodb:
+  enabled: true
+  # Percona Server for MongoDB Operator
+  operator:
+    enabled: true
+    version: '1.22.0'
+  replicas: 3
+  topology: 'replicaset'
+  sharding:
+    enabled: false
+  resources:
+    requests:
+      cpu: '2'
+      memory: 8Gi
+    limits:
+      cpu: '4'
+      memory: 16Gi
+  storage:
+    dataDir:
+      size: 100Gi
+      storageClass: 'gp3'
+    logsDir:
+      size: 10Gi
+      storageClass: 'gp3'
+  configuration: |
+    operationProfiling:
+      mode: slowOp
+      slowOpThresholdMs: 200
+    replication:
+      oplogSizeMB: 4096
+    storage:
+      wiredTiger:
+        engineConfig:
+          cacheSizeGB: 4
+  backup:
+    enabled: true
+    pbm:
+      version: '2.7'
+    schedule:
+      - name: daily-full
+        schedule: '0 2 * * *'
+        keep: 7
+        storageName: s3-backup
+    storages:
+      s3-backup:
+        type: s3
+        s3:
+          bucket: 'abl-backup-tier-s'
+          region: 'us-east-1'
+          prefix: 'mongodb/'
+  users:
+    - name: abl-app
+      db: abl
+      roles:
+        - name: readWrite
+          db: abl
+  monitoring:
+    enabled: true
+    pmm:
+      enabled: false
+    exporter:
+      enabled: true
+  nodeSelector:
+    node-pool: data
+
+# ClickHouse: Single node + 3 Keeper via Altinity Operator
+clickhouse:
+  enabled: true
+  operator:
+    enabled: true
+    version: '0.26.0'
+  # Single server for Tier S (no replication)
+  shards: 1
+  replicas: 1
+  keeper:
+    replicas: 3
+    resources:
+      requests:
+        cpu: 250m
+        memory: 256Mi
+      limits:
+        cpu: 500m
+        memory: 512Mi
+    storage:
+      size: 5Gi
+      storageClass: 'gp3'
+  resources:
+    requests:
+      cpu: '2'
+      memory: 4Gi
+    limits:
+      cpu: '4'
+      memory: 8Gi
+  storage:
+    dataDir:
+      size: 50Gi
+      storageClass: 'gp3'
+  settings:
+    max_memory_usage: 3221225472 # 3 GB
+    background_pool_size: 2
+    parts_to_delay_insert: 150
+    parts_to_throw_insert: 300
+  ttl:
+    traces: '7 DAY'
+    metrics: '30 DAY'
+    usage: '90 DAY'
+  monitoring:
+    enabled: true
+    prometheusPort: 9363
+  nodeSelector:
+    node-pool: data
+
+# OpenSearch: 2 data nodes, no dedicated masters
+opensearch:
+  enabled: true
+  version: '3.3'
+  # No dedicated masters for Tier S
+  masterNodes:
+    enabled: false
+  dataNodes:
+    replicas: 2
+    resources:
+      requests:
+        cpu: '2'
+        memory: 4Gi
+      limits:
+        cpu: '4'
+        memory: 8Gi
+    storage:
+      size: 50Gi
+      storageClass: 'gp3'
+    jvmHeap: '2g'
+  warmNodes:
+    enabled: false
+  config:
+    index:
+      numberOfShards: 1
+      numberOfReplicas: 1
+    knn:
+      enabled: true
+      algoParam:
+        efSearch: 100
+        efConstruction: 256
+        m: 16
+  ism:
+    enabled: true
+    policies:
+      - name: default-lifecycle
+        states:
+          - name: hot
+            actions:
+              - rollover:
+                  minSize: '50gb'
+                  minIndexAge: '30d'
+            transitions:
+              - stateName: delete
+                conditions:
+                  minIndexAge: '90d'
+          - name: delete
+            actions:
+              - delete: {}
+  nodeSelector:
+    node-pool: data
+
+# Redis: 3-node Sentinel (1 primary + 2 replicas)
+redis:
+  enabled: true
+  operator:
+    enabled: true
+    # OpsTree redis-operator
+  architecture: 'sentinel'
+  sentinel:
+    replicas: 3
+    resources:
+      requests:
+        cpu: 100m
+        memory: 128Mi
+      limits:
+        cpu: 200m
+        memory: 256Mi
+  master:
+    resources:
+      requests:
+        cpu: '1'
+        memory: 4Gi
+      limits:
+        cpu: '2'
+        memory: 8Gi
+  replica:
+    replicaCount: 2
+    resources:
+      requests:
+        cpu: '1'
+        memory: 4Gi
+      limits:
+        cpu: '2'
+        memory: 8Gi
+  config:
+    maxmemory: '3gb'
+    maxmemory-policy: 'noeviction'
+    activedefrag: 'yes'
+    active-defrag-threshold-lower: '10'
+    active-defrag-cycle-max: '25'
+    save: '900 1 300 10' # RDB snapshots
+    appendonly: 'yes'
+    appendfsync: 'everysec'
+  nodeSelector:
+    node-pool: data
+
+# Neo4j: Single instance
+neo4j:
+  enabled: true
+  replicas: 1
+  # Single instance for Tier S
+  core:
+    numberOfServers: 1
+  resources:
+    requests:
+      cpu: '1'
+      memory: 2Gi
+    limits:
+      cpu: '2'
+      memory: 4Gi
+  config:
+    dbms.memory.heap.initial_size: '1g'
+    dbms.memory.heap.max_size: '1g'
+    dbms.memory.pagecache.size: '512m'
+  storage:
+    data:
+      size: 20Gi
+      storageClass: 'gp3'
+  backup:
+    enabled: true
+    schedule: '0 3 * * 0' # Weekly
+    destination: 's3://abl-backup-tier-s/neo4j/'
+  nodeSelector:
+    node-pool: data
+
+# Qdrant: Single node
+qdrant:
+  enabled: true
+  replicas: 1
+  resources:
+    requests:
+      cpu: '1'
+      memory: 2Gi
+    limits:
+      cpu: '2'
+      memory: 4Gi
+  storage:
+    size: 20Gi
+    storageClass: 'gp3'
+  config:
+    collection:
+      vectorSize: 1024
+      distance: 'Cosine'
+    optimizers:
+      indexingThreshold: 20000
+      memmapThreshold: 50000
+    quantization:
+      scalar:
+        type: 'int8'
+        alwaysRam: true
+  snapshot:
+    enabled: true
+    schedule: '0 4 * * *'
+  nodeSelector:
+    node-pool: data
+
+# Restate: 3-node Raft cluster
+restate:
+  enabled: true
+  replicas: 3
+  resources:
+    requests:
+      cpu: '1'
+      memory: 2Gi
+    limits:
+      cpu: '2'
+      memory: 4Gi
+  storage:
+    journal:
+      size: 20Gi
+      storageClass: 'gp3'
+  config:
+    partitions: 1
+    metadataStoreType: 'replicated'
+    snapshotInterval: 10000
+    trimDelayInterval: '10m'
+  nodeSelector:
+    node-pool: data
+
+# ============================================================================
+# Node Pools (Karpenter NodePool definitions)
+# ============================================================================
+
+nodePools:
+  general:
+    instanceTypes:
+      aws: ['m5.large', 'm5.xlarge']
+      azure: ['Standard_D4s_v3', 'Standard_D8s_v3']
+      gcp: ['e2-standard-4', 'e2-standard-8']
+    minNodes: 3
+    maxNodes: 4
+    labels:
+      node-pool: general
+    taints: []
+
+  compute:
+    instanceTypes:
+      aws: ['c5.xlarge', 'c5.2xlarge']
+      azure: ['Standard_F4s_v2', 'Standard_F8s_v2']
+      gcp: ['c2-standard-8', 'c2-standard-16']
+    minNodes: 1
+    maxNodes: 2
+    labels:
+      node-pool: compute
+    taints: []
+
+  data:
+    instanceTypes:
+      aws: ['r5.xlarge', 'r5.2xlarge']
+      azure: ['Standard_E4s_v3', 'Standard_E8s_v3']
+      gcp: ['n2-highmem-4', 'n2-highmem-8']
+    minNodes: 2
+    maxNodes: 3
+    labels:
+      node-pool: data
+    taints: []
+
+# ============================================================================
+# Ingress / Gateway API
+# ============================================================================
+
+gateway:
+  enabled: true
+  className: 'cilium'
+  listeners:
+    - name: https
+      port: 443
+      protocol: HTTPS
+      tls:
+        certificateRefs:
+          - name: abl-tls
+  routes:
+    - name: studio
+      hostnames: ['studio.abl.example.com']
+      backendRef:
+        name: studio
+        port: 5173
+    - name: runtime
+      hostnames: ['api.abl.example.com']
+      backendRef:
+        name: runtime
+        port: 3112
+    - name: admin
+      hostnames: ['admin.abl.example.com']
+      backendRef:
+        name: admin
+        port: 3003

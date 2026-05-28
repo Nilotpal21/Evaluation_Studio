@@ -1,0 +1,37 @@
+{
+  "name": "Tool Correctness",
+  "description": "Evaluates whether the correct tools were called with proper parameters (namespace, filters, query text)",
+  "type": "trajectory",
+  "category": "tool_correctness",
+  "trajectoryMetrics": "tool_sequence",
+  "scoringRubric": {
+    "scaleType": "1-5",
+    "points": [
+      {
+        "score": 5,
+        "label": "Perfect",
+        "description": "Correct tool called with all relevant filters extracted and proper namespace selection."
+      },
+      {
+        "score": 4,
+        "label": "Good",
+        "description": "Correct tool called but minor filter extraction issues."
+      },
+      {
+        "score": 3,
+        "label": "Partial",
+        "description": "Correct tool called but missing important filters or wrong namespace."
+      },
+      {
+        "score": 2,
+        "label": "Poor",
+        "description": "Wrong tool called or major parameter errors."
+      },
+      {
+        "score": 1,
+        "label": "Failing",
+        "description": "Tool not called when it should have been, or completely wrong parameters."
+      }
+    ]
+  }
+}

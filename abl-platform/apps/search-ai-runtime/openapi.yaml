@@ -1,0 +1,1210 @@
+openapi: 3.0.3
+info:
+  title: SearchAI Runtime API
+  description: |
+    REST endpoints for SearchAI Runtime service, providing vocabulary management, agent integration, and capability management APIs.
+
+    ## Authentication
+    All endpoints require Bearer token authentication via the `Authorization` header.
+
+    ## Tenant Isolation
+    All operations are scoped to the authenticated user's tenant. Resources from other tenants are not accessible.
+
+    ## API Groups
+    - **Vocabulary Management (API-1 to API-6)**: CRUD operations for vocabulary entries
+    - **Agent Integration (API-7 to API-9)**: Download-first pattern for agents to minimize LLM costs
+    - **Capability Management (API-11 to API-16)**: Admin-only CRUD for system capabilities
+  version: 1.0.0
+  contact:
+    name: Agent Platform Team
+servers:
+  - url: http://localhost:3114
+    description: Local development
+  - url: https://api.example.com/search-ai-runtime
+    description: Production
+
+security:
+  - bearerAuth: []
+
+tags:
+  - name: Vocabulary Management
+    description: CRUD operations for vocabulary entries (API-1 to API-6)
+  - name: Agent Integration
+    description: Download-first pattern endpoints for agents (API-7 to API-9)
+  - name: Capability Management
+    description: Admin-only CRUD for system capabilities (API-11 to API-16)
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    # Common schemas
+    SuccessResponse:
+      type: object
+      required:
+        - success
+        - data
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+
+    ErrorResponse:
+      type: object
+      required:
+        - success
+        - error
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: object
+          required:
+            - code
+            - message
+          properties:
+            code:
+              type: string
+              example: VALIDATION_ERROR
+            message:
+              type: string
+              example: Invalid request parameters
+            details:
+              type: array
+              items:
+                type: object
+
+    # Vocabulary schemas
+    VocabularyEntry:
+      type: object
+      required:
+        - id
+        - term
+        - fieldRef
+        - capabilities
+        - relatedFields
+        - enabled
+        - generatedBy
+      properties:
+        id:
+          type: string
+          example: entry_abc123
+        term:
+          type: string
+          minLength: 2
+          maxLength: 50
+          example: priority
+        aliases:
+          type: array
+          items:
+            type: string
+          maxItems: 10
+          example: [pri, urgency]
+        description:
+          type: string
+          maxLength: 500
+          example: Priority level of the issue
+        fieldRef:
+          type: string
+          example: issue_priority
+        capabilities:
+          type: object
+          required:
+            - canFilter
+            - canDisplay
+            - canAggregate
+            - canSort
+          properties:
+            canFilter:
+              type: boolean
+              example: true
+            canDisplay:
+              type: boolean
+              example: true
+            canAggregate:
+              type: boolean
+              example: true
+            canSort:
+              type: boolean
+              example: true
+        relatedFields:
+          type: object
+          required:
+            - displayWith
+            - aggregateWith
+          properties:
+            displayWith:
+              type: array
+              items:
+                type: string
+              maxItems: 30
+              example: [summary, assignee, status]
+            aggregateWith:
+              type: array
+              items:
+                type: string
+              maxItems: 10
+              example: [status, type]
+        enabled:
+          type: boolean
+          example: true
+        confidence:
+          type: number
+          minimum: 0
+          maximum: 1
+          example: 0.95
+        generatedBy:
+          type: string
+          enum: [auto, manual]
+          example: auto
+        usageCount:
+          type: integer
+          example: 42
+        lastUsed:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    CreateVocabularyEntry:
+      type: object
+      required:
+        - term
+        - fieldRef
+        - capabilities
+        - generatedBy
+      properties:
+        term:
+          type: string
+          minLength: 2
+          maxLength: 50
+        aliases:
+          type: array
+          items:
+            type: string
+          maxItems: 10
+        description:
+          type: string
+          maxLength: 500
+        fieldRef:
+          type: string
+        capabilities:
+          type: object
+          required:
+            - canFilter
+            - canDisplay
+            - canAggregate
+            - canSort
+          properties:
+            canFilter:
+              type: boolean
+            canDisplay:
+              type: boolean
+            canAggregate:
+              type: boolean
+            canSort:
+              type: boolean
+        relatedFields:
+          type: object
+          required:
+            - displayWith
+            - aggregateWith
+          properties:
+            displayWith:
+              type: array
+              items:
+                type: string
+              maxItems: 30
+            aggregateWith:
+              type: array
+              items:
+                type: string
+              maxItems: 10
+        enabled:
+          type: boolean
+        confidence:
+          type: number
+          minimum: 0
+          maximum: 1
+        generatedBy:
+          type: string
+          enum: [auto, manual]
+
+    # Capability schemas
+    Capability:
+      type: object
+      required:
+        - _id
+        - tenantId
+        - name
+        - type
+        - description
+        - supportedFieldTypes
+        - triggerKeywords
+        - examples
+        - enabled
+        - metadata
+      properties:
+        _id:
+          type: string
+          example: cap_abc123
+        tenantId:
+          type: string
+          example: tenant_456
+        name:
+          type: string
+          example: count
+        type:
+          type: string
+          enum: [aggregation, operator, sort]
+          example: aggregation
+        description:
+          type: string
+          example: Count number of items
+        supportedFieldTypes:
+          type: array
+          items:
+            type: string
+          example: [any]
+        triggerKeywords:
+          type: array
+          items:
+            type: string
+          minItems: 1
+          maxItems: 20
+          example: [count, total, number of]
+        examples:
+          type: array
+          items:
+            type: string
+          minItems: 1
+          maxItems: 10
+          example: [Count all bugs, Total number of issues]
+        enabled:
+          type: boolean
+          example: true
+        metadata:
+          type: object
+          properties:
+            version:
+              type: integer
+              example: 1
+            createdBy:
+              type: string
+              enum: [system, admin]
+              example: system
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    CreateCapability:
+      type: object
+      required:
+        - name
+        - type
+        - description
+        - supportedFieldTypes
+        - triggerKeywords
+        - examples
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 50
+        type:
+          type: string
+          enum: [aggregation, operator, sort]
+        description:
+          type: string
+          minLength: 1
+          maxLength: 500
+        supportedFieldTypes:
+          type: array
+          items:
+            type: string
+          minItems: 1
+        triggerKeywords:
+          type: array
+          items:
+            type: string
+          minItems: 1
+          maxItems: 20
+        examples:
+          type: array
+          items:
+            type: string
+          minItems: 1
+          maxItems: 10
+
+paths:
+  # ─── Vocabulary Management APIs ──────────────────────────────────
+
+  /projects/{projectId}/kb/{kbId}/vocabulary:
+    get:
+      tags:
+        - Vocabulary Management
+      summary: List vocabulary entries (API-1)
+      description: Returns paginated list of vocabulary entries with optional filters
+      operationId: listVocabularyEntries
+      parameters:
+        - name: projectId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: kbId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [active, inactive, all]
+            default: active
+        - name: generatedBy
+          in: query
+          schema:
+            type: string
+            enum: [auto, manual, all]
+            default: all
+        - name: search
+          in: query
+          description: Search in term and aliases
+          schema:
+            type: string
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 500
+            default: 100
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          entries:
+                            type: array
+                            items:
+                              $ref: '#/components/schemas/VocabularyEntry'
+                          total:
+                            type: integer
+                          limit:
+                            type: integer
+                          offset:
+                            type: integer
+                          vocabulary:
+                            type: object
+                            properties:
+                              _id:
+                                type: string
+                              version:
+                                type: integer
+                              status:
+                                type: string
+                              lastGeneratedAt:
+                                type: string
+                                format: date-time
+        '404':
+          description: Vocabulary not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    post:
+      tags:
+        - Vocabulary Management
+      summary: Create vocabulary entry (API-2)
+      description: Creates a new vocabulary entry
+      operationId: createVocabularyEntry
+      parameters:
+        - name: projectId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: kbId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateVocabularyEntry'
+      responses:
+        '201':
+          description: Entry created successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          entryId:
+                            type: string
+                          message:
+                            type: string
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Duplicate term
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /projects/{projectId}/kb/{kbId}/vocabulary/{entryId}:
+    put:
+      tags:
+        - Vocabulary Management
+      summary: Update vocabulary entry (API-3)
+      description: Updates an existing vocabulary entry (partial update)
+      operationId: updateVocabularyEntry
+      parameters:
+        - name: projectId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: kbId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: entryId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                aliases:
+                  type: array
+                  items:
+                    type: string
+                description:
+                  type: string
+                capabilities:
+                  type: object
+                relatedFields:
+                  type: object
+                enabled:
+                  type: boolean
+                confidence:
+                  type: number
+      responses:
+        '200':
+          description: Entry updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '404':
+          description: Entry not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    delete:
+      tags:
+        - Vocabulary Management
+      summary: Delete vocabulary entry (API-4)
+      description: Deletes a vocabulary entry (blocked if used in last 30 days)
+      operationId: deleteVocabularyEntry
+      parameters:
+        - name: projectId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: kbId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: entryId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Entry deleted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '404':
+          description: Entry not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Entry in use (cannot delete)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /projects/{projectId}/kb/{kbId}/vocabulary/{entryId}/toggle:
+    patch:
+      tags:
+        - Vocabulary Management
+      summary: Toggle vocabulary entry (API-5)
+      description: Enable or disable a vocabulary entry
+      operationId: toggleVocabularyEntry
+      parameters:
+        - name: projectId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: kbId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: entryId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - enabled
+              properties:
+                enabled:
+                  type: boolean
+      responses:
+        '200':
+          description: Entry toggled successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '404':
+          description: Entry not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /projects/{projectId}/kb/{kbId}/vocabulary/test:
+    post:
+      tags:
+        - Vocabulary Management
+      summary: Test vocabulary resolution (API-6)
+      description: Tests vocabulary resolution for a given query
+      operationId: testVocabularyResolution
+      parameters:
+        - name: projectId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: kbId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - query
+              properties:
+                query:
+                  type: string
+                entryIds:
+                  type: array
+                  items:
+                    type: string
+      responses:
+        '200':
+          description: Resolution results
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          query:
+                            type: string
+                          resolutions:
+                            type: array
+                            items:
+                              type: object
+                          unresolvedSegments:
+                            type: array
+                            items:
+                              type: string
+                          suggestions:
+                            type: array
+                            items:
+                              type: string
+
+  # ─── Agent Integration APIs ──────────────────────────────────────
+
+  /projects/{projectId}/kb/{kbId}/query-types:
+    get:
+      tags:
+        - Agent Integration
+      summary: Get query type examples (API-7)
+      description: |
+        Returns few-shot learning examples for query type classification.
+        Agents download these once and use them for local classification.
+        Cache: 1 hour
+      operationId: getQueryTypes
+      parameters:
+        - name: projectId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: kbId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: connectorType
+          in: query
+          description: Connector type (generic, jira, etc.)
+          schema:
+            type: string
+            default: generic
+        - name: includeGeneric
+          in: query
+          description: Include generic examples with connector-specific ones
+          schema:
+            type: boolean
+            default: false
+      responses:
+        '200':
+          description: Query type examples
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                example: public, max-age=3600
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          queryTypes:
+                            type: object
+                            properties:
+                              structured:
+                                type: object
+                              semantic:
+                                type: object
+                              hybrid:
+                                type: object
+                              aggregation:
+                                type: object
+                          metadata:
+                            type: object
+                            properties:
+                              connectorType:
+                                type: string
+                              lastUpdated:
+                                type: string
+                              version:
+                                type: string
+
+  /projects/{projectId}/kb/{kbId}/vocabulary-context:
+    get:
+      tags:
+        - Agent Integration
+      summary: Get vocabulary context (API-8)
+      description: |
+        Returns complete vocabulary + schema for agent rephrasing.
+        Agents download this once and use it for local vocabulary resolution.
+        Cache: 5 minutes
+      operationId: getVocabularyContext
+      parameters:
+        - name: projectId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: kbId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: includeSchema
+          in: query
+          schema:
+            type: boolean
+            default: true
+        - name: includeCapabilities
+          in: query
+          schema:
+            type: boolean
+            default: true
+        - name: includeExamples
+          in: query
+          schema:
+            type: boolean
+            default: false
+      responses:
+        '200':
+          description: Vocabulary context
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                example: public, max-age=300
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          vocabulary:
+                            type: array
+                            items:
+                              type: object
+                          schema:
+                            type: object
+                          capabilities:
+                            type: object
+                          metadata:
+                            type: object
+        '404':
+          description: Vocabulary not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /projects/{projectId}/kb/{kbId}/extract-fields:
+    post:
+      tags:
+        - Agent Integration
+      summary: Extract fields from query (API-9)
+      description: |
+        Parses rephrased query and extracts structured fields.
+        Currently returns 501 - requires DI setup for FieldExtractorService.
+      operationId: extractFields
+      parameters:
+        - name: projectId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: kbId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - query
+                - queryType
+              properties:
+                query:
+                  type: string
+                queryType:
+                  type: string
+                  enum: [structured, semantic, hybrid, aggregation]
+                options:
+                  type: object
+      responses:
+        '501':
+          description: Not implemented (requires DI setup)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  # ─── Capability Management APIs ──────────────────────────────────
+
+  /capabilities:
+    get:
+      tags:
+        - Capability Management
+      summary: List capabilities (API-11)
+      description: Returns all capabilities for tenant (public endpoint)
+      operationId: listCapabilities
+      parameters:
+        - name: type
+          in: query
+          schema:
+            type: string
+            enum: [aggregation, operator, sort]
+        - name: enabled
+          in: query
+          schema:
+            type: boolean
+      responses:
+        '200':
+          description: List of capabilities
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          capabilities:
+                            type: array
+                            items:
+                              $ref: '#/components/schemas/Capability'
+                          total:
+                            type: integer
+
+    post:
+      tags:
+        - Capability Management
+      summary: Create capability (API-13)
+      description: Creates a new capability (admin only)
+      operationId: createCapability
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateCapability'
+      responses:
+        '201':
+          description: Capability created
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          capability:
+                            $ref: '#/components/schemas/Capability'
+                          message:
+                            type: string
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden (admin role required)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Duplicate name
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /capabilities/{capabilityId}:
+    get:
+      tags:
+        - Capability Management
+      summary: Get capability by ID (API-12)
+      description: Returns a single capability (public endpoint)
+      operationId: getCapability
+      parameters:
+        - name: capabilityId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Capability details
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          capability:
+                            $ref: '#/components/schemas/Capability'
+        '404':
+          description: Capability not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    put:
+      tags:
+        - Capability Management
+      summary: Update capability (API-14)
+      description: Updates an existing capability (admin only)
+      operationId: updateCapability
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: capabilityId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                description:
+                  type: string
+                  minLength: 1
+                  maxLength: 500
+                supportedFieldTypes:
+                  type: array
+                  items:
+                    type: string
+                  minItems: 1
+                triggerKeywords:
+                  type: array
+                  items:
+                    type: string
+                  minItems: 1
+                  maxItems: 20
+                examples:
+                  type: array
+                  items:
+                    type: string
+                  minItems: 1
+                  maxItems: 10
+      responses:
+        '200':
+          description: Capability updated
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          capability:
+                            $ref: '#/components/schemas/Capability'
+                          message:
+                            type: string
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden (admin role required)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Capability not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    delete:
+      tags:
+        - Capability Management
+      summary: Delete capability (API-16)
+      description: Deletes a capability (admin only, use with caution)
+      operationId: deleteCapability
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: capabilityId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Capability deleted
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          deleted:
+                            type: boolean
+                          message:
+                            type: string
+        '403':
+          description: Forbidden (admin role required)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Capability not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /capabilities/{capabilityId}/toggle:
+    post:
+      tags:
+        - Capability Management
+      summary: Toggle capability (API-15)
+      description: Enable or disable a capability (admin only)
+      operationId: toggleCapability
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: capabilityId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - enabled
+              properties:
+                enabled:
+                  type: boolean
+      responses:
+        '200':
+          description: Capability toggled
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          capability:
+                            $ref: '#/components/schemas/Capability'
+                          message:
+                            type: string
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden (admin role required)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Capability not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'

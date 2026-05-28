@@ -1,0 +1,48 @@
+{
+  "format_version": "2.0",
+  "name": "Dispute Transaction",
+  "slug": "dispute-transaction",
+  "description": "Multi-agent system for credit/debit card transaction dispute resolution with channel-specific routing, intelligent validation, and reason-specific workflows",
+  "abl_version": "1.0",
+  "exported_at": "2026-03-12T00:00:00.000Z",
+  "dsl_format": "legacy",
+  "layers_included": ["core"],
+  "entry_agent": "DisputeTransaction_Supervisor",
+  "agents": {
+    "DisputeTransaction_Supervisor": {
+      "path": "agents/dispute_transaction_supervisor.agent.abl",
+      "description": "Multi-agent orchestrator for credit/debit card transaction dispute resolution",
+      "type": "supervisor"
+    },
+    "Dispute": {
+      "path": "agents/dispute.agent.abl",
+      "description": "Complete end-to-end dispute processing: intake, card/transaction selection, probing validation, information collection, and confirmation"
+    },
+    "Agent_Transfer": {
+      "path": "agents/agent_transfer.agent.abl",
+      "description": "Transfers customers to human agents when automated assistance is not sufficient"
+    },
+    "Feedback_Agent": {
+      "path": "agents/feedback_agent.agent.abl",
+      "description": "Collects customer feedback about their experience with the dispute resolution process"
+    }
+  },
+  "tools": {
+    "dispute_tools": {
+      "path": "tools/dispute.tools.abl"
+    },
+    "transfer_tools": {
+      "path": "tools/transfer.tools.abl"
+    },
+    "feedback_tools": {
+      "path": "tools/feedback.tools.abl"
+    }
+  },
+  "metadata": {
+    "entity_counts": {
+      "agents": 4,
+      "tools": 3
+    },
+    "required_env_vars": ["KORE_AI_API_TOKEN"]
+  }
+}

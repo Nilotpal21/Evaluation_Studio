@@ -1,0 +1,13 @@
+{
+  "agent_name": "WebCrawler",
+  "strings": {
+    "on_start": "I'm ready to help you crawl and extract content from websites. What would you like me to crawl?",
+    "gather_url": "What website or URL would you like me to crawl?",
+    "gather_crawl_type": "How should I crawl this site?",
+    "gather_max_pages": "Maximum number of pages to crawl?",
+    "complete_success": "Crawl complete! Here are the results.",
+    "error_navigation_failed": "I couldn't reach that website. It may be down or blocking automated access.",
+    "error_javascript_required": "This site requires JavaScript. Switching to browser mode...",
+    "error_rate_limited": "The site is rate-limiting requests. Slowing down..."
+  }
+}

@@ -1,0 +1,249 @@
+# Redis Cluster harness for integration & chaos tests.
+#
+# Boots a 6-node cluster (3 masters + 3 replicas) on ports 7000-7005, then
+# bootstraps slot ownership via `redis-cli --cluster create`.
+#
+# Cross-platform note: `network_mode: host` is a Linux-only feature and
+# breaks on macOS / Windows Docker Desktop, where containers run inside a
+# Linux VM with their own network namespace. Instead, every Redis node
+# shares the network namespace of `redis-cluster-net` (a tiny pause
+# container that publishes every cluster port and bus-port to the host),
+# and every node sets `--cluster-announce-ip 127.0.0.1`. This way:
+#   - All 6 nodes can reach each other at 127.0.0.1:<port> (same netns)
+#   - The host can reach every node at 127.0.0.1:<port> (published ports)
+#   - CLUSTER NODES gossip uses 127.0.0.1, so MOVED redirects work from host
+#
+# Usage:
+#   docker compose -f docker-compose.cluster.yml up -d
+#   pnpm vitest run --config vitest.cluster.config.ts
+#   docker compose -f docker-compose.cluster.yml down -v
+
+x-redis-defaults: &redis-defaults
+  image: redis:7-alpine
+  restart: 'no'
+  network_mode: 'service:redis-cluster-net'
+  depends_on:
+    redis-cluster-net:
+      condition: service_started
+
+services:
+  # Tiny network anchor — publishes every cluster port to the host. All
+  # actual Redis nodes attach to this container's netns so they share
+  # 127.0.0.1 with the host and each other.
+  redis-cluster-net:
+    image: alpine:3.20
+    container_name: abl-redis-cluster-net
+    restart: 'no'
+    command: ['sh', '-c', 'while true; do sleep 3600; done']
+    ports:
+      - '127.0.0.1:7000:7000'
+      - '127.0.0.1:7001:7001'
+      - '127.0.0.1:7002:7002'
+      - '127.0.0.1:7003:7003'
+      - '127.0.0.1:7004:7004'
+      - '127.0.0.1:7005:7005'
+      - '127.0.0.1:17000:17000'
+      - '127.0.0.1:17001:17001'
+      - '127.0.0.1:17002:17002'
+      - '127.0.0.1:17003:17003'
+      - '127.0.0.1:17004:17004'
+      - '127.0.0.1:17005:17005'
+
+  redis-cluster-0:
+    <<: *redis-defaults
+    container_name: abl-redis-cluster-0
+    command:
+      - redis-server
+      - --port
+      - '7000'
+      - --cluster-enabled
+      - 'yes'
+      - --cluster-require-full-coverage
+      - 'no'
+      - --cluster-node-timeout
+      - '5000'
+      - --cluster-announce-ip
+      - '127.0.0.1'
+      - --cluster-config-file
+      - nodes-7000.conf
+      - --appendonly
+      - 'yes'
+      - --appendfilename
+      - appendonly-7000.aof
+    healthcheck:
+      test: ['CMD', 'redis-cli', '-p', '7000', 'ping']
+      interval: 1s
+      timeout: 3s
+      retries: 30
+
+  redis-cluster-1:
+    <<: *redis-defaults
+    container_name: abl-redis-cluster-1
+    command:
+      - redis-server
+      - --port
+      - '7001'
+      - --cluster-enabled
+      - 'yes'
+      - --cluster-require-full-coverage
+      - 'no'
+      - --cluster-node-timeout
+      - '5000'
+      - --cluster-announce-ip
+      - '127.0.0.1'
+      - --cluster-config-file
+      - nodes-7001.conf
+      - --appendonly
+      - 'yes'
+      - --appendfilename
+      - appendonly-7001.aof
+    healthcheck:
+      test: ['CMD', 'redis-cli', '-p', '7001', 'ping']
+      interval: 1s
+      timeout: 3s
+      retries: 30
+
+  redis-cluster-2:
+    <<: *redis-defaults
+    container_name: abl-redis-cluster-2
+    command:
+      - redis-server
+      - --port
+      - '7002'
+      - --cluster-enabled
+      - 'yes'
+      - --cluster-require-full-coverage
+      - 'no'
+      - --cluster-node-timeout
+      - '5000'
+      - --cluster-announce-ip
+      - '127.0.0.1'
+      - --cluster-config-file
+      - nodes-7002.conf
+      - --appendonly
+      - 'yes'
+      - --appendfilename
+      - appendonly-7002.aof
+    healthcheck:
+      test: ['CMD', 'redis-cli', '-p', '7002', 'ping']
+      interval: 1s
+      timeout: 3s
+      retries: 30
+
+  redis-cluster-3:
+    <<: *redis-defaults
+    container_name: abl-redis-cluster-3
+    command:
+      - redis-server
+      - --port
+      - '7003'
+      - --cluster-enabled
+      - 'yes'
+      - --cluster-require-full-coverage
+      - 'no'
+      - --cluster-node-timeout
+      - '5000'
+      - --cluster-announce-ip
+      - '127.0.0.1'
+      - --cluster-config-file
+      - nodes-7003.conf
+      - --appendonly
+      - 'yes'
+      - --appendfilename
+      - appendonly-7003.aof
+    healthcheck:
+      test: ['CMD', 'redis-cli', '-p', '7003', 'ping']
+      interval: 1s
+      timeout: 3s
+      retries: 30
+
+  redis-cluster-4:
+    <<: *redis-defaults
+    container_name: abl-redis-cluster-4
+    command:
+      - redis-server
+      - --port
+      - '7004'
+      - --cluster-enabled
+      - 'yes'
+      - --cluster-require-full-coverage
+      - 'no'
+      - --cluster-node-timeout
+      - '5000'
+      - --cluster-announce-ip
+      - '127.0.0.1'
+      - --cluster-config-file
+      - nodes-7004.conf
+      - --appendonly
+      - 'yes'
+      - --appendfilename
+      - appendonly-7004.aof
+    healthcheck:
+      test: ['CMD', 'redis-cli', '-p', '7004', 'ping']
+      interval: 1s
+      timeout: 3s
+      retries: 30
+
+  redis-cluster-5:
+    <<: *redis-defaults
+    container_name: abl-redis-cluster-5
+    command:
+      - redis-server
+      - --port
+      - '7005'
+      - --cluster-enabled
+      - 'yes'
+      - --cluster-require-full-coverage
+      - 'no'
+      - --cluster-node-timeout
+      - '5000'
+      - --cluster-announce-ip
+      - '127.0.0.1'
+      - --cluster-config-file
+      - nodes-7005.conf
+      - --appendonly
+      - 'yes'
+      - --appendfilename
+      - appendonly-7005.aof
+    healthcheck:
+      test: ['CMD', 'redis-cli', '-p', '7005', 'ping']
+      interval: 1s
+      timeout: 3s
+      retries: 30
+
+  redis-cluster-init:
+    image: redis:7-alpine
+    container_name: abl-redis-cluster-init
+    restart: 'no'
+    network_mode: 'service:redis-cluster-net'
+    depends_on:
+      redis-cluster-0:
+        condition: service_healthy
+      redis-cluster-1:
+        condition: service_healthy
+      redis-cluster-2:
+        condition: service_healthy
+      redis-cluster-3:
+        condition: service_healthy
+      redis-cluster-4:
+        condition: service_healthy
+      redis-cluster-5:
+        condition: service_healthy
+    entrypoint:
+      - sh
+      - -c
+      - |
+        # Idempotent: --cluster create returns non-zero if already initialized.
+        # All nodes reachable at 127.0.0.1 (shared netns with redis-cluster-net).
+        redis-cli --cluster create \
+          127.0.0.1:7000 127.0.0.1:7001 127.0.0.1:7002 \
+          127.0.0.1:7003 127.0.0.1:7004 127.0.0.1:7005 \
+          --cluster-replicas 1 --cluster-yes || true
+        # Wait until cluster_state:ok before exiting healthy.
+        for i in $$(seq 1 30); do
+          if redis-cli -p 7000 CLUSTER INFO | grep -q 'cluster_state:ok'; then
+            echo "cluster ready"; exit 0
+          fi
+          sleep 1
+        done
+        echo "cluster failed to reach cluster_state:ok"; exit 1

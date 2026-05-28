@@ -1,0 +1,1 @@
+export { SearchTestSection } from './SearchTestSection';

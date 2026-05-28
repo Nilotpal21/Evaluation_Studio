@@ -1,0 +1,33 @@
+start_rollover_case(source_account_type: string, destination_account_type: string, amount_estimate: string, notes?: string) -> {success: boolean, caseId: string, queue: string, destinationAccountType: string, nextStep: string, summary: string}
+  description: "Open a demo rollover case and return the next operational step"
+  type: sandbox
+  confirm: never
+  runtime: "javascript"
+  timeout: 5000
+  memory_mb: 128
+  params:
+    source_account_type:
+      description: "Plan or account the rollover is coming from"
+    destination_account_type:
+      description: "Target IRA or retirement account"
+    amount_estimate:
+      description: "Approximate amount involved in the rollover"
+    notes:
+      description: "Original user phrasing or added intake notes"
+  code: |
+    const source = String(typeof $source_account_type !== 'undefined' ? $source_account_type : 'former 401(k)').trim() || 'former 401(k)';
+    const destination = String(typeof $destination_account_type !== 'undefined' ? $destination_account_type : 'Traditional IRA').trim() || 'Traditional IRA';
+    const amountEstimate = String(typeof $amount_estimate !== 'undefined' ? $amount_estimate : 'the full balance').trim() || 'the full balance';
+    const notes = String(typeof $notes !== 'undefined' ? $notes : '').trim();
+    const queue = /403|pension/i.test(source) ? 'Qualified Plan Desk' : 'Rollover Operations';
+    const caseId = 'RO-' + Date.now().toString().slice(-8);
+    const nextStep = 'Expect a rollover packet that confirms the distribution path from the ' + source + ' into the ' + destination + '.';
+
+    return JSON.stringify({
+      success: true,
+      caseId,
+      queue,
+      destinationAccountType: destination,
+      nextStep,
+      summary: 'Opened rollover case ' + caseId + ' for ' + amountEstimate + ' moving from ' + source + ' into ' + destination + (notes ? ' with note: ' + notes.slice(0, 120) : '.')
+    });

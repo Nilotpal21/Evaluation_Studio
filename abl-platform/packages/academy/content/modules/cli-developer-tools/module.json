@@ -1,0 +1,36 @@
+{
+  "id": "cli-developer-tools",
+  "title": "CLI & Developer Tools",
+  "lessons": [
+    {
+      "id": "01-cli-overview",
+      "title": "CLI Installation & Configuration",
+      "sourceFile": "cli/01-cli-overview.md",
+      "minutes": 6
+    },
+    {
+      "id": "02-project-management",
+      "title": "Project & Agent Management Commands",
+      "sourceFile": "cli/02-project-management.md",
+      "minutes": 8
+    },
+    {
+      "id": "03-local-development",
+      "title": "Local Development & Testing Workflows",
+      "sourceFile": "cli/03-local-development.md",
+      "minutes": 10
+    },
+    {
+      "id": "04-deployment-ops",
+      "title": "Deployment & Operations Commands",
+      "sourceFile": "cli/04-deployment-ops.md",
+      "minutes": 8
+    },
+    {
+      "id": "05-scripting-automation",
+      "title": "Scripting & CI/CD Automation",
+      "sourceFile": "cli/05-scripting-automation.md",
+      "minutes": 6
+    }
+  ]
+}

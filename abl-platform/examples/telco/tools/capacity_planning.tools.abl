@@ -1,0 +1,10 @@
+# Capacity Planning Tools
+# These tools are defined inline in the agent DSL files.
+# This file serves as a tool registry reference for the v2 export format.
+
+# Tools:
+#   get_traffic_analytics — Get traffic analytics and congestion data for a region
+#   get_capacity_forecast — Generate 90-day capacity forecast for a region
+#   simulate_traffic_shift — Simulate a traffic shift before execution
+#   execute_traffic_shift — Execute an approved traffic shift
+#   get_subscriber_experience — Get real-time subscriber experience metrics

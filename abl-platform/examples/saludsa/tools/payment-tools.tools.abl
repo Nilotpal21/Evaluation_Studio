@@ -1,0 +1,15 @@
+/**
+ * Saludsa Payment Tools
+ *
+ * Tools for payment inquiries, balance checks, and payment history.
+ */
+
+TOOLS:
+  get_account_balance(user_id: string) -> AccountBalance:
+    description: "Retrieve account balance for a user"
+
+  get_payment_history(user_id: string, months: number) -> PaymentHistory:
+    description: "Retrieve payment history for a user over specified months"
+
+  get_payment_methods() -> PaymentMethods:
+    description: "List available payment methods"

@@ -1,0 +1,28 @@
+{
+  "version": 1,
+  "id": "ablp-340-runtime-url-optional",
+  "jiraKey": "ABLP-340",
+  "summary": "Studio should not require NEXT_PUBLIC_RUNTIME_URL to be set in order to boot and serve embed/runtime paths",
+  "description": "Studio currently treats NEXT_PUBLIC_RUNTIME_URL as required in places where it should fall back gracefully to the current deployment context. Remove the hard requirement, update the runtime/embed path handling accordingly, and keep the Studio test surface green.",
+  "helixCommand": "fix",
+  "scope": ["apps/studio"],
+  "targetCommit": "195c951504fb82d83f710fa50d30603f2e57093d",
+  "baseCommit": "0e9b75bc3717140aa40ad8a940ff608709a57e06",
+  "changedFiles": [
+    "apps/studio/next.config.mjs",
+    "apps/studio/src/__tests__/api-routes/api-deployment-routes.test.ts",
+    "apps/studio/src/__tests__/components/deployment-components.test.tsx",
+    "apps/studio/src/__tests__/helpers/studio-api-harness.ts",
+    "apps/studio/src/__tests__/runtime-config.test.ts",
+    "apps/studio/src/app/api/sdk/embed/[projectId]/route.ts",
+    "apps/studio/src/components/workflows/triggers/WebhookQuickStart.tsx",
+    "apps/studio/src/config/runtime.server.ts",
+    "apps/studio/src/config/runtime.ts",
+    "apps/studio/src/proxy.ts",
+    "docs/plans/2026-04-13-runtime-url-plane-routing-plan.md"
+  ],
+  "tags": ["studio", "runtime-config", "deployment"],
+  "notes": [
+    "This is a broader fix with tests and config changes, useful as a medium-difficulty replay."
+  ]
+}

@@ -1,0 +1,10 @@
+# Account Management Tools
+# These tools are defined inline in the agent DSL files.
+# This file serves as a tool registry reference for the v2 export format.
+
+# Tools:
+#   verify_identity — Verify customer identity via email, phone, or security questions
+#   reset_password — Initiate password reset via email or phone verification
+#   check_icloud_status — Check iCloud storage usage, plan, and connected devices
+#   manage_two_factor — Enable, disable, or generate recovery key for 2FA
+#   unlock_apple_id — Attempt to unlock a locked Apple ID

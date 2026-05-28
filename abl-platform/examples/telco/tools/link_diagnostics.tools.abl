@@ -1,0 +1,8 @@
+# Link Diagnostics Tools
+# These tools are defined inline in the agent DSL files.
+# This file serves as a tool registry reference for the v2 export format.
+
+# Tools:
+#   analyze_link_health — Analyze overall health of a transport link
+#   get_link_history — Get historical events and outage data for a link
+#   run_link_diagnostics — Run OTDR, loopback, or BER diagnostics on a link

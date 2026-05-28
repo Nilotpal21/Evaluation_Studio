@@ -1,0 +1,226 @@
+{
+  "metadata": {
+    "purpose": "Edge cases that expose failures in adaptive preprocessing",
+    "categories": {
+      "multilingual_failures": "Non-English queries incorrectly marked as 'skip'",
+      "typo_failures": "Typo-laden queries not detected properly",
+      "semantic_failures": "Complex semantic queries under-processed",
+      "technical_term_false_positives": "Non-technical queries incorrectly flagged as technical",
+      "proper_noun_false_positives": "Normal capitalized words misclassified",
+      "entity_detection_failures": "Entities missed or false positives",
+      "question_pattern_failures": "Questions not recognized as needing thorough processing",
+      "mixed_language_failures": "Queries mixing English + non-English",
+      "subtle_typo_failures": "Hard-to-detect typos (transpositions, homophones)",
+      "length_heuristic_failures": "Short but complex or long but simple queries"
+    }
+  },
+  "failure_scenarios": [
+    {
+      "id": "multilingual_fail_001",
+      "category": "multilingual_failures",
+      "query": "cómo configurar kubernetes",
+      "current_adaptive_decision": "skip",
+      "expected_optimal": "balanced",
+      "failure_reason": "Spanish query not detected, treated as gibberish, skipped entirely",
+      "fix_needed": "Integrate language detection into complexity analyzer"
+    },
+    {
+      "id": "multilingual_fail_002",
+      "category": "multilingual_failures",
+      "query": "Wie konfiguriere ich Docker Container",
+      "current_adaptive_decision": "skip",
+      "expected_optimal": "balanced",
+      "failure_reason": "German query not detected",
+      "fix_needed": "Add language detection"
+    },
+    {
+      "id": "multilingual_fail_003",
+      "category": "multilingual_failures",
+      "query": "コンテナの設定",
+      "current_adaptive_decision": "skip",
+      "expected_optimal": "balanced",
+      "failure_reason": "Japanese query not detected (non-Latin script)",
+      "fix_needed": "Support non-Latin scripts in language detection"
+    },
+    {
+      "id": "typo_fail_001",
+      "category": "typo_failures",
+      "query": "deplyoment configurtion",
+      "current_adaptive_decision": "fast",
+      "expected_optimal": "thorough",
+      "failure_reason": "Transposition typos (deplyoment) not detected",
+      "fix_needed": "Improve typo detection with edit distance"
+    },
+    {
+      "id": "typo_fail_002",
+      "category": "subtle_typo_failures",
+      "query": "there configuration file is missing",
+      "current_adaptive_decision": "fast",
+      "expected_optimal": "thorough",
+      "failure_reason": "Homophone typo (there vs their) not detected",
+      "fix_needed": "Context-aware spell checking"
+    },
+    {
+      "id": "typo_fail_003",
+      "category": "subtle_typo_failures",
+      "query": "recieve mesage from server",
+      "current_adaptive_decision": "fast",
+      "expected_optimal": "thorough",
+      "failure_reason": "Common misspellings (recieve, mesage) not flagged",
+      "fix_needed": "Expand typo pattern dictionary"
+    },
+    {
+      "id": "semantic_fail_001",
+      "category": "semantic_failures",
+      "query": "how do I troubleshoot connection issues",
+      "current_adaptive_decision": "fast",
+      "expected_optimal": "thorough",
+      "failure_reason": "Question pattern not detected, needs synonym expansion",
+      "fix_needed": "Detect question words (how, what, why, when, where)"
+    },
+    {
+      "id": "semantic_fail_002",
+      "category": "semantic_failures",
+      "query": "what are the best practices for security",
+      "current_adaptive_decision": "fast",
+      "expected_optimal": "thorough",
+      "failure_reason": "Semantic query needs synonyms (best practices = guidelines)",
+      "fix_needed": "Increase complexity score for question patterns"
+    },
+    {
+      "id": "semantic_fail_003",
+      "category": "semantic_failures",
+      "query": "explain the difference between REST and GraphQL",
+      "current_adaptive_decision": "fast",
+      "expected_optimal": "thorough",
+      "failure_reason": "Comparative query needs semantic understanding",
+      "fix_needed": "Detect comparison patterns (difference between, vs, compared to)"
+    },
+    {
+      "id": "question_fail_001",
+      "category": "question_pattern_failures",
+      "query": "why is my service failing",
+      "current_adaptive_decision": "fast",
+      "expected_optimal": "thorough",
+      "failure_reason": "Why-question not boosting complexity score",
+      "fix_needed": "Question word detection"
+    },
+    {
+      "id": "question_fail_002",
+      "category": "question_pattern_failures",
+      "query": "when should I use caching",
+      "current_adaptive_decision": "fast",
+      "expected_optimal": "thorough",
+      "failure_reason": "When-question not detected",
+      "fix_needed": "Question word detection"
+    },
+    {
+      "id": "technical_false_positive_001",
+      "category": "technical_term_false_positives",
+      "query": "I love python programming",
+      "current_adaptive_decision": "fast",
+      "expected_optimal": "balanced",
+      "failure_reason": "Python detected as technical term, but query is conversational",
+      "fix_needed": "Context-aware technical term detection"
+    },
+    {
+      "id": "proper_noun_false_positive_001",
+      "category": "proper_noun_false_positives",
+      "query": "Monday Morning Meeting Notes",
+      "current_adaptive_decision": "fast",
+      "expected_optimal": "balanced",
+      "failure_reason": "All words capitalized = proper nouns, but it's just title case",
+      "fix_needed": "Ignore all-caps or title-case patterns"
+    },
+    {
+      "id": "entity_fail_001",
+      "category": "entity_detection_failures",
+      "query": "meeting at 3pm",
+      "current_adaptive_decision": "fast",
+      "expected_optimal": "thorough",
+      "failure_reason": "Time entity (3pm) not detected",
+      "fix_needed": "Expand entity patterns for informal times"
+    },
+    {
+      "id": "entity_fail_002",
+      "category": "entity_detection_failures",
+      "query": "invoice for two thousand dollars",
+      "current_adaptive_decision": "fast",
+      "expected_optimal": "thorough",
+      "failure_reason": "Written-out numbers not detected",
+      "fix_needed": "Parse written numbers (two thousand = 2000)"
+    },
+    {
+      "id": "mixed_language_fail_001",
+      "category": "mixed_language_failures",
+      "query": "configure kubernetes con parametros especificos",
+      "current_adaptive_decision": "skip",
+      "expected_optimal": "thorough",
+      "failure_reason": "Mixed English-Spanish not detected",
+      "fix_needed": "Detect code-switching (multiple languages in one query)"
+    },
+    {
+      "id": "length_fail_001",
+      "category": "length_heuristic_failures",
+      "query": "fix",
+      "current_adaptive_decision": "skip",
+      "expected_optimal": "skip",
+      "failure_reason": "None (correctly skipped)",
+      "fix_needed": "N/A - working correctly"
+    },
+    {
+      "id": "length_fail_002",
+      "category": "length_heuristic_failures",
+      "query": "Lorem ipsum dolor sit amet consectetur adipiscing elit sed do eiusmod tempor incididunt ut labore et dolore magna aliqua",
+      "current_adaptive_decision": "thorough",
+      "expected_optimal": "skip",
+      "failure_reason": "Long query assumed complex, but it's just lorem ipsum (gibberish)",
+      "fix_needed": "Detect meaningless text patterns"
+    },
+    {
+      "id": "length_fail_003",
+      "category": "length_heuristic_failures",
+      "query": "api",
+      "current_adaptive_decision": "skip",
+      "expected_optimal": "fast",
+      "failure_reason": "Very short but technical term, might need spell checking",
+      "fix_needed": "Don't auto-skip technical terms even if short"
+    },
+    {
+      "id": "edge_case_001",
+      "category": "edge_cases",
+      "query": "",
+      "current_adaptive_decision": "skip",
+      "expected_optimal": "skip",
+      "failure_reason": "Empty query handled correctly",
+      "fix_needed": "N/A"
+    },
+    {
+      "id": "edge_case_002",
+      "category": "edge_cases",
+      "query": "     ",
+      "current_adaptive_decision": "skip",
+      "expected_optimal": "skip",
+      "failure_reason": "Whitespace-only query",
+      "fix_needed": "Strip whitespace before analysis"
+    },
+    {
+      "id": "edge_case_003",
+      "category": "edge_cases",
+      "query": "🚀 deploy kubernetes 🎉",
+      "current_adaptive_decision": "fast",
+      "expected_optimal": "fast",
+      "failure_reason": "Emojis handled but not counted as complexity",
+      "fix_needed": "N/A - working"
+    },
+    {
+      "id": "edge_case_004",
+      "category": "edge_cases",
+      "query": "SELECT * FROM users WHERE name = 'John O''Brien'",
+      "current_adaptive_decision": "skip",
+      "expected_optimal": "skip",
+      "failure_reason": "SQL with escaped quotes",
+      "fix_needed": "N/A - SQL detection working"
+    }
+  ]
+}

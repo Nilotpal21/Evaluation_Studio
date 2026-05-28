@@ -1,0 +1,19 @@
+{
+  "name": "Automobile Domain",
+  "description": "Tests automobile product search with namespace switch to afg_automobiles, Toyota SUV filters, and budget constraint",
+  "category": "tool_usage",
+  "difficulty": "medium",
+  "entryAgent": "GuardRail_Supervisor",
+  "initialMessage": "Show me a Toyota SUV under 200000 AED",
+  "expectedOutcome": "Agent routes to Advisor_Agent, performs product_search with namespace=afg_automobiles, make=Toyota, bodyType=SUV, price_max=200000, returns vehicle results",
+  "maxTurns": 3,
+  "maxToolCalls": 1,
+  "tags": ["automobile", "product-search", "namespace-switch", "filters"],
+  "agentPath": ["GuardRail_Supervisor", "Advisor_Agent"],
+  "expectedMilestones": [
+    "supervisor_routes_to_advisor",
+    "automobile_namespace_selected",
+    "product_search_with_filters",
+    "toyota_results_presented"
+  ]
+}

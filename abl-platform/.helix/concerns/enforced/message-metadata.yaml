@@ -1,0 +1,65 @@
+id: message-metadata
+title: Message and Session Metadata Hygiene
+enforcement: blocking
+severity_default: high
+rubric_concern: 2
+
+scope:
+  globs:
+    - apps/runtime/src/**/*.ts
+    - apps/search-ai/src/**/*.ts
+    - packages/**/src/**/*.ts
+  exclude:
+    - '**/__tests__/**'
+    - '**/*.test.ts'
+
+references:
+  docs:
+    - CLAUDE.md#key-rules
+  related_concerns:
+    - session-identity
+    - agent-transfer
+    - clean-contracts
+
+detectors:
+  - id: reserved-transport-keys-not-in-metadata
+    kind: grep
+    severity: high
+    # history, replyTo, and other transport-reserved keys must not be
+    # forwarded via the generic messageMetadata map. See CLAUDE.md:
+    # "Boundary metadata normalization".
+    pattern: "messageMetadata\\[['\"]?(history|replyTo|traceparent|tracestate)['\"]?\\]"
+    message: |
+      Reserved transport keys (history, replyTo, traceparent, tracestate)
+      must not travel through generic messageMetadata. They belong on
+      typed channel fields.
+    fix_hint: |
+      Extract the reserved key into its typed location (e.g. handoff.history)
+      at the adapter boundary before forwarding.
+
+  - id: metadata-validated-at-entry
+    kind: model-review
+    severity: medium
+    guidance_ref: ../../prompts/metadata-boundary-lens.md
+    output_schema:
+      rule_id: metadata-validated-at-entry
+      severity: high | medium
+      location:
+        file: string
+        line: number
+      claim: string
+      reality: string
+      options:
+        A: add zod validation at the entry point
+        B: confirm metadata is already validated upstream (cite the file/line)
+    message: |
+      Per-message and per-channel metadata must be validated at the entry
+      point (WebSocket adapter, HTTP route, queue consumer). Validation
+      deeper in the stack masks upstream bugs and risks cache poisoning.
+    fix_hint: |
+      Add a zod schema at the adapter. Pass the canonical typed shape
+      downstream, never the raw payload.
+
+stage_hooks:
+  - stage: implementation
+    inject_checklist: true

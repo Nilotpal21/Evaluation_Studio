@@ -1,0 +1,37 @@
+{
+  "name": "@abl/piece-azure-document-intelligence",
+  "version": "0.1.0",
+  "private": true,
+  "type": "commonjs",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./normalize": {
+      "types": "./dist/normalize.d.ts",
+      "default": "./dist/normalize.js"
+    },
+    "./parse-retry-after": {
+      "types": "./dist/parse-retry-after.d.ts",
+      "default": "./dist/parse-retry-after.js"
+    },
+    "./actions/extract-document": {
+      "types": "./dist/actions/extract-document.d.ts",
+      "default": "./dist/actions/extract-document.js"
+    },
+    "./safe-fetch": {
+      "types": "./dist/safe-fetch.d.ts",
+      "default": "./dist/safe-fetch.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc"
+  },
+  "dependencies": {
+    "@activepieces/pieces-framework": "^0.25.4",
+    "rate-limiter-flexible": "^5.0.0"
+  }
+}

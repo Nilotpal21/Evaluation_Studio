@@ -1,0 +1,76 @@
+id: reasoning-flow-parity
+title: Reasoning vs Flow Path Consistency
+enforcement: advisory
+severity_default: high
+rubric_concern: 5
+
+protects:
+  - parity between reasoning agents and scripted flow agents where the platform promises shared behavior
+  - intentional, documented divergences when the paths truly differ
+
+review_when:
+  - GATHER, extraction, tool calls, constraints, completion checks, handoff, localization, metadata propagation, or trace events change
+  - any execution-layer utility shared by both ReasoningExecutor and FlowStepExecutor changes
+
+review_questions:
+  - Does this behavior need to exist in both reasoning and flow paths?
+  - If only one path changed, is the difference intentional and documented?
+  - Are validation, tracing, and state updates consistent between ReasoningExecutor and FlowStepExecutor?
+  - Could a bug fix in one engine leave the other path incorrect?
+  - Do docs and examples still describe the real parity story?
+
+proof_expected:
+  - parity tests for both paths when behavior should match
+  - explicit N/A rationale when only one path is relevant
+  - updated docs/specs if paths intentionally diverge
+
+scope:
+  globs:
+    - apps/runtime/src/executors/**/*.ts
+    - apps/runtime/src/services/reasoning/**/*.ts
+    - apps/runtime/src/services/flow/**/*.ts
+    - packages/compiler/src/**/*.ts
+  exclude:
+    - '**/__tests__/**'
+    - '**/*.test.ts'
+
+references:
+  docs:
+    - docs/sdlc/change-review-rubric.md
+  related_concerns:
+    - session-context
+    - message-metadata
+    - agent-transfer
+
+detectors:
+  - id: shared-utility-covers-both-paths
+    kind: model-review
+    severity: high
+    guidance_ref: ../../prompts/reasoning-flow-parity-lens.md
+    output_schema:
+      rule_id: shared-utility-covers-both-paths
+      severity: high | medium
+      location:
+        file: string
+        line: number
+      claim: string
+      reality: string
+      options:
+        A: update both ReasoningExecutor and FlowStepExecutor to use the shared behavior
+        B: document the intentional divergence in the feature spec
+        C: add a parity test proving both paths produce equivalent outputs
+    message: |
+      A change to shared execution utilities (metadata propagation, trace
+      emission, completion detection, constraint evaluation) must be applied
+      consistently to both ReasoningExecutor and FlowStepExecutor unless a
+      divergence is explicitly documented.
+    fix_hint: |
+      Extract the shared logic into a utility consumed by both executors, or
+      make the divergence explicit in code + docs. Add parity tests in
+      apps/runtime/src/__tests__ covering both paths.
+
+stage_hooks:
+  - stage: implementation
+    inject_checklist: true
+  - stage: oracle-analysis
+    as_review_lens: true

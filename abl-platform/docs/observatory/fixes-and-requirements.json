@@ -1,0 +1,721 @@
+{
+  "$schema": "observatory-spec",
+  "type": "fixes-and-requirements",
+  "version": "2026-03-10",
+  "generatedFrom": [
+    "docs/observatory-spec/apis.json",
+    "docs/observatory-spec/gaps.json",
+    "docs/RFC_PRODUCTION_OBSERVABILITY_AND_TROUBLESHOOTING.md",
+    "docs/plans/2026-03-10-unified-observability-design.md",
+    "docs/plans/2026-03-10-unified-observability-plan.md",
+    "docs/plans/2026-03-08-production-observability-implementation-plan.md",
+    "docs/PLATFORM_OBSERVABILITY_ROADMAP.md",
+    "docs/OBSERVABILITY_AND_TRACING.md",
+    "docs/plans/2026-03-07-runtime-debuggability-design.md",
+    "docs/plans/2026-03-08-debuggability-gaps-plan.md",
+    "docs/specs/rfcs/RFC-015-agent-observability.md",
+    "docs/specs/rfcs/RFC-016-system-observability-reliability.md"
+  ],
+  "existingApiFixes": [
+    {
+      "apiId": "1.3",
+      "api": "GET /sessions/:id",
+      "fixes": [
+        {
+          "id": "FIX-1.3-A",
+          "title": "Fix ClickHouse span_id and parent_span_id writes",
+          "severity": "critical",
+          "source": ["gaps.json#5.1.1", "RFC-Production#G3", "unified-design#Section3"],
+          "description": "ClickHouse appendEvent writes randomUUID() as span_id and '' as parent_span_id, destroying the real hierarchy",
+          "file": "apps/runtime/src/services/stores/clickhouse-trace-store.ts",
+          "lines": "110-111",
+          "fix": "Use event.spanId ?? randomUUID() and event.parentSpanId ?? '' instead of unconditional randomUUID()",
+          "status": "done",
+          "fixedIn": "2026-03-10",
+          "blocksGaps": ["5.1.1", "5.2.1"]
+        },
+        {
+          "id": "FIX-1.3-B",
+          "title": "Fix ClickHouse empty agent_name",
+          "severity": "high",
+          "source": ["gaps.json#5.1.2"],
+          "description": "appendEvent always writes '' as agent_name",
+          "file": "apps/runtime/src/services/stores/clickhouse-trace-store.ts",
+          "lines": "113",
+          "fix": "Use event.agentName ?? event.data?.agentName ?? '' instead of hardcoded ''",
+          "status": "done",
+          "fixedIn": "2026-03-10"
+        },
+        {
+          "id": "FIX-1.3-C",
+          "title": "Fix message.content ContentBlock[] handling",
+          "severity": "medium",
+          "source": ["gaps.json#5.1.3"],
+          "description": "message.content can be ContentBlock[] but UI only handles string",
+          "file": "apps/studio/src/hooks/useSessionDetail.ts",
+          "fix": "In buildConversationTree: Array.isArray(content) ? content.filter(b => b.type === 'text').map(b => b.text).join('') : content",
+          "status": "not-started"
+        },
+        {
+          "id": "FIX-1.3-D",
+          "title": "Add handoffCount to session detail response",
+          "severity": "low",
+          "source": ["gaps.json#5.1.1 notes"],
+          "description": "handoffCount available in list response via DB but missing from detail response",
+          "file": "apps/runtime/src/routes/sessions.ts",
+          "fix": "Include handoffCount from DB session in detail response",
+          "status": "not-started"
+        }
+      ]
+    },
+    {
+      "apiId": "1.7",
+      "api": "GET /sessions/:id/traces",
+      "fixes": [
+        {
+          "id": "FIX-1.7-A",
+          "title": "Reorder trace read path to canonical ClickHouse first",
+          "severity": "high",
+          "source": ["RFC-Production#G3", "prod-obs-plan#AO-02", "gaps.json#5.3.5"],
+          "description": "Currently falls back to lossy platform_events. Should read abl_platform.traces first (canonical)",
+          "file": "apps/runtime/src/routes/sessions.ts",
+          "lines": "1223-1322",
+          "fix": "When memory store empty: query abl_platform.traces first (gated by OBS_TRACE_CANONICAL_READ), then platform_events fallback",
+          "featureFlag": "OBS_TRACE_CANONICAL_READ",
+          "status": "done",
+          "fixedIn": "2026-03-10",
+          "notes": "OBS_TRACE_CANONICAL_READ flag removed entirely. isClickHouseTraceEnabled() used directly."
+        },
+        {
+          "id": "FIX-1.7-B",
+          "title": "Add _meta response metadata",
+          "severity": "medium",
+          "source": ["RFC-Production#Section7.1", "prod-obs-plan#AO-02"],
+          "description": "Response should include source transparency",
+          "fix": "Add _meta: { source: 'memory'|'clickhouse_traces'|'clickhouse_platform_events', event_count, is_truncated, query_window_ms }",
+          "status": "done",
+          "fixedIn": "2026-03-10",
+          "notes": "_meta returns source, event_count, is_truncated. query_window_ms deferred (low value)."
+        },
+        {
+          "id": "FIX-1.7-C",
+          "title": "Add eventType, decisionKind, spanId filter params",
+          "severity": "medium",
+          "source": ["unified-design#Section5", "unified-plan#Task6"],
+          "description": "Traces endpoint needs filtering for progressive loading and decision filtering",
+          "fix": "Parse and apply eventType, decisionKind, spanId as WHERE clauses in ClickHouse query",
+          "status": "done",
+          "fixedIn": "2026-03-10",
+          "notes": "sendTracesResponse() at sessions.ts:1602-1627 filters by eventType, decisionKind, spanId query params. Applied post-fetch (not in CH WHERE clause)."
+        },
+        {
+          "id": "FIX-1.7-D",
+          "title": "Add include=metrics for span-level aggregation",
+          "severity": "medium",
+          "source": ["unified-plan#Task6"],
+          "description": "When include=metrics, return per-span aggregated metrics alongside events",
+          "fix": "Run secondary ClickHouse query: GROUP BY span_id, parent_span_id with sum(tokensIn), sum(cost), count()",
+          "status": "done",
+          "fixedIn": "2026-03-10",
+          "notes": "sendTracesResponse() at sessions.ts:1653 calls computeSpanMetrics() when include=metrics. Aggregation done in-memory from fetched traces."
+        }
+      ]
+    },
+    {
+      "apiId": "1.10",
+      "api": "GET /sessions/:id/agent-spec",
+      "fixes": [
+        {
+          "id": "FIX-1.10-A",
+          "title": "Add DB fallback for historical sessions",
+          "severity": "medium",
+          "source": ["gaps.json#5.2.5"],
+          "description": "Returns 404 for historical sessions not in RuntimeExecutor",
+          "file": "apps/runtime/src/routes/sessions.ts",
+          "fix": "Look up agent by name from session.currentAgent in DB when RuntimeExecutor session not found",
+          "status": "not-started"
+        }
+      ]
+    },
+    {
+      "apiId": "1.12",
+      "api": "GET /sessions/export",
+      "fixes": [
+        {
+          "id": "FIX-1.12-A",
+          "title": "Add ClickHouse fallback for export",
+          "severity": "medium",
+          "source": ["gaps.json#5.3.3"],
+          "description": "Only reads from in-memory TraceStore, so historical sessions can't be exported",
+          "fix": "Add same ClickHouse fallback chain as /traces endpoint",
+          "status": "done",
+          "fixedIn": "2026-03-10",
+          "notes": "Export endpoint now resolves runtimeSessionId from DB and falls back to queryClickHouseCanonicalTraces when in-memory is empty."
+        }
+      ]
+    },
+    {
+      "apiId": "1.13",
+      "api": "GET /sessions/generations",
+      "fixes": [
+        {
+          "id": "FIX-1.13-A",
+          "title": "Add ClickHouse fallback for generations",
+          "severity": "high",
+          "source": ["gaps.json#5.3.2", "unified-plan#Task9"],
+          "description": "Only scans in-memory TraceStore (max 100 sessions)",
+          "fix": "Query ClickHouse: SELECT * FROM abl_platform.traces WHERE event_type = 'llm_call' AND tenant_id = ? ORDER BY timestamp DESC",
+          "status": "done",
+          "fixedIn": "2026-03-10"
+        },
+        {
+          "id": "FIX-1.13-B",
+          "title": "Add model name normalization",
+          "severity": "low",
+          "source": ["gaps.json#5.3.2 notes"],
+          "description": "Raw model string from provider, not normalized",
+          "fix": "Normalize model IDs using getModelCapabilities lookup",
+          "status": "not-started"
+        }
+      ]
+    },
+    {
+      "apiId": "1.16",
+      "api": "WebSocket /ws",
+      "fixes": [
+        {
+          "id": "FIX-1.16-A",
+          "title": "Remove separate 'decisions' WebSocket message type",
+          "severity": "medium",
+          "source": ["unified-design#Section2", "unified-plan#Task4"],
+          "description": "Decision events should arrive as regular trace_event messages, not separate 'decisions' type",
+          "fix": "Delete decision-log.ts, remove decisions message type from WS handler. Decisions flow through emitDecision() as trace events",
+          "status": "done",
+          "fixedIn": "2026-03-10",
+          "notes": "No 'decisions' WS message type exists. Decision events flow as type: 'trace_event' with decisionKind in data payload."
+        }
+      ]
+    }
+  ],
+  "newApiRequirements": [
+    {
+      "id": "NEW-API-1",
+      "api": "GET /sessions/:id/traces/:spanId/children",
+      "method": "GET",
+      "purpose": "Progressive loading - events within a specific span",
+      "source": ["unified-design#Section5", "unified-plan#Task7"],
+      "priority": "high",
+      "description": "Dedicated endpoint for lazy-loading span children. Currently partially implemented as spanId query param on /traces",
+      "implementation": {
+        "file": "apps/runtime/src/routes/sessions.ts",
+        "query": "SELECT * FROM abl_platform.traces WHERE session_id = ? AND tenant_id = ? AND parent_span_id = ? ORDER BY timestamp ASC LIMIT ? OFFSET ?",
+        "auth": "session:read"
+      },
+      "status": "done",
+      "fixedIn": "2026-03-10"
+    },
+    {
+      "id": "NEW-API-2",
+      "api": "GET /sessions/:id/metrics",
+      "method": "GET",
+      "purpose": "Server-side aggregated session metrics (cost, tokens, duration, error count)",
+      "source": ["unified-design#Section5", "unified-plan#Task8", "gaps.json#5.3.1"],
+      "priority": "high",
+      "description": "Dedicated metrics endpoint that queries ClickHouse for aggregated counts without transferring full event payloads. Eliminates client-side metric computation",
+      "implementation": {
+        "file": "apps/runtime/src/routes/sessions.ts",
+        "query": "SELECT count() as trace_count, sum(tokensIn) as total_tokens_in, sum(tokensOut) as total_tokens_out, sum(cost) as total_cost, min(timestamp) as first_event, max(timestamp) as last_event, countIf(has_error = 1) as error_count, countIf(event_type = 'llm_call') as llm_call_count, countIf(event_type = 'tool_call') as tool_call_count FROM abl_platform.traces WHERE session_id = ? AND tenant_id = ?",
+        "auth": "session:read"
+      },
+      "status": "done",
+      "fixedIn": "2026-03-10",
+      "notes": "Returns totalLLMCalls, totalToolCalls, totalTokensIn, totalTokensOut, totalCost, totalDurationMs, errorCount. Falls back to ClickHouse."
+    },
+    {
+      "id": "NEW-API-3",
+      "api": "GET /traces/:id/detail",
+      "method": "GET",
+      "purpose": "Full trace with span tree structure + per-span metrics",
+      "source": ["unified-design#Section5"],
+      "priority": "medium",
+      "description": "Returns a complete span tree for a trace, including per-span metrics (cost, tokens, duration). Used by Traces Explorer detail view",
+      "implementation": {
+        "file": "apps/runtime/src/routes/traces.ts (new)",
+        "auth": "traces:read"
+      },
+      "status": "not-started"
+    },
+    {
+      "id": "NEW-API-4",
+      "api": "GET /traces",
+      "method": "GET",
+      "purpose": "Cross-session trace search with advanced filters, time range, sparse field selection",
+      "source": ["unified-design#Section5"],
+      "priority": "medium",
+      "description": "Enhanced trace search endpoint for Traces Explorer. Supports time range, eventType/decisionKind filters, full-text search, column selection",
+      "queryParams": [
+        "timeRange",
+        "eventType",
+        "decisionKind",
+        "search",
+        "searchMode",
+        "columns",
+        "limit",
+        "offset",
+        "sort"
+      ],
+      "implementation": {
+        "file": "apps/runtime/src/routes/traces.ts (new)",
+        "auth": "traces:read"
+      },
+      "status": "not-started"
+    },
+    {
+      "id": "NEW-API-5",
+      "api": "GET /traces/export",
+      "method": "GET",
+      "purpose": "CSV export with streaming response for trace data",
+      "source": ["unified-design#Section5"],
+      "priority": "low",
+      "description": "Streaming CSV export of trace events. Separate from /sessions/export which is session-scoped. Requires traces:export permission",
+      "implementation": {
+        "auth": "traces:export"
+      },
+      "status": "not-started"
+    },
+    {
+      "id": "NEW-API-6",
+      "api": "GET /sessions/:id/messages",
+      "method": "GET",
+      "purpose": "Paginated message retrieval independent of full session detail",
+      "source": ["gaps.json#5.3.4"],
+      "priority": "low",
+      "description": "For sessions with hundreds of messages, paginate independently. DB already supports findMessagesForSessionCursor()",
+      "status": "not-started"
+    },
+    {
+      "id": "NEW-API-7",
+      "api": "GET /sessions/traces?sessionIds=x,y,z",
+      "method": "GET",
+      "purpose": "Bulk trace query across multiple sessions for correlation",
+      "source": ["gaps.json#5.3.6"],
+      "priority": "low",
+      "description": "Returns merged, chronologically sorted traces from multiple sessions. For debugging handoff chains across sessions",
+      "status": "not-started"
+    }
+  ],
+  "runtimeFixes": [
+    {
+      "id": "RT-FIX-1",
+      "title": "Remove per-event flush in ClickHouseTraceStore",
+      "severity": "high",
+      "source": ["RFC-Production#G4", "prod-obs-plan#AO-03"],
+      "description": "appendEvent() calls await flush() after every insert, defeating BufferedWriter 10K/5s batch policy",
+      "file": "apps/runtime/src/services/stores/clickhouse-trace-store.ts",
+      "fix": "Remove await this.writer.flush() after insert() in appendEvent(), createTrace(), endTrace(). Keep in close()/shutdown",
+      "status": "done",
+      "fixedIn": "2026-03-10",
+      "notes": "Fire-and-forget via BufferedWriter. No per-event flush."
+    },
+    {
+      "id": "RT-FIX-2",
+      "title": "Add traceparent/tracestate to workflow-engine proxy",
+      "severity": "medium",
+      "source": ["RFC-Production#G2", "prod-obs-plan#AO-01"],
+      "description": "Cross-service traces break at runtime→workflow-engine boundary",
+      "file": "apps/runtime/src/middleware/workflow-engine-proxy.ts",
+      "lines": "76-82",
+      "fix": "Add traceparent and tracestate headers to fetch call alongside existing x-request-id",
+      "status": "not-started"
+    },
+    {
+      "id": "RT-FIX-3",
+      "title": "Add trace context to Kafka message headers",
+      "severity": "medium",
+      "source": ["RFC-Production#G6", "prod-obs-plan#AO-01"],
+      "description": "Kafka events carry no trace context for correlation",
+      "file": "apps/runtime/src/services/event-bus/kafka-subscriber.ts",
+      "lines": "212-216",
+      "fix": "Add traceparent, tracestate, session-id to Kafka headers. Gate with OBS_EVENTBUS_TRACE_HEADERS flag",
+      "featureFlag": "OBS_EVENTBUS_TRACE_HEADERS",
+      "status": "not-started"
+    },
+    {
+      "id": "RT-FIX-4",
+      "title": "Replace session.id in voice metrics labels",
+      "severity": "high",
+      "source": ["RFC-Production#G5", "prod-obs-plan#SO-02"],
+      "description": "6 voice metric instruments use session.id as label, creating unbounded cardinality",
+      "file": "apps/runtime/src/observability/voice-metrics.ts",
+      "lines": "113, 115, 120, 124, 129, 192",
+      "fix": "Replace session.id with bounded labels: channel, voice.provider, agent_name",
+      "featureFlag": "OBS_METRIC_LABEL_GUARDRAILS",
+      "status": "not-started"
+    },
+    {
+      "id": "RT-FIX-5",
+      "title": "Add Mongo to runtime /health/ready",
+      "severity": "medium",
+      "source": ["RFC-Production#G10", "prod-obs-plan#SO-01"],
+      "description": "Runtime readiness only checks heap + Redis. Mongo outage doesn't fail readiness",
+      "file": "apps/runtime/src/server.ts",
+      "lines": "305-342",
+      "fix": "Add mongoose.connection.readyState === 1 check behind OBS_STRICT_READINESS_GATES flag",
+      "featureFlag": "OBS_STRICT_READINESS_GATES",
+      "status": "not-started"
+    },
+    {
+      "id": "RT-FIX-6",
+      "title": "Gate OTEL SDK on config flags",
+      "severity": "low",
+      "source": ["RFC-Production#G9", "prod-obs-plan#SO-04"],
+      "description": "OTEL_ENABLED and METRICS_ENABLED defined in config but never consumed",
+      "files": [
+        "apps/runtime/src/observability/otel-setup.ts",
+        "apps/workflow-engine/src/observability/otel-setup.ts"
+      ],
+      "fix": "Check OTEL_ENABLED !== 'false' before sdk.start(). No-op metrics when METRICS_ENABLED === 'false'",
+      "status": "not-started"
+    },
+    {
+      "id": "RT-FIX-7",
+      "title": "Kill decision-log.ts and merge into trace events",
+      "severity": "high",
+      "source": ["unified-design#Section2", "unified-plan#Tasks1-5"],
+      "description": "Two parallel trace systems that don't talk to each other. Decision log requires verbose verbosity but most sessions run standard",
+      "files": [
+        "apps/runtime/src/services/execution/decision-log.ts (DELETE)",
+        "apps/runtime/src/services/trace-emitter.ts (add emitDecision)",
+        "apps/runtime/src/services/execution/trace-helpers.ts (add decision verbosity)",
+        "apps/runtime/src/services/execution/flow-step-executor.ts (migrate 11 call sites)",
+        "apps/runtime/src/services/execution/routing-executor.ts (migrate 3 call sites)",
+        "apps/runtime/src/services/execution/reasoning-executor.ts (migrate 1 call site)",
+        "apps/runtime/src/services/execution/output-guardrails.ts (migrate 1 call site)",
+        "apps/runtime/src/services/execution/constraint-checker.ts (migrate 2 call sites)"
+      ],
+      "fix": "Add emitDecision() to TraceEmitter with per-kind verbosity gating. Migrate all appendDecision calls. Delete decision-log.ts and decisionLog from session state",
+      "status": "done",
+      "fixedIn": "2026-03-10",
+      "notes": "decision-log.ts fully deleted. emitDecision() in trace-emitter.ts:615 with 11-kind verbosity gating via shouldEmitDecision() in trace-helpers.ts. All call sites migrated."
+    },
+    {
+      "id": "RT-FIX-8",
+      "title": "Ensure cost field in ClickHouse trace data blob",
+      "severity": "medium",
+      "source": ["gaps.json#5.1.5"],
+      "description": "Per-span cost lost after memory eviction because not all logLLMCall callers include cost",
+      "fix": "Verify all logLLMCall callers pass cost field. Cost calculation already wired into reasoning-executor, flow-step-executor, llm-field-validator",
+      "status": "done",
+      "fixedIn": "2026-03-10",
+      "notes": "Cost calc wired in previous session. Verify it persists through ClickHouse write path"
+    }
+  ],
+  "searchAiFixes": [
+    {
+      "id": "SAI-FIX-1",
+      "title": "Mount metrics router in search-ai-runtime",
+      "severity": "medium",
+      "source": ["RFC-Production#G7", "prod-obs-plan#SO-03"],
+      "file": "apps/search-ai-runtime/src/server.ts",
+      "fix": "Import metricsRouter and add app.use('/metrics', metricsRouter)",
+      "status": "not-started"
+    },
+    {
+      "id": "SAI-FIX-2",
+      "title": "Add requestIdMiddleware to search-ai-runtime",
+      "severity": "medium",
+      "source": ["RFC-Production#G8", "prod-obs-plan#SO-03"],
+      "file": "apps/search-ai-runtime/src/server.ts",
+      "fix": "Import and mount requestIdMiddleware from @agent-platform/shared-observability",
+      "status": "not-started"
+    }
+  ],
+  "studioFixes": [
+    {
+      "id": "UI-FIX-1",
+      "title": "Fix replay synthetic spanId to use real values",
+      "severity": "high",
+      "source": ["gaps.json#5.1.6"],
+      "file": "apps/studio/src/utils/replay-trace-events.ts",
+      "lines": "145-146",
+      "fix": "Prefer event.spanId ?? eventData.spanId ?? ('span-' + event.id) and event.parentSpanId ?? eventData.parentSpanId",
+      "status": "done",
+      "fixedIn": "2026-03-10",
+      "blocksGaps": ["5.2.1"],
+      "notes": "Already implemented: replay-trace-events.ts:145 uses `eventData.spanId || 'span-' + event.id` and line 146 extracts parentSpanId. DebugTabs.tsx:356-368 shows contextual message when spans empty but metrics exist."
+    },
+    {
+      "id": "UI-FIX-2",
+      "title": "Fix ContentBlock[] handling in conversation tree",
+      "severity": "medium",
+      "source": ["gaps.json#5.1.3"],
+      "file": "apps/studio/src/hooks/useSessionDetail.ts",
+      "fix": "Extract text from ContentBlock[]: Array.isArray(content) ? content.filter(b => b.type === 'text').map(b => b.text).join('') : content",
+      "status": "not-started"
+    }
+  ],
+  "newUiRequirements": [
+    {
+      "id": "UI-NEW-1",
+      "title": "Replace Decisions tab with Traces tab in DebugTabs",
+      "priority": "high",
+      "source": ["unified-design#Section4b"],
+      "description": "Real-time waterfall via WebSocket using observatory-store. Decision events render inline within parent span",
+      "component": "DebugTabs.tsx",
+      "status": "not-started"
+    },
+    {
+      "id": "UI-NEW-2",
+      "title": "WaterfallPanel shared component",
+      "priority": "high",
+      "source": ["unified-design#Section4a"],
+      "description": "Shared wrapper that builds span tree from spanId/parentSpanId and renders SpanTree. Used by debug panel (live), session detail (historical), traces explorer (search)",
+      "component": "WaterfallPanel.tsx (new)",
+      "status": "not-started"
+    },
+    {
+      "id": "UI-NEW-3",
+      "title": "NodeDetailPanel right sidebar",
+      "priority": "high",
+      "source": ["unified-design#Section4a"],
+      "description": "Right sidebar when clicking a span. Summary row (cost, tokens, latency, timestamp). Tabs: Preview (chat bubbles), Request, Response, Metadata, Logs. Decision events show reason/candidates/selected",
+      "component": "NodeDetailPanel.tsx (new)",
+      "status": "not-started"
+    },
+    {
+      "id": "UI-NEW-4",
+      "title": "TimeRangeSelector component",
+      "priority": "medium",
+      "source": ["unified-design#Section4a"],
+      "description": "Preset buttons (1h, 24h, 7d, 30d, 90d) + custom date range picker. UTC normalization",
+      "component": "TimeRangeSelector.tsx (new)",
+      "status": "not-started"
+    },
+    {
+      "id": "UI-NEW-5",
+      "title": "AdvancedFilterPanel component",
+      "priority": "medium",
+      "source": ["unified-design#Section4a"],
+      "description": "Right-side slideout (720px). Add/remove filter rows. Typed operators (string: =, !=, contains; number: =, >, >=, <, <=; datetime: >=, <=, =; multi-select: any of, none of). AND logic. Filter tags above table",
+      "component": "AdvancedFilterPanel.tsx (new)",
+      "status": "not-started"
+    },
+    {
+      "id": "UI-NEW-6",
+      "title": "ColumnCustomizer component",
+      "priority": "low",
+      "source": ["unified-design#Section4a"],
+      "description": "Toggle columns on/off, drag to reorder, pinned columns, localStorage persistence",
+      "component": "ColumnCustomizer.tsx (new)",
+      "status": "not-started"
+    },
+    {
+      "id": "UI-NEW-7",
+      "title": "CsvExport component",
+      "priority": "low",
+      "source": ["unified-design#Section4a", "gaps.json#5.2.3"],
+      "description": "Export button for all visible + hidden columns. Filename with timestamp. Disabled when no data",
+      "component": "CsvExport.tsx (new)",
+      "status": "not-started"
+    },
+    {
+      "id": "UI-NEW-8",
+      "title": "Session list filters (time range, status, channel, search)",
+      "priority": "medium",
+      "source": ["unified-design#Section4c", "gaps.json#5.2.2"],
+      "description": "Add TimeRangeSelector, status dropdown, channel dropdown, session ID search, environment filter, CsvExport. API already supports status and channel filters",
+      "component": "SessionsListPage.tsx / SessionsExplorerTab.tsx",
+      "status": "not-started"
+    },
+    {
+      "id": "UI-NEW-9",
+      "title": "Traces Explorer with real span tree",
+      "priority": "medium",
+      "source": ["unified-design#Section4e"],
+      "description": "Replace synthesized TraceSpanTree that fakes hierarchy with shared WaterfallPanel using real spanId/parentSpanId. Two sub-tabs: Traces and Generations. All shared components (TimeRangeSelector, AdvancedFilterPanel, ColumnCustomizer, CsvExport)",
+      "component": "TracesExplorerTab.tsx",
+      "status": "not-started"
+    },
+    {
+      "id": "UI-NEW-10",
+      "title": "Analysis tab or panel in session detail",
+      "priority": "medium",
+      "source": ["gaps.json#5.2.4"],
+      "description": "Wire GET /sessions/:id/analysis to UI. Show automated diagnostics: issues, suggestions, flow path analysis",
+      "component": "SessionDetailPage.tsx",
+      "status": "not-started"
+    },
+    {
+      "id": "UI-NEW-11",
+      "title": "Cost breakdown visualization in Performance tab",
+      "priority": "low",
+      "source": ["gaps.json#5.2.7"],
+      "description": "Cost waterfall or bar chart showing per-LLM-call cost, aggregated from trace events",
+      "component": "LLMCallsTab in DebugTabs",
+      "status": "not-started"
+    },
+    {
+      "id": "UI-NEW-12",
+      "title": "Performance tab with ClickHouse fallback",
+      "priority": "medium",
+      "source": ["gaps.json#5.2.6"],
+      "description": "Wire useSessionTraces with types=llm_call to fetch from traces endpoint. Currently only shows in-memory data",
+      "component": "LLMCallsTab in DebugTabs",
+      "status": "not-started"
+    },
+    {
+      "id": "UI-NEW-13",
+      "title": "SpanTree enhancements (cost, decisions, status icons)",
+      "priority": "high",
+      "source": ["unified-design#Section4a"],
+      "description": "Enhance existing SpanTree: decision event rendering (icon + kind badge + reason text), cost column with color coding, token breakdown tooltip, status indicators, copy span ID",
+      "component": "SpanTree.tsx",
+      "status": "not-started"
+    }
+  ],
+  "platformRequirements": [
+    {
+      "id": "PLAT-1",
+      "title": "Graduate OBS_TRACE_CANONICAL_READ to default-on",
+      "priority": "medium",
+      "source": ["gaps.json#5.3.5", "RFC-Production#Section8"],
+      "description": "ClickHouse canonical traces are opt-in. Most deployments use lossy platform_events fallback. After verifying write reliability, make canonical reads the default",
+      "status": "done",
+      "fixedIn": "2026-03-10",
+      "notes": "OBS_TRACE_CANONICAL_READ removed. ClickHouse canonical reads are default."
+    },
+    {
+      "id": "PLAT-2",
+      "title": "Add request_id to PlatformEvent envelope",
+      "priority": "low",
+      "source": ["RFC-Production#Section7.2", "prod-obs-plan#AO-02"],
+      "description": "Populate request_id from AsyncLocalStorage during event creation. Persists into custom_dimensions Map column (no ClickHouse ALTER needed)",
+      "file": "packages/eventstore/src/schema/platform-event.ts",
+      "status": "not-started"
+    },
+    {
+      "id": "PLAT-3",
+      "title": "Archive retrieval APIs (RFC-015)",
+      "priority": "low",
+      "source": ["RFC-015"],
+      "description": "6 archive routes defined in RFC-015: /api/archives, /api/archives/:id, /api/archives/:id/download, /api/archives/audit-export, /api/archives/sessions, /api/archives/traces. Not covered in observatory spec",
+      "status": "not-started"
+    },
+    {
+      "id": "PLAT-4",
+      "title": "Alert rule evaluation APIs (RFC-016)",
+      "priority": "low",
+      "source": ["RFC-016"],
+      "description": "Alert config CRUD (GET/POST/PATCH/DELETE /alerts) and alerting scheduler from RFC-016. Not covered in observatory spec. Separate system from session/trace observability",
+      "status": "not-started"
+    },
+    {
+      "id": "PLAT-5",
+      "title": "Coroot infrastructure monitoring deployment",
+      "priority": "medium",
+      "source": ["PLATFORM_OBSERVABILITY_ROADMAP#Section4"],
+      "description": "eBPF-based infrastructure monitoring (K8s, MongoDB, Redis, ClickHouse, inter-service). SLO-based alerting with AI root cause analysis. ~70 lines of code changes + Helm chart",
+      "status": "not-started"
+    },
+    {
+      "id": "PLAT-6",
+      "title": "Workspace concept within organizations",
+      "priority": "low",
+      "source": ["PLATFORM_OBSERVABILITY_ROADMAP#Section3"],
+      "description": "Target hierarchy: Account -> Workspace -> Project. Workspace provides team-level collaboration and scoping. Currently flat org -> project",
+      "status": "not-started"
+    }
+  ],
+  "summary": {
+    "totalItems": 52,
+    "byCategory": {
+      "existingApiFixes": 13,
+      "newApiRequirements": 7,
+      "runtimeFixes": 8,
+      "searchAiFixes": 2,
+      "studioFixes": 2,
+      "newUiRequirements": 13,
+      "platformRequirements": 6
+    },
+    "bySeverityOrPriority": {
+      "critical": 2,
+      "high": 12,
+      "medium": 23,
+      "low": 15
+    },
+    "implementationOrder": [
+      {
+        "phase": "Phase 0: Data Foundation (must-fix before anything else)",
+        "items": ["FIX-1.3-A", "FIX-1.3-B", "RT-FIX-1", "UI-FIX-1"],
+        "done": ["FIX-1.3-A", "FIX-1.3-B", "RT-FIX-1", "UI-FIX-1"],
+        "rationale": "ClickHouse writes correct span_id/parent_span_id/agent_name. Replay uses real values. Without these, all historical session views are broken"
+      },
+      {
+        "phase": "Phase 1: Runtime Unification",
+        "items": ["RT-FIX-7", "FIX-1.16-A", "RT-FIX-8", "FIX-1.7-A", "FIX-1.7-B"],
+        "done": ["RT-FIX-7", "FIX-1.16-A", "RT-FIX-8", "FIX-1.7-A", "FIX-1.7-B"],
+        "rationale": "Kill decision-log.ts, merge into traces. Enable canonical ClickHouse reads. Ensure cost persists"
+      },
+      {
+        "phase": "Phase 2: API Enhancement",
+        "items": ["FIX-1.7-C", "FIX-1.7-D", "NEW-API-1", "NEW-API-2", "FIX-1.13-A", "FIX-1.12-A"],
+        "done": ["FIX-1.7-C", "FIX-1.7-D", "NEW-API-1", "NEW-API-2", "FIX-1.13-A", "FIX-1.12-A"],
+        "rationale": "Add filtering, metrics, progressive loading, ClickHouse fallbacks to existing endpoints"
+      },
+      {
+        "phase": "Phase 3: UI Core Components",
+        "items": ["UI-NEW-2", "UI-NEW-3", "UI-NEW-13", "UI-FIX-2", "FIX-1.3-C", "UI-NEW-1"],
+        "rationale": "Build shared WaterfallPanel + NodeDetailPanel, enhance SpanTree, fix content rendering, replace Decisions tab"
+      },
+      {
+        "phase": "Phase 4: UI Feature Parity",
+        "items": [
+          "UI-NEW-4",
+          "UI-NEW-5",
+          "UI-NEW-6",
+          "UI-NEW-7",
+          "UI-NEW-8",
+          "UI-NEW-9",
+          "UI-NEW-12"
+        ],
+        "rationale": "TimeRangeSelector, AdvancedFilterPanel, ColumnCustomizer, CsvExport, session list filters, Traces Explorer"
+      },
+      {
+        "phase": "Phase 5: System Health & Polish",
+        "items": [
+          "RT-FIX-2",
+          "RT-FIX-3",
+          "RT-FIX-4",
+          "RT-FIX-5",
+          "RT-FIX-6",
+          "SAI-FIX-1",
+          "SAI-FIX-2"
+        ],
+        "rationale": "Cross-service trace propagation, metrics cardinality, readiness, config flags"
+      },
+      {
+        "phase": "Phase 6: Nice-to-Have",
+        "items": [
+          "NEW-API-3",
+          "NEW-API-4",
+          "NEW-API-5",
+          "NEW-API-6",
+          "NEW-API-7",
+          "UI-NEW-10",
+          "UI-NEW-11",
+          "FIX-1.3-D",
+          "FIX-1.10-A",
+          "FIX-1.13-B",
+          "PLAT-1",
+          "PLAT-2",
+          "PLAT-3",
+          "PLAT-4",
+          "PLAT-5",
+          "PLAT-6"
+        ],
+        "done": ["PLAT-1"],
+        "rationale": "Trace detail, cross-session queries, analysis tab, cost breakdown, archives, alerts, Coroot, workspaces"
+      }
+    ]
+  }
+}

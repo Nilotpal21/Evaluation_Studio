@@ -1,0 +1,24 @@
+{
+  "extends": ["../../.eslintrc.base.json"],
+  "rules": {
+    "no-restricted-syntax": [
+      "error",
+      {
+        "selector": "CallExpression[callee.property.name='findById']",
+        "message": "Use findOne({ _id, tenantId }) instead of findById() for tenant isolation. See CLAUDE.md Core Invariants."
+      },
+      {
+        "selector": "CallExpression[callee.property.name='findByIdAndUpdate']",
+        "message": "Use findOneAndUpdate({ _id, tenantId }, ...) instead of findByIdAndUpdate() for tenant isolation. See CLAUDE.md Core Invariants."
+      },
+      {
+        "selector": "CallExpression[callee.property.name='findByIdAndDelete']",
+        "message": "Use findOneAndDelete({ _id, tenantId }) instead of findByIdAndDelete() for tenant isolation. See CLAUDE.md Core Invariants."
+      },
+      {
+        "selector": "CallExpression[callee.type='MemberExpression'][callee.property.name='keys'][arguments.length=1]:matches([callee.object.name='redis'], [callee.object.name='client'], [callee.object.name='redisClient'], [callee.object.property.name='redis'], [callee.object.property.name='client'], [callee.object.property.name='redisClient'])",
+        "message": "Use scanKeys() from @agent-platform/redis instead of .keys(pattern). Top-level KEYS returns partial results in Redis Cluster (silent data loss)."
+      }
+    ]
+  }
+}

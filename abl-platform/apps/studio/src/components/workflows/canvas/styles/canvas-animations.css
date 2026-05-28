@@ -1,0 +1,224 @@
+/**
+ * Canvas Animations
+ *
+ * Complex multi-step CSS keyframes for the workflow canvas.
+ * These animations exceed Tailwind's @keyframes ergonomics.
+ */
+
+/* ─── Node Appear (on add) ──────────────────────────────────────── */
+@keyframes node-appear {
+  0% {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-node-appear {
+  animation: node-appear 250ms ease-out;
+}
+
+/* ─── Slide In Right (debug panel) ──────────────────────────────── */
+@keyframes slide-in-right {
+  0% {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  100% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.animate-slide-in-right {
+  animation: slide-in-right 350ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* ─── Execution: Completed Flash ────────────────────────────────── */
+@keyframes completion-flash {
+  0% {
+    box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.5);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(34, 197, 94, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(34, 197, 94, 0);
+  }
+}
+
+.animate-completion-flash {
+  animation: completion-flash 600ms ease-out;
+}
+
+/* ─── Execution: Error Shake ────────────────────────────────────── */
+@keyframes error-shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  20%,
+  60% {
+    transform: translateX(-3px);
+  }
+  40%,
+  80% {
+    transform: translateX(3px);
+  }
+}
+
+.animate-error-shake {
+  animation: error-shake 400ms ease-in-out;
+}
+
+/* ─── Execution: Pulse Ring (running) ───────────────────────────── */
+@keyframes pulse-ring {
+  0% {
+    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 6px rgba(59, 130, 246, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0);
+  }
+}
+
+.animate-pulse-ring {
+  animation: pulse-ring 1.5s ease-out infinite;
+}
+
+/* ─── Edge: Draw In ─────────────────────────────────────────────── */
+@keyframes edge-draw {
+  0% {
+    stroke-dashoffset: 1000;
+  }
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* ─── Edge: Traveling Pulse (running execution) ─────────────────── */
+@keyframes edge-pulse-travel {
+  0% {
+    stroke-dashoffset: 20;
+  }
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* ─── Edge: Flow Dots (active execution) ───────────────────────── */
+@keyframes edge-flow {
+  0% {
+    stroke-dashoffset: 12;
+  }
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* ─── Handle: Pointer Cursor Override ──────────────────────────── */
+.react-flow__handle.connectionindicator {
+  cursor: pointer;
+}
+
+/* ─── Handle: Glow Ring ─────────────────────────────────────────── */
+@keyframes handle-glow {
+  0% {
+    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4);
+  }
+  100% {
+    box-shadow: 0 0 0 6px rgba(59, 130, 246, 0);
+  }
+}
+
+.animate-handle-glow-ring {
+  animation: handle-glow 1s ease-out infinite;
+}
+
+/* ─── Handle: Hint Tooltip Entrance ────────────────────────────── */
+@keyframes handle-hint-in {
+  0% {
+    opacity: 0;
+    transform: translateX(-50%) translateY(4px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+.animate-handle-hint-in {
+  animation: handle-hint-in 200ms ease-out;
+}
+
+/* ─── Toolbar: Save Text Fade ───────────────────────────────────── */
+@keyframes fade-in-out {
+  0% {
+    opacity: 0;
+    transform: translateY(2px);
+  }
+  20% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  80% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-2px);
+  }
+}
+
+/* ─── Toolbar: Badge Pulse ──────────────────────────────────────── */
+@keyframes badge-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+}
+
+.animate-badge-pulse {
+  animation: badge-pulse 300ms ease-in-out;
+}
+
+/* ─── Reduced Motion ────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .animate-node-appear,
+  .animate-slide-in-right,
+  .animate-completion-flash,
+  .animate-error-shake,
+  .animate-pulse-ring,
+  .animate-badge-pulse,
+  .animate-handle-glow-ring,
+  .animate-handle-hint-in {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+/* ─── Canvas Vignette ───────────────────────────────────────────── */
+.canvas-vignette::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(ellipse at center, transparent 60%, rgba(0, 0, 0, 0.04) 100%);
+  z-index: 1;
+}
+
+/* ─── Dark Mode Canvas Overrides ────────────────────────────────── */
+@media (prefers-color-scheme: dark) {
+  .canvas-vignette::after {
+    background: radial-gradient(ellipse at center, transparent 60%, rgba(0, 0, 0, 0.15) 100%);
+  }
+}

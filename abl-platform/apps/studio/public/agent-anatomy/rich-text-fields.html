@@ -1,0 +1,2371 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Rich Text Fields — Notion-Style Editing for DSL</title>
+    <style>
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      :root {
+        --bg: #0c0c0c;
+        --bg2: #141414;
+        --bg3: #1c1c1c;
+        --bg4: #252525;
+        --fg: #e8e8e8;
+        --fg2: #aaa;
+        --fg3: #777;
+        --fg4: #555;
+        --border: #1e1e1e;
+        --border2: #2a2a2a;
+        --accent: rgba(90, 142, 255, 0.15);
+        --accent-b: rgba(90, 142, 255, 0.25);
+        --accent-c: #7090c0;
+        --mono: 'Berkeley Mono', 'JetBrains Mono', 'SF Mono', 'Fira Code', monospace;
+        --sans: 'Inter', -apple-system, sans-serif;
+      }
+      body {
+        font-family: var(--sans);
+        background: var(--bg);
+        color: var(--fg);
+        line-height: 1.65;
+        -webkit-font-smoothing: antialiased;
+      }
+      header {
+        padding: 40px 32px 36px;
+        border-bottom: 1px solid var(--border);
+      }
+      header h1 {
+        font-size: 1.5rem;
+        font-weight: 600;
+        letter-spacing: -0.02em;
+      }
+      header .sub {
+        font-size: 0.88rem;
+        color: var(--fg3);
+        margin-top: 4px;
+        max-width: 640px;
+      }
+      .container {
+        max-width: 920px;
+        margin: 0 auto;
+        padding: 28px 24px 80px;
+      }
+      .section {
+        margin-bottom: 48px;
+      }
+      .st {
+        font-size: 0.72rem;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: var(--fg4);
+        margin-bottom: 14px;
+        padding-bottom: 8px;
+        border-bottom: 1px solid var(--border);
+      }
+      .desc {
+        font-size: 0.82rem;
+        color: var(--fg3);
+        margin-bottom: 14px;
+        line-height: 1.6;
+      }
+      .box {
+        border-radius: 5px;
+        padding: 10px 14px;
+        font-size: 0.78rem;
+        color: var(--fg3);
+        margin: 10px 0;
+        border: 1px solid var(--border);
+        line-height: 1.55;
+      }
+      .box.key {
+        border-left: 2px solid #605080;
+      }
+      .box.key::before {
+        content: 'Key  ';
+        font-weight: 600;
+        color: #9080b0;
+      }
+      .box.warn {
+        border-left: 2px solid #805050;
+      }
+      .box.warn::before {
+        content: 'Warning  ';
+        font-weight: 600;
+        color: #b07070;
+      }
+      .box.tip {
+        border-left: 2px solid #806040;
+      }
+      .box.tip::before {
+        content: 'Approach  ';
+        font-weight: 600;
+        color: #b09060;
+      }
+
+      /* Tables */
+      .tbl {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.78rem;
+        margin: 10px 0;
+      }
+      .tbl th {
+        text-align: left;
+        padding: 6px 10px;
+        border-bottom: 1px solid var(--border2);
+        color: var(--fg4);
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 0.66rem;
+        letter-spacing: 0.06em;
+      }
+      .tbl td {
+        padding: 5px 10px;
+        border-bottom: 1px solid var(--border);
+        color: var(--fg3);
+        vertical-align: top;
+      }
+      .tbl td:first-child {
+        font-family: var(--mono);
+        color: var(--fg2);
+        font-size: 0.76rem;
+      }
+
+      /* Mockups */
+      .mock {
+        background: var(--bg2);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        overflow: hidden;
+        margin: 14px 0;
+      }
+      .mock-head {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 14px;
+        background: var(--bg3);
+        border-bottom: 1px solid var(--border);
+        font-size: 0.7rem;
+        color: var(--fg3);
+      }
+      .mock-head .sp {
+        flex: 1;
+      }
+
+      /* Rich editor mockup */
+      .re {
+        display: flex;
+        min-height: 280px;
+      }
+      .re-left {
+        flex: 1;
+        border-right: 1px solid var(--border);
+        display: flex;
+        flex-direction: column;
+      }
+      .re-right {
+        width: 340px;
+        display: flex;
+        flex-direction: column;
+      }
+      .re-bar {
+        display: flex;
+        gap: 3px;
+        padding: 5px 8px;
+        border-bottom: 1px solid var(--border);
+        background: var(--bg3);
+        flex-wrap: wrap;
+        align-items: center;
+      }
+      .re-btn {
+        padding: 3px 7px;
+        border-radius: 3px;
+        font-size: 0.66rem;
+        color: var(--fg4);
+        cursor: pointer;
+        border: none;
+        background: none;
+        font-family: var(--sans);
+      }
+      .re-btn:hover {
+        background: var(--bg4);
+        color: var(--fg3);
+      }
+      .re-btn.a {
+        background: var(--bg4);
+        color: var(--fg2);
+      }
+      .re-btn.acc {
+        color: var(--accent-c);
+      }
+      .re-sep {
+        width: 1px;
+        height: 14px;
+        background: var(--border2);
+        margin: 0 3px;
+      }
+      .re-content {
+        flex: 1;
+        padding: 12px 14px;
+        font-size: 0.82rem;
+        line-height: 1.7;
+        color: var(--fg2);
+        overflow-y: auto;
+      }
+      .re-ph {
+        padding: 5px 8px;
+        border-bottom: 1px solid var(--border);
+        background: var(--bg3);
+        font-size: 0.6rem;
+        color: var(--fg4);
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+      }
+      .re-prev {
+        flex: 1;
+        padding: 12px;
+        font-size: 0.82rem;
+        color: var(--fg2);
+        line-height: 1.6;
+        overflow-y: auto;
+      }
+
+      /* Inline tokens */
+      .var-tok {
+        display: inline;
+        padding: 1px 4px;
+        background: var(--accent);
+        border: 1px solid var(--accent-b);
+        border-radius: 3px;
+        font-family: var(--mono);
+        font-size: 0.72rem;
+        color: var(--accent-c);
+      }
+      .hb-tok {
+        display: inline;
+        padding: 1px 3px;
+        background: rgba(160, 128, 160, 0.1);
+        border: 1px solid rgba(160, 128, 160, 0.15);
+        border-radius: 3px;
+        font-family: var(--mono);
+        font-size: 0.7rem;
+        color: #a080a0;
+      }
+
+      /* Slash popup */
+      .slash-popup {
+        background: var(--bg3);
+        border: 1px solid var(--border2);
+        border-radius: 6px;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+        width: 260px;
+        overflow: hidden;
+        margin-top: 6px;
+      }
+      .slash-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 10px;
+        font-size: 0.72rem;
+        cursor: pointer;
+      }
+      .slash-item:hover,
+      .slash-item.f {
+        background: var(--accent);
+      }
+      .slash-item.f {
+        border-left: 2px solid var(--accent-c);
+      }
+      .slash-item .si-label {
+        font-weight: 600;
+        color: var(--fg2);
+      }
+      .slash-item .si-desc {
+        color: var(--fg4);
+        margin-left: auto;
+        font-size: 0.66rem;
+      }
+
+      pre.y {
+        background: var(--bg);
+        border: 1px solid var(--border);
+        border-radius: 5px;
+        padding: 12px 14px;
+        font-family: var(--mono);
+        font-size: 0.74rem;
+        line-height: 1.7;
+        overflow-x: auto;
+        color: var(--fg3);
+        margin: 10px 0;
+        white-space: pre;
+      }
+      .k {
+        color: #8a8aff;
+        font-weight: 500;
+      }
+      .s {
+        color: #b8a070;
+      }
+      .t {
+        color: #70b080;
+      }
+      .c {
+        color: #444;
+        font-style: italic;
+      }
+      .n {
+        color: #7090c0;
+      }
+      .v {
+        color: #a080a0;
+      }
+    </style>
+  </head>
+  <body>
+    <nav
+      style="
+        position: sticky;
+        top: 0;
+        z-index: 50;
+        background: var(--bg);
+        border-bottom: 1px solid var(--border);
+        padding: 6px 16px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        overflow-x: auto;
+        flex-wrap: nowrap;
+      "
+    >
+      <a
+        href="index.html"
+        style="
+          font-size: 0.72rem;
+          color: var(--fg3);
+          text-decoration: none;
+          padding: 4px 8px;
+          border-radius: 4px;
+          white-space: nowrap;
+        "
+        >Overview</a
+      >
+      <a
+        href="tools.html"
+        style="
+          font-size: 0.68rem;
+          color: var(--fg3);
+          text-decoration: none;
+          padding: 4px 8px;
+          border-radius: 4px;
+          white-space: nowrap;
+        "
+        >Tools</a
+      >
+      <a
+        href="flow.html"
+        style="
+          font-size: 0.68rem;
+          color: var(--fg3);
+          text-decoration: none;
+          padding: 4px 8px;
+          border-radius: 4px;
+          white-space: nowrap;
+        "
+        >Flow</a
+      >
+      <a
+        href="guardrails.html"
+        style="
+          font-size: 0.68rem;
+          color: var(--fg3);
+          text-decoration: none;
+          padding: 4px 8px;
+          border-radius: 4px;
+          white-space: nowrap;
+        "
+        >Guardrails</a
+      >
+      <a
+        href="gather.html"
+        style="
+          font-size: 0.68rem;
+          color: var(--fg3);
+          text-decoration: none;
+          padding: 4px 8px;
+          border-radius: 4px;
+          white-space: nowrap;
+        "
+        >Gather</a
+      >
+      <a
+        href="templates.html"
+        style="
+          font-size: 0.68rem;
+          color: var(--fg3);
+          text-decoration: none;
+          padding: 4px 8px;
+          border-radius: 4px;
+          white-space: nowrap;
+        "
+        >Templates</a
+      >
+      <a
+        href="memory.html"
+        style="
+          font-size: 0.68rem;
+          color: var(--fg3);
+          text-decoration: none;
+          padding: 4px 8px;
+          border-radius: 4px;
+          white-space: nowrap;
+        "
+        >Memory</a
+      >
+      <a
+        href="coordination.html"
+        style="
+          font-size: 0.68rem;
+          color: var(--fg3);
+          text-decoration: none;
+          padding: 4px 8px;
+          border-radius: 4px;
+          white-space: nowrap;
+        "
+        >Coordination</a
+      >
+      <a
+        href="lifecycle.html"
+        style="
+          font-size: 0.68rem;
+          color: var(--fg3);
+          text-decoration: none;
+          padding: 4px 8px;
+          border-radius: 4px;
+          white-space: nowrap;
+        "
+        >Lifecycle</a
+      >
+      <a
+        href="output.html"
+        style="
+          font-size: 0.68rem;
+          color: var(--fg3);
+          text-decoration: none;
+          padding: 4px 8px;
+          border-radius: 4px;
+          white-space: nowrap;
+        "
+        >Output</a
+      >
+      <a
+        href="execution.html"
+        style="
+          font-size: 0.68rem;
+          color: var(--fg3);
+          text-decoration: none;
+          padding: 4px 8px;
+          border-radius: 4px;
+          white-space: nowrap;
+        "
+        >Execution</a
+      >
+      <a
+        href="advanced.html"
+        style="
+          font-size: 0.68rem;
+          color: var(--fg3);
+          text-decoration: none;
+          padding: 4px 8px;
+          border-radius: 4px;
+          white-space: nowrap;
+        "
+        >Advanced</a
+      >
+      <span style="color: var(--border2); margin: 0 2px">|</span>
+      <a
+        href="workflows.html"
+        style="
+          font-size: 0.68rem;
+          color: var(--fg3);
+          text-decoration: none;
+          padding: 4px 8px;
+          border-radius: 4px;
+          white-space: nowrap;
+        "
+        >Workflows</a
+      >
+      <a
+        href="monaco-editor-wireframe.html"
+        style="
+          font-size: 0.68rem;
+          color: var(--fg3);
+          text-decoration: none;
+          padding: 4px 8px;
+          border-radius: 4px;
+          white-space: nowrap;
+        "
+        >Editor</a
+      >
+      <a
+        href="rich-text-fields.html"
+        style="
+          font-size: 0.68rem;
+          font-weight: 600;
+          color: var(--fg);
+          text-decoration: none;
+          padding: 4px 10px;
+          border-radius: 4px;
+          white-space: nowrap;
+          background: var(--bg3);
+          border: 1px solid var(--border2);
+        "
+        >Rich Text + AI</a
+      >
+    </nav>
+
+    <style id="theme-auto">
+      @media (prefers-color-scheme: light) {
+        :root {
+          --bg: #fafafa !important;
+          --bg2: #f4f4f5 !important;
+          --bg3: #e4e4e7 !important;
+          --bg4: #d4d4d8 !important;
+          --fg: #18181b !important;
+          --fg2: #52525b !important;
+          --fg3: #71717a !important;
+          --fg4: #a1a1aa !important;
+          --border: #e4e4e7 !important;
+          --border2: #d4d4d8 !important;
+        }
+        pre,
+        pre.y,
+        pre.pc,
+        .code-block,
+        pre.preview-code {
+          background: #f4f4f5 !important;
+          border-color: #e4e4e7 !important;
+        }
+        .kw,
+        .k {
+          color: #6366f1 !important;
+        }
+        .str,
+        .s {
+          color: #b45309 !important;
+        }
+        .typ,
+        .t,
+        .type {
+          color: #059669 !important;
+        }
+        .num,
+        .n {
+          color: #2563eb !important;
+        }
+        .vr,
+        .v,
+        .var {
+          color: #9333ea !important;
+        }
+        .cmt,
+        .c,
+        .comment {
+          color: #a1a1aa !important;
+        }
+        nav {
+          background: #fafafa !important;
+          border-bottom-color: #e4e4e7 !important;
+        }
+        nav a {
+          color: #52525b !important;
+        }
+      }
+    </style>
+
+    <nav
+      style="
+        position: sticky;
+        top: 0;
+        z-index: 50;
+        background: #0c0c0c;
+        border-bottom: 1px solid #1e1e1e;
+        padding: 6px 16px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        overflow-x: auto;
+        flex-wrap: nowrap;
+      "
+    >
+      <a
+        href="index.html"
+        style="
+          font-size: 0.72rem;
+          font-weight: 600;
+          color: #aaa;
+          text-decoration: none;
+          padding: 4px 10px;
+          border-radius: 4px;
+          white-space: nowrap;
+        "
+        onmouseover="this.style.background = '#1c1c1c'"
+        onmouseout="this.style.background = ''"
+        >Overview</a
+      >
+      <a
+        href="tools.html"
+        style="
+          font-size: 0.68rem;
+          color: #aaa;
+          text-decoration: none;
+          padding: 4px 8px;
+          border-radius: 4px;
+          white-space: nowrap;
+        "
+        onmouseover="this.style.background = '#1c1c1c'"
+        onmouseout="this.style.background = ''"
+        >Tools</a
+      >
+      <a
+        href="flow.html"
+        style="
+          font-size: 0.68rem;
+          color: #aaa;
+          text-decoration: none;
+          padding: 4px 8px;
+          border-radius: 4px;
+          white-space: nowrap;
+        "
+        onmouseover="this.style.background = '#1c1c1c'"
+        onmouseout="this.style.background = ''"
+        >Flow</a
+      >
+      <a
+        href="guardrails.html"
+        style="
+          font-size: 0.68rem;
+          color: #aaa;
+          text-decoration: none;
+          padding: 4px 8px;
+          border-radius: 4px;
+          white-space: nowrap;
+        "
+        onmouseover="this.style.background = '#1c1c1c'"
+        onmouseout="this.style.background = ''"
+        >Guardrails</a
+      >
+      <a
+        href="gather.html"
+        style="
+          font-size: 0.68rem;
+          color: #aaa;
+          text-decoration: none;
+          padding: 4px 8px;
+          border-radius: 4px;
+          white-space: nowrap;
+        "
+        onmouseover="this.style.background = '#1c1c1c'"
+        onmouseout="this.style.background = ''"
+        >Gather</a
+      >
+      <a
+        href="templates.html"
+        style="
+          font-size: 0.68rem;
+          color: #aaa;
+          text-decoration: none;
+          padding: 4px 8px;
+          border-radius: 4px;
+          white-space: nowrap;
+        "
+        onmouseover="this.style.background = '#1c1c1c'"
+        onmouseout="this.style.background = ''"
+        >Templates</a
+      >
+      <a
+        href="memory.html"
+        style="
+          font-size: 0.68rem;
+          color: #aaa;
+          text-decoration: none;
+          padding: 4px 8px;
+          border-radius: 4px;
+          white-space: nowrap;
+        "
+        onmouseover="this.style.background = '#1c1c1c'"
+        onmouseout="this.style.background = ''"
+        >Memory</a
+      >
+      <a
+        href="coordination.html"
+        style="
+          font-size: 0.68rem;
+          color: #aaa;
+          text-decoration: none;
+          padding: 4px 8px;
+          border-radius: 4px;
+          white-space: nowrap;
+        "
+        onmouseover="this.style.background = '#1c1c1c'"
+        onmouseout="this.style.background = ''"
+        >Coordination</a
+      >
+      <a
+        href="lifecycle.html"
+        style="
+          font-size: 0.68rem;
+          color: #aaa;
+          text-decoration: none;
+          padding: 4px 8px;
+          border-radius: 4px;
+          white-space: nowrap;
+        "
+        onmouseover="this.style.background = '#1c1c1c'"
+        onmouseout="this.style.background = ''"
+        >Lifecycle</a
+      >
+      <a
+        href="output.html"
+        style="
+          font-size: 0.68rem;
+          color: #aaa;
+          text-decoration: none;
+          padding: 4px 8px;
+          border-radius: 4px;
+          white-space: nowrap;
+        "
+        onmouseover="this.style.background = '#1c1c1c'"
+        onmouseout="this.style.background = ''"
+        >Output</a
+      >
+      <a
+        href="execution.html"
+        style="
+          font-size: 0.68rem;
+          color: #aaa;
+          text-decoration: none;
+          padding: 4px 8px;
+          border-radius: 4px;
+          white-space: nowrap;
+        "
+        onmouseover="this.style.background = '#1c1c1c'"
+        onmouseout="this.style.background = ''"
+        >Execution</a
+      >
+      <a
+        href="advanced.html"
+        style="
+          font-size: 0.68rem;
+          color: #aaa;
+          text-decoration: none;
+          padding: 4px 8px;
+          border-radius: 4px;
+          white-space: nowrap;
+        "
+        onmouseover="this.style.background = '#1c1c1c'"
+        onmouseout="this.style.background = ''"
+        >Advanced</a
+      >
+      <span style="color: #2a2a2a; margin: 0 2px">|</span>
+      <a
+        href="workflows.html"
+        style="
+          font-size: 0.68rem;
+          color: #aaa;
+          text-decoration: none;
+          padding: 4px 8px;
+          border-radius: 4px;
+          white-space: nowrap;
+        "
+        onmouseover="this.style.background = '#1c1c1c'"
+        onmouseout="this.style.background = ''"
+        >Workflows</a
+      >
+      <a
+        href="monaco-editor-wireframe.html"
+        style="
+          font-size: 0.68rem;
+          color: #aaa;
+          text-decoration: none;
+          padding: 4px 8px;
+          border-radius: 4px;
+          white-space: nowrap;
+        "
+        onmouseover="this.style.background = '#1c1c1c'"
+        onmouseout="this.style.background = ''"
+        >Editor</a
+      >
+      <a
+        href="rich-text-fields.html"
+        style="
+          font-size: 0.68rem;
+          color: #e8e8e8;
+          text-decoration: none;
+          padding: 4px 8px;
+          border-radius: 4px;
+          white-space: nowrap;
+          background: #1c1c1c;
+          border: 1px solid #2a2a2a;
+        "
+        onmouseover="this.style.background = '#1c1c1c'"
+        onmouseout="this.style.background = '#1c1c1c'"
+        >Rich Text + AI</a
+      >
+    </nav>
+
+    <header>
+      <h1>Rich Text Fields — Notion-Style Editing for DSL</h1>
+      <div class="sub">
+        Which DSL fields need a rich text editor, how the Notion-like / command works inside text
+        blocks, and how to safely round-trip between rich editing and YAML.
+      </div>
+    </header>
+
+    <div class="container">
+      <!-- ═══════════════════════════════════════════ -->
+      <!-- FIELD ANALYSIS -->
+      <!-- ═══════════════════════════════════════════ -->
+      <div class="section">
+        <div class="st">1. All Text-Heavy Fields in ABL DSL</div>
+        <div class="desc">
+          Fields grouped by who reads them (LLM instructions vs user-facing) and editing complexity.
+        </div>
+
+        <div class="box key">
+          Two distinct audiences: fields the <strong>LLM reads</strong> (persona, instructions,
+          goal) and fields the <strong>user sees</strong> (RESPOND, templates, messages). Both
+          benefit from rich editing but with different toolbar options.
+        </div>
+
+        <table class="tbl">
+          <tr>
+            <th>Field</th>
+            <th>Audience</th>
+            <th>Supports {{vars}}</th>
+            <th>Multi-line</th>
+            <th>Rich Edit Tier</th>
+          </tr>
+          <tr>
+            <td>PERSONA:</td>
+            <td>LLM</td>
+            <td>No</td>
+            <td>Always (|)</td>
+            <td style="color: #70b080">Tier 1 — Must Have</td>
+          </tr>
+          <tr>
+            <td>GOAL:</td>
+            <td>LLM</td>
+            <td>No</td>
+            <td>Sometimes</td>
+            <td style="color: #70b080">Tier 1</td>
+          </tr>
+          <tr>
+            <td>LIMITATIONS:</td>
+            <td>LLM</td>
+            <td>No</td>
+            <td>List of strings</td>
+            <td style="color: var(--fg3)">Tier 3 — List editor</td>
+          </tr>
+          <tr>
+            <td>INSTRUCTIONS:</td>
+            <td>LLM</td>
+            <td>Yes</td>
+            <td>Always (|)</td>
+            <td style="color: #70b080">Tier 1</td>
+          </tr>
+          <tr>
+            <td>SYSTEM_PROMPT:</td>
+            <td>LLM</td>
+            <td>Yes</td>
+            <td>Always (|)</td>
+            <td style="color: #70b080">Tier 1</td>
+          </tr>
+          <tr>
+            <td>RESPOND:</td>
+            <td>User</td>
+            <td>Yes {{var}} + {{#each}}</td>
+            <td>Often (|)</td>
+            <td style="color: #70b080">Tier 1</td>
+          </tr>
+          <tr>
+            <td>TEMPLATES content:</td>
+            <td>User</td>
+            <td>Yes {{var}} + helpers</td>
+            <td>Always (|)</td>
+            <td style="color: #70b080">Tier 1</td>
+          </tr>
+          <tr>
+            <td>TEMPLATES formats:</td>
+            <td>User</td>
+            <td>Yes</td>
+            <td>Always (|)</td>
+            <td style="color: #b8a070">Tier 2 — Channel-specific</td>
+          </tr>
+          <tr>
+            <td>MESSAGES values:</td>
+            <td>User</td>
+            <td>Yes {{var}}</td>
+            <td>Usually short</td>
+            <td style="color: #b8a070">Tier 2</td>
+          </tr>
+          <tr>
+            <td>ON_START RESPOND:</td>
+            <td>User</td>
+            <td>Yes</td>
+            <td>Often</td>
+            <td style="color: #70b080">Tier 1</td>
+          </tr>
+          <tr>
+            <td>COMPLETE RESPOND:</td>
+            <td>User</td>
+            <td>Yes</td>
+            <td>Often</td>
+            <td style="color: #70b080">Tier 1</td>
+          </tr>
+          <tr>
+            <td>ON_ERROR respond:</td>
+            <td>User</td>
+            <td>Yes</td>
+            <td>Short</td>
+            <td style="color: #b8a070">Tier 2</td>
+          </tr>
+          <tr>
+            <td>Guardrail message:</td>
+            <td>User</td>
+            <td>No</td>
+            <td>Short</td>
+            <td style="color: var(--fg3)">Tier 3 — Simple input</td>
+          </tr>
+          <tr>
+            <td>Gather prompt:</td>
+            <td>User</td>
+            <td>No</td>
+            <td>Short</td>
+            <td style="color: var(--fg3)">Tier 3 — Simple input</td>
+          </tr>
+          <tr>
+            <td>Gather retryPrompt:</td>
+            <td>User</td>
+            <td>No</td>
+            <td>Short</td>
+            <td style="color: var(--fg3)">Tier 3 — Simple input</td>
+          </tr>
+          <tr>
+            <td>Tool description:</td>
+            <td>LLM</td>
+            <td>No</td>
+            <td>Sometimes (|)</td>
+            <td style="color: #b8a070">Tier 2</td>
+          </tr>
+          <tr>
+            <td>Handoff summary:</td>
+            <td>LLM</td>
+            <td>Yes</td>
+            <td>Short</td>
+            <td style="color: var(--fg3)">Tier 3</td>
+          </tr>
+          <tr>
+            <td>Escalation reason:</td>
+            <td>Internal</td>
+            <td>No</td>
+            <td>Short</td>
+            <td style="color: var(--fg3)">Tier 3</td>
+          </tr>
+          <tr>
+            <td>Step GOAL:</td>
+            <td>LLM</td>
+            <td>No</td>
+            <td>Short</td>
+            <td style="color: var(--fg3)">Tier 3</td>
+          </tr>
+          <tr>
+            <td>Digression RESPOND:</td>
+            <td>User</td>
+            <td>Yes</td>
+            <td>Sometimes</td>
+            <td style="color: #b8a070">Tier 2</td>
+          </tr>
+          <tr>
+            <td>PRESENT:</td>
+            <td>User</td>
+            <td>Yes {{var}}</td>
+            <td>Always</td>
+            <td style="color: #b8a070">Tier 2</td>
+          </tr>
+        </table>
+      </div>
+
+      <!-- ═══════════════════════════════════════════ -->
+      <!-- THE APPROACH -->
+      <!-- ═══════════════════════════════════════════ -->
+      <div class="section">
+        <div class="st">2. The Approach — Inline Rich Text Overlay</div>
+
+        <div class="box tip">
+          When the user clicks into a text-heavy field in the Monaco editor (or types
+          <code>/</code> inside one), an <strong>inline rich text overlay</strong> appears — like
+          Notion's block editor. It provides formatting, variable insertion, and Handlebars helpers.
+          On save/close, the rich content is serialized back to valid YAML with <code>|</code> block
+          scalar.
+        </div>
+
+        <div class="desc"><strong>Two modes of rich text editing:</strong></div>
+
+        <table class="tbl">
+          <tr>
+            <th>Mode</th>
+            <th>When</th>
+            <th>Features</th>
+          </tr>
+          <tr>
+            <td>LLM Instruction Mode</td>
+            <td>PERSONA, GOAL, INSTRUCTIONS, SYSTEM_PROMPT, tool description</td>
+            <td>
+              Markdown formatting, bullet lists, numbered lists, headers, bold/italic. No variable
+              insertion (LLM reads these as-is).
+            </td>
+          </tr>
+          <tr>
+            <td>User Response Mode</td>
+            <td>RESPOND, TEMPLATES, MESSAGES, PRESENT, ON_START RESPOND</td>
+            <td>
+              Everything in LLM mode PLUS: {{variable}} picker, {{#if}} conditionals, {{#each}}
+              loops, channel-specific formatting.
+            </td>
+          </tr>
+        </table>
+      </div>
+
+      <!-- ═══════════════════════════════════════════ -->
+      <!-- YAML SAFETY -->
+      <!-- ═══════════════════════════════════════════ -->
+      <div class="section">
+        <div class="st">3. YAML Safety — Round-Trip Without Breaking DSL</div>
+
+        <div class="box warn">
+          The rich editor must produce content that round-trips through YAML parsing without
+          corruption. Key challenges: preserving <code>{{var}}</code> tokens, multi-line strings,
+          special YAML characters (<code>:</code> <code>#</code> <code>-</code>), and indentation.
+        </div>
+
+        <div class="desc"><strong>The safe serialization strategy:</strong></div>
+
+        <pre
+          class="y"
+        ><span class="c"># Rule 1: Multi-line content ALWAYS uses YAML block scalar "|"</span>
+<span class="k">PERSONA:</span> |
+  Professional and empathetic claims assistant.
+  Uses clear language.
+
+<span class="c"># Rule 2: Single-line content uses double quotes</span>
+<span class="k">RESPOND:</span> <span class="s">"Hello! How can I help?"</span>
+
+<span class="c"># Rule 3: {{variables}} are preserved as-is inside | blocks</span>
+<span class="k">RESPOND:</span> |
+  Your claim <span class="v">{{claim_id}}</span> has been submitted.
+  Status: <span class="v">{{claim_status}}</span>
+
+<span class="c"># Rule 4: Handlebars helpers preserved verbatim</span>
+<span class="k">RESPOND:</span> |
+  <span class="v">{{#each hotels}}</span>
+  <span class="v">{{@index}}</span>. <span class="v">{{name}}</span> - $<span class="v">{{price}}</span>/night
+  <span class="v">{{/each}}</span>
+
+<span class="c"># Rule 5: Markdown inside | block is safe (YAML doesn't interpret it)</span>
+<span class="k">PERSONA:</span> |
+  ## Role
+  You are a **claims specialist** with expertise in:
+  - Insurance claims processing
+  - Policy interpretation
+  - Customer empathy</pre>
+
+        <div class="box key">
+          The <code>|</code> (literal block scalar) preserves everything verbatim — markdown,
+          variables, special characters. The rich editor serializes to <code>|</code> for any
+          multi-line content. Single-line uses quoted strings with escaped characters.
+        </div>
+
+        <div class="desc"><strong>Serialization rules:</strong></div>
+
+        <table class="tbl">
+          <tr>
+            <th>Content</th>
+            <th>Serialization</th>
+            <th>Example</th>
+          </tr>
+          <tr>
+            <td>Single line, no special chars</td>
+            <td>Double quotes</td>
+            <td><code>"Hello!"</code></td>
+          </tr>
+          <tr>
+            <td>Single line with {{var}}</td>
+            <td>Double quotes</td>
+            <td><code>"Hello {{name}}!"</code></td>
+          </tr>
+          <tr>
+            <td>Multi-line (any)</td>
+            <td>Block scalar |</td>
+            <td><code>|\n line1\n line2</code></td>
+          </tr>
+          <tr>
+            <td>Contains : or #</td>
+            <td>Double quotes or |</td>
+            <td><code>"Note: important"</code></td>
+          </tr>
+          <tr>
+            <td>Contains " (quote)</td>
+            <td>Escaped or |</td>
+            <td><code>|\n He said "hello"</code></td>
+          </tr>
+        </table>
+      </div>
+
+      <!-- ═══════════════════════════════════════════ -->
+      <!-- WIREFRAME: LLM MODE -->
+      <!-- ═══════════════════════════════════════════ -->
+      <div class="section">
+        <div class="st">4. Wireframe — LLM Instruction Mode (PERSONA, INSTRUCTIONS)</div>
+        <div class="desc">
+          Rich text editor for fields the LLM reads. Markdown formatting with live preview.
+        </div>
+
+        <div class="mock">
+          <div class="mock-head">
+            Rich Text Editor — PERSONA field
+            <div class="sp"></div>
+            <span
+              style="
+                font-size: 0.62rem;
+                padding: 2px 6px;
+                background: var(--bg4);
+                border-radius: 3px;
+              "
+              >LLM Instruction Mode</span
+            >
+          </div>
+          <div class="re">
+            <div class="re-left">
+              <div class="re-bar">
+                <div class="re-btn"><strong>B</strong></div>
+                <div class="re-btn"><em>I</em></div>
+                <div class="re-sep"></div>
+                <div class="re-btn">H1</div>
+                <div class="re-btn">H2</div>
+                <div class="re-btn">H3</div>
+                <div class="re-sep"></div>
+                <div class="re-btn">• List</div>
+                <div class="re-btn">1. List</div>
+                <div class="re-sep"></div>
+                <div class="re-btn">&lt;/&gt; Code</div>
+                <div class="re-btn">— Rule</div>
+                <div class="re-sep"></div>
+                <div style="flex: 1"></div>
+                <div class="re-btn" style="font-size: 0.6rem; color: var(--fg4)">
+                  Type / for commands
+                </div>
+              </div>
+              <div class="re-content" style="font-family: var(--sans)">
+                <div style="font-size: 0.9rem; font-weight: 600; margin-bottom: 6px">Role</div>
+                <div>
+                  You are a <strong>professional claims assistant</strong> for ABC Insurance.
+                </div>
+                <div style="margin-top: 8px">Your responsibilities:</div>
+                <ul style="margin: 4px 0 0 18px; color: var(--fg3)">
+                  <li>Guide customers through the claims process</li>
+                  <li>Verify policy information before proceeding</li>
+                  <li>Maintain empathetic, clear communication</li>
+                </ul>
+                <div
+                  style="margin-top: 12px; font-size: 0.9rem; font-weight: 600; margin-bottom: 6px"
+                >
+                  Tone
+                </div>
+                <div>
+                  Keep responses <strong>concise</strong> — 2-3 sentences max. Use simple language,
+                  avoid jargon.
+                </div>
+                <div
+                  style="margin-top: 8px; color: var(--accent-c); font-size: 0.76rem; opacity: 0.5"
+                >
+                  Type / for formatting commands...
+                </div>
+              </div>
+            </div>
+            <div class="re-right">
+              <div class="re-ph">Generated YAML</div>
+              <div
+                class="re-prev"
+                style="
+                  font-family: var(--mono);
+                  font-size: 0.72rem;
+                  color: var(--fg3);
+                  line-height: 1.6;
+                "
+              >
+                <span class="k">PERSONA:</span> | ## Role You are a **professional claims
+                assistant** for ABC Insurance. Your responsibilities: - Guide customers through
+                claims - Verify policy information - Maintain empathetic communication ## Tone Keep
+                responses **concise** — 2-3 sentences max. Use simple language.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══════════════════════════════════════════ -->
+      <!-- WIREFRAME: USER MODE -->
+      <!-- ═══════════════════════════════════════════ -->
+      <div class="section">
+        <div class="st">5. Wireframe — User Response Mode (RESPOND, TEMPLATES)</div>
+        <div class="desc">
+          Rich text editor for user-facing responses. Adds variable insertion and Handlebars
+          helpers.
+        </div>
+
+        <div class="mock">
+          <div class="mock-head">
+            Rich Text Editor — RESPOND field
+            <div class="sp"></div>
+            <span
+              style="
+                font-size: 0.62rem;
+                padding: 2px 6px;
+                background: var(--bg4);
+                border-radius: 3px;
+              "
+              >User Response Mode</span
+            >
+          </div>
+          <div class="re">
+            <div class="re-left">
+              <div class="re-bar">
+                <div class="re-btn"><strong>B</strong></div>
+                <div class="re-btn"><em>I</em></div>
+                <div class="re-sep"></div>
+                <div class="re-btn">H1</div>
+                <div class="re-btn">H2</div>
+                <div class="re-sep"></div>
+                <div class="re-btn">• List</div>
+                <div class="re-btn">1. List</div>
+                <div class="re-sep"></div>
+                <div class="re-btn acc">{{ }} Variable</div>
+                <div class="re-btn acc">{{#if}} Condition</div>
+                <div class="re-btn acc">{{#each}} Loop</div>
+                <div class="re-sep"></div>
+                <div style="flex: 1"></div>
+                <div class="re-btn a">Edit</div>
+                <div class="re-btn">YAML</div>
+              </div>
+              <div class="re-content" style="font-family: var(--sans)">
+                <div>I found these hotels for you:</div>
+                <div style="margin-top: 8px">
+                  <span class="hb-tok">{{#each hotels}}</span>
+                </div>
+                <div style="margin: 4px 0 4px 12px">
+                  <span class="var-tok">{{@index}}</span>.
+                  <strong><span class="var-tok">{{name}}</span></strong> — $<span class="var-tok"
+                    >{{price}}</span
+                  >/night (<span class="var-tok">{{rating}}</span> stars)
+                </div>
+                <div>
+                  <span class="hb-tok">{{/each}}</span>
+                </div>
+                <div style="margin-top: 10px">Which hotel would you like to book?</div>
+                <div style="margin-top: 12px">
+                  <span class="hb-tok">{{#if has_loyalty}}</span>
+                </div>
+                <div style="margin-left: 12px; color: var(--fg3)">
+                  Your loyalty discount of <span class="var-tok">{{discount_pct}}</span>% has been
+                  applied!
+                </div>
+                <div>
+                  <span class="hb-tok">{{/if}}</span>
+                </div>
+              </div>
+            </div>
+            <div class="re-right">
+              <div class="re-ph">Generated YAML</div>
+              <div
+                class="re-prev"
+                style="
+                  font-family: var(--mono);
+                  font-size: 0.72rem;
+                  color: var(--fg3);
+                  line-height: 1.6;
+                "
+              >
+                <span class="k">RESPOND:</span> | I found these hotels for you: {{#each hotels}}
+                {{@index}}. **{{name}}** — ${{price}}/night ({{rating}} stars) {{/each}} Which hotel
+                would you like? {{#if has_loyalty}} Your loyalty discount of {{discount_pct}}% has
+                been applied! {{/if}}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══════════════════════════════════════════ -->
+      <!-- WIREFRAME: SLASH IN TEXT -->
+      <!-- ═══════════════════════════════════════════ -->
+      <div class="section">
+        <div class="st">6. Wireframe — / Commands Inside Text Fields</div>
+        <div class="desc">
+          When user types / inside the rich text editor, a Notion-style popup appears with
+          text-specific commands.
+        </div>
+
+        <div class="mock">
+          <div class="mock-head">
+            / Command inside RESPOND text block
+            <div class="sp"></div>
+          </div>
+          <div style="padding: 14px">
+            <div style="font-size: 0.82rem; color: var(--fg2); line-height: 1.7">
+              <div>Your claim <span class="var-tok">{{claim_id}}</span> has been submitted.</div>
+              <div style="margin-top: 4px">/</div>
+              <div class="slash-popup">
+                <div
+                  style="
+                    padding: 4px 10px;
+                    font-size: 0.6rem;
+                    color: var(--accent-c);
+                    background: var(--accent);
+                    border-bottom: 1px solid var(--border);
+                  "
+                >
+                  Insert in text
+                </div>
+                <div class="slash-item f">
+                  <span class="si-label">{{ }} Variable</span
+                  ><span class="si-desc">Insert variable</span>
+                </div>
+                <div class="slash-item">
+                  <span class="si-label">{{#if}}</span
+                  ><span class="si-desc">Conditional block</span>
+                </div>
+                <div class="slash-item">
+                  <span class="si-label">{{#each}}</span
+                  ><span class="si-desc">Loop over array</span>
+                </div>
+                <div
+                  style="
+                    padding: 3px 10px;
+                    font-size: 0.56rem;
+                    font-weight: 600;
+                    color: var(--fg4);
+                    text-transform: uppercase;
+                    background: var(--bg2);
+                  "
+                >
+                  Formatting
+                </div>
+                <div class="slash-item">
+                  <span class="si-label">Heading</span><span class="si-desc">H1, H2, H3</span>
+                </div>
+                <div class="slash-item">
+                  <span class="si-label">Bullet List</span
+                  ><span class="si-desc">Unordered list</span>
+                </div>
+                <div class="slash-item">
+                  <span class="si-label">Numbered List</span
+                  ><span class="si-desc">Ordered list</span>
+                </div>
+                <div class="slash-item">
+                  <span class="si-label">Divider</span><span class="si-desc">Horizontal rule</span>
+                </div>
+                <div class="slash-item">
+                  <span class="si-label">Code Block</span
+                  ><span class="si-desc">Monospace text</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div style="margin-top: 14px">
+          <div class="desc">
+            <strong>Variable picker</strong> — when user selects "Variable" or types
+            <code>{{</code>:
+          </div>
+        </div>
+
+        <div class="mock" style="max-width: 300px">
+          <div class="mock-head">Insert Variable</div>
+          <div style="padding: 6px 10px; border-bottom: 1px solid var(--border)">
+            <input
+              style="
+                width: 100%;
+                padding: 5px 8px;
+                background: var(--bg3);
+                border: 1px solid var(--border2);
+                border-radius: 4px;
+                color: var(--fg);
+                font-size: 0.76rem;
+                outline: none;
+              "
+              placeholder="Search variables..."
+              readonly
+            />
+          </div>
+          <div style="padding: 4px 0">
+            <div
+              style="
+                padding: 3px 10px;
+                font-size: 0.58rem;
+                color: var(--fg4);
+                text-transform: uppercase;
+              "
+            >
+              Gather Fields
+            </div>
+            <div
+              style="
+                padding: 5px 10px;
+                font-size: 0.76rem;
+                cursor: pointer;
+                display: flex;
+                gap: 6px;
+              "
+            >
+              <span style="font-family: var(--mono); color: var(--accent-c)">claim_id</span
+              ><span style="color: var(--fg4); font-size: 0.66rem">string</span>
+            </div>
+            <div
+              style="
+                padding: 5px 10px;
+                font-size: 0.76rem;
+                cursor: pointer;
+                display: flex;
+                gap: 6px;
+              "
+            >
+              <span style="font-family: var(--mono); color: var(--accent-c)">claim_status</span
+              ><span style="color: var(--fg4); font-size: 0.66rem">string</span>
+            </div>
+            <div
+              style="
+                padding: 5px 10px;
+                font-size: 0.76rem;
+                cursor: pointer;
+                display: flex;
+                gap: 6px;
+              "
+            >
+              <span style="font-family: var(--mono); color: var(--accent-c)">customer_name</span
+              ><span style="color: var(--fg4); font-size: 0.66rem">string</span>
+            </div>
+            <div
+              style="
+                padding: 3px 10px;
+                font-size: 0.58rem;
+                color: var(--fg4);
+                text-transform: uppercase;
+                margin-top: 4px;
+              "
+            >
+              Session Memory
+            </div>
+            <div
+              style="
+                padding: 5px 10px;
+                font-size: 0.76rem;
+                cursor: pointer;
+                display: flex;
+                gap: 6px;
+              "
+            >
+              <span style="font-family: var(--mono); color: #a080a0">attempts</span
+              ><span style="color: var(--fg4); font-size: 0.66rem">number</span>
+            </div>
+            <div
+              style="
+                padding: 3px 10px;
+                font-size: 0.58rem;
+                color: var(--fg4);
+                text-transform: uppercase;
+                margin-top: 4px;
+              "
+            >
+              Tool Results
+            </div>
+            <div
+              style="
+                padding: 5px 10px;
+                font-size: 0.76rem;
+                cursor: pointer;
+                display: flex;
+                gap: 6px;
+              "
+            >
+              <span style="font-family: var(--mono); color: var(--fg3)">result.hotels</span
+              ><span style="color: var(--fg4); font-size: 0.66rem">array</span>
+            </div>
+            <div
+              style="
+                padding: 3px 10px;
+                font-size: 0.58rem;
+                color: var(--fg4);
+                text-transform: uppercase;
+                margin-top: 4px;
+              "
+            >
+              Built-in
+            </div>
+            <div
+              style="
+                padding: 5px 10px;
+                font-size: 0.76rem;
+                cursor: pointer;
+                display: flex;
+                gap: 6px;
+              "
+            >
+              <span style="font-family: var(--mono); color: var(--fg4)">channel</span>
+            </div>
+            <div
+              style="
+                padding: 5px 10px;
+                font-size: 0.76rem;
+                cursor: pointer;
+                display: flex;
+                gap: 6px;
+              "
+            >
+              <span style="font-family: var(--mono); color: var(--fg4)">turn_count</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══════════════════════════════════════════ -->
+      <!-- WIREFRAME: TRIGGER DETECTION -->
+      <!-- ═══════════════════════════════════════════ -->
+      <div class="section">
+        <div class="st">7. When to Show Rich Text Editor</div>
+        <div class="desc">
+          The rich text overlay activates when the user's cursor enters a text-heavy field in
+          Monaco. Detection uses the same AST context detector.
+        </div>
+
+        <table class="tbl">
+          <tr>
+            <th>Trigger</th>
+            <th>Action</th>
+          </tr>
+          <tr>
+            <td>Click/cursor into PERSONA: | block</td>
+            <td>Open LLM Instruction Mode overlay</td>
+          </tr>
+          <tr>
+            <td>Click/cursor into RESPOND: | block</td>
+            <td>Open User Response Mode overlay</td>
+          </tr>
+          <tr>
+            <td>Click/cursor into INSTRUCTIONS: text block</td>
+            <td>Open LLM Instruction Mode overlay</td>
+          </tr>
+          <tr>
+            <td>Click/cursor into TEMPLATES content: block</td>
+            <td>Open User Response Mode overlay</td>
+          </tr>
+          <tr>
+            <td>Click/cursor into SYSTEM_PROMPT: | block</td>
+            <td>Open LLM Instruction Mode overlay</td>
+          </tr>
+          <tr>
+            <td>Type / inside any rich text overlay</td>
+            <td>Show text-specific slash commands (not DSL commands)</td>
+          </tr>
+          <tr>
+            <td>Type {{ inside User Response Mode</td>
+            <td>Show variable picker</td>
+          </tr>
+          <tr>
+            <td>Press Escape or click outside</td>
+            <td>Close overlay, serialize to YAML, update Monaco</td>
+          </tr>
+        </table>
+
+        <div class="box key">
+          The rich text overlay sits <strong>on top of</strong> the Monaco editor for the selected
+          text block. When closed, it serializes the content back to valid YAML and updates the
+          Monaco model. The user can always switch to raw YAML view.
+        </div>
+      </div>
+
+      <!-- ═══════════════════════════════════════════ -->
+      <!-- ARCHITECTURE -->
+      <!-- ═══════════════════════════════════════════ -->
+      <div class="section">
+        <div class="st">8. Technical Architecture</div>
+
+        <pre class="y"><span class="c"># Component hierarchy</span>
+ABLEditor
+  ├── Monaco Editor (code view)
+  │
+  ├── RichTextOverlay (appears on text field activation)
+  │   ├── RichTextToolbar
+  │   │   ├── FormattingButtons (bold, italic, heading, list)
+  │   │   ├── VariableInsertButton ({{ }})        <span class="c"># User Response Mode only</span>
+  │   │   ├── ConditionalButton ({{#if}})          <span class="c"># User Response Mode only</span>
+  │   │   └── LoopButton ({{#each}})               <span class="c"># User Response Mode only</span>
+  │   │
+  │   ├── RichTextEditor (contentEditable or lightweight MD editor)
+  │   │   ├── Renders markdown as WYSIWYG
+  │   │   ├── {{var}} tokens rendered as inline chips
+  │   │   ├── {{#if}}/{{#each}} rendered as block markers
+  │   │   └── / command triggers SlashMenu
+  │   │
+  │   ├── SlashMenu (text-specific commands)
+  │   │   ├── Variable picker
+  │   │   ├── Conditional block
+  │   │   ├── Loop block
+  │   │   ├── Heading, list, divider, code
+  │   │   └── (NOT DSL construct commands)
+  │   │
+  │   └── YAMLPreviewPanel (right side, live)
+  │
+  └── VariablePickerPopup (shared between MonacoCommands + RichText)
+
+<span class="c"># Serialization flow</span>
+Rich Text (WYSIWYG) → Markdown string → YAML block scalar (|)
+  - Bold → **text**
+  - Heading → ## text
+  - List → - item
+  - {{var}} chip → {{var}} literal
+  - {{#if}} block → {{#if condition}}\ncontent\n{{/if}}
+
+<span class="c"># Deserialization flow</span>
+YAML block scalar (|) → Markdown string → Rich Text (WYSIWYG)
+  - **text** → Bold
+  - ## text → Heading
+  - {{var}} → Inline chip
+  - {{#if}} → Block marker</pre>
+      </div>
+
+      <!-- ═══════════════════════════════════════════ -->
+      <!-- EDGE CASES -->
+      <!-- ═══════════════════════════════════════════ -->
+      <div class="section">
+        <div class="st">9. Edge Cases &amp; Safety</div>
+
+        <table class="tbl">
+          <tr>
+            <th>Edge Case</th>
+            <th>Solution</th>
+          </tr>
+          <tr>
+            <td>User types raw YAML syntax in rich editor</td>
+            <td>Escape : and # in output. Wrap in quotes if single-line.</td>
+          </tr>
+          <tr>
+            <td>{{var}} inside bold: **{{name}}**</td>
+            <td>Preserve both — serialize as **{{name}}**</td>
+          </tr>
+          <tr>
+            <td>Nested Handlebars: {{#if}}{{#each}}</td>
+            <td>Render as nested block markers. Serialize verbatim.</td>
+          </tr>
+          <tr>
+            <td>Empty multi-line field</td>
+            <td>Serialize as empty string "", not |</td>
+          </tr>
+          <tr>
+            <td>User switches to YAML view mid-edit</td>
+            <td>Serialize current state, update Monaco, show code.</td>
+          </tr>
+          <tr>
+            <td>Invalid Handlebars (unclosed {{#if}})</td>
+            <td>Warning in editor, but allow it (don't block save).</td>
+          </tr>
+          <tr>
+            <td>RTL text (Arabic)</td>
+            <td>Rich editor respects dir="rtl". YAML serialization unaffected.</td>
+          </tr>
+          <tr>
+            <td>Indentation in | block</td>
+            <td>Always indent 2 spaces from parent key. Consistent.</td>
+          </tr>
+          <tr>
+            <td>Trailing newlines</td>
+            <td>Use | (clip) not |+ (keep) — trims trailing newlines.</td>
+          </tr>
+        </table>
+      </div>
+
+      <!-- ═══════════════════════════════════════════ -->
+      <!-- FULL FIELD MAP -->
+      <!-- ═══════════════════════════════════════════ -->
+      <div class="section">
+        <div class="st">10. Complete Field → Editor Mode Map</div>
+
+        <table class="tbl">
+          <tr>
+            <th>DSL Field</th>
+            <th>Editor Mode</th>
+            <th>Toolbar</th>
+            <th>Variables</th>
+            <th>Helpers</th>
+          </tr>
+          <tr>
+            <td>PERSONA:</td>
+            <td>LLM Instruction</td>
+            <td>Format only</td>
+            <td>No</td>
+            <td>No</td>
+          </tr>
+          <tr>
+            <td>GOAL:</td>
+            <td>LLM Instruction</td>
+            <td>Format only</td>
+            <td>No</td>
+            <td>No</td>
+          </tr>
+          <tr>
+            <td>INSTRUCTIONS:</td>
+            <td>LLM Instruction</td>
+            <td>Format + vars</td>
+            <td>Yes</td>
+            <td>No</td>
+          </tr>
+          <tr>
+            <td>SYSTEM_PROMPT:</td>
+            <td>LLM Instruction</td>
+            <td>Format + vars</td>
+            <td>Yes</td>
+            <td>No</td>
+          </tr>
+          <tr>
+            <td>RESPOND:</td>
+            <td>User Response</td>
+            <td>Full</td>
+            <td>Yes</td>
+            <td>Yes (if/each)</td>
+          </tr>
+          <tr>
+            <td>TEMPLATES content:</td>
+            <td>User Response</td>
+            <td>Full</td>
+            <td>Yes</td>
+            <td>Yes</td>
+          </tr>
+          <tr>
+            <td>PRESENT:</td>
+            <td>User Response</td>
+            <td>Full</td>
+            <td>Yes</td>
+            <td>Yes</td>
+          </tr>
+          <tr>
+            <td>ON_START RESPOND:</td>
+            <td>User Response</td>
+            <td>Full</td>
+            <td>Yes</td>
+            <td>Yes</td>
+          </tr>
+          <tr>
+            <td>COMPLETE RESPOND:</td>
+            <td>User Response</td>
+            <td>Full</td>
+            <td>Yes</td>
+            <td>Yes</td>
+          </tr>
+          <tr>
+            <td>MESSAGES values:</td>
+            <td>User Response (lite)</td>
+            <td>Minimal</td>
+            <td>Yes</td>
+            <td>No</td>
+          </tr>
+          <tr>
+            <td>ON_ERROR respond:</td>
+            <td>User Response (lite)</td>
+            <td>Minimal</td>
+            <td>Yes</td>
+            <td>No</td>
+          </tr>
+          <tr>
+            <td>Tool description:</td>
+            <td>LLM Instruction (lite)</td>
+            <td>Minimal</td>
+            <td>No</td>
+            <td>No</td>
+          </tr>
+          <tr>
+            <td>Gather prompt:</td>
+            <td>Plain text</td>
+            <td>None</td>
+            <td>No</td>
+            <td>No</td>
+          </tr>
+          <tr>
+            <td>Guardrail message:</td>
+            <td>Plain text</td>
+            <td>None</td>
+            <td>No</td>
+            <td>No</td>
+          </tr>
+        </table>
+      </div>
+
+      <!-- ═══════════════════════════════════════════ -->
+      <!-- AI ASSIST -->
+      <!-- ═══════════════════════════════════════════ -->
+      <div class="section">
+        <div class="st">11. AI Assist — Notion-Style AI Commands</div>
+        <div class="desc">
+          When user selects text in the rich text editor or types <code>/ai</code>, AI-powered
+          writing assistance appears. Available in both LLM Instruction Mode and User Response Mode.
+        </div>
+
+        <div class="box key">
+          AI Assist uses the project's configured LLM to help users write better agent content. It
+          understands the DSL context — it knows if you're writing a PERSONA (so it suggests
+          personality traits) vs a RESPOND (so it suggests user-friendly language).
+        </div>
+
+        <div class="mock">
+          <div class="mock-head">
+            AI Assist — Text Selection Menu
+            <div class="sp"></div>
+          </div>
+          <div style="padding: 16px">
+            <div
+              style="
+                font-size: 0.82rem;
+                color: var(--fg2);
+                line-height: 1.8;
+                font-family: var(--sans);
+              "
+            >
+              <div>
+                You are a
+                <span style="background: rgba(90, 142, 255, 0.15); padding: 1px 0"
+                  >professional claims assistant for ABC Insurance. Your job is to help customers
+                  file claims quickly and accurately.</span
+                >
+              </div>
+              <div style="margin-top: 8px">
+                <!-- AI floating toolbar -->
+                <div
+                  style="
+                    display: inline-flex;
+                    gap: 2px;
+                    padding: 4px;
+                    background: var(--bg3);
+                    border: 1px solid var(--border2);
+                    border-radius: 6px;
+                    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+                  "
+                >
+                  <div
+                    style="
+                      padding: 4px 8px;
+                      font-size: 0.68rem;
+                      color: var(--accent-c);
+                      cursor: pointer;
+                      border-radius: 3px;
+                    "
+                    onmouseover="this.style.background = '#252525'"
+                    onmouseout="this.style.background = ''"
+                  >
+                    ✨ Improve
+                  </div>
+                  <div
+                    style="
+                      padding: 4px 8px;
+                      font-size: 0.68rem;
+                      color: var(--fg3);
+                      cursor: pointer;
+                      border-radius: 3px;
+                    "
+                    onmouseover="this.style.background = '#252525'"
+                    onmouseout="this.style.background = ''"
+                  >
+                    Shorter
+                  </div>
+                  <div
+                    style="
+                      padding: 4px 8px;
+                      font-size: 0.68rem;
+                      color: var(--fg3);
+                      cursor: pointer;
+                      border-radius: 3px;
+                    "
+                    onmouseover="this.style.background = '#252525'"
+                    onmouseout="this.style.background = ''"
+                  >
+                    Longer
+                  </div>
+                  <div
+                    style="
+                      padding: 4px 8px;
+                      font-size: 0.68rem;
+                      color: var(--fg3);
+                      cursor: pointer;
+                      border-radius: 3px;
+                    "
+                    onmouseover="this.style.background = '#252525'"
+                    onmouseout="this.style.background = ''"
+                  >
+                    Tone ▾
+                  </div>
+                  <span
+                    style="
+                      width: 1px;
+                      height: 14px;
+                      background: var(--border2);
+                      margin: 0 2px;
+                      align-self: center;
+                    "
+                  ></span>
+                  <div
+                    style="
+                      padding: 4px 8px;
+                      font-size: 0.68rem;
+                      color: var(--fg3);
+                      cursor: pointer;
+                      border-radius: 3px;
+                    "
+                    onmouseover="this.style.background = '#252525'"
+                    onmouseout="this.style.background = ''"
+                  >
+                    Translate ▾
+                  </div>
+                  <div
+                    style="
+                      padding: 4px 8px;
+                      font-size: 0.68rem;
+                      color: var(--fg3);
+                      cursor: pointer;
+                      border-radius: 3px;
+                    "
+                    onmouseover="this.style.background = '#252525'"
+                    onmouseout="this.style.background = ''"
+                  >
+                    Ask AI...
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="desc" style="margin-top: 16px">
+          <strong>/ai slash command</strong> — full AI command menu:
+        </div>
+
+        <div class="mock" style="max-width: 500px">
+          <div style="padding: 14px">
+            <div style="font-size: 0.82rem; color: var(--fg3); margin-bottom: 6px">/ai</div>
+            <div
+              style="
+                width: 300px;
+                background: var(--bg3);
+                border: 1px solid var(--border2);
+                border-radius: 6px;
+                box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+                overflow: hidden;
+              "
+            >
+              <div
+                style="
+                  padding: 4px 10px;
+                  font-size: 0.6rem;
+                  color: var(--accent-c);
+                  background: var(--accent);
+                  border-bottom: 1px solid var(--border);
+                "
+              >
+                ✨ AI Assist
+              </div>
+              <div
+                style="
+                  padding: 3px 10px;
+                  font-size: 0.56rem;
+                  font-weight: 600;
+                  color: var(--fg4);
+                  text-transform: uppercase;
+                  background: var(--bg2);
+                "
+              >
+                Write
+              </div>
+              <div class="ci f" style="font-size: 0.72rem">
+                <span style="font-weight: 600; color: var(--fg2)">✨ Improve writing</span
+                ><span style="color: var(--fg4); margin-left: auto; font-size: 0.66rem"
+                  >Refine tone + clarity</span
+                >
+              </div>
+              <div class="ci" style="font-size: 0.72rem">
+                <span style="font-weight: 600; color: var(--fg2)">📝 Continue writing</span
+                ><span style="color: var(--fg4); margin-left: auto; font-size: 0.66rem"
+                  >Extend content</span
+                >
+              </div>
+              <div class="ci" style="font-size: 0.72rem">
+                <span style="font-weight: 600; color: var(--fg2)">🔄 Rewrite</span
+                ><span style="color: var(--fg4); margin-left: auto; font-size: 0.66rem"
+                  >Different approach</span
+                >
+              </div>
+              <div
+                style="
+                  padding: 3px 10px;
+                  font-size: 0.56rem;
+                  font-weight: 600;
+                  color: var(--fg4);
+                  text-transform: uppercase;
+                  background: var(--bg2);
+                "
+              >
+                Adjust
+              </div>
+              <div class="ci" style="font-size: 0.72rem">
+                <span style="font-weight: 600; color: var(--fg2)">📏 Make shorter</span
+                ><span style="color: var(--fg4); margin-left: auto; font-size: 0.66rem"
+                  >Concise version</span
+                >
+              </div>
+              <div class="ci" style="font-size: 0.72rem">
+                <span style="font-weight: 600; color: var(--fg2)">📐 Make longer</span
+                ><span style="color: var(--fg4); margin-left: auto; font-size: 0.66rem"
+                  >More detail</span
+                >
+              </div>
+              <div class="ci" style="font-size: 0.72rem">
+                <span style="font-weight: 600; color: var(--fg2)">🎭 Change tone</span
+                ><span style="color: var(--fg4); margin-left: auto; font-size: 0.66rem"
+                  >Professional / Casual / Empathetic</span
+                >
+              </div>
+              <div class="ci" style="font-size: 0.72rem">
+                <span style="font-weight: 600; color: var(--fg2)">📋 Simplify language</span
+                ><span style="color: var(--fg4); margin-left: auto; font-size: 0.66rem"
+                  >Plain language</span
+                >
+              </div>
+              <div
+                style="
+                  padding: 3px 10px;
+                  font-size: 0.56rem;
+                  font-weight: 600;
+                  color: var(--fg4);
+                  text-transform: uppercase;
+                  background: var(--bg2);
+                "
+              >
+                Transform
+              </div>
+              <div class="ci" style="font-size: 0.72rem">
+                <span style="font-weight: 600; color: var(--fg2)">🌐 Translate</span
+                ><span style="color: var(--fg4); margin-left: auto; font-size: 0.66rem"
+                  >Any language</span
+                >
+              </div>
+              <div class="ci" style="font-size: 0.72rem">
+                <span style="font-weight: 600; color: var(--fg2)">📊 Add structure</span
+                ><span style="color: var(--fg4); margin-left: auto; font-size: 0.66rem"
+                  >Headers + bullets</span
+                >
+              </div>
+              <div class="ci" style="font-size: 0.72rem">
+                <span style="font-weight: 600; color: var(--fg2)">🔍 Fix grammar</span
+                ><span style="color: var(--fg4); margin-left: auto; font-size: 0.66rem"
+                  >Spelling + grammar</span
+                >
+              </div>
+              <div
+                style="
+                  padding: 3px 10px;
+                  font-size: 0.56rem;
+                  font-weight: 600;
+                  color: var(--fg4);
+                  text-transform: uppercase;
+                  background: var(--bg2);
+                "
+              >
+                DSL-Aware
+              </div>
+              <div class="ci" style="font-size: 0.72rem">
+                <span style="font-weight: 600; color: var(--fg2)">🤖 Generate persona</span
+                ><span style="color: var(--fg4); margin-left: auto; font-size: 0.66rem"
+                  >From agent goal</span
+                >
+              </div>
+              <div class="ci" style="font-size: 0.72rem">
+                <span style="font-weight: 600; color: var(--fg2)">💬 Generate response</span
+                ><span style="color: var(--fg4); margin-left: auto; font-size: 0.66rem"
+                  >From step context</span
+                >
+              </div>
+              <div class="ci" style="font-size: 0.72rem">
+                <span style="font-weight: 600; color: var(--fg2)">📋 Generate instructions</span
+                ><span style="color: var(--fg4); margin-left: auto; font-size: 0.66rem"
+                  >From tools + goals</span
+                >
+              </div>
+              <div style="padding: 3px 10px; border-top: 1px solid var(--border)">
+                <input
+                  style="
+                    width: 100%;
+                    padding: 5px 8px;
+                    background: var(--bg);
+                    border: 1px solid var(--border2);
+                    border-radius: 4px;
+                    color: var(--fg);
+                    font-size: 0.72rem;
+                    outline: none;
+                  "
+                  placeholder="Or describe what you want..."
+                  readonly
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="desc" style="margin-top: 16px">
+          <strong>AI Diff Preview</strong> — shows proposed changes before accepting:
+        </div>
+
+        <div class="mock">
+          <div class="mock-head">
+            AI Suggestion — Improve Writing
+            <div class="sp"></div>
+            <span style="font-size: 0.62rem; color: var(--fg4)">✨ Powered by project LLM</span>
+          </div>
+          <div style="padding: 14px">
+            <div
+              style="
+                font-size: 0.66rem;
+                color: var(--fg4);
+                text-transform: uppercase;
+                letter-spacing: 0.06em;
+                margin-bottom: 8px;
+              "
+            >
+              Original
+            </div>
+            <div
+              style="
+                padding: 10px 12px;
+                background: var(--bg);
+                border: 1px solid var(--border);
+                border-radius: 5px;
+                font-size: 0.8rem;
+                color: var(--fg3);
+                line-height: 1.6;
+                text-decoration: line-through;
+                opacity: 0.6;
+              "
+            >
+              You are a professional claims assistant for ABC Insurance. Your job is to help
+              customers file claims quickly and accurately.
+            </div>
+            <div
+              style="
+                font-size: 0.66rem;
+                color: var(--fg4);
+                text-transform: uppercase;
+                letter-spacing: 0.06em;
+                margin: 12px 0 8px;
+              "
+            >
+              Suggested
+            </div>
+            <div
+              style="
+                padding: 10px 12px;
+                background: rgba(112, 176, 128, 0.04);
+                border: 1px solid rgba(112, 176, 128, 0.15);
+                border-radius: 5px;
+                font-size: 0.8rem;
+                color: var(--fg2);
+                line-height: 1.6;
+              "
+            >
+              You are a <strong>professional and empathetic</strong> claims assistant for ABC
+              Insurance. You guide customers through the claims process with
+              <strong>patience and clarity</strong>, ensuring they feel supported at every step.
+              Your communication is concise, jargon-free, and always confirms understanding before
+              proceeding.
+            </div>
+            <div style="display: flex; gap: 6px; justify-content: flex-end; margin-top: 12px">
+              <div
+                style="
+                  padding: 5px 12px;
+                  border-radius: 4px;
+                  font-size: 0.72rem;
+                  cursor: pointer;
+                  border: 1px solid var(--border2);
+                  color: var(--fg3);
+                  background: var(--bg3);
+                "
+              >
+                Discard
+              </div>
+              <div
+                style="
+                  padding: 5px 12px;
+                  border-radius: 4px;
+                  font-size: 0.72rem;
+                  cursor: pointer;
+                  border: 1px solid var(--border2);
+                  color: var(--fg3);
+                  background: var(--bg3);
+                "
+              >
+                Try Again
+              </div>
+              <div
+                style="
+                  padding: 5px 12px;
+                  border-radius: 4px;
+                  font-size: 0.72rem;
+                  cursor: pointer;
+                  border: 1px solid rgba(90, 142, 255, 0.25);
+                  color: var(--accent-c);
+                  background: rgba(90, 142, 255, 0.15);
+                "
+              >
+                ✓ Accept
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══════════════════════════════════════════ -->
+      <!-- AI DSL-AWARE -->
+      <!-- ═══════════════════════════════════════════ -->
+      <div class="section">
+        <div class="st">12. AI Assist — DSL-Aware Generation</div>
+        <div class="desc">
+          AI commands that understand the agent's DSL context. Generate content based on what's
+          already defined in the agent.
+        </div>
+
+        <table class="tbl">
+          <tr>
+            <th>AI Command</th>
+            <th>Context Used</th>
+            <th>What It Generates</th>
+          </tr>
+          <tr>
+            <td>Generate persona</td>
+            <td>AGENT name + GOAL + TOOLS</td>
+            <td>Multi-paragraph PERSONA with role, tone, expertise based on what the agent does</td>
+          </tr>
+          <tr>
+            <td>Generate response</td>
+            <td>Step name + GATHER fields + CALL result</td>
+            <td>RESPOND text with appropriate {{variables}} from the step context</td>
+          </tr>
+          <tr>
+            <td>Generate instructions</td>
+            <td>GOAL + TOOLS + GATHER + CONSTRAINTS</td>
+            <td>Structured INSTRUCTIONS with rules derived from tools and constraints</td>
+          </tr>
+          <tr>
+            <td>Generate welcome</td>
+            <td>AGENT name + GOAL + PERSONA</td>
+            <td>ON_START RESPOND matching the agent's personality</td>
+          </tr>
+          <tr>
+            <td>Generate error message</td>
+            <td>ON_ERROR type + PERSONA tone</td>
+            <td>User-friendly error response matching agent's communication style</td>
+          </tr>
+          <tr>
+            <td>Add variables</td>
+            <td>GATHER fields + SESSION vars</td>
+            <td>Inserts relevant {{variables}} into existing text based on context</td>
+          </tr>
+        </table>
+
+        <div class="box tip">
+          DSL-aware AI reads the current agent definition to generate contextually relevant content.
+          If you have 5 GATHER fields, "Generate response" will include those variables. If your
+          PERSONA is empathetic, "Generate error message" will match that tone.
+        </div>
+
+        <div class="mock" style="max-width: 500px">
+          <div class="mock-head">🤖 Generate Persona — from Agent Context</div>
+          <div style="padding: 14px">
+            <div style="font-size: 0.66rem; color: var(--fg4); margin-bottom: 8px">
+              Agent:
+              <span style="color: var(--fg2); font-family: var(--mono)">Insurance_Claim_Agent</span>
+            </div>
+            <div style="font-size: 0.66rem; color: var(--fg4); margin-bottom: 8px">
+              Goal: <span style="color: var(--fg2)">Help users file insurance claims</span>
+            </div>
+            <div style="font-size: 0.66rem; color: var(--fg4); margin-bottom: 12px">
+              Tools: <span style="color: var(--fg2)">fetch_policy, submit_claim</span> · Gather:
+              <span style="color: var(--fg2)">policy_number, damage_amount</span>
+            </div>
+            <div
+              style="
+                padding: 10px 12px;
+                background: rgba(112, 176, 128, 0.04);
+                border: 1px solid rgba(112, 176, 128, 0.15);
+                border-radius: 5px;
+                font-size: 0.8rem;
+                color: var(--fg2);
+                line-height: 1.6;
+              "
+            >
+              <div style="font-weight: 600; margin-bottom: 6px">Generated PERSONA:</div>
+              You are a <strong>professional and empathetic</strong> claims assistant for the
+              insurance platform. You specialize in helping customers navigate the claims filing
+              process from start to finish.<br /><br />
+              Your approach:<br />
+              - Always verify the policy number before proceeding<br />
+              - Explain each step clearly in plain language<br />
+              - Be patient when collecting damage estimates<br />
+              - Confirm all details before final submission<br /><br />
+              Keep responses concise (2-3 sentences). Never use insurance jargon without
+              explanation.
+            </div>
+            <div style="display: flex; gap: 6px; justify-content: flex-end; margin-top: 12px">
+              <div
+                style="
+                  padding: 5px 12px;
+                  border-radius: 4px;
+                  font-size: 0.72rem;
+                  cursor: pointer;
+                  border: 1px solid var(--border2);
+                  color: var(--fg3);
+                "
+              >
+                Regenerate
+              </div>
+              <div
+                style="
+                  padding: 5px 12px;
+                  border-radius: 4px;
+                  font-size: 0.72rem;
+                  cursor: pointer;
+                  border: 1px solid rgba(90, 142, 255, 0.25);
+                  color: var(--accent-c);
+                  background: rgba(90, 142, 255, 0.15);
+                "
+              >
+                ✓ Insert
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

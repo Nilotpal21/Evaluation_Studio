@@ -1,0 +1,344 @@
+{
+  "timestamp": "2026-03-13T20:25:03.366Z",
+  "platform": "abl",
+  "model": "azure/healthassist-gpt-4.1-2025-04-14",
+  "scenarios": [
+    {
+      "scenario": "S1: Greeting Only · Turn 1",
+      "userMessage": "Hello",
+      "agentResponse": "Hello! Welcome to the provider portal. I'm here to help you with member plan information, coverage details, and claim status. How can I assist you today?",
+      "metrics": {
+        "startMs": 1773433478849,
+        "firstChunkMs": 1773433478915,
+        "endMs": 1773433478915,
+        "ttfb": 66,
+        "total": 66,
+        "chunkCount": 1,
+        "responseLength": 153
+      },
+      "passed": true
+    },
+    {
+      "scenario": "S2: Auth via Provider ID → Plan Info · Turn 1",
+      "userMessage": "I need to check a member's plan information",
+      "agentResponse": "Hello! Welcome to the provider portal. I'm here to help you with member plan information, coverage details, and claim status. How can I assist you today?",
+      "metrics": {
+        "startMs": 1773433478921,
+        "firstChunkMs": 1773433478924,
+        "endMs": 1773433478924,
+        "ttfb": 3,
+        "total": 3,
+        "chunkCount": 1,
+        "responseLength": 153
+      },
+      "passed": true
+    },
+    {
+      "scenario": "S2: Auth via Provider ID → Plan Info · Turn 2",
+      "userMessage": "485736201",
+      "agentResponse": "To verify your identity, could you please provide your Provider ID or NPI ID?",
+      "metrics": {
+        "startMs": 1773433478933,
+        "firstChunkMs": 1773433481622,
+        "endMs": 1773433481622,
+        "ttfb": 2689,
+        "total": 2689,
+        "chunkCount": 1,
+        "responseLength": 77
+      },
+      "passed": true
+    },
+    {
+      "scenario": "S2: Auth via Provider ID → Plan Info · Turn 3",
+      "userMessage": "Yes, that's correct",
+      "agentResponse": "Is that correct?",
+      "metrics": {
+        "startMs": 1773433482659,
+        "firstChunkMs": 1773433484048,
+        "endMs": 1773433484049,
+        "ttfb": 1389,
+        "total": 1390,
+        "chunkCount": 1,
+        "responseLength": 16
+      },
+      "passed": true
+    },
+    {
+      "scenario": "S2: Auth via Provider ID → Plan Info · Turn 4",
+      "userMessage": "7823564",
+      "agentResponse": "<status>Authenticating provider before accessing member services</status>\n\nfunctions.handoff_to_Authentication_Agent({\n  reason: \"Provider must be authenticated before accessing member information.\",\n  message: \"7823564\"\n})",
+      "metrics": {
+        "startMs": 1773433488245,
+        "firstChunkMs": 1773433489763,
+        "endMs": 1773433489765,
+        "ttfb": 1518,
+        "total": 1520,
+        "chunkCount": 1,
+        "responseLength": 223
+      },
+      "passed": true
+    },
+    {
+      "scenario": "S3: Coverage Info Query · Turn 1",
+      "userMessage": "What services are covered for one of my patients?",
+      "agentResponse": "Hello! Welcome to the provider portal. I'm here to help you with member plan information, coverage details, and claim status. How can I assist you today?",
+      "metrics": {
+        "startMs": 1773433489776,
+        "firstChunkMs": 1773433489781,
+        "endMs": 1773433489782,
+        "ttfb": 5,
+        "total": 6,
+        "chunkCount": 1,
+        "responseLength": 153
+      },
+      "passed": true
+    },
+    {
+      "scenario": "S3: Coverage Info Query · Turn 2",
+      "userMessage": "7823564",
+      "agentResponse": "To verify your identity, could you please provide your Provider ID or NPI ID?",
+      "metrics": {
+        "startMs": 1773433489786,
+        "firstChunkMs": 1773433492066,
+        "endMs": 1773433492067,
+        "ttfb": 2280,
+        "total": 2281,
+        "chunkCount": 1,
+        "responseLength": 77
+      },
+      "passed": true
+    },
+    {
+      "scenario": "S4: Plan Info — Deductible Query · Turn 1",
+      "userMessage": "I want to check the deductible status for a member",
+      "agentResponse": "Hello! Welcome to the provider portal. I'm here to help you with member plan information, coverage details, and claim status. How can I assist you today?",
+      "metrics": {
+        "startMs": 1773433492074,
+        "firstChunkMs": 1773433492079,
+        "endMs": 1773433492079,
+        "ttfb": 5,
+        "total": 5,
+        "chunkCount": 1,
+        "responseLength": 153
+      },
+      "passed": true
+    },
+    {
+      "scenario": "S4: Plan Info — Deductible Query · Turn 2",
+      "userMessage": "7823564",
+      "agentResponse": "To verify your identity, could you please provide your Provider ID or NPI ID?",
+      "metrics": {
+        "startMs": 1773433492085,
+        "firstChunkMs": 1773433493464,
+        "endMs": 1773433493464,
+        "ttfb": 1379,
+        "total": 1379,
+        "chunkCount": 1,
+        "responseLength": 77
+      },
+      "passed": true
+    },
+    {
+      "scenario": "S5: Claim Status Query · Turn 1",
+      "userMessage": "I need to check claim status for a patient",
+      "agentResponse": "Hello! Welcome to the provider portal. I'm here to help you with member plan information, coverage details, and claim status. How can I assist you today?",
+      "metrics": {
+        "startMs": 1773433493470,
+        "firstChunkMs": 1773433493472,
+        "endMs": 1773433493472,
+        "ttfb": 2,
+        "total": 2,
+        "chunkCount": 1,
+        "responseLength": 153
+      },
+      "passed": true
+    },
+    {
+      "scenario": "S5: Claim Status Query · Turn 2",
+      "userMessage": "7823566",
+      "agentResponse": "To verify your identity, could you please provide your Provider ID or NPI ID?",
+      "metrics": {
+        "startMs": 1773433493477,
+        "firstChunkMs": 1773433494930,
+        "endMs": 1773433494932,
+        "ttfb": 1453,
+        "total": 1455,
+        "chunkCount": 1,
+        "responseLength": 77
+      },
+      "passed": true
+    },
+    {
+      "scenario": "S6: Invalid Provider ID Format · Turn 1",
+      "userMessage": "Check plan info for a member please",
+      "agentResponse": "Hello! Welcome to the provider portal. I'm here to help you with member plan information, coverage details, and claim status. How can I assist you today?",
+      "metrics": {
+        "startMs": 1773433494938,
+        "firstChunkMs": 1773433494941,
+        "endMs": 1773433494941,
+        "ttfb": 3,
+        "total": 3,
+        "chunkCount": 1,
+        "responseLength": 153
+      },
+      "passed": true
+    },
+    {
+      "scenario": "S6: Invalid Provider ID Format · Turn 2",
+      "userMessage": "12345",
+      "agentResponse": "<status>Redirecting for authentication before accessing member services</status>\n\nhandoff_to_Authentication_Agent({\n  reason: \"Authentication required before processing member-related requests.\",\n  message: \"12345\"\n})",
+      "metrics": {
+        "startMs": 1773433494947,
+        "firstChunkMs": 1773433496212,
+        "endMs": 1773433496215,
+        "ttfb": 1265,
+        "total": 1268,
+        "chunkCount": 1,
+        "responseLength": 217
+      },
+      "passed": true
+    },
+    {
+      "scenario": "S7: Multi-Intent — Plan Info Then Claim Status · Turn 1",
+      "userMessage": "I need plan information for a member",
+      "agentResponse": "Hello! Welcome to the provider portal. I'm here to help you with member plan information, coverage details, and claim status. How can I assist you today?",
+      "metrics": {
+        "startMs": 1773433496224,
+        "firstChunkMs": 1773433496229,
+        "endMs": 1773433496229,
+        "ttfb": 5,
+        "total": 5,
+        "chunkCount": 1,
+        "responseLength": 153
+      },
+      "passed": true
+    },
+    {
+      "scenario": "S7: Multi-Intent — Plan Info Then Claim Status · Turn 2",
+      "userMessage": "7823564",
+      "agentResponse": "To verify your identity, could you please provide your Provider ID or NPI ID?",
+      "metrics": {
+        "startMs": 1773433496234,
+        "firstChunkMs": 1773433497879,
+        "endMs": 1773433497880,
+        "ttfb": 1645,
+        "total": 1646,
+        "chunkCount": 1,
+        "responseLength": 77
+      },
+      "passed": true
+    },
+    {
+      "scenario": "S7: Multi-Intent — Plan Info Then Claim Status · Turn 3",
+      "userMessage": "Now show me claim status for member 7823566",
+      "agentResponse": "Please provide: provider_identifier",
+      "metrics": {
+        "startMs": 1773433499068,
+        "firstChunkMs": 1773433500106,
+        "endMs": 1773433500106,
+        "ttfb": 1038,
+        "total": 1038,
+        "chunkCount": 1,
+        "responseLength": 35
+      },
+      "passed": true
+    },
+    {
+      "scenario": "S8: Coverage — Specific Service Inquiry · Turn 1",
+      "userMessage": "Is physical therapy covered for my patient?",
+      "agentResponse": "Hello! Welcome to the provider portal. I'm here to help you with member plan information, coverage details, and claim status. How can I assist you today?",
+      "metrics": {
+        "startMs": 1773433500115,
+        "firstChunkMs": 1773433500119,
+        "endMs": 1773433500119,
+        "ttfb": 4,
+        "total": 4,
+        "chunkCount": 1,
+        "responseLength": 153
+      },
+      "passed": true
+    },
+    {
+      "scenario": "S8: Coverage — Specific Service Inquiry · Turn 2",
+      "userMessage": "7823564",
+      "agentResponse": "To verify your identity, could you please provide your Provider ID or NPI ID?",
+      "metrics": {
+        "startMs": 1773433500125,
+        "firstChunkMs": 1773433500856,
+        "endMs": 1773433500857,
+        "ttfb": 731,
+        "total": 732,
+        "chunkCount": 1,
+        "responseLength": 77
+      },
+      "passed": true
+    },
+    {
+      "scenario": "S9: Farewell Flow · Turn 1",
+      "userMessage": "Hello",
+      "agentResponse": "Hello! Welcome to the provider portal. I'm here to help you with member plan information, coverage details, and claim status. How can I assist you today?",
+      "metrics": {
+        "startMs": 1773433500866,
+        "firstChunkMs": 1773433500870,
+        "endMs": 1773433500870,
+        "ttfb": 4,
+        "total": 4,
+        "chunkCount": 1,
+        "responseLength": 153
+      },
+      "passed": true
+    },
+    {
+      "scenario": "S9: Farewell Flow · Turn 2",
+      "userMessage": "That's all, thank you",
+      "agentResponse": "Thank you for your message. If you have any service requests in the future, please let me know!",
+      "metrics": {
+        "startMs": 1773433500876,
+        "firstChunkMs": 1773433502255,
+        "endMs": 1773433502255,
+        "ttfb": 1379,
+        "total": 1379,
+        "chunkCount": 1,
+        "responseLength": 95
+      },
+      "passed": true
+    },
+    {
+      "scenario": "S10: Claim Status with Date Filter · Turn 1",
+      "userMessage": "I need to check claims for a patient",
+      "agentResponse": "Hello! Welcome to the provider portal. I'm here to help you with member plan information, coverage details, and claim status. How can I assist you today?",
+      "metrics": {
+        "startMs": 1773433502259,
+        "firstChunkMs": 1773433502262,
+        "endMs": 1773433502262,
+        "ttfb": 3,
+        "total": 3,
+        "chunkCount": 1,
+        "responseLength": 153
+      },
+      "passed": true
+    },
+    {
+      "scenario": "S10: Claim Status with Date Filter · Turn 2",
+      "userMessage": "7823566, I only need claims from January 2025",
+      "agentResponse": "<status>Authentication required before retrieving claim information</status>\n\nhandoff_to_Authentication_Agent({\n  reason: \"Provider must authenticate to access claim details for member 7823566.\",\n  message: \"Authenticate to view claims for member 7823566 from January 2025.\"\n})",
+      "metrics": {
+        "startMs": 1773433502267,
+        "firstChunkMs": 1773433503352,
+        "endMs": 1773433503354,
+        "ttfb": 1085,
+        "total": 1087,
+        "chunkCount": 1,
+        "responseLength": 277
+      },
+      "passed": true
+    }
+  ],
+  "summary": {
+    "total": 22,
+    "passed": 22,
+    "failed": 0,
+    "avgTotalMs": 817,
+    "avgTtfbMs": 816
+  }
+}

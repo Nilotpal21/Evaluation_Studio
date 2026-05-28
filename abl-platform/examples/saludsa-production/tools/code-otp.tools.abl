@@ -1,0 +1,225 @@
+/**
+ * Saludsa OTP Code Tools (Sandbox)
+ * JavaScript sandbox tools ported from Kore.ai code tools for OTP generation,
+ * validation, and OTP failure transfer handling.
+ * These tools contain orchestration logic (memory reads/writes, retry counting,
+ * Zendesk updates, business hours checks) that cannot be expressed as simple HTTP calls.
+ */
+
+TOOLS:
+  // Sandbox tools — no base_url/auth needed
+
+  otp_generator() -> {success: boolean, message: string}
+    description: "Generates a One-Time Password (OTP) for the current user session as part of identity verification or authentication flows. Calls POST /otpGenerator with the session ID."
+    type: sandbox
+    runtime: "javascript"
+    timeout: 45000
+    memory_mb: 128
+    code: |
+      const axios = require("axios");
+
+      const sessionMetaData = await memory.get_content("sessionMeta");
+      const sessionInfo = sessionMetaData?.data?.content?.sessionInfo;
+      const baseUrl = env.SALUDSA_MCP_ENDPOINT;
+      const headers = {
+        "Authorization": env.SALUDSA_MCP_AUTH
+      }
+
+      async function generateOTP() {
+        try {
+           const reqBody = {
+            "sessionId": sessionInfo?.sessionId
+          }
+          const apiRes = await axios.post(`${baseUrl}/otpGenerator`, reqBody, { headers });
+          console.log("apiRes status", apiRes?.status)
+          return apiRes.data
+        } catch (error) {
+          console.log("Error running in generateOTP API", error.stack);
+          return {
+            success: false,
+            error: error.stack,
+            message: error.message
+          }
+        }
+      }
+
+
+      return generateOTP();
+
+  otp_validator(userProvidedCodigoOtp: string) -> {success: boolean, userDetails: object}
+    description: "Validates a user-provided OTP every time the user responds after being prompted. Any input is treated as one OTP attempt. Maximum two attempts: on first incorrect OTP re-triggers for retry. On second failure, updates Zendesk ticket with usecase:auth_fail and agent must immediately transfer to SAC. Tracks otpInvalidCount. Sets otpValidated:true on success."
+    type: sandbox
+    runtime: "javascript"
+    timeout: 45000
+    memory_mb: 128
+    params:
+      userProvidedCodigoOtp:
+        description: "The OTP entered by the user, generated previously for the session, used to confirm identity and authorize continuation of secure workflows."
+    code: |
+      const axios = require("axios");
+
+      const sessionMetaData = await memory.get_content("sessionMeta");
+      const metaData = sessionMetaData?.data?.content?.metadata;
+      const sessionInfo = sessionMetaData?.data?.content?.sessionInfo;
+      const baseUrl = env.SALUDSA_MCP_ENDPOINT;
+      const headers = {
+        "Authorization": env.SALUDSA_MCP_AUTH
+      }
+
+
+      async function validateOtp() {
+        try {
+           const uInfo = await memory.get_content("userInfo");
+            console.log("*** UINFO ***", uInfo);
+            var invalidCount = uInfo.data?.content?.otpInvalidCount ||  0;
+
+          const reqBody = {
+            "sessionId": sessionInfo?.sessionId,
+            "userProvidedCodigoOtp":$userProvidedCodigoOtp
+          }
+          const apiRes = await axios.post(`${baseUrl}/otpValidator`, reqBody, { headers });
+          console.log("apiRes status", apiRes?.status)
+          console.log("apiRes?.data",apiRes?.data)
+
+          const userDetails = { apiError: apiRes?.data?.apiError, message: apiRes?.data?.message};
+
+          if (!apiRes?.data?.success) {
+            userDetails.errorMessage = apiRes?.data?.message;
+          }
+          else{
+            userDetails.otpValidated=true;
+          }
+
+          console.log("invalidCount", invalidCount);
+          if (userDetails.errorMessage == "Incorrect OTP") {
+                       userDetails.otpInvalidCount = invalidCount+1;
+            console.log("after incrementing", userDetails.otpInvalidCount);
+                    }
+          await memory.set_content("userInfo", userDetails);
+          if(userDetails.otpInvalidCount == 2){
+            const reqBody = {
+              "sessionId": sessionInfo?.sessionId,
+              "usecase": "auth_fail",
+              "requerimientos_samy": "user_authentication_fail",
+              "transfer_type": "samy"
+            }
+
+
+            try {
+              const zendeskUpdateRes = await axios.post(`${baseUrl}/updateZendeskTicket`, reqBody, { headers });
+              console.log("zendeskUpdateRes", zendeskUpdateRes?.status);
+              console.log("zendeskUpdateRes", zendeskUpdateRes?.data);
+            } catch (err) {
+              console.log("Error in zendeskUpdateRes: ", err.stack)
+            }
+            }
+
+            return JSON.stringify({ success: true, userDetails });
+        } catch (error) {
+          console.log("Error running in otpValidator API", error.stack);
+          return {
+            success: false,
+            error: error.stack,
+            message: error.message
+          }
+        }
+
+      }
+
+
+      return validateOtp();
+
+  otp_failure_sac_transfer() -> {success: string, data: object}
+    description: "Handles the transfer to SAC when OTP validation fails after two retry attempts. Checks business hours via validate_out_of_hours MCP tool. If within hours: sets handsOffStatus:true, queueName:WhatsappSAC, reason:El usuario no pudo realizar la autenticacion OTP. If outside hours: sets isOutsideBusinessHours:true."
+    type: sandbox
+    runtime: "javascript"
+    timeout: 45000
+    memory_mb: 128
+    code: |
+      const axios = require("axios");
+
+      async function setTransferMetaData() {
+        const sessionMetaData = await memory.get_content("sessionMeta");
+        const metaData = sessionMetaData?.data?.content?.metadata;
+        const sessionInfo = sessionMetaData?.data?.content?.sessionInfo;
+        console.log("sessionInfo", JSON.stringify(sessionInfo))
+
+        const userInfo = await memory.get_content("userInfo");
+        console.log("userInfo", JSON.stringify(userInfo))
+        try {
+          let transferMetadata, outputMessage;
+          let channel = metaData?.plataforma;
+          const queueName = "WhatsappSAC";
+          const businessUnit = "SAC";
+          const ticketNumber = userInfo?.data?.content?.ticketId;
+          console.log("ticketNumber",ticketNumber)
+
+          const mcp_baseUrl = env.SALUDSA_MCP_ENDPOINT;
+          const mcp_headers = {
+            "Authorization": env.SALUDSA_MCP_AUTH
+          }
+
+          // Check business hours via MCP validateoutofhours tool
+          const hoursReqBody = {
+            "channel": channel
+          };
+          const res = await axios.post(`${mcp_baseUrl}/validateoutofhours`, hoursReqBody, { headers: mcp_headers });
+          console.log("res.status", res?.status);
+          console.log("res.data", res?.data);
+
+          if (!res?.data?.isHoursOfOperationValid) {
+            transferMetadata = {
+              isOutsideBusinessHours: true,
+               handsOffStatus:false
+            }
+            outputMessage = "Outside business hours!"
+
+            // zendesk ticket update for outside hours
+
+            console.log("sessionInfo?.sessionId", sessionInfo.sessionId)
+            const reqBody = {
+              "sessionId": sessionInfo?.sessionId,
+              "usecase": "transfer_sac",
+              "channel": channel,
+              "requerimientos_samy": "sac_after_hours",
+              "transfer_type": "samy",
+              "note": "se llena con el detalle la conversación entre usuario y Samy",
+              "subject": "Informacion fuera de horario contrato: {{contractNumber}}"
+            }
+
+            console.log("reqBody", reqBody);
+            try {
+              const zendeskUpdateRes = await axios.post(`${mcp_baseUrl}/updateZendeskTicket`, reqBody, { headers: mcp_headers });
+              console.log("zendeskUpdateRes", zendeskUpdateRes?.status);
+              console.log("zendeskUpdateRes", zendeskUpdateRes?.data);
+            } catch (err) {
+              console.log("Error in zendeskUpdateRes: ", err.stack)
+            }
+
+          } else {
+              outputMessage = "Agent hand off inputs successfully saved!!"
+            // save transfer meta data
+            transferMetadata = {
+              isOutsideBusinessHours: false,
+              queueName,
+              externalPhoneNumber: null,
+              businessUnit,
+              reason: "El usuario no pudo realizar la autenticación OTP",
+              ticketId: ticketNumber,
+              highPriorityTransfer: false,
+              handsOffMsg:outputMessage,
+              handsOffStatus:true
+            };
+
+          }
+
+          await memory.set_content("transfer_metadata", transferMetadata);
+
+          return { success: outputMessage, data: transferMetadata };
+
+        } catch (ex) {
+          return { success: "false", error: ex.message };
+        }
+      }
+
+      return setTransferMetaData();

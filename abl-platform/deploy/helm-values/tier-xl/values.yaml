@@ -1,0 +1,1273 @@
+# ============================================================================
+# ABL Platform - Tier XL (Hyperscale) Helm Values
+# ============================================================================
+# Profile: 1000+ agents, 500K+ conversations/day, 5M+ documents, multi-region
+# Cluster: 30-60+ nodes per region (primary + DR)
+# Monthly storage growth: 2-10+ TB
+#
+# Special considerations:
+#   - Sharded MongoDB with zone-based routing
+#   - Cross-region replication for all data stores
+#   - CDN for Studio static assets
+#   - Dedicated ingress per service tier
+#   - Cilium network policies + PSA restricted
+#   - Managed services recommended for data stores
+# ============================================================================
+
+global:
+  tier: 'XL'
+  clusterName: 'abl-platform-hyperscale'
+  storageClass: 'gp3'
+  cloudProvider: 'aws'
+  imageRegistry: 'ghcr.io/koreai'
+  imagePullPolicy: IfNotPresent
+  imagePullSecrets:
+    - name: ghcr-credentials
+  domain: 'abl.example.com'
+  tls:
+    enabled: true
+    issuer: 'letsencrypt-prod'
+  monitoring:
+    enabled: true
+    prometheusEndpoint: 'http://prometheus.monitoring.svc:9090'
+  podSecurityStandard: 'restricted'
+  # Multi-region configuration
+  multiRegion:
+    enabled: true
+    primaryRegion: 'us-east-1'
+    drRegion: 'us-west-2'
+    mode: 'active-passive'
+  # Encryption at rest with BYOK
+  encryption:
+    enabled: true
+    kmsProvider: 'aws-kms'
+    kmsKeyId: 'arn:aws:kms:us-east-1:123456789:key/example-key-id'
+  # CDN for static assets
+  cdn:
+    enabled: true
+    provider: 'cloudfront'
+    distributionId: 'E1234567890'
+
+# ============================================================================
+# Tier 1 - Compute-Intensive Services
+# ============================================================================
+
+runtime:
+  enabled: true
+  replicaCount: 12
+  image:
+    repository: 'ghcr.io/koreai/abl-runtime'
+    tag: 'latest'
+  resources:
+    requests:
+      cpu: '4'
+      memory: 8Gi
+    limits:
+      cpu: '8'
+      memory: 16Gi
+  ports:
+    http: 3112
+    ws: 3112
+  env:
+    NODE_ENV: 'production'
+    LOG_LEVEL: 'info'
+    # Sharded MongoDB via multiple mongos routers
+    MONGODB_URI: 'mongodb://mongos-0.mongos.abl-data.svc:27017,mongos-1.mongos.abl-data.svc:27017,mongos-2.mongos.abl-data.svc:27017/abl?w=majority&readPreference=secondaryPreferred'
+    REDIS_URL: 'redis://redis-cluster.abl-data.svc:6379'
+    CLICKHOUSE_URL: 'http://clickhouse-lb.abl-data.svc:8123'
+    MESSAGE_PERSISTENCE_MAX_BATCH_SIZE: '25'
+    MESSAGE_PERSISTENCE_WORKER_CONCURRENCY: '2'
+    # High concurrency connection tuning
+    MONGODB_MAX_POOL_SIZE: '100'
+    REDIS_MAX_RETRIES: '5'
+    WS_MAX_CONNECTIONS_PER_POD: '2000'
+  autoscaling:
+    enabled: true
+    minReplicas: 12
+    maxReplicas: 40
+    metrics:
+      - type: Resource
+        resource:
+          name: cpu
+          target:
+            type: Utilization
+            averageUtilization: 60
+      - type: Resource
+        resource:
+          name: memory
+          target:
+            type: Utilization
+            averageUtilization: 70
+      - type: Pods
+        pods:
+          metric:
+            name: websocket_connections
+          target:
+            type: AverageValue
+            averageValue: '1000'
+    behavior:
+      scaleDown:
+        stabilizationWindowSeconds: 600
+        policies:
+          - type: Percent
+            value: 15
+            periodSeconds: 120
+      scaleUp:
+        stabilizationWindowSeconds: 30
+        policies:
+          - type: Percent
+            value: 100
+            periodSeconds: 15
+          - type: Pods
+            value: 8
+            periodSeconds: 30
+        selectPolicy: Max
+  probes:
+    liveness:
+      path: /health
+      initialDelaySeconds: 15
+      periodSeconds: 20
+    readiness:
+      path: /health
+      initialDelaySeconds: 5
+      periodSeconds: 10
+  podDisruptionBudget:
+    minAvailable: 8
+  nodeSelector:
+    node-pool: general
+  topologySpreadConstraints:
+    - maxSkew: 1
+      topologyKey: topology.kubernetes.io/zone
+      whenUnsatisfiable: DoNotSchedule
+      labelSelector:
+        matchLabels:
+          app.kubernetes.io/name: runtime
+
+bgeM3:
+  enabled: true
+  replicaCount: 12
+  image:
+    repository: 'ghcr.io/huggingface/text-embeddings-inference'
+    tag: '1.2'
+  args:
+    - '--model-id'
+    - 'BAAI/bge-m3'
+    - '--port'
+    - '8001'
+    - '--max-batch-tokens'
+    - '65536'
+    - '--max-concurrent-requests'
+    - '512'
+  resources:
+    requests:
+      cpu: '4'
+      memory: 8Gi
+    limits:
+      cpu: '8'
+      memory: 16Gi
+  ports:
+    http: 8001
+  persistence:
+    enabled: true
+    storageClass: 'gp3'
+    size: 20Gi
+    mountPath: /data
+  autoscaling:
+    enabled: true
+    minReplicas: 12
+    maxReplicas: 40
+    metrics:
+      - type: Resource
+        resource:
+          name: cpu
+          target:
+            type: Utilization
+            averageUtilization: 60
+  keda:
+    enabled: true
+    triggers:
+      - type: prometheus
+        metadata:
+          serverAddress: 'http://prometheus.monitoring.svc:9090'
+          metricName: 'bullmq_embedding_queue_depth'
+          query: 'sum(bullmq_queue_waiting{queue="embedding-ingest"})'
+          threshold: '50'
+  probes:
+    liveness:
+      path: /health
+      initialDelaySeconds: 120
+      periodSeconds: 30
+    readiness:
+      path: /health
+      initialDelaySeconds: 60
+      periodSeconds: 10
+  podDisruptionBudget:
+    minAvailable: 8
+  nodeSelector:
+    node-pool: compute
+  topologySpreadConstraints:
+    - maxSkew: 1
+      topologyKey: topology.kubernetes.io/zone
+      whenUnsatisfiable: DoNotSchedule
+      labelSelector:
+        matchLabels:
+          app.kubernetes.io/name: bge-m3
+
+docling:
+  enabled: true
+  replicaCount: 8
+  image:
+    repository: 'ghcr.io/koreai/abl-docling'
+    tag: 'latest'
+  resources:
+    requests:
+      cpu: '4'
+      memory: 8Gi
+    limits:
+      cpu: '8'
+      memory: 16Gi
+  ports:
+    http: 8080
+  autoscaling:
+    enabled: true
+    minReplicas: 8
+    maxReplicas: 20
+    metrics:
+      - type: Resource
+        resource:
+          name: cpu
+          target:
+            type: Utilization
+            averageUtilization: 65
+  podDisruptionBudget:
+    minAvailable: 4
+  nodeSelector:
+    node-pool: compute
+
+# Self-hosted LLM for hyperscale (multi-node model parallelism)
+selfHostedLlm:
+  enabled: false
+  # Uncomment to enable self-hosted LLM with H100 GPUs
+  # replicaCount: 8
+  # image:
+  #   repository: "vllm/vllm-openai"
+  #   tag: "latest"
+  # args:
+  #   - "--model"
+  #   - "meta-llama/Llama-3.1-405B-Instruct"
+  #   - "--tensor-parallel-size"
+  #   - "8"
+  #   - "--max-model-len"
+  #   - "131072"
+  #   - "--enable-prefix-caching"
+  # resources:
+  #   requests:
+  #     cpu: "24"
+  #     memory: 96Gi
+  #     nvidia.com/gpu: 8
+  #   limits:
+  #     cpu: "48"
+  #     memory: 192Gi
+  #     nvidia.com/gpu: 8
+  # autoscaling:
+  #   enabled: true
+  #   minReplicas: 8
+  #   maxReplicas: 16
+  # # KServe InferenceService for advanced serving
+  # kserve:
+  #   enabled: true
+  #   predictor:
+  #     minReplicas: 8
+  #     maxReplicas: 16
+  # nodeSelector:
+  #   node-pool: gpu
+  #   accelerator: nvidia-h100
+
+# ============================================================================
+# Tier 3 - Application Services (2-5x Tier L)
+# ============================================================================
+
+studio:
+  enabled: true
+  replicaCount: 8
+  image:
+    repository: 'ghcr.io/koreai/abl-studio'
+    tag: 'latest'
+  resources:
+    requests:
+      cpu: '2'
+      memory: 4Gi
+    limits:
+      cpu: '4'
+      memory: 8Gi
+  ports:
+    http: 5173
+  autoscaling:
+    enabled: true
+    minReplicas: 8
+    maxReplicas: 20
+    metrics:
+      - type: Resource
+        resource:
+          name: cpu
+          target:
+            type: Utilization
+            averageUtilization: 65
+  env:
+    NODE_ENV: 'production'
+    MONGODB_MANAGED: 'true'
+    MONGODB_MAX_POOL_SIZE: '10'
+  probes:
+    liveness:
+      path: /health
+      initialDelaySeconds: 30
+      periodSeconds: 20
+    readiness:
+      path: /health
+      initialDelaySeconds: 10
+      periodSeconds: 10
+  podDisruptionBudget:
+    minAvailable: 4
+  nodeSelector:
+    node-pool: general
+
+admin:
+  enabled: true
+  replicaCount: 4
+  image:
+    repository: 'ghcr.io/koreai/abl-admin'
+    tag: 'latest'
+  resources:
+    requests:
+      cpu: '1'
+      memory: 2Gi
+    limits:
+      cpu: '2'
+      memory: 4Gi
+  ports:
+    http: 3003
+  podDisruptionBudget:
+    minAvailable: 2
+  nodeSelector:
+    node-pool: general
+
+searchAi:
+  enabled: true
+  replicaCount: 10
+  image:
+    repository: 'ghcr.io/koreai/abl-search-ai'
+    tag: 'latest'
+  resources:
+    requests:
+      cpu: '4'
+      memory: 8Gi
+    limits:
+      cpu: '8'
+      memory: 16Gi
+  ports:
+    http: 3113
+  autoscaling:
+    enabled: true
+    minReplicas: 10
+    maxReplicas: 25
+    metrics:
+      - type: Resource
+        resource:
+          name: cpu
+          target:
+            type: Utilization
+            averageUtilization: 60
+  podDisruptionBudget:
+    minAvailable: 5
+  nodeSelector:
+    node-pool: general
+
+searchAiRuntime:
+  enabled: true
+  replicaCount: 10
+  image:
+    repository: 'ghcr.io/koreai/abl-search-ai-runtime'
+    tag: 'latest'
+  resources:
+    requests:
+      cpu: '2'
+      memory: 4Gi
+    limits:
+      cpu: '4'
+      memory: 8Gi
+  ports:
+    http: 3114
+  autoscaling:
+    enabled: true
+    minReplicas: 10
+    maxReplicas: 25
+    metrics:
+      - type: Resource
+        resource:
+          name: cpu
+          target:
+            type: Utilization
+            averageUtilization: 65
+  podDisruptionBudget:
+    minAvailable: 5
+  nodeSelector:
+    node-pool: general
+
+workflowEngine:
+  enabled: true
+  replicaCount: 8
+  image:
+    repository: 'ghcr.io/koreai/abl-workflow-engine'
+    tag: 'latest'
+  resources:
+    requests:
+      cpu: '2'
+      memory: 4Gi
+    limits:
+      cpu: '4'
+      memory: 8Gi
+  autoscaling:
+    enabled: true
+    minReplicas: 8
+    maxReplicas: 20
+    metrics:
+      - type: Resource
+        resource:
+          name: cpu
+          target:
+            type: Utilization
+            averageUtilization: 60
+  podDisruptionBudget:
+    minAvailable: 4
+  nodeSelector:
+    node-pool: general
+
+preprocessing:
+  enabled: true
+  replicaCount: 4
+  image:
+    repository: 'ghcr.io/koreai/abl-preprocessing'
+    tag: 'latest'
+  resources:
+    requests:
+      cpu: '2'
+      memory: 4Gi
+    limits:
+      cpu: '4'
+      memory: 8Gi
+  ports:
+    http: 8003
+  autoscaling:
+    enabled: true
+    minReplicas: 4
+    maxReplicas: 10
+  nodeSelector:
+    node-pool: general
+
+nluSidecar:
+  enabled: true
+  replicaCount: 4
+  image:
+    repository: 'ghcr.io/koreai/abl-nlu-sidecar'
+    tag: 'latest'
+  resources:
+    requests:
+      cpu: '1'
+      memory: 2Gi
+    limits:
+      cpu: '2'
+      memory: 4Gi
+  nodeSelector:
+    node-pool: general
+
+crawlerGo:
+  enabled: true
+  replicaCount: 10
+  image:
+    repository: 'ghcr.io/koreai/abl-crawler'
+    tag: 'latest'
+  resources:
+    requests:
+      cpu: '2'
+      memory: 2Gi
+    limits:
+      cpu: '4'
+      memory: 4Gi
+  autoscaling:
+    enabled: true
+    minReplicas: 10
+    maxReplicas: 25
+  nodeSelector:
+    node-pool: general
+
+crawlerMcp:
+  enabled: true
+  replicaCount: 4
+  image:
+    repository: 'ghcr.io/koreai/abl-crawler-mcp'
+    tag: 'latest'
+  resources:
+    requests:
+      cpu: '4'
+      memory: 4Gi
+    limits:
+      cpu: '8'
+      memory: 8Gi
+  autoscaling:
+    enabled: true
+    minReplicas: 4
+    maxReplicas: 10
+  nodeSelector:
+    node-pool: general
+
+multimodal:
+  enabled: true
+  replicaCount: 4
+  image:
+    repository: 'ghcr.io/koreai/abl-multimodal'
+    tag: 'latest'
+  resources:
+    requests:
+      cpu: '2'
+      memory: 4Gi
+    limits:
+      cpu: '4'
+      memory: 8Gi
+  autoscaling:
+    enabled: true
+    minReplicas: 4
+    maxReplicas: 10
+  nodeSelector:
+    node-pool: general
+
+# ============================================================================
+# Tier 2 - Stateful Data Stores
+# ============================================================================
+# NOTE: For Tier XL, managed services are strongly recommended.
+# The self-hosted configurations below are for air-gapped/on-prem deployments.
+# Managed alternatives:
+#   MongoDB -> Atlas M50+
+#   Redis -> ElastiCache Global Datastore
+#   OpenSearch -> AWS OpenSearch Service
+#   ClickHouse -> ClickHouse Cloud
+#   Neo4j -> AuraDB Enterprise
+#   Qdrant -> Qdrant Cloud
+# ============================================================================
+
+# MongoDB: 5+ shards x 3-node RS + 3 config servers + 3+ mongos
+mongodb:
+  enabled: true
+  operator:
+    enabled: true
+    version: '1.22.0'
+  topology: 'sharded'
+  sharding:
+    enabled: true
+    shards: 5
+    configServers:
+      replicas: 3
+      resources:
+        requests:
+          cpu: '4'
+          memory: 8Gi
+        limits:
+          cpu: '8'
+          memory: 16Gi
+      storage:
+        size: 100Gi
+        storageClass: 'gp3'
+    mongos:
+      replicas: 3
+      resources:
+        requests:
+          cpu: '4'
+          memory: 8Gi
+        limits:
+          cpu: '8'
+          memory: 16Gi
+    shardKey:
+      messages: '{ tenantId: "hashed" }'
+      conversations: '{ tenantId: 1, createdAt: -1 }'
+      auditLogs: '{ tenantId: "hashed" }'
+    # Zone-based sharding by region + tenant
+    zones:
+      - name: 'us-east'
+        shards: [0, 1, 2]
+        ranges:
+          - collection: messages
+            min: '{ region: "us-east", tenantId: MinKey }'
+            max: '{ region: "us-east", tenantId: MaxKey }'
+      - name: 'us-west'
+        shards: [3, 4]
+        ranges:
+          - collection: messages
+            min: '{ region: "us-west", tenantId: MinKey }'
+            max: '{ region: "us-west", tenantId: MaxKey }'
+  replicas: 3
+  resources:
+    requests:
+      cpu: '8'
+      memory: 32Gi
+    limits:
+      cpu: '16'
+      memory: 64Gi
+  storage:
+    dataDir:
+      size: 4Ti
+      storageClass: 'io2'
+      iops: 10000
+    logsDir:
+      size: 100Gi
+      storageClass: 'gp3'
+  configuration: |
+    operationProfiling:
+      mode: slowOp
+      slowOpThresholdMs: 20
+    replication:
+      oplogSizeMB: 32768
+    storage:
+      wiredTiger:
+        engineConfig:
+          cacheSizeGB: 20
+    net:
+      maxIncomingConnections: 20000
+  backup:
+    enabled: true
+    pbm:
+      version: '2.7'
+      type: 'physical'
+    schedule:
+      - name: continuous-pitr
+        type: oplog
+        storageName: s3-backup
+      - name: hourly-physical
+        schedule: '0 * * * *'
+        keep: 72
+        storageName: s3-backup
+    storages:
+      s3-backup:
+        type: s3
+        s3:
+          bucket: 'abl-backup-tier-xl'
+          region: 'us-east-1'
+          prefix: 'mongodb/'
+  crossRegionReplication:
+    enabled: true
+    targetRegion: 'us-west-2'
+  monitoring:
+    enabled: true
+    exporter:
+      enabled: true
+  indexes:
+    ttl:
+      messages: '365d'
+      traceEvents: '90d'
+      sessions: '24h'
+    compound:
+      - collection: messages
+        keys: '{ tenantId: 1, projectId: 1, createdAt: -1 }'
+      - collection: conversations
+        keys: '{ tenantId: 1, projectId: 1, createdAt: -1 }'
+      - collection: auditLogs
+        keys: '{ tenantId: 1, createdAt: -1 }'
+  nodeSelector:
+    node-pool: data
+  topologySpreadConstraints:
+    - maxSkew: 1
+      topologyKey: topology.kubernetes.io/zone
+      whenUnsatisfiable: DoNotSchedule
+
+# ClickHouse: 6+ shards x 2 replicas + 3 Keeper + S3 cold storage
+clickhouse:
+  enabled: true
+  operator:
+    enabled: true
+    version: '0.26.0'
+  shards: 6
+  replicas: 2
+  keeper:
+    replicas: 3
+    resources:
+      requests:
+        cpu: '2'
+        memory: 2Gi
+      limits:
+        cpu: '4'
+        memory: 4Gi
+    storage:
+      size: 50Gi
+      storageClass: 'gp3'
+  resources:
+    requests:
+      cpu: '8'
+      memory: 32Gi
+    limits:
+      cpu: '16'
+      memory: 64Gi
+  storage:
+    dataDir:
+      size: 2Ti
+      storageClass: 'io2'
+      iops: 10000
+  settings:
+    max_memory_usage: 25769803776 # 24 GB
+    background_pool_size: 16
+    parts_to_delay_insert: 150
+    parts_to_throw_insert: 300
+    insert_quorum: 2
+    distributed_ddl_task_timeout: 600
+    # Merge settings for high volume
+    merge_tree_max_rows_to_use_cache: 1048576
+    merge_tree_max_bytes_to_use_cache: 2147483648
+  ttl:
+    traces: '90 DAY'
+    metrics: '365 DAY'
+    usage: '730 DAY'
+  tieredStorage:
+    enabled: true
+    hotVolume:
+      storageClass: 'io2'
+    warmVolume:
+      storageClass: 'gp3'
+      ttlToWarm: '7 DAY'
+    coldVolume:
+      type: 's3'
+      bucket: 'abl-clickhouse-cold-tier-xl'
+      ttlToCold: '30 DAY'
+  shardingConfig:
+    shardingKey: 'cityHash64(tenant_id)'
+    # Separate tables for high/low volume data
+    highVolumeTables:
+      - trace_events
+      - llm_usage
+      - metrics
+    lowVolumeTables:
+      - billing_events
+      - audit_summary
+  # Materialized downsampled aggregates for fast queries
+  materializedViews:
+    enabled: true
+    views:
+      - name: 'trace_events_hourly'
+        query: 'SELECT tenant_id, toStartOfHour(timestamp) AS hour, event_type, count() AS cnt, avg(latency_ms) AS avg_latency FROM trace_events GROUP BY tenant_id, hour, event_type'
+      - name: 'llm_usage_daily'
+        query: 'SELECT tenant_id, toDate(timestamp) AS day, model, sum(input_tokens) AS total_input, sum(output_tokens) AS total_output FROM llm_usage GROUP BY tenant_id, day, model'
+  monitoring:
+    enabled: true
+    prometheusPort: 9363
+  nodeSelector:
+    node-pool: data
+  topologySpreadConstraints:
+    - maxSkew: 1
+      topologyKey: topology.kubernetes.io/zone
+      whenUnsatisfiable: DoNotSchedule
+
+# OpenSearch: 12+ hot + 6+ warm + 3 cold (S3) + 3 masters
+opensearch:
+  enabled: true
+  version: '3.3'
+  masterNodes:
+    enabled: true
+    replicas: 3
+    resources:
+      requests:
+        cpu: '4'
+        memory: 8Gi
+      limits:
+        cpu: '8'
+        memory: 16Gi
+    storage:
+      size: 50Gi
+      storageClass: 'gp3'
+    jvmHeap: '4g'
+  dataNodes:
+    replicas: 12
+    resources:
+      requests:
+        cpu: '8'
+        memory: 32Gi
+      limits:
+        cpu: '16'
+        memory: 64Gi
+    storage:
+      size: 4Ti
+      storageClass: 'io2'
+      iops: 10000
+    jvmHeap: '16g'
+  warmNodes:
+    enabled: true
+    replicas: 6
+    resources:
+      requests:
+        cpu: '4'
+        memory: 16Gi
+      limits:
+        cpu: '8'
+        memory: 32Gi
+    storage:
+      size: 8Ti
+      storageClass: 'st1'
+    jvmHeap: '8g'
+  coldNodes:
+    enabled: true
+    replicas: 3
+    resources:
+      requests:
+        cpu: '2'
+        memory: 8Gi
+      limits:
+        cpu: '4'
+        memory: 16Gi
+    storage:
+      type: 's3'
+      bucket: 'abl-opensearch-cold-tier-xl'
+    jvmHeap: '4g'
+  config:
+    index:
+      chunksShards: 12
+      vectorsShards: 6
+      numberOfReplicas: 2
+    knn:
+      enabled: true
+      algoParam:
+        efSearch: 200
+        efConstruction: 256
+        m: 16
+    segmentReplication:
+      enabled: true
+    routing:
+      allocation:
+        awareness:
+          attributes: 'zone'
+  # Per-tenant index strategy
+  indexStrategy:
+    # Large tenants get dedicated indices
+    dedicatedTenantThreshold: 1000000 # vectors
+    # Small tenants share indices with routing
+    sharedIndexRouting: 'tenantId'
+    # Time-based rollover for all
+    rolloverPolicy:
+      maxSize: '50gb'
+      maxAge: '7d'
+  ism:
+    enabled: true
+    policies:
+      - name: hyperscale-lifecycle
+        states:
+          - name: hot
+            actions:
+              - rollover:
+                  minSize: '50gb'
+                  minIndexAge: '7d'
+            transitions:
+              - stateName: warm
+                conditions:
+                  minIndexAge: '7d'
+          - name: warm
+            actions:
+              - replicaCount:
+                  numberOfReplicas: 1
+              - forceMerge:
+                  maxNumSegments: 1
+            transitions:
+              - stateName: cold
+                conditions:
+                  minIndexAge: '30d'
+          - name: cold
+            actions:
+              - snapshot:
+                  repository: 's3-backup'
+            transitions:
+              - stateName: delete
+                conditions:
+                  minIndexAge: '90d'
+          - name: delete
+            actions:
+              - delete: {}
+  crossRegion:
+    enabled: true
+    targetRegion: 'us-west-2'
+    replicationType: 'active-passive'
+  nodeSelector:
+    node-pool: data
+  topologySpreadConstraints:
+    - maxSkew: 1
+      topologyKey: topology.kubernetes.io/zone
+      whenUnsatisfiable: DoNotSchedule
+
+# Redis: 24+ nodes or ElastiCache Global Datastore
+# Separate clusters: cache / queues / pub-sub
+redis:
+  enabled: true
+  operator:
+    enabled: true
+  architecture: 'cluster'
+  # Primary cluster: queues + locks (noeviction)
+  cluster:
+    masterNodes: 12
+    replicasPerMaster: 2
+  master:
+    resources:
+      requests:
+        cpu: '4'
+        memory: 16Gi
+      limits:
+        cpu: '8'
+        memory: 32Gi
+  replica:
+    resources:
+      requests:
+        cpu: '4'
+        memory: 16Gi
+      limits:
+        cpu: '8'
+        memory: 32Gi
+  config:
+    maxmemory: '12gb'
+    maxmemory-policy: 'noeviction'
+    activedefrag: 'yes'
+    active-defrag-threshold-lower: '10'
+    active-defrag-cycle-max: '25'
+    appendonly: 'yes'
+    appendfsync: 'everysec'
+    cluster-enabled: 'yes'
+    cluster-require-full-coverage: 'no'
+    cluster-allow-reads-when-down: 'yes'
+  # Separate cache cluster (evictable, LFU)
+  cacheCluster:
+    enabled: true
+    masterNodes: 6
+    replicasPerMaster: 1
+    config:
+      maxmemory: '12gb'
+      maxmemory-policy: 'allkeys-lfu'
+      appendonly: 'no'
+  # Separate pub-sub cluster
+  pubsubCluster:
+    enabled: true
+    masterNodes: 3
+    replicasPerMaster: 1
+    config:
+      maxmemory: '4gb'
+      maxmemory-policy: 'noeviction'
+      appendonly: 'no'
+  # Cross-region replication (ElastiCache Global Datastore equivalent)
+  crossRegion:
+    enabled: true
+    mode: 'active-passive'
+    targetRegion: 'us-west-2'
+  nodeSelector:
+    node-pool: data
+  topologySpreadConstraints:
+    - maxSkew: 1
+      topologyKey: topology.kubernetes.io/zone
+      whenUnsatisfiable: DoNotSchedule
+
+# Neo4j: 5 core + 5+ read replicas, multi-DC Fabric
+neo4j:
+  enabled: true
+  core:
+    numberOfServers: 5
+  readReplicas:
+    numberOfServers: 5
+  resources:
+    requests:
+      cpu: '8'
+      memory: 32Gi
+    limits:
+      cpu: '16'
+      memory: 64Gi
+  readReplicaResources:
+    requests:
+      cpu: '4'
+      memory: 16Gi
+    limits:
+      cpu: '8'
+      memory: 32Gi
+  config:
+    dbms.memory.heap.initial_size: '16g'
+    dbms.memory.heap.max_size: '16g'
+    dbms.memory.pagecache.size: '12g'
+    causal_clustering.minimum_core_cluster_size_at_formation: '5'
+    causal_clustering.minimum_core_cluster_size_at_runtime: '3'
+    causal_clustering.server.routing_enabled: 'true'
+    dbms.routing.default_router: 'SERVER'
+    # Fabric composite databases
+    fabric.database.name: 'abl-fabric'
+  fabric:
+    enabled: true
+    compositeDatabases:
+      - name: 'tenant-graphs'
+        description: 'Composite DB routing to per-tenant databases'
+  storage:
+    data:
+      size: 2Ti
+      storageClass: 'io2'
+      iops: 5000
+  backup:
+    enabled: true
+    schedule: '0 * * * *' # Hourly
+    destination: 's3://abl-backup-tier-xl/neo4j/'
+    crossRegion:
+      enabled: true
+      targetRegion: 'us-west-2'
+  nodeSelector:
+    node-pool: data
+
+# Qdrant: 10+ nodes, cross-region, product quantization
+qdrant:
+  enabled: true
+  replicas: 10
+  resources:
+    requests:
+      cpu: '4'
+      memory: 16Gi
+    limits:
+      cpu: '8'
+      memory: 32Gi
+  storage:
+    size: 2Ti
+    storageClass: 'io2'
+    iops: 5000
+  config:
+    collection:
+      vectorSize: 1024
+      distance: 'Cosine'
+      replicationFactor: 3
+      writeConsistency: 'majority'
+      shardNumber: 10
+    optimizers:
+      indexingThreshold: 20000
+      memmapThreshold: 50000
+    quantization:
+      # Product quantization for extreme storage optimization
+      product:
+        compression: 'x16'
+        alwaysRam: false
+    shardKey: 'tenantId'
+    # Mmap for cold segments
+    storage:
+      mmap:
+        enabled: true
+        threshold: 100000
+  crossRegion:
+    enabled: true
+    targetRegion: 'us-west-2'
+  snapshot:
+    enabled: true
+    schedule: '0 */2 * * *' # Every 2 hours
+  nodeSelector:
+    node-pool: data
+
+# Restate: 5-node primary + standby DR
+restate:
+  enabled: true
+  replicas: 5
+  resources:
+    requests:
+      cpu: '4'
+      memory: 8Gi
+    limits:
+      cpu: '8'
+      memory: 16Gi
+  storage:
+    journal:
+      size: 1Ti
+      storageClass: 'io2'
+      iops: 10000
+  config:
+    partitions: 32
+    metadataStoreType: 'replicated'
+    snapshotInterval: 5000
+    trimDelayInterval: '10m'
+    compactionInterval: '15m'
+    # S3 archival for journal segments
+    archival:
+      enabled: true
+      bucket: 'abl-restate-archive-tier-xl'
+  # Standby DR cluster
+  standby:
+    enabled: true
+    region: 'us-west-2'
+    replicas: 5
+    asyncReplication: true
+  podDisruptionBudget:
+    minAvailable: 3
+  nodeSelector:
+    node-pool: data
+  topologySpreadConstraints:
+    - maxSkew: 1
+      topologyKey: topology.kubernetes.io/zone
+      whenUnsatisfiable: DoNotSchedule
+
+# ============================================================================
+# Node Pools (Karpenter NodePool definitions)
+# ============================================================================
+
+nodePools:
+  general:
+    instanceTypes:
+      aws: ['m5.4xlarge', 'm5.8xlarge']
+      azure: ['Standard_D32s_v3', 'Standard_D64s_v3']
+      gcp: ['e2-standard-32', 'e2-standard-64']
+    minNodes: 15
+    maxNodes: 30
+    labels:
+      node-pool: general
+    taints: []
+
+  compute:
+    instanceTypes:
+      aws: ['c5.9xlarge', 'c5.18xlarge']
+      azure: ['Standard_F32s_v2', 'Standard_F64s_v2']
+      gcp: ['c2-standard-60']
+    minNodes: 5
+    maxNodes: 10
+    labels:
+      node-pool: compute
+    taints: []
+
+  data:
+    instanceTypes:
+      aws: ['r5.8xlarge', 'r5.12xlarge', 'i3.8xlarge']
+      azure: ['Standard_E32s_v3', 'Standard_E64s_v3']
+      gcp: ['n2-highmem-32', 'n2-highmem-64']
+    minNodes: 12
+    maxNodes: 25
+    labels:
+      node-pool: data
+    taints: []
+
+  gpu:
+    enabled: false
+    instanceTypes:
+      aws: ['p4de.24xlarge', 'p5.48xlarge']
+      azure: ['Standard_ND96amsr_A100_v4']
+      gcp: ['a3-highgpu-8g']
+    minNodes: 0
+    maxNodes: 16
+    labels:
+      node-pool: gpu
+      accelerator: nvidia-h100
+    taints:
+      - key: 'nvidia.com/gpu'
+        value: 'true'
+        effect: 'NoSchedule'
+
+# ============================================================================
+# Ingress / Gateway API (Dedicated per service tier)
+# ============================================================================
+
+gateway:
+  enabled: true
+  className: 'cilium'
+  # Separate gateways per traffic class
+  gateways:
+    - name: public
+      listeners:
+        - name: https
+          port: 443
+          protocol: HTTPS
+          tls:
+            certificateRefs:
+              - name: abl-tls
+      routes:
+        - name: studio
+          hostnames: ['studio.abl.example.com']
+          backendRef:
+            name: studio
+            port: 5173
+        - name: admin
+          hostnames: ['admin.abl.example.com']
+          backendRef:
+            name: admin
+            port: 3003
+    - name: api
+      listeners:
+        - name: https
+          port: 443
+          protocol: HTTPS
+          tls:
+            certificateRefs:
+              - name: abl-api-tls
+      routes:
+        - name: runtime
+          hostnames: ['api.abl.example.com']
+          backendRef:
+            name: runtime
+            port: 3112
+        - name: search-ai
+          hostnames: ['search.abl.example.com']
+          backendRef:
+            name: search-ai-runtime
+            port: 3114
+    - name: internal
+      listeners:
+        - name: https
+          port: 443
+          protocol: HTTPS
+      routes:
+        - name: webhooks
+          hostnames: ['webhooks.abl.internal']
+          backendRef:
+            name: runtime
+            port: 3112
+
+# ============================================================================
+# Network Policies (Cilium L7 policies)
+# ============================================================================
+
+networkPolicies:
+  enabled: true
+  defaultDeny: true
+  policies:
+    - name: runtime-to-datastores
+      from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: runtime
+      to:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: mongos
+          ports: [27017]
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: redis
+          ports: [6379]
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: clickhouse
+          ports: [8123, 9000]
+    - name: searchai-to-datastores
+      from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: search-ai
+      to:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: opensearch
+          ports: [9200]
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: qdrant
+          ports: [6333, 6334]
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: neo4j
+          ports: [7474, 7687]
+    - name: workflow-to-restate
+      from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: workflow-engine
+      to:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: restate
+          ports: [8080, 9070]
+    - name: deny-cross-namespace
+      # Block all cross-namespace traffic by default
+      from: []
+      to: []

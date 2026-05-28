@@ -1,0 +1,14 @@
+AGENT: ChildGatherFlow
+
+GOAL: "Collect the caller destination"
+
+FLOW:
+  entry_point: collect_destination
+  steps:
+    - collect_destination
+
+collect_destination:
+  REASONING: false
+  GATHER:
+    - destination: required
+  THEN: COMPLETE

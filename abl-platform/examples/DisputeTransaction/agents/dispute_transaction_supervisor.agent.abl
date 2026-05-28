@@ -1,0 +1,94 @@
+SUPERVISOR: DisputeTransaction_Supervisor
+VERSION: "1.0"
+DESCRIPTION: "Multi-agent orchestrator for credit/debit card transaction dispute resolution"
+GOAL: "Route customers through dispute intake, validation, information collection, and submission based on dispute type and channel"
+
+PERSONA: |
+  Professional financial services orchestrator.
+  Security-conscious and detail-oriented.
+  Ensures proper flow through dispute resolution stages.
+  Routes based on dispute type, channel, and authentication status.
+
+EXECUTION:
+  model: gpt-4.1
+  temperature: 0.3
+  max_tokens: 1500
+  max_iterations: 5
+  inline_gather: true
+  pipeline:
+    enabled: true
+    mode: sequential
+    model: qwen35-a3b-35b
+    shortCircuit:
+      enabled: true
+      confidenceThreshold: 0.85
+
+MEMORY:
+  session:
+    - profile_id
+    - customer_id
+    - session_id
+    - session_context
+    - authenticated
+    - channel_type
+    - dispute_stage
+    - dispute_reason
+    - selected_card_id
+    - selected_transaction_ids
+    - dispute_id
+    - escalation_reason
+    - escalation_required
+    - feedback_offered
+    - dispute_ack
+    - not_supported_agent_transfer
+    - contact_to_merchant
+
+AGENTS:
+  dispute: Dispute
+  transfer: Agent_Transfer
+  feedback: Feedback_Agent
+
+ON_START:
+  - SET: profile_id = COALESCE(profile_id, user.profile_id, user_id)
+  - SET: customer_id = COALESCE(customer_id, user.customer_id, user_id)
+  - SET: session_id = COALESCE(session_id, session.id)
+  - SET: session_context = COALESCE(session_context, "Dispute transaction support session")
+  - SET: channel_type = COALESCE(channel_type, session.channel, "web")
+  - SET: authenticated = COALESCE(authenticated, user.is_authenticated, true)
+  - SET: feedback_offered = COALESCE(feedback_offered, false)
+
+HANDOFF:
+   # P1 - Complete dispute processing (intake, validation, information collection)
+  - TO: Dispute
+    WHEN: authenticated == true AND (dispute_stage == "" OR dispute_stage == "initial_capture")
+    CONTEXT:
+      pass: [profile_id, session_context, channel_type]
+      summary: "Complete end-to-end dispute processing: intake, card/transaction selection, probing validation, information collection, and confirmation"
+    EXPECT_RETURN: true
+    ON_RETURN: "proceed_to_submission"
+
+  # P2 - Escalation to human agent
+  - TO: Agent_Transfer
+    WHEN: escalation_required == true OR not_supported_agent_transfer == true
+    CONTEXT:
+      pass: [profile_id, customer_id, dispute_reason, escalation_reason, session_context]
+      summary: "Escalation to human agent"
+    EXPECT_RETURN: false
+
+  # P3 - Feedback collection
+  - TO: Feedback_Agent
+    WHEN: dispute_id != "" AND feedback_offered == false
+    CONTEXT:
+      pass: [session_id, dispute_id]
+      summary: "Collect post-dispute feedback"
+    EXPECT_RETURN: false
+
+COMPLETE:
+  - WHEN: dispute_id != ""
+    RESPOND: "Your dispute (ID: {{dispute_id}}) has been filed successfully. We'll update you via email as we investigate."
+
+  - WHEN: escalation_required == true
+    RESPOND: "I've connected you with a specialist who will help complete your dispute."
+
+  - WHEN: contact_to_merchant == true
+    RESPOND: "Please try resolving this with the merchant first. If the issue persists, come back and we'll help you file a dispute."

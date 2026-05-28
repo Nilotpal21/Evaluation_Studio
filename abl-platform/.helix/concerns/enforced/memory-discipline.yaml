@@ -1,0 +1,60 @@
+id: memory-discipline
+title: In-Memory Data Structure Discipline
+enforcement: blocking
+severity_default: high
+rubric_concern: 2
+
+scope:
+  globs:
+    - apps/**/src/**/*.ts
+    - packages/**/src/**/*.ts
+  exclude:
+    - '**/__tests__/**'
+    - '**/*.test.ts'
+
+references:
+  docs:
+    - CLAUDE.md#key-rules
+  related_concerns:
+    - retention
+    - scale
+    - cross-pod
+
+detectors:
+  - id: new-map-needs-ttl-and-size
+    kind: model-review
+    severity: high
+    guidance_ref: ../../prompts/map-discipline-lens.md
+    output_schema:
+      rule_id: new-map-needs-ttl-and-size
+      severity: high | medium
+      location:
+        file: string
+        line: number
+      claim: string
+      reality: string
+      options:
+        A: wrap in lru-cache with max + ttl
+        B: confirm request-scoped (cite the scope lifetime)
+    message: |
+      Every `new Map()` that outlives a single request needs a max size,
+      TTL, and eviction policy. Bare Maps on module scope are a recurring
+      leak source in long-running Node services.
+    fix_hint: |
+      Use lru-cache (already in dependencies) with max and ttl. For weak
+      references, use WeakMap with explicit cleanup hooks. Document the
+      eviction policy in a one-line comment.
+
+  - id: no-unbounded-array-accumulator
+    kind: grep
+    severity: medium
+    pattern: 'const\s+\w+:\s*\w+\[\]\s*=\s*\[\]'
+    message: |
+      Arrays accumulated on module scope without bounds will grow until OOM.
+    fix_hint: |
+      Bound with a ring buffer, periodically flush to durable storage, or
+      move to Redis stream / Kafka. Document retention at declaration.
+
+stage_hooks:
+  - stage: implementation
+    inject_checklist: true

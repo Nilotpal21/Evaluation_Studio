@@ -1,0 +1,41 @@
+/**
+ * Saludsa Transfer Tools
+ * MCP tools for business hours, task eligibility, data consent, and Vitality.
+ */
+
+TOOLS:
+  auth: api_key
+  timeout: 45000
+  auth_config:
+    header_name: "Authorization"
+    api_key: "{{env.SALUDSA_MCP_AUTH}}"
+
+  validate_out_of_hours(codigoTarea: string, sessionId: string) -> {success: boolean, outOfHours: boolean, start: string, end: string, message: string}
+    type: http
+    endpoint: "{{env.SALUDSA_MCP_ENDPOINT}}/validateoutofhours"
+    method: POST
+    description: "Validate after-hours service availability by queue. Replaces Kore.ai platform API. codigoTarea examples: Autorizaciones, Urgencias, Transferencia_Travel."
+
+  validate_task_eligibility(codigoTarea: string, sessionId: string) -> {success: boolean, isEligible: boolean, activeContracts: object, activeContractsCount: number, ticketId: string, apiError: boolean, message: string}
+    type: http
+    endpoint: "{{env.SALUDSA_MCP_ENDPOINT}}/validateTaskEligibility"
+    method: POST
+    description: "Check eligibility for business tasks and update Zendesk. codigoTarea: MedicoEnLinea, Urgencias, Autorizaciones, MedicoDomicilio, Transferencia_Dental, TRANSFERENCIA_EXEQUIAL, TransferenciaPca, Transferencia_Travel."
+
+  validar_elegibilidad_tarea(codigoTarea: string, sessionId: string) -> {success: boolean, isEligible: boolean, apiError: boolean}
+    type: http
+    endpoint: "{{env.SALUDSA_MCP_ENDPOINT}}/validarElegibilidadTarea"
+    method: POST
+    description: "Check eligibility using business parameters."
+
+  lpd_consent(userConsent: string, channel: string, sessionId: string) -> {success: boolean}
+    type: http
+    endpoint: "{{env.SALUDSA_MCP_ENDPOINT}}/lpd-consent"
+    method: POST
+    description: "Handle user data consent (GDPR/privacy)."
+
+  vitality_check(sessionId: string) -> {success: boolean, isActive: boolean}
+    type: http
+    endpoint: "{{env.SALUDSA_MCP_ENDPOINT}}/vitalityCheck"
+    method: POST
+    description: "VPMS service check for Vitality wellness program."

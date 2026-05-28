@@ -1,0 +1,239 @@
+# Human-owned HELIX verification policy for abl-platform.
+# This file encodes what evidence HELIX must gather before it trusts a change.
+
+version: 1
+
+defaults:
+  policyWhenNoModuleMatches:
+    maxAutonomyLevel: L1
+    requireHumanCheckpoint: true
+    requiredCommands:
+      - pnpm build
+      - npx prettier --write
+    regressionSuites:
+      - repo-fast
+    missingE2EAction: characterize-first
+  buildBeforeTest: true
+  characterizeFirstWhen:
+    - no targeted regression suite maps to touched files
+    - a critical module lacks real end-to-end coverage
+    - only mocked tests cover the touched behavior
+    - a change crosses package boundaries without a known verification map
+  rejectEvidence:
+    - mocked codebase components in e2e tests
+    - direct database access in e2e assertions
+    - green tests that did not execute the touched module
+  escalateWhen:
+    - auth or isolation logic changes
+    - public contract or shared type changes
+    - migrations or seed data change
+    - runtime startup or environment requirements change
+
+suites:
+  - id: repo-fast
+    kind: regression
+    command: pnpm test:report:fast
+    scope: repo
+  - id: repo-full
+    kind: regression
+    command: pnpm test:report
+    scope: repo
+  - id: e2e-smoke
+    kind: e2e
+    command: pnpm e2e:smoke
+    scope: repo
+  - id: helix-package
+    kind: regression
+    command: pnpm --filter @agent-platform/helix test
+    scope:
+      - packages/helix
+  - id: runtime-fast
+    kind: regression
+    command: pnpm --filter @agent-platform/runtime test:fast
+    scope:
+      - apps/runtime
+  - id: runtime-e2e
+    kind: e2e
+    command: pnpm --filter @agent-platform/runtime test:e2e
+    scope:
+      - apps/runtime
+  - id: runtime-sdk-auth
+    kind: e2e
+    command: pnpm --filter @agent-platform/runtime test:sdk-auth
+    scope:
+      - apps/runtime
+  - id: studio-fast
+    kind: regression
+    command: pnpm --filter @agent-platform/studio test:fast
+    scope:
+      - apps/studio
+  - id: studio-lint
+    kind: regression
+    command: pnpm --filter @agent-platform/studio lint
+    scope:
+      - apps/studio
+  - id: studio-e2e
+    kind: e2e
+    command: pnpm --filter @agent-platform/studio test:e2e
+    scope:
+      - apps/studio
+  - id: studio-sdk-preview
+    kind: e2e
+    command: pnpm --filter @agent-platform/studio test:e2e:sdk-preview
+    scope:
+      - apps/studio
+  - id: search-ai-fast
+    kind: regression
+    command: pnpm --filter @agent-platform/search-ai test:fast
+    scope:
+      - apps/search-ai
+  - id: search-ai-runtime-fast
+    kind: regression
+    command: pnpm --filter @agent-platform/search-ai-runtime test:fast
+    scope:
+      - apps/search-ai-runtime
+  - id: project-io-fast
+    kind: regression
+    command: pnpm --filter @agent-platform/project-io test:fast
+    scope:
+      - packages/project-io
+
+modulePolicies:
+  - id: helix-core
+    criticality: high
+    paths:
+      - packages/helix/src
+    maxAutonomyLevel: L2
+    requiredCommands:
+      - pnpm --filter @agent-platform/helix build
+      - npx prettier --write
+    requiredSuites:
+      regression:
+        - helix-package
+      e2e: []
+    requiredSignals:
+      - session resume must preserve completed-stage progress
+      - prompt context snapshots must remain persisted and reusable
+      - quality gate failures must remain blocking and structured
+    missingE2EAction: not-required
+
+  - id: runtime-auth-and-isolation
+    criticality: critical
+    paths:
+      - apps/runtime/src
+      - packages/shared-auth/src
+      - packages/database/src
+    maxAutonomyLevel: L1
+    requiredCommands:
+      - pnpm build
+      - npx prettier --write
+    requiredSuites:
+      regression:
+        - runtime-fast
+        - repo-full
+      e2e:
+        - runtime-sdk-auth
+        - e2e-smoke
+    requiredSignals:
+      - real HTTP middleware path is exercised
+      - cross-tenant and cross-project access returns 404
+      - user-owned resources are filtered by userId or createdBy
+      - no direct DB access or module mocks appear in e2e coverage
+    characterizeFirstWhen:
+      - touched files are not covered by an auth or isolation test
+      - the change crosses runtime routes and shared-auth middleware
+
+  - id: runtime-session-and-streaming
+    criticality: high
+    paths:
+      - apps/runtime/src
+      - packages/execution/src
+      - packages/compiler/src
+    maxAutonomyLevel: L2
+    requiredCommands:
+      - pnpm build
+      - npx prettier --write
+    requiredSuites:
+      regression:
+        - runtime-fast
+        - repo-full
+      e2e:
+        - runtime-e2e
+        - e2e-smoke
+    requiredSignals:
+      - real runtime session creation and resume path is exercised
+      - streaming and structured content survive round-trips
+      - tool wiring and execution context invariants are verified
+    characterizeFirstWhen:
+      - no failing or characterization test exists for the touched code path
+
+  - id: studio-sdk-preview-and-bootstrap
+    criticality: high
+    paths:
+      - apps/studio/src
+      - apps/studio/eslint-rules
+      - apps/studio/eslint.config.mjs
+      - apps/studio/scripts/run-eslint.mjs
+      - packages/web-sdk/src
+    maxAutonomyLevel: L2
+    requiredCommands:
+      - pnpm build
+      - pnpm --filter @agent-platform/studio lint
+      - npx prettier --write
+    requiredSuites:
+      regression:
+        - studio-lint
+        - studio-fast
+        - repo-fast
+      e2e:
+        - studio-sdk-preview
+        - studio-e2e
+    requiredSignals:
+      - preview bootstrap artifacts remain valid end-to-end
+      - runtime and studio shared signing assumptions stay aligned
+      - browser flows use real UI or HTTP boundaries, not mocked internals
+
+  - id: project-io-import-export
+    criticality: high
+    paths:
+      - packages/project-io/src
+    maxAutonomyLevel: L2
+    requiredCommands:
+      - pnpm --filter @agent-platform/project-io build
+      - npx prettier --write
+    requiredSuites:
+      regression:
+        - project-io-fast
+        - repo-fast
+      e2e: []
+    requiredSignals:
+      - export/import round-trip or equivalent contract test is exercised
+      - manifest shape and tool signature extraction stay stable
+      - cross-reference resolution remains deterministic
+    missingE2EAction: not-required
+
+  - id: search-ai-ingestion-and-retrieval
+    criticality: high
+    paths:
+      - apps/search-ai/src
+      - apps/search-ai-runtime/src
+      - services/docling-service
+      - services/preprocessing-service
+    maxAutonomyLevel: L1
+    requiredCommands:
+      - pnpm build
+      - npx prettier --write
+    requiredSuites:
+      regression:
+        - search-ai-fast
+        - search-ai-runtime-fast
+        - repo-full
+      e2e:
+        - e2e-smoke
+    requiredSignals:
+      - ingestion changes preserve document-to-index flow
+      - retrieval changes preserve end-user query success path
+      - service boundary changes include at least one real multi-service probe
+    characterizeFirstWhen:
+      - touched behavior depends on Python service contracts without dedicated regression tests
+      - no end-to-end retrieval or ingestion probe covers the touched path

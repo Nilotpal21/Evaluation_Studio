@@ -1,0 +1,132 @@
+---
+title: 'Import package contract'
+section: 'abl-reference'
+order: 14
+description: 'Exact project package, layer, manifest, compiler-preview, and diagnostics contract for ABL folders and archives.'
+---
+
+# Project package and diagnostics contract
+
+The import preview endpoint accepts a JSON body with a `files` map:
+
+```json
+{
+  "files": {
+    "project.json": "{...}",
+    "agents/support.agent.abl": "AGENT: Support_Agent\nGOAL: \"Help\""
+  },
+  "deleteUnmatched": false,
+  "layers": ["core"]
+}
+```
+
+MCP tools may assemble this `files` map from a local folder or `.zip`, but the platform package contract is the same. The same package shape is used for import preview, compiler-model discovery, ABL design linting, transcript failure diagnosis, and repair/eval loops where an operator repeatedly patches the agent definition and validates it again.
+
+## Canonical folders
+
+| Folder               | Layer         | Notes                          |
+| -------------------- | ------------- | ------------------------------ |
+| `agents/`            | `core`        | `.agent.abl` or `.agent.yaml`  |
+| `tools/`             | `core`        | `.tools.abl` files             |
+| `behavior_profiles/` | `core`        | `.behavior_profile.abl` files  |
+| `config/`, `core/`   | `core`        | Runtime/config files           |
+| `locales/`           | `core`        | `locales/<locale>/<file>.json` |
+| `connections/`       | `connections` | Connection bundles             |
+| `prompts/`           | `prompts`     | Prompt-library bundles         |
+| `guardrails/`        | `guardrails`  | Guardrail JSON/YAML bundles    |
+| `workflows/`         | `workflows`   | Workflow and version bundles   |
+| `evals/`             | `evals`       | Eval scenario bundles          |
+| `search/`            | `search`      | Search/KB bundles              |
+| `channels/`          | `channels`    | Channel bundles                |
+| `vocabulary/`        | `vocabulary`  | Vocabulary bundles             |
+
+## Layer names
+
+`layers_included` and request `layers` accept only:
+
+```text
+core
+connections
+prompts
+guardrails
+workflows
+evals
+search
+channels
+vocabulary
+```
+
+Behavior profiles are imported through the `core` layer. `behavior_profiles` is not a layer name.
+
+Manifest profile records do not create behavior profiles by themselves. They must point at files present in the import payload, usually `behavior_profiles/<name>.behavior_profile.abl`. During preview, the importer categorizes and compiles those files; if the manifest references a profile path that is missing, or an agent uses `USE BEHAVIOR_PROFILE` for a profile that was not compiled, diagnostics should report the missing path or unresolved profile reference.
+
+## Manifest rules
+
+`project.json` v2 uses:
+
+```json
+{
+  "format_version": "2.0",
+  "entry_agent": "Support_Agent",
+  "layers_included": ["core", "connections"],
+  "agents": {
+    "Support_Agent": { "path": "agents/support.agent.abl" }
+  },
+  "tools": {
+    "support_tools": { "path": "tools/support.tools.abl" }
+  },
+  "behavior_profiles": {
+    "voice_vip": {
+      "name": "voice_vip",
+      "path": "behavior_profiles/voice_vip.behavior_profile.abl",
+      "priority": 100,
+      "when_summary": "true",
+      "used_by": ["Support_Agent"]
+    }
+  },
+  "metadata": {
+    "entity_counts": {
+      "core": 3,
+      "connections": 0
+    },
+    "required_env_vars": [],
+    "required_connectors": [],
+    "required_mcp_servers": []
+  }
+}
+```
+
+If `metadata.entity_counts` is present, import preview treats it as authoritative and checks that declared layers and archive files match.
+
+## Compiler preview and diagnostics
+
+Import preview and package diagnostics do more than read files. They:
+
+1. Parses `project.json` and `abl.lock`.
+2. Strips a single common wrapper folder from uploaded archives.
+3. Categorizes files into layers.
+4. Validates layer parity and duplicate logical names.
+5. Validates agent, tool, and behavior profile syntax.
+6. Builds dependency refs for handoffs, delegates, tool imports, and profile use.
+7. Runs compiler validation for imported agent/profile documents.
+8. Expose the compiler-visible model: agents, tools, flow steps, handoffs, memory variables, behavior profile references, and unresolved refs.
+9. Return normalized preview/lint issues, warnings, preview digest, acknowledgement requirements, and suggested fixes.
+
+## Error response shape
+
+Import endpoints return JSON on failure:
+
+```json
+{
+  "success": false,
+  "preview": { "...": "optional preview" },
+  "previewDigest": "optional-digest",
+  "warnings": [],
+  "error": {
+    "code": "INVALID_LAYERS",
+    "message": "Unsupported import layer(s): behavior_profiles"
+  }
+}
+```
+
+MCP wrappers should preserve this body. If the wrapper only reports `400 Bad Request`, use `debug_docs` with this topic or call `platform_validate_package` from an updated MCP tool.

@@ -1,0 +1,1227 @@
+{
+  "issue": {
+    "expand": "renderedFields,names,schema,operations,editmeta,changelog,versionedRepresentations",
+    "id": "550643",
+    "self": "https://koreteam.atlassian.net/rest/api/3/issue/550643",
+    "key": "ABLP-1059",
+    "renderedFields": {
+      "statuscategorychangedate": "Thursday 2:13 PM",
+      "issuetype": null,
+      "timespent": null,
+      "project": null,
+      "fixVersions": null,
+      "aggregatetimespent": null,
+      "statusCategory": null,
+      "resolution": null,
+      "customfield_13700": null,
+      "customfield_15205": null,
+      "resolutiondate": null,
+      "workratio": null,
+      "issuerestriction": null,
+      "watches": null,
+      "lastViewed": null,
+      "created": "Thursday 2:13 PM",
+      "customfield_15279": null,
+      "priority": null,
+      "customfield_15514": null,
+      "labels": null,
+      "customfield_15508": null,
+      "timeestimate": null,
+      "aggregatetimeoriginalestimate": null,
+      "versions": null,
+      "issuelinks": null,
+      "assignee": null,
+      "updated": "Thursday 2:14 PM",
+      "status": null,
+      "components": null,
+      "timeoriginalestimate": null,
+      "description": "<h3><a name=\"What%27shappening\"></a>What's happening</h3>\n\n<ol>\n\t<li>The handoff to a remote A2A agent was configured with <tt>ASYNC: true</tt> in the DSL, but the actual outbound call still went as <tt>async: false</tt>. The trace confirms a blocking sync call was made, not an async push call.</li>\n</ol>\n\n\n<ol>\n\t<li>The platform does not consult the remote agent's <tt>agent-card.json</tt> capabilities (<tt>streaming</tt>, <tt>pushNotifications</tt>) when deciding which mode to use. The decision is based purely on the DSL flag and ignores what the remote agent has declared it supports.</li>\n</ol>\n\n\n<ol>\n\t<li>As a result:\n\t<ul>\n\t\t<li>Streaming mode is never reached, even when the remote agent declares <tt>streaming: true</tt>.</li>\n\t\t<li>Async push mode is not reliably triggered, even when DSL says <tt>ASYNC: true</tt> and the remote agent declares <tt>pushNotifications: true</tt>.</li>\n\t</ul>\n\t</li>\n</ol>\n\n\n<h3><a name=\"Whatshouldhappen\"></a>What should happen</h3>\n\n<p>The mode should be picked based on <b>both</b> the DSL flag and the remote agent's advertised capabilities:</p>\n\n\n\n<div class='table-wrap'>\n<table class='confluenceTable'><tbody>\n<tr>\n<th class='confluenceTh'>DSL <tt>ASYNC</tt></th>\n<th class='confluenceTh'>Remote <tt>streaming</tt></th>\n<th class='confluenceTh'>Remote <tt>pushNotifications</tt></th>\n<th class='confluenceTh'>Mode</th>\n</tr>\n<tr>\n<td class='confluenceTd'><tt>false</tt> (or absent)</td>\n<td class='confluenceTd'><tt>false</tt></td>\n<td class='confluenceTd'>any</td>\n<td class='confluenceTd'><b>Sync</b></td>\n</tr>\n<tr>\n<td class='confluenceTd'><tt>false</tt> (or absent)</td>\n<td class='confluenceTd'><tt>true</tt></td>\n<td class='confluenceTd'>any</td>\n<td class='confluenceTd'><b>Streaming</b></td>\n</tr>\n<tr>\n<td class='confluenceTd'><tt>true</tt></td>\n<td class='confluenceTd'>any</td>\n<td class='confluenceTd'><tt>true</tt></td>\n<td class='confluenceTd'><b>Async push</b></td>\n</tr>\n<tr>\n<td class='confluenceTd'><tt>true</tt></td>\n<td class='confluenceTd'>any</td>\n<td class='confluenceTd'><tt>false</tt></td>\n<td class='confluenceTd'><b>Error</b> — async requested but agent does not support push notifications</td>\n</tr>\n</tbody></table>\n</div>\n\n\n<p>Additionally:</p>\n\n<ul>\n\t<li>The trace should clearly show which mode was chosen and why.</li>\n\t<li>When a mismatch occurs (e.g., <tt>ASYNC: true</tt> but remote does not support push), the platform should fail fast with a clear error, not silently fall back to sync.</li>\n</ul>\n",
+      "customfield_15225": "",
+      "customfield_11300": null,
+      "timetracking": {},
+      "security": null,
+      "attachment": [],
+      "aggregatetimeestimate": null,
+      "summary": null,
+      "creator": null,
+      "subtasks": null,
+      "reporter": null,
+      "aggregateprogress": null,
+      "customfield_10002": null,
+      "customfield_10400": null,
+      "customfield_13900": null,
+      "environment": "",
+      "duedate": null,
+      "progress": null,
+      "votes": null,
+      "comment": {
+        "comments": [],
+        "self": "https://koreteam.atlassian.net/rest/api/3/issue/550643/comment",
+        "maxResults": 0,
+        "total": 0,
+        "startAt": 0
+      },
+      "worklog": {
+        "startAt": 0,
+        "maxResults": 20,
+        "total": 0,
+        "worklogs": []
+      }
+    },
+    "changelog": {
+      "startAt": 0,
+      "maxResults": 1,
+      "total": 1,
+      "histories": [
+        {
+          "id": "6171385",
+          "author": {
+            "self": "https://koreteam.atlassian.net/rest/api/3/user?accountId=712020%3A6b23a021-654a-4caf-b58f-58828da87f2d",
+            "accountId": "712020:6b23a021-654a-4caf-b58f-58828da87f2d",
+            "avatarUrls": {
+              "48x48": "https://secure.gravatar.com/avatar/6ea3357475d47c399134491a46a98176?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FVG-4.png",
+              "24x24": "https://secure.gravatar.com/avatar/6ea3357475d47c399134491a46a98176?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FVG-4.png",
+              "16x16": "https://secure.gravatar.com/avatar/6ea3357475d47c399134491a46a98176?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FVG-4.png",
+              "32x32": "https://secure.gravatar.com/avatar/6ea3357475d47c399134491a46a98176?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FVG-4.png"
+            },
+            "displayName": "Vijay Gudikal",
+            "active": true,
+            "timeZone": "Asia/Kolkata",
+            "accountType": "atlassian"
+          },
+          "created": "2026-05-14T14:14:02.341+0530",
+          "items": [
+            {
+              "field": "assignee",
+              "fieldtype": "jira",
+              "fieldId": "assignee",
+              "from": null,
+              "fromString": null,
+              "to": "557058:19965570-a9cd-4d76-b059-6af5ae4fdca7",
+              "toString": "Prasanna Arikala",
+              "tmpFromAccountId": null,
+              "tmpToAccountId": "557058:19965570-a9cd-4d76-b059-6af5ae4fdca7"
+            }
+          ]
+        }
+      ]
+    },
+    "fields": {
+      "statuscategorychangedate": "2026-05-14T14:13:49.406+0530",
+      "issuetype": {
+        "self": "https://koreteam.atlassian.net/rest/api/3/issuetype/13402",
+        "id": "13402",
+        "description": "",
+        "iconUrl": "https://koreteam.atlassian.net/rest/api/2/universal_avatar/view/type/issuetype/avatar/10703?size=medium",
+        "name": "Bug",
+        "subtask": false,
+        "avatarId": 10703,
+        "entityId": "ffe81e74-168d-44e4-b40a-87293f5b8180",
+        "hierarchyLevel": 0
+      },
+      "timespent": null,
+      "project": {
+        "self": "https://koreteam.atlassian.net/rest/api/3/project/17286",
+        "id": "17286",
+        "key": "ABLP",
+        "name": "Agent-Platform-v2",
+        "projectTypeKey": "software",
+        "simplified": true,
+        "avatarUrls": {
+          "48x48": "https://koreteam.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/15404",
+          "24x24": "https://koreteam.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/15404?size=small",
+          "16x16": "https://koreteam.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/15404?size=xsmall",
+          "32x32": "https://koreteam.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/15404?size=medium"
+        }
+      },
+      "fixVersions": [],
+      "aggregatetimespent": null,
+      "statusCategory": {
+        "self": "https://koreteam.atlassian.net/rest/api/3/statuscategory/2",
+        "id": 2,
+        "key": "new",
+        "colorName": "blue-gray",
+        "name": "To Do"
+      },
+      "resolution": null,
+      "customfield_13700": "{}",
+      "customfield_15205": null,
+      "resolutiondate": null,
+      "workratio": -1,
+      "issuerestriction": {
+        "issuerestrictions": {},
+        "shouldDisplay": true
+      },
+      "watches": {
+        "self": "https://koreteam.atlassian.net/rest/api/3/issue/ABLP-1059/watchers",
+        "watchCount": 1,
+        "isWatching": false
+      },
+      "lastViewed": null,
+      "created": "2026-05-14T14:13:49.038+0530",
+      "customfield_15279": null,
+      "priority": {
+        "self": "https://koreteam.atlassian.net/rest/api/3/priority/10200",
+        "iconUrl": "https://koreteam.atlassian.net/images/icons/priorities/trivial_new.svg",
+        "name": "None",
+        "id": "10200"
+      },
+      "customfield_15514": null,
+      "labels": [],
+      "customfield_15508": null,
+      "timeestimate": null,
+      "aggregatetimeoriginalestimate": null,
+      "versions": [],
+      "issuelinks": [],
+      "assignee": {
+        "self": "https://koreteam.atlassian.net/rest/api/3/user?accountId=557058%3A19965570-a9cd-4d76-b059-6af5ae4fdca7",
+        "accountId": "557058:19965570-a9cd-4d76-b059-6af5ae4fdca7",
+        "emailAddress": "prasanna@kore.com",
+        "avatarUrls": {
+          "48x48": "https://secure.gravatar.com/avatar/84aa6c5f7ca4865903e52515ef5499c4?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FPA-6.png",
+          "24x24": "https://secure.gravatar.com/avatar/84aa6c5f7ca4865903e52515ef5499c4?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FPA-6.png",
+          "16x16": "https://secure.gravatar.com/avatar/84aa6c5f7ca4865903e52515ef5499c4?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FPA-6.png",
+          "32x32": "https://secure.gravatar.com/avatar/84aa6c5f7ca4865903e52515ef5499c4?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FPA-6.png"
+        },
+        "displayName": "Prasanna Arikala",
+        "active": true,
+        "timeZone": "Asia/Kolkata",
+        "accountType": "atlassian"
+      },
+      "updated": "2026-05-14T14:14:02.341+0530",
+      "status": {
+        "self": "https://koreteam.atlassian.net/rest/api/3/status/13811",
+        "description": "",
+        "iconUrl": "https://koreteam.atlassian.net/images/icons/statuses/generic.png",
+        "name": "To Do",
+        "id": "13811",
+        "statusCategory": {
+          "self": "https://koreteam.atlassian.net/rest/api/3/statuscategory/2",
+          "id": 2,
+          "key": "new",
+          "colorName": "blue-gray",
+          "name": "To Do"
+        }
+      },
+      "components": [],
+      "timeoriginalestimate": null,
+      "description": {
+        "type": "doc",
+        "version": 1,
+        "content": [
+          {
+            "type": "heading",
+            "attrs": {
+              "level": 3,
+              "localId": "cd9c15ca9a8a"
+            },
+            "content": [
+              {
+                "type": "text",
+                "text": "What's happening"
+              }
+            ]
+          },
+          {
+            "type": "orderedList",
+            "attrs": {
+              "order": 1,
+              "localId": "2160225c77b1"
+            },
+            "content": [
+              {
+                "type": "listItem",
+                "attrs": {
+                  "localId": "202b8a2c9bed"
+                },
+                "content": [
+                  {
+                    "type": "paragraph",
+                    "content": [
+                      {
+                        "type": "text",
+                        "text": "The handoff to a remote A2A agent was configured with "
+                      },
+                      {
+                        "type": "text",
+                        "text": "ASYNC: true",
+                        "marks": [
+                          {
+                            "type": "code"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "text",
+                        "text": " in the DSL, but the actual outbound call still went as "
+                      },
+                      {
+                        "type": "text",
+                        "text": "async: false",
+                        "marks": [
+                          {
+                            "type": "code"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "text",
+                        "text": ". The trace confirms a blocking sync call was made, not an async push call."
+                      }
+                    ],
+                    "attrs": {
+                      "localId": "82f81688f153"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "orderedList",
+            "attrs": {
+              "order": 2,
+              "localId": "b5ab2ba292f8"
+            },
+            "content": [
+              {
+                "type": "listItem",
+                "attrs": {
+                  "localId": "6c3e04478802"
+                },
+                "content": [
+                  {
+                    "type": "paragraph",
+                    "content": [
+                      {
+                        "type": "text",
+                        "text": "The platform does not consult the remote agent's "
+                      },
+                      {
+                        "type": "text",
+                        "text": "agent-card.json",
+                        "marks": [
+                          {
+                            "type": "code"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "text",
+                        "text": " capabilities ("
+                      },
+                      {
+                        "type": "text",
+                        "text": "streaming",
+                        "marks": [
+                          {
+                            "type": "code"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "text",
+                        "text": ", "
+                      },
+                      {
+                        "type": "text",
+                        "text": "pushNotifications",
+                        "marks": [
+                          {
+                            "type": "code"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "text",
+                        "text": ") when deciding which mode to use. The decision is based purely on the DSL flag and ignores what the remote agent has declared it supports."
+                      }
+                    ],
+                    "attrs": {
+                      "localId": "a43cd853ec39"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "orderedList",
+            "attrs": {
+              "order": 3,
+              "localId": "7773f12a6d4b"
+            },
+            "content": [
+              {
+                "type": "listItem",
+                "attrs": {
+                  "localId": "1d5d590bf4f0"
+                },
+                "content": [
+                  {
+                    "type": "paragraph",
+                    "content": [
+                      {
+                        "type": "text",
+                        "text": "As a result:"
+                      }
+                    ],
+                    "attrs": {
+                      "localId": "e0e9598f624c"
+                    }
+                  },
+                  {
+                    "type": "bulletList",
+                    "content": [
+                      {
+                        "type": "listItem",
+                        "attrs": {
+                          "localId": "eb64d93910ad"
+                        },
+                        "content": [
+                          {
+                            "type": "paragraph",
+                            "content": [
+                              {
+                                "type": "text",
+                                "text": "Streaming mode is never reached, even when the remote agent declares "
+                              },
+                              {
+                                "type": "text",
+                                "text": "streaming: true",
+                                "marks": [
+                                  {
+                                    "type": "code"
+                                  }
+                                ]
+                              },
+                              {
+                                "type": "text",
+                                "text": "."
+                              }
+                            ],
+                            "attrs": {
+                              "localId": "afd961af9434"
+                            }
+                          }
+                        ]
+                      },
+                      {
+                        "type": "listItem",
+                        "attrs": {
+                          "localId": "2bfafdb5d3d4"
+                        },
+                        "content": [
+                          {
+                            "type": "paragraph",
+                            "content": [
+                              {
+                                "type": "text",
+                                "text": "Async push mode is not reliably triggered, even when DSL says "
+                              },
+                              {
+                                "type": "text",
+                                "text": "ASYNC: true",
+                                "marks": [
+                                  {
+                                    "type": "code"
+                                  }
+                                ]
+                              },
+                              {
+                                "type": "text",
+                                "text": " and the remote agent declares "
+                              },
+                              {
+                                "type": "text",
+                                "text": "pushNotifications: true",
+                                "marks": [
+                                  {
+                                    "type": "code"
+                                  }
+                                ]
+                              },
+                              {
+                                "type": "text",
+                                "text": "."
+                              }
+                            ],
+                            "attrs": {
+                              "localId": "815bd53d7753"
+                            }
+                          }
+                        ]
+                      }
+                    ],
+                    "attrs": {
+                      "localId": "6bb569d434f3"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "heading",
+            "attrs": {
+              "level": 3,
+              "localId": "62d98b625fe2"
+            },
+            "content": [
+              {
+                "type": "text",
+                "text": "What should happen"
+              }
+            ]
+          },
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "type": "text",
+                "text": "The mode should be picked based on "
+              },
+              {
+                "type": "text",
+                "text": "both",
+                "marks": [
+                  {
+                    "type": "strong"
+                  }
+                ]
+              },
+              {
+                "type": "text",
+                "text": " the DSL flag and the remote agent's advertised capabilities:"
+              }
+            ],
+            "attrs": {
+              "localId": "84d8d1daff4c"
+            }
+          },
+          {
+            "type": "paragraph",
+            "attrs": {
+              "localId": "e5d581e1314f"
+            }
+          },
+          {
+            "type": "table",
+            "attrs": {
+              "isNumberColumnEnabled": false,
+              "layout": "center",
+              "localId": "741ce33b-007b-4fa8-be8f-756a7ff7ea9f"
+            },
+            "content": [
+              {
+                "type": "tableRow",
+                "attrs": {
+                  "localId": "fd23f80a4b97"
+                },
+                "content": [
+                  {
+                    "type": "tableHeader",
+                    "attrs": {
+                      "localId": "bcea2be1b288",
+                      "background": "#ffffff"
+                    },
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "DSL "
+                          },
+                          {
+                            "type": "text",
+                            "text": "ASYNC",
+                            "marks": [
+                              {
+                                "type": "code"
+                              }
+                            ]
+                          }
+                        ],
+                        "attrs": {
+                          "localId": "86a2f46f608f"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "type": "tableHeader",
+                    "attrs": {
+                      "localId": "8bf90fabce90",
+                      "background": "#ffffff"
+                    },
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "Remote "
+                          },
+                          {
+                            "type": "text",
+                            "text": "streaming",
+                            "marks": [
+                              {
+                                "type": "code"
+                              }
+                            ]
+                          }
+                        ],
+                        "attrs": {
+                          "localId": "6fabf00f5ece"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "type": "tableHeader",
+                    "attrs": {
+                      "localId": "ff69040f216f",
+                      "background": "#ffffff"
+                    },
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "Remote "
+                          },
+                          {
+                            "type": "text",
+                            "text": "pushNotifications",
+                            "marks": [
+                              {
+                                "type": "code"
+                              }
+                            ]
+                          }
+                        ],
+                        "attrs": {
+                          "localId": "437be0c9b07f"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "type": "tableHeader",
+                    "attrs": {
+                      "localId": "8bd710183b20",
+                      "background": "#ffffff"
+                    },
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "Mode"
+                          }
+                        ],
+                        "attrs": {
+                          "localId": "e988bb4a4150"
+                        }
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "type": "tableRow",
+                "attrs": {
+                  "localId": "b6688b05df19"
+                },
+                "content": [
+                  {
+                    "type": "tableCell",
+                    "attrs": {
+                      "localId": "c4247df07330",
+                      "background": "#ffffff"
+                    },
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "false",
+                            "marks": [
+                              {
+                                "type": "code"
+                              }
+                            ]
+                          },
+                          {
+                            "type": "text",
+                            "text": " (or absent)"
+                          }
+                        ],
+                        "attrs": {
+                          "localId": "450800c7ee6b"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "type": "tableCell",
+                    "attrs": {
+                      "localId": "1418be5bc62d",
+                      "background": "#ffffff"
+                    },
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "false",
+                            "marks": [
+                              {
+                                "type": "code"
+                              }
+                            ]
+                          }
+                        ],
+                        "attrs": {
+                          "localId": "388f95341a52"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "type": "tableCell",
+                    "attrs": {
+                      "localId": "c4cda9e58911",
+                      "background": "#ffffff"
+                    },
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "any"
+                          }
+                        ],
+                        "attrs": {
+                          "localId": "4fa54608aba0"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "type": "tableCell",
+                    "attrs": {
+                      "localId": "717b383a6314",
+                      "background": "#ffffff"
+                    },
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "Sync",
+                            "marks": [
+                              {
+                                "type": "strong"
+                              }
+                            ]
+                          }
+                        ],
+                        "attrs": {
+                          "localId": "dbfa6d938957"
+                        }
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "type": "tableRow",
+                "attrs": {
+                  "localId": "6b98004cdda3"
+                },
+                "content": [
+                  {
+                    "type": "tableCell",
+                    "attrs": {
+                      "localId": "463ab8ceec8b",
+                      "background": "#ffffff"
+                    },
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "false",
+                            "marks": [
+                              {
+                                "type": "code"
+                              }
+                            ]
+                          },
+                          {
+                            "type": "text",
+                            "text": " (or absent)"
+                          }
+                        ],
+                        "attrs": {
+                          "localId": "8b84f77d30f5"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "type": "tableCell",
+                    "attrs": {
+                      "localId": "28d0d6537392",
+                      "background": "#ffffff"
+                    },
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "true",
+                            "marks": [
+                              {
+                                "type": "code"
+                              }
+                            ]
+                          }
+                        ],
+                        "attrs": {
+                          "localId": "224eaa00b758"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "type": "tableCell",
+                    "attrs": {
+                      "localId": "9095b59c1c11",
+                      "background": "#ffffff"
+                    },
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "any"
+                          }
+                        ],
+                        "attrs": {
+                          "localId": "b879771b15fe"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "type": "tableCell",
+                    "attrs": {
+                      "localId": "02a8738885ef",
+                      "background": "#ffffff"
+                    },
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "Streaming",
+                            "marks": [
+                              {
+                                "type": "strong"
+                              }
+                            ]
+                          }
+                        ],
+                        "attrs": {
+                          "localId": "8036ce7f30af"
+                        }
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "type": "tableRow",
+                "attrs": {
+                  "localId": "72e560ce318b"
+                },
+                "content": [
+                  {
+                    "type": "tableCell",
+                    "attrs": {
+                      "localId": "2b9ded191078",
+                      "background": "#ffffff"
+                    },
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "true",
+                            "marks": [
+                              {
+                                "type": "code"
+                              }
+                            ]
+                          }
+                        ],
+                        "attrs": {
+                          "localId": "eaf580b3051c"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "type": "tableCell",
+                    "attrs": {
+                      "localId": "454aa0a36056",
+                      "background": "#ffffff"
+                    },
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "any"
+                          }
+                        ],
+                        "attrs": {
+                          "localId": "0c085c1d745e"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "type": "tableCell",
+                    "attrs": {
+                      "localId": "921884b6b788",
+                      "background": "#ffffff"
+                    },
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "true",
+                            "marks": [
+                              {
+                                "type": "code"
+                              }
+                            ]
+                          }
+                        ],
+                        "attrs": {
+                          "localId": "73587e792dcc"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "type": "tableCell",
+                    "attrs": {
+                      "localId": "6209d8cb9e8b",
+                      "background": "#ffffff"
+                    },
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "Async push",
+                            "marks": [
+                              {
+                                "type": "strong"
+                              }
+                            ]
+                          }
+                        ],
+                        "attrs": {
+                          "localId": "b2001537aadc"
+                        }
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "type": "tableRow",
+                "attrs": {
+                  "localId": "4b37587c8ef0"
+                },
+                "content": [
+                  {
+                    "type": "tableCell",
+                    "attrs": {
+                      "localId": "a4a6fcad5c7e",
+                      "background": "#ffffff"
+                    },
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "true",
+                            "marks": [
+                              {
+                                "type": "code"
+                              }
+                            ]
+                          }
+                        ],
+                        "attrs": {
+                          "localId": "416e6394ea91"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "type": "tableCell",
+                    "attrs": {
+                      "localId": "5af8848d0d3d",
+                      "background": "#ffffff"
+                    },
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "any"
+                          }
+                        ],
+                        "attrs": {
+                          "localId": "4b1e81a09b25"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "type": "tableCell",
+                    "attrs": {
+                      "localId": "2b491ef79d65",
+                      "background": "#ffffff"
+                    },
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "false",
+                            "marks": [
+                              {
+                                "type": "code"
+                              }
+                            ]
+                          }
+                        ],
+                        "attrs": {
+                          "localId": "06154459d009"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "type": "tableCell",
+                    "attrs": {
+                      "localId": "75c9c8ce2c01",
+                      "background": "#ffffff"
+                    },
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "Error",
+                            "marks": [
+                              {
+                                "type": "strong"
+                              }
+                            ]
+                          },
+                          {
+                            "type": "text",
+                            "text": " — async requested but agent does not support push notifications"
+                          }
+                        ],
+                        "attrs": {
+                          "localId": "2b148ebb05ef"
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "type": "text",
+                "text": "Additionally:"
+              }
+            ],
+            "attrs": {
+              "localId": "b8bf8f47787c"
+            }
+          },
+          {
+            "type": "bulletList",
+            "content": [
+              {
+                "type": "listItem",
+                "attrs": {
+                  "localId": "3f478bc28936"
+                },
+                "content": [
+                  {
+                    "type": "paragraph",
+                    "content": [
+                      {
+                        "type": "text",
+                        "text": "The trace should clearly show which mode was chosen and why."
+                      }
+                    ],
+                    "attrs": {
+                      "localId": "a5ea0fb6b4bb"
+                    }
+                  }
+                ]
+              },
+              {
+                "type": "listItem",
+                "attrs": {
+                  "localId": "1e0b3758e463"
+                },
+                "content": [
+                  {
+                    "type": "paragraph",
+                    "content": [
+                      {
+                        "type": "text",
+                        "text": "When a mismatch occurs (e.g., "
+                      },
+                      {
+                        "type": "text",
+                        "text": "ASYNC: true",
+                        "marks": [
+                          {
+                            "type": "code"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "text",
+                        "text": " but remote does not support push), the platform should fail fast with a clear error, not silently fall back to sync."
+                      }
+                    ],
+                    "attrs": {
+                      "localId": "661024a74490"
+                    }
+                  }
+                ]
+              }
+            ],
+            "attrs": {
+              "localId": "926f2116d336"
+            }
+          }
+        ]
+      },
+      "customfield_15225": null,
+      "customfield_11300": null,
+      "timetracking": {},
+      "security": null,
+      "attachment": [],
+      "aggregatetimeestimate": null,
+      "summary": "A2A handoff mode is not capability-aware, and ASYNC: true does not result in an async call",
+      "creator": {
+        "self": "https://koreteam.atlassian.net/rest/api/3/user?accountId=712020%3A6b23a021-654a-4caf-b58f-58828da87f2d",
+        "accountId": "712020:6b23a021-654a-4caf-b58f-58828da87f2d",
+        "avatarUrls": {
+          "48x48": "https://secure.gravatar.com/avatar/6ea3357475d47c399134491a46a98176?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FVG-4.png",
+          "24x24": "https://secure.gravatar.com/avatar/6ea3357475d47c399134491a46a98176?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FVG-4.png",
+          "16x16": "https://secure.gravatar.com/avatar/6ea3357475d47c399134491a46a98176?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FVG-4.png",
+          "32x32": "https://secure.gravatar.com/avatar/6ea3357475d47c399134491a46a98176?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FVG-4.png"
+        },
+        "displayName": "Vijay Gudikal",
+        "active": true,
+        "timeZone": "Asia/Kolkata",
+        "accountType": "atlassian"
+      },
+      "subtasks": [],
+      "reporter": {
+        "self": "https://koreteam.atlassian.net/rest/api/3/user?accountId=712020%3A6b23a021-654a-4caf-b58f-58828da87f2d",
+        "accountId": "712020:6b23a021-654a-4caf-b58f-58828da87f2d",
+        "avatarUrls": {
+          "48x48": "https://secure.gravatar.com/avatar/6ea3357475d47c399134491a46a98176?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FVG-4.png",
+          "24x24": "https://secure.gravatar.com/avatar/6ea3357475d47c399134491a46a98176?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FVG-4.png",
+          "16x16": "https://secure.gravatar.com/avatar/6ea3357475d47c399134491a46a98176?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FVG-4.png",
+          "32x32": "https://secure.gravatar.com/avatar/6ea3357475d47c399134491a46a98176?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FVG-4.png"
+        },
+        "displayName": "Vijay Gudikal",
+        "active": true,
+        "timeZone": "Asia/Kolkata",
+        "accountType": "atlassian"
+      },
+      "aggregateprogress": {
+        "progress": 0,
+        "total": 0
+      },
+      "customfield_10002": null,
+      "customfield_10400": "1|i0hxnf:",
+      "customfield_13900": null,
+      "environment": null,
+      "duedate": null,
+      "progress": {
+        "progress": 0,
+        "total": 0
+      },
+      "votes": {
+        "self": "https://koreteam.atlassian.net/rest/api/3/issue/ABLP-1059/votes",
+        "votes": 0,
+        "hasVoted": false
+      },
+      "comment": {
+        "comments": [],
+        "self": "https://koreteam.atlassian.net/rest/api/3/issue/550643/comment",
+        "maxResults": 0,
+        "total": 0,
+        "startAt": 0
+      },
+      "worklog": {
+        "startAt": 0,
+        "maxResults": 20,
+        "total": 0,
+        "worklogs": []
+      }
+    }
+  },
+  "comments": {
+    "startAt": 0,
+    "maxResults": 100,
+    "total": 0,
+    "comments": []
+  }
+}

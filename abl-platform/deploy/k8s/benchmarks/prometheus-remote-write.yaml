@@ -1,0 +1,197 @@
+# ============================================================================
+# Prometheus Remote Write Configuration for k6
+# ============================================================================
+# Configures k6 pods to push metrics via Prometheus remote write protocol.
+# k6 1.0 has built-in Prometheus remote write support (no xk6 extension needed).
+#
+# Metrics pipeline:
+#   k6 runner pods --> Prometheus Remote Write --> Prometheus 3.10 --> Grafana 12.3
+#
+# Usage:
+#   kubectl apply -f prometheus-remote-write.yaml
+#
+# This ConfigMap is referenced by TestRun runner pod env vars.
+# ============================================================================
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: k6-prometheus-remote-write
+  namespace: abl-benchmarks
+  labels:
+    app.kubernetes.io/name: k6-prometheus-config
+    app.kubernetes.io/component: metrics-config
+    app.kubernetes.io/part-of: abl-platform-benchmarks
+data:
+  # Prometheus remote write endpoint
+  # Adjust to match your Prometheus deployment:
+  #   - kube-prometheus-stack: http://prometheus-kube-prometheus-prometheus.monitoring.svc:9090/api/v1/write
+  #   - VictoriaMetrics:       http://victoria-metrics.monitoring.svc:8428/api/v1/write
+  #   - Grafana Mimir:         http://mimir-distributor.monitoring.svc:8080/api/v1/push
+  K6_PROMETHEUS_RW_SERVER_URL: 'http://prometheus-kube-prometheus-prometheus.monitoring.svc.cluster.local:9090/api/v1/write'
+
+  # Push interval: how frequently k6 flushes metrics to Prometheus
+  # 5s is optimal for real-time dashboard visibility without overwhelming Prometheus
+  K6_PROMETHEUS_RW_PUSH_INTERVAL: '5s'
+
+  # Trend statistics to export as Prometheus metrics
+  # These map to k6 Trend metrics (http_req_duration, iteration_duration, etc.)
+  K6_PROMETHEUS_RW_TREND_STATS: 'p(50),p(95),p(99),max,avg,min,med,count'
+
+  # Enable native histograms (Prometheus 3.x feature)
+  # Provides more accurate percentile calculations in Prometheus/Grafana
+  K6_PROMETHEUS_RW_NATIVE_HISTOGRAMS: 'true'
+
+  # Send stale markers when test finishes so Grafana shows clean series end
+  K6_PROMETHEUS_RW_STALE_MARKERS: 'true'
+
+  # Insecure skip TLS verify (set to false in production with valid certs)
+  K6_PROMETHEUS_RW_INSECURE_SKIP_TLS_VERIFY: 'true'
+
+  # Additional metric labels applied to all k6 metrics
+  # Useful for filtering in Grafana across different test runs
+  K6_PROMETHEUS_RW_TREND_AS_NATIVE_HISTOGRAM: 'true'
+---
+# Optional: Prometheus ServiceMonitor for scraping k6 operator metrics
+# Requires kube-prometheus-stack or Prometheus Operator
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: k6-grafana-dashboard
+  namespace: abl-benchmarks
+  labels:
+    app.kubernetes.io/name: k6-grafana-dashboard
+    app.kubernetes.io/component: dashboard
+    app.kubernetes.io/part-of: abl-platform-benchmarks
+    grafana_dashboard: 'true'
+  annotations:
+    grafana-folder: 'ABL Benchmarks'
+data:
+  k6-benchmark-overview.json: |
+    {
+      "annotations": { "list": [] },
+      "description": "ABL Platform k6 Benchmark Results Overview",
+      "editable": true,
+      "fiscalYearStartMonth": 0,
+      "graphTooltip": 1,
+      "links": [],
+      "panels": [
+        {
+          "title": "Request Rate (RPS)",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+          "targets": [
+            {
+              "expr": "rate(k6_http_reqs_total[1m])",
+              "legendFormat": "{{scenario}} - RPS"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "reqps"
+            }
+          }
+        },
+        {
+          "title": "Response Time Percentiles",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+          "targets": [
+            {
+              "expr": "k6_http_req_duration_p95{scenario=~\".*\"}",
+              "legendFormat": "{{scenario}} - p95"
+            },
+            {
+              "expr": "k6_http_req_duration_p99{scenario=~\".*\"}",
+              "legendFormat": "{{scenario}} - p99"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "ms"
+            }
+          }
+        },
+        {
+          "title": "Virtual Users",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+          "targets": [
+            {
+              "expr": "k6_vus{scenario=~\".*\"}",
+              "legendFormat": "{{scenario}} - VUs"
+            }
+          ]
+        },
+        {
+          "title": "Error Rate",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+          "targets": [
+            {
+              "expr": "rate(k6_http_req_failed_total[1m])",
+              "legendFormat": "{{scenario}} - errors/s"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "ops",
+              "thresholds": {
+                "steps": [
+                  { "color": "green", "value": null },
+                  { "color": "yellow", "value": 0.001 },
+                  { "color": "red", "value": 0.01 }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "TTFT (Time to First Token) - Streaming",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 16 },
+          "targets": [
+            {
+              "expr": "k6_ttft_duration_p95",
+              "legendFormat": "TTFT p95"
+            },
+            {
+              "expr": "k6_ttft_duration_p99",
+              "legendFormat": "TTFT p99"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "ms"
+            }
+          }
+        },
+        {
+          "title": "Tool Calls",
+          "type": "stat",
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 16 },
+          "targets": [
+            {
+              "expr": "increase(k6_tool_call_count_total[5m])",
+              "legendFormat": "Tool Calls (5m)"
+            }
+          ]
+        }
+      ],
+      "schemaVersion": 39,
+      "tags": ["k6", "abl-platform", "benchmarks"],
+      "templating": {
+        "list": [
+          {
+            "name": "scenario",
+            "type": "query",
+            "query": "label_values(k6_http_reqs_total, scenario)",
+            "multi": true,
+            "includeAll": true
+          }
+        ]
+      },
+      "time": { "from": "now-1h", "to": "now" },
+      "title": "ABL Platform - k6 Benchmark Overview",
+      "uid": "abl-k6-benchmark-overview"
+    }

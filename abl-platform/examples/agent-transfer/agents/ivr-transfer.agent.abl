@@ -1,0 +1,125 @@
+// =============================================================================
+// IVR Transfer Agent - Demonstrates voice channel agent transfer
+// =============================================================================
+//
+// Voice transfers differ from chat:
+// - transfer_to_agent returns 'waiting' status (SIP/PSTN transfer initiated)
+// - The voice gateway handles the actual call routing
+// - postAgentAction: "end" is typical for voice (no return to AI after call)
+
+AGENT: IVR_Transfer
+GOAL: "Route voice callers to the appropriate human agent department"
+
+EXECUTION:
+  model: gpt-4.1
+  temperature: 0.7
+  max_tokens: 2000
+  max_iterations: 10
+  inline_gather: true
+
+IDENTITY:
+  role: "IVR Routing Assistant"
+  persona: "Concise and professional voice assistant that efficiently routes calls"
+
+TOOLS:
+  check_availability:
+    description: "Check if human agents are available for transfer"
+    params:
+      agentId: string
+      contactId: string
+      tenantId: string
+      projectId: string
+      skills: string[]
+      queue: string
+    returns: object
+
+  set_queue:
+    description: "Validate a queue exists and is available for routing"
+    params:
+      agentId: string
+      queueId: string
+    returns: object
+
+  transfer_to_agent:
+    description: "Transfer conversation to a human agent"
+    params:
+      provider: string
+      skills: string[]
+      queueId: string
+      priority: number
+      postAgentAction: string
+      metadata: object
+    returns: object
+
+FLOW:
+  entry_point: welcome
+  steps:
+    - welcome
+    - select_department
+    - validate_queue
+    - transfer_call
+    - transfer_initiated
+    - no_agents
+
+welcome:
+  REASONING: false
+  RESPOND: "Welcome. For sales, say sales. For support, say support. For billing, say billing."
+  THEN: select_department
+
+select_department:
+  REASONING: false
+  GATHER:
+    - department: required
+      prompt: "Which department would you like?"
+      type: enum
+      options: ["sales", "support", "billing"]
+  THEN: validate_queue
+
+validate_queue:
+  REASONING: false
+  CALL: set_queue
+    call_with:
+      queueId: "{{department}}_queue"
+  ON_SUCCESS:
+    - IF: set_queue.data == true
+      THEN: transfer_call
+    - ELSE:
+      RESPOND: "That department is not available right now."
+      THEN: select_department
+  ON_FAIL:
+    RESPOND: "I could not validate the queue. Let me try connecting you."
+    THEN: transfer_call
+
+transfer_call:
+  REASONING: false
+  CALL: transfer_to_agent
+    call_with:
+      provider: "kore"
+      skills: ["{{department}}"]
+      queueId: "{{department}}_queue"
+      priority: 5
+      postAgentAction: "end"
+      metadata:
+        channel: "voice"
+        department: "{{department}}"
+  ON_SUCCESS:
+    - IF: transfer_to_agent.status == "waiting"
+      THEN: transfer_initiated
+    - ELSE:
+      THEN: no_agents
+  ON_FAIL:
+    THEN: no_agents
+
+transfer_initiated:
+  REASONING: false
+  RESPOND: "Connecting you now. Please hold."
+  THEN: complete
+
+no_agents:
+  REASONING: false
+  RESPOND: "No agents are available in that department. Please call back during business hours."
+  THEN: complete
+
+COMPLETE:
+  - WHEN: transfer_to_agent.status == "waiting"
+    RESPOND: "Thank you for calling. Goodbye."

@@ -1,0 +1,245 @@
+{
+  "title": "Workflows → Document Extraction",
+  "description": "Phase 4 / LLD §3 task 4.5. Renders all 14 document-extraction metrics emitted by apps/search-ai (worker side, log-line + log-scraper) and apps/workflow-engine (OTel meter). Two-queue saturation, callback delivery, Azure DI cost cap, parked-promise gauge, envelope-size histogram (Round 7).",
+  "uid": "wf-doc-extraction",
+  "tags": ["workflow-engine", "search-ai", "extraction", "ABLP-1073"],
+  "schemaVersion": 39,
+  "timezone": "browser",
+  "time": { "from": "now-6h", "to": "now" },
+  "refresh": "30s",
+  "templating": {
+    "list": [
+      {
+        "name": "tenant",
+        "type": "query",
+        "datasource": { "type": "prometheus" },
+        "query": "label_values(workflow_docling_callback_post_attempts_total, tenant)",
+        "includeAll": true,
+        "multi": true,
+        "current": { "selected": false, "text": "All", "value": "$__all" }
+      },
+      {
+        "name": "project",
+        "type": "query",
+        "datasource": { "type": "prometheus" },
+        "query": "label_values(azure_di_extractions_total{tenant=~\"$tenant\"}, project)",
+        "includeAll": true,
+        "multi": true,
+        "current": { "selected": false, "text": "All", "value": "$__all" }
+      }
+    ]
+  },
+  "panels": [
+    {
+      "id": 1,
+      "title": "BullMQ queue depth",
+      "type": "timeseries",
+      "gridPos": { "x": 0, "y": 0, "w": 12, "h": 8 },
+      "targets": [
+        {
+          "expr": "bullmq_queue_depth{queue=~\"(search|workflow)-docling-extraction\"}",
+          "legendFormat": "{{queue}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 50 },
+              { "color": "red", "value": 200 }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": 2,
+      "title": "Worker active jobs",
+      "type": "timeseries",
+      "gridPos": { "x": 12, "y": 0, "w": 12, "h": 8 },
+      "targets": [
+        {
+          "expr": "worker_active_jobs{queue=~\"(search|workflow)-docling-extraction\"}",
+          "legendFormat": "{{queue}}"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "Engine-side wait duration (p50/p95/p99)",
+      "type": "timeseries",
+      "gridPos": { "x": 0, "y": 8, "w": 12, "h": 8 },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.50, sum by (le) (rate(workflow_docling_wait_duration_seconds_bucket{tenant=~\"$tenant\"}[5m])))",
+          "legendFormat": "p50"
+        },
+        {
+          "expr": "histogram_quantile(0.95, sum by (le) (rate(workflow_docling_wait_duration_seconds_bucket{tenant=~\"$tenant\"}[5m])))",
+          "legendFormat": "p95"
+        },
+        {
+          "expr": "histogram_quantile(0.99, sum by (le) (rate(workflow_docling_wait_duration_seconds_bucket{tenant=~\"$tenant\"}[5m])))",
+          "legendFormat": "p99"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "s" } }
+    },
+    {
+      "id": 4,
+      "title": "Parked promises",
+      "type": "timeseries",
+      "gridPos": { "x": 12, "y": 8, "w": 12, "h": 8 },
+      "targets": [
+        {
+          "expr": "workflow_docling_parked_promises_gauge{tenant=~\"$tenant\"}",
+          "legendFormat": "{{tenant}}"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "title": "Extraction errors by class",
+      "type": "timeseries",
+      "gridPos": { "x": 0, "y": 16, "w": 12, "h": 8 },
+      "targets": [
+        {
+          "expr": "sum by (error_class) (rate(workflow_docling_errors_total{tenant=~\"$tenant\"}[5m]))",
+          "legendFormat": "{{error_class}}"
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "title": "Envelope size (Round 7 — pre-50 MB cap)",
+      "type": "heatmap",
+      "gridPos": { "x": 12, "y": 16, "w": 12, "h": 8 },
+      "targets": [
+        {
+          "expr": "sum by (le) (rate(workflow_extraction_envelope_bytes_bucket{}[5m]))",
+          "legendFormat": "{{le}}"
+        }
+      ],
+      "options": { "calculate": false, "yAxis": { "unit": "bytes" } }
+    },
+    {
+      "id": 7,
+      "title": "Callback post attempts vs failures",
+      "type": "timeseries",
+      "gridPos": { "x": 0, "y": 24, "w": 12, "h": 8 },
+      "targets": [
+        {
+          "expr": "sum(rate(workflow_docling_callback_post_attempts_total{tenant=~\"$tenant\"}[5m]))",
+          "legendFormat": "attempts"
+        },
+        {
+          "expr": "sum(rate(workflow_docling_callback_post_failures_total{tenant=~\"$tenant\"}[5m]))",
+          "legendFormat": "failures"
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "title": "Callback failure error_class (TIMESTAMP_EXPIRED vs SIGNATURE_INVALID)",
+      "type": "timeseries",
+      "gridPos": { "x": 12, "y": 24, "w": 12, "h": 8 },
+      "targets": [
+        {
+          "expr": "sum by (error_class) (rate(workflow_docling_callback_post_failures_total{tenant=~\"$tenant\"}[5m]))",
+          "legendFormat": "{{error_class}}"
+        }
+      ]
+    },
+    {
+      "id": 9,
+      "title": "Rate-limited extractions",
+      "type": "timeseries",
+      "gridPos": { "x": 0, "y": 32, "w": 12, "h": 8 },
+      "targets": [
+        {
+          "expr": "sum by (tenant) (rate(workflow_docling_rate_limited_total{tenant=~\"$tenant\"}[5m]))",
+          "legendFormat": "{{tenant}}"
+        }
+      ]
+    },
+    {
+      "id": 10,
+      "title": "Extraction too large",
+      "type": "timeseries",
+      "gridPos": { "x": 12, "y": 32, "w": 12, "h": 8 },
+      "targets": [
+        {
+          "expr": "sum by (provider, tenantId) (rate(workflow_extraction_too_large_total{tenantId=~\"$tenant\"}[5m]))",
+          "legendFormat": "{{provider}}/{{tenantId}}"
+        }
+      ]
+    },
+    {
+      "id": 11,
+      "title": "Azure DI extractions by status",
+      "type": "timeseries",
+      "gridPos": { "x": 0, "y": 40, "w": 12, "h": 8 },
+      "targets": [
+        {
+          "expr": "sum by (status) (rate(azure_di_extractions_total{tenant=~\"$tenant\",project=~\"$project\"}[5m]))",
+          "legendFormat": "{{status}}"
+        }
+      ]
+    },
+    {
+      "id": 12,
+      "title": "Azure DI circuit-breaker state (0=closed, 1=half-open, 2=open)",
+      "type": "stat",
+      "gridPos": { "x": 12, "y": 40, "w": 12, "h": 8 },
+      "targets": [
+        {
+          "expr": "azure_di_circuit_breaker_state{tenant=~\"$tenant\"}",
+          "legendFormat": "{{tenant}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": { "text": "closed", "color": "green" },
+                "1": { "text": "half-open", "color": "yellow" },
+                "2": { "text": "open", "color": "red" }
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": 13,
+      "title": "Azure DI cost-cap used ratio (per tenant/project)",
+      "type": "timeseries",
+      "gridPos": { "x": 0, "y": 48, "w": 24, "h": 8 },
+      "targets": [
+        {
+          "expr": "azure_di_cost_cap_used_ratio{tenant=~\"$tenant\",project=~\"$project\"}",
+          "legendFormat": "{{tenant}}/{{project}} ({{cap_kind}})"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "max": 1,
+          "min": 0,
+          "unit": "percentunit",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 0.6 },
+              { "color": "red", "value": 0.8 }
+            ]
+          }
+        }
+      }
+    }
+  ]
+}

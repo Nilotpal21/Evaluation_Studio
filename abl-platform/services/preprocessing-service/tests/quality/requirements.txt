@@ -1,0 +1,12 @@
+# Requirements for retrieval quality testing
+
+# Core dependencies
+numpy>=1.24.0
+
+# Optional: For production-quality embeddings (not needed for basic isolated testing)
+# sentence-transformers>=2.2.0
+# faiss-cpu>=1.7.4
+
+# Optional: For end-to-end testing with real services
+# requests>=2.31.0
+# qdrant-client>=1.7.0

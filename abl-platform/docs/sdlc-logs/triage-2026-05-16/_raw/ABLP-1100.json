@@ -1,0 +1,1528 @@
+{
+  "issue": {
+    "expand": "renderedFields,names,schema,operations,editmeta,changelog,versionedRepresentations",
+    "id": "551419",
+    "self": "https://koreteam.atlassian.net/rest/api/3/issue/551419",
+    "key": "ABLP-1100",
+    "renderedFields": {
+      "statuscategorychangedate": "Yesterday 2:26 AM",
+      "issuetype": null,
+      "timespent": null,
+      "project": null,
+      "fixVersions": null,
+      "aggregatetimespent": null,
+      "statusCategory": null,
+      "resolution": null,
+      "customfield_13700": null,
+      "customfield_15205": null,
+      "resolutiondate": null,
+      "workratio": null,
+      "issuerestriction": null,
+      "watches": null,
+      "lastViewed": "Yesterday 2:55 AM",
+      "created": "Yesterday 2:26 AM",
+      "customfield_15279": null,
+      "priority": null,
+      "customfield_15514": null,
+      "labels": null,
+      "timeestimate": null,
+      "aggregatetimeoriginalestimate": null,
+      "versions": null,
+      "issuelinks": null,
+      "assignee": null,
+      "updated": "Yesterday 2:38 AM",
+      "status": null,
+      "components": null,
+      "timeoriginalestimate": null,
+      "description": "<h3><a name=\"Problem\"></a>Problem</h3>\n\n<p>The ABL Platform currently has NO PARAMETER TRANSFORMATION LAYER between the LLM generating a tool call and the tool being executed. Every value the tool needs must be produced by the LLM as raw JSON in the tool call response.</p>\n\n<h4><a name=\"Thiscreatessignificantproblems%3A\"></a>This creates significant problems:</h4>\n\n<ul>\n\t<li>Larger schemas in the prompt (more tokens describing nested objects)</li>\n\t<li>Higher error rates (wrong nesting, hallucinated envelope fields)</li>\n\t<li>Costlier models required (simpler models fail on nested structured output)</li>\n\t<li>Longer instructions explaining boilerplate instead of domain logic</li>\n</ul>\n\n\n<p>EXAMPLE: For an XO 10 webhook, the LLM must generate the entire nlMeta object including botId (static), language (from session), and channelType (always webhook). Only intent and entities are truly dynamic.</p>\n\n<h3><a name=\"CurrentArchitectureGaps\"></a>Current Architecture Gaps</h3>\n\n<ol>\n\t<li>NO PARAMETER PRE-PROCESSOR LAYER - Between reasoning-executor.ts:320 and tool-binding-executor.ts:362, parameters pass through unchanged</li>\n\t<li>NO COMPUTED/DERIVED PARAMETER DECLARATION - ToolParameter interface has no concept of derived from context/config</li>\n\t<li>NO PARAMETER ENRICHMENT MIDDLEWARE - Tool middleware chain only has logging/timing</li>\n\t<li>NO PARAMETER SCHEMA FILTERING FOR LLM - All parameters exposed to LLM, even derived ones</li>\n\t<li>NO LOOKUP/REGISTRY RESOLUTION - Static values still require LLM generation</li>\n</ol>\n\n\n<h3><a name=\"Solution%28PhasedApproach%29\"></a>Solution (Phased Approach)</h3>\n\n<p>PHASE 1 (P1): Hidden params + defaultSource</p>\n\n<ul>\n\t<li>Quick win: Add hidden: true + defaultSource to ToolParameter</li>\n\t<li>Filter hidden params from LLM schema</li>\n\t<li>Resolve defaults from context at execution time</li>\n\t<li>EFFORT: Low (2-3 days)</li>\n</ul>\n\n\n<p>PHASE 2 (P0): Parameter Pre-Processor Middleware</p>\n\n<ul>\n\t<li>Add ToolParamPreProcessor middleware type</li>\n\t<li>Transform LLM output to full tool params</li>\n\t<li>Support computed params from session/config/lookup/expression</li>\n\t<li>EFFORT: Medium (1 week)</li>\n</ul>\n\n\n<p>PHASE 3 (P2): DSL COMPUTED block</p>\n\n<ul>\n\t<li>Extend tool DSL with COMPUTED section</li>\n\t<li>Best developer experience for tool authors</li>\n\t<li>EFFORT: Medium-High (1-2 weeks)</li>\n</ul>\n\n\n<h3><a name=\"ReferenceImplementation\"></a>Reference Implementation</h3>\n\n<h4><a name=\"UseXO10webhooknlMetaconstructionasvalidationcase%3A\"></a>Use XO 10 webhook nlMeta construction as validation case:</h4>\n\n<ul>\n\t<li>CURRENT: LLM generates ~8 fields, nested 2 levels</li>\n\t<li>TARGET: LLM generates ~3 fields, flat (message, intent, entities)</li>\n\t<li>AUTO-COMPUTED: botId, language, channelType, timezone</li>\n</ul>\n\n\n<h3><a name=\"ExpectedImpact\"></a>Expected Impact</h3>\n\n<p>LLM params to generate: ~8 fields nested → ~3 fields flat<br/>\nJSON Schema complexity: Nested objects + arrays → Simple flat properties<br/>\nPrompt instruction tokens: ~200-300 tokens → ~50 tokens<br/>\nModel tier required: Higher (structured output) → Lower (simple key-value)<br/>\nError surface area: High → Low</p>\n\n<h3><a name=\"TechnicalDetails\"></a>Technical Details</h3>\n\n<h4><a name=\"KeyFiles%3A\"></a>Key Files:</h4>\n\n<ul>\n\t<li>packages/compiler/src/platform/ir/schema.ts:1095-1108 - ToolParameter interface</li>\n\t<li>packages/compiler/src/platform/constructs/executors/reasoning-executor.ts:320 - Integration point</li>\n\t<li>packages/compiler/src/platform/constructs/executors/tool-binding-executor.ts:362-437 - Execution entry</li>\n\t<li>packages/compiler/src/platform/constructs/executors/tool-middleware.ts - Middleware chain</li>\n\t<li>packages/compiler/src/platform/llm/types.ts:146-154 - LLM schema generation</li>\n</ul>\n",
+      "customfield_11300": null,
+      "timetracking": {},
+      "security": null,
+      "attachment": [
+        {
+          "self": "https://koreteam.atlassian.net/rest/api/3/attachment/760384",
+          "id": "760384",
+          "filename": "tool-parameter-preprocessing-gaps.md",
+          "author": {
+            "self": "https://koreteam.atlassian.net/rest/api/3/user?accountId=557058%3Ac94a0226-6947-4bc4-af96-0aa24b13be44",
+            "accountId": "557058:c94a0226-6947-4bc4-af96-0aa24b13be44",
+            "emailAddress": "vishnu.nekkanti@kore.com",
+            "avatarUrls": {
+              "48x48": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/557058:c94a0226-6947-4bc4-af96-0aa24b13be44/c39cbf3c-1201-47e9-9750-3f5bc302e7c0/48",
+              "24x24": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/557058:c94a0226-6947-4bc4-af96-0aa24b13be44/c39cbf3c-1201-47e9-9750-3f5bc302e7c0/24",
+              "16x16": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/557058:c94a0226-6947-4bc4-af96-0aa24b13be44/c39cbf3c-1201-47e9-9750-3f5bc302e7c0/16",
+              "32x32": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/557058:c94a0226-6947-4bc4-af96-0aa24b13be44/c39cbf3c-1201-47e9-9750-3f5bc302e7c0/32"
+            },
+            "displayName": "Vishnu Kumar Nekkanti",
+            "active": true,
+            "timeZone": "America/New_York",
+            "accountType": "atlassian"
+          },
+          "created": "Yesterday 2:27 AM",
+          "size": "19 kB",
+          "mimeType": "application/octet-stream",
+          "content": "https://koreteam.atlassian.net/rest/api/3/attachment/content/760384"
+        }
+      ],
+      "aggregatetimeestimate": null,
+      "summary": null,
+      "creator": null,
+      "subtasks": null,
+      "reporter": null,
+      "aggregateprogress": null,
+      "customfield_10002": null,
+      "customfield_10400": null,
+      "customfield_13900": null,
+      "environment": "",
+      "duedate": "Fri, 22/May/26",
+      "progress": null,
+      "votes": null,
+      "comment": {
+        "comments": [
+          {
+            "self": "https://koreteam.atlassian.net/rest/api/3/issue/551419/comment/1373209",
+            "id": "1373209",
+            "author": {
+              "self": "https://koreteam.atlassian.net/rest/api/3/user?accountId=557058%3Ac94a0226-6947-4bc4-af96-0aa24b13be44",
+              "accountId": "557058:c94a0226-6947-4bc4-af96-0aa24b13be44",
+              "emailAddress": "vishnu.nekkanti@kore.com",
+              "avatarUrls": {
+                "48x48": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/557058:c94a0226-6947-4bc4-af96-0aa24b13be44/c39cbf3c-1201-47e9-9750-3f5bc302e7c0/48",
+                "24x24": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/557058:c94a0226-6947-4bc4-af96-0aa24b13be44/c39cbf3c-1201-47e9-9750-3f5bc302e7c0/24",
+                "16x16": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/557058:c94a0226-6947-4bc4-af96-0aa24b13be44/c39cbf3c-1201-47e9-9750-3f5bc302e7c0/16",
+                "32x32": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/557058:c94a0226-6947-4bc4-af96-0aa24b13be44/c39cbf3c-1201-47e9-9750-3f5bc302e7c0/32"
+              },
+              "displayName": "Vishnu Kumar Nekkanti",
+              "active": true,
+              "timeZone": "America/New_York",
+              "accountType": "atlassian"
+            },
+            "body": "<h3><a name=\"Update\"></a>Update</h3>\n\n<p>Analysis document attached. This ticket was auto-generated from the analysis document using the /analysis-to-jira skill.</p>",
+            "updateAuthor": {
+              "self": "https://koreteam.atlassian.net/rest/api/3/user?accountId=557058%3Ac94a0226-6947-4bc4-af96-0aa24b13be44",
+              "accountId": "557058:c94a0226-6947-4bc4-af96-0aa24b13be44",
+              "emailAddress": "vishnu.nekkanti@kore.com",
+              "avatarUrls": {
+                "48x48": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/557058:c94a0226-6947-4bc4-af96-0aa24b13be44/c39cbf3c-1201-47e9-9750-3f5bc302e7c0/48",
+                "24x24": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/557058:c94a0226-6947-4bc4-af96-0aa24b13be44/c39cbf3c-1201-47e9-9750-3f5bc302e7c0/24",
+                "16x16": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/557058:c94a0226-6947-4bc4-af96-0aa24b13be44/c39cbf3c-1201-47e9-9750-3f5bc302e7c0/16",
+                "32x32": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/557058:c94a0226-6947-4bc4-af96-0aa24b13be44/c39cbf3c-1201-47e9-9750-3f5bc302e7c0/32"
+              },
+              "displayName": "Vishnu Kumar Nekkanti",
+              "active": true,
+              "timeZone": "America/New_York",
+              "accountType": "atlassian"
+            },
+            "created": "Yesterday 2:27 AM",
+            "updated": "Yesterday 2:27 AM",
+            "jsdPublic": true
+          },
+          {
+            "self": "https://koreteam.atlassian.net/rest/api/3/issue/551419/comment/1373255",
+            "id": "1373255",
+            "author": {
+              "self": "https://koreteam.atlassian.net/rest/api/3/user?accountId=557058%3Ac94a0226-6947-4bc4-af96-0aa24b13be44",
+              "accountId": "557058:c94a0226-6947-4bc4-af96-0aa24b13be44",
+              "emailAddress": "vishnu.nekkanti@kore.com",
+              "avatarUrls": {
+                "48x48": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/557058:c94a0226-6947-4bc4-af96-0aa24b13be44/c39cbf3c-1201-47e9-9750-3f5bc302e7c0/48",
+                "24x24": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/557058:c94a0226-6947-4bc4-af96-0aa24b13be44/c39cbf3c-1201-47e9-9750-3f5bc302e7c0/24",
+                "16x16": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/557058:c94a0226-6947-4bc4-af96-0aa24b13be44/c39cbf3c-1201-47e9-9750-3f5bc302e7c0/16",
+                "32x32": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/557058:c94a0226-6947-4bc4-af96-0aa24b13be44/c39cbf3c-1201-47e9-9750-3f5bc302e7c0/32"
+              },
+              "displayName": "Vishnu Kumar Nekkanti",
+              "active": true,
+              "timeZone": "America/New_York",
+              "accountType": "atlassian"
+            },
+            "body": "<h3><a name=\"Update\"></a>Update</h3>\n\n<p><a href=\"https://koreteam.atlassian.net/secure/ViewProfile.jspa?accountId=557058%3A19965570-a9cd-4d76-b059-6af5ae4fdca7\" class=\"user-hover\" rel=\"557058:19965570-a9cd-4d76-b059-6af5ae4fdca7\" data-account-id=\"557058:19965570-a9cd-4d76-b059-6af5ae4fdca7\" accountid=\"557058:19965570-a9cd-4d76-b059-6af5ae4fdca7\" rel=\"noreferrer\">Prasanna Arikala</a>  , this is the feature gap I mentioned over the phone. Addressing this will significantly improve cost and reliability with respect to tool calling by reducing the complexity of what the LLM needs to generate and minimizing the error surface area for structured outputs.</p>",
+            "updateAuthor": {
+              "self": "https://koreteam.atlassian.net/rest/api/3/user?accountId=557058%3Ac94a0226-6947-4bc4-af96-0aa24b13be44",
+              "accountId": "557058:c94a0226-6947-4bc4-af96-0aa24b13be44",
+              "emailAddress": "vishnu.nekkanti@kore.com",
+              "avatarUrls": {
+                "48x48": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/557058:c94a0226-6947-4bc4-af96-0aa24b13be44/c39cbf3c-1201-47e9-9750-3f5bc302e7c0/48",
+                "24x24": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/557058:c94a0226-6947-4bc4-af96-0aa24b13be44/c39cbf3c-1201-47e9-9750-3f5bc302e7c0/24",
+                "16x16": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/557058:c94a0226-6947-4bc4-af96-0aa24b13be44/c39cbf3c-1201-47e9-9750-3f5bc302e7c0/16",
+                "32x32": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/557058:c94a0226-6947-4bc4-af96-0aa24b13be44/c39cbf3c-1201-47e9-9750-3f5bc302e7c0/32"
+              },
+              "displayName": "Vishnu Kumar Nekkanti",
+              "active": true,
+              "timeZone": "America/New_York",
+              "accountType": "atlassian"
+            },
+            "created": "Yesterday 2:38 AM",
+            "updated": "Yesterday 2:38 AM",
+            "jsdPublic": true
+          }
+        ],
+        "self": "https://koreteam.atlassian.net/rest/api/3/issue/551419/comment",
+        "maxResults": 2,
+        "total": 2,
+        "startAt": 0
+      },
+      "worklog": {
+        "startAt": 0,
+        "maxResults": 20,
+        "total": 0,
+        "worklogs": []
+      }
+    },
+    "changelog": {
+      "startAt": 0,
+      "maxResults": 8,
+      "total": 8,
+      "histories": [
+        {
+          "id": "6176933",
+          "author": {
+            "self": "https://koreteam.atlassian.net/rest/api/3/user?accountId=557058%3Ac94a0226-6947-4bc4-af96-0aa24b13be44",
+            "accountId": "557058:c94a0226-6947-4bc4-af96-0aa24b13be44",
+            "emailAddress": "vishnu.nekkanti@kore.com",
+            "avatarUrls": {
+              "48x48": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/557058:c94a0226-6947-4bc4-af96-0aa24b13be44/c39cbf3c-1201-47e9-9750-3f5bc302e7c0/48",
+              "24x24": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/557058:c94a0226-6947-4bc4-af96-0aa24b13be44/c39cbf3c-1201-47e9-9750-3f5bc302e7c0/24",
+              "16x16": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/557058:c94a0226-6947-4bc4-af96-0aa24b13be44/c39cbf3c-1201-47e9-9750-3f5bc302e7c0/16",
+              "32x32": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/557058:c94a0226-6947-4bc4-af96-0aa24b13be44/c39cbf3c-1201-47e9-9750-3f5bc302e7c0/32"
+            },
+            "displayName": "Vishnu Kumar Nekkanti",
+            "active": true,
+            "timeZone": "America/New_York",
+            "accountType": "atlassian"
+          },
+          "created": "2026-05-16T02:36:33.427+0530",
+          "items": [
+            {
+              "field": "assignee",
+              "fieldtype": "jira",
+              "fieldId": "assignee",
+              "from": null,
+              "fromString": null,
+              "to": "557058:19965570-a9cd-4d76-b059-6af5ae4fdca7",
+              "toString": "Prasanna Arikala",
+              "tmpFromAccountId": null,
+              "tmpToAccountId": "557058:19965570-a9cd-4d76-b059-6af5ae4fdca7"
+            }
+          ]
+        },
+        {
+          "id": "6176922",
+          "author": {
+            "self": "https://koreteam.atlassian.net/rest/api/3/user?accountId=557058%3Ac94a0226-6947-4bc4-af96-0aa24b13be44",
+            "accountId": "557058:c94a0226-6947-4bc4-af96-0aa24b13be44",
+            "emailAddress": "vishnu.nekkanti@kore.com",
+            "avatarUrls": {
+              "48x48": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/557058:c94a0226-6947-4bc4-af96-0aa24b13be44/c39cbf3c-1201-47e9-9750-3f5bc302e7c0/48",
+              "24x24": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/557058:c94a0226-6947-4bc4-af96-0aa24b13be44/c39cbf3c-1201-47e9-9750-3f5bc302e7c0/24",
+              "16x16": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/557058:c94a0226-6947-4bc4-af96-0aa24b13be44/c39cbf3c-1201-47e9-9750-3f5bc302e7c0/16",
+              "32x32": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/557058:c94a0226-6947-4bc4-af96-0aa24b13be44/c39cbf3c-1201-47e9-9750-3f5bc302e7c0/32"
+            },
+            "displayName": "Vishnu Kumar Nekkanti",
+            "active": true,
+            "timeZone": "America/New_York",
+            "accountType": "atlassian"
+          },
+          "created": "2026-05-16T02:32:42.756+0530",
+          "items": [
+            {
+              "field": "duedate",
+              "fieldtype": "jira",
+              "fieldId": "duedate",
+              "from": "2026-05-20",
+              "fromString": "2026-05-20 00:00:00.0",
+              "to": "2026-05-22",
+              "toString": "2026-05-22 00:00:00.0"
+            }
+          ]
+        },
+        {
+          "id": "6176921",
+          "author": {
+            "self": "https://koreteam.atlassian.net/rest/api/3/user?accountId=557058%3Ac94a0226-6947-4bc4-af96-0aa24b13be44",
+            "accountId": "557058:c94a0226-6947-4bc4-af96-0aa24b13be44",
+            "emailAddress": "vishnu.nekkanti@kore.com",
+            "avatarUrls": {
+              "48x48": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/557058:c94a0226-6947-4bc4-af96-0aa24b13be44/c39cbf3c-1201-47e9-9750-3f5bc302e7c0/48",
+              "24x24": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/557058:c94a0226-6947-4bc4-af96-0aa24b13be44/c39cbf3c-1201-47e9-9750-3f5bc302e7c0/24",
+              "16x16": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/557058:c94a0226-6947-4bc4-af96-0aa24b13be44/c39cbf3c-1201-47e9-9750-3f5bc302e7c0/16",
+              "32x32": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/557058:c94a0226-6947-4bc4-af96-0aa24b13be44/c39cbf3c-1201-47e9-9750-3f5bc302e7c0/32"
+            },
+            "displayName": "Vishnu Kumar Nekkanti",
+            "active": true,
+            "timeZone": "America/New_York",
+            "accountType": "atlassian"
+          },
+          "created": "2026-05-16T02:32:24.218+0530",
+          "items": [
+            {
+              "field": "duedate",
+              "fieldtype": "jira",
+              "fieldId": "duedate",
+              "from": null,
+              "fromString": null,
+              "to": "2026-05-20",
+              "toString": "2026-05-20 00:00:00.0"
+            }
+          ]
+        },
+        {
+          "id": "6176919",
+          "author": {
+            "self": "https://koreteam.atlassian.net/rest/api/3/user?accountId=557058%3Ac94a0226-6947-4bc4-af96-0aa24b13be44",
+            "accountId": "557058:c94a0226-6947-4bc4-af96-0aa24b13be44",
+            "emailAddress": "vishnu.nekkanti@kore.com",
+            "avatarUrls": {
+              "48x48": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/557058:c94a0226-6947-4bc4-af96-0aa24b13be44/c39cbf3c-1201-47e9-9750-3f5bc302e7c0/48",
+              "24x24": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/557058:c94a0226-6947-4bc4-af96-0aa24b13be44/c39cbf3c-1201-47e9-9750-3f5bc302e7c0/24",
+              "16x16": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/557058:c94a0226-6947-4bc4-af96-0aa24b13be44/c39cbf3c-1201-47e9-9750-3f5bc302e7c0/16",
+              "32x32": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/557058:c94a0226-6947-4bc4-af96-0aa24b13be44/c39cbf3c-1201-47e9-9750-3f5bc302e7c0/32"
+            },
+            "displayName": "Vishnu Kumar Nekkanti",
+            "active": true,
+            "timeZone": "America/New_York",
+            "accountType": "atlassian"
+          },
+          "created": "2026-05-16T02:30:00.318+0530",
+          "items": [
+            {
+              "field": "description",
+              "fieldtype": "jira",
+              "fieldId": "description",
+              "from": null,
+              "fromString": "h3. Description\n\n## Problem\n\nThe ABL Platform currently has **no parameter transformation layer** between the LLM generating a tool call and the tool being executed. Every value the tool needs — whether it's a user-driven input or a static config value — must be produced by the LLM as raw JSON in the tool call response.\n\nh4. This creates significant problems:\n\n* **Larger schemas in the prompt** (more tokens describing nested objects the LLM shouldn't reason about)\n* **Higher error rates** (wrong nesting, hallucinated envelope fields, stale config values)\n* **Costlier models required** (simpler models fail on deeply nested structured output)\n* **Longer instructions** explaining boilerplate structure instead of domain logic\n\n**Example:** For an XO 10 webhook tool calling an external scheduling API, the LLM must generate the entire {{nlMeta}} object including {{botId}} (static context value), {{language}} (derivable from session), and {{channelType}} (always \"webhook\"). Only {{intent}} and {{entities}} are truly dynamic.\n\n## Current Architecture Gaps\n\n# **No Parameter Pre-Processor Layer** - Between {{reasoning-executor.ts:320}} and {{tool-binding-executor.ts:362}}, parameters pass through unchanged\n# **No Computed/Derived Parameter Declaration** - {{ToolParameter}} interface has no concept of \"derived from context/config\"\n# **No Parameter Enrichment Middleware** - Tool middleware chain only has logging/timing\n# **No Parameter Schema Filtering for LLM** - All parameters exposed to LLM, even derived ones\n# **No Lookup/Registry Resolution** - Static values still require LLM generation\n\n## Solution (Phased Approach)\n\n**Phase 1 (P1):** Hidden params + defaultSource\n\n* Quick win: Add {{hidden: true}} + {{defaultSource}} to {{ToolParameter}}\n* Filter hidden params from LLM schema\n* Resolve defaults from context at execution time\n* **Effort:** Low (2-3 days)\n\n**Phase 2 (P0):** Parameter Pre-Processor Middleware\n\n* Add {{ToolParamPreProcessor}} middleware type\n* Transform LLM output → full tool params\n* Support computed params from session/config/lookup/expression\n* **Effort:** Medium (1 week)\n\n**Phase 3 (P2):** DSL COMPUTED block\n\n* Extend tool DSL with COMPUTED section\n* Best developer experience for tool authors\n* **Effort:** Medium-High (1-2 weeks)\n\n## Reference Implementation\n\nh4. Use XO 10 webhook {{nlMeta}} construction as validation case:\n\n* **Current:** LLM generates ~8 fields, nested 2 levels\n* **Target:** LLM generates ~3 fields, flat (message, intent, entities)\n* **Auto-computed:** botId, language, channelType, timezone\n\n## Expected Impact\n\n| Metric | Before | After |\n|--------|--------|-------|\n| LLM params to generate | ~8 fields, nested 2 levels | ~3 fields, flat |\n| JSON Schema complexity | Object with nested objects + arrays | Simple flat properties |\n| Prompt instruction tokens | ~200-300 tokens | ~50 tokens |\n| Model tier required | Higher (structured output) | Lower (simple key-value) |\n| Error surface area | High | Low |\n\n## Technical Details\n\n**Key Files:**\n\n* {{packages/compiler/src/platform/ir/schema.ts:1095-1108}} - ToolParameter interface\n* {{packages/compiler/src/platform/constructs/executors/reasoning-executor.ts:320}} - Integration point\n* {{packages/compiler/src/platform/constructs/executors/tool-binding-executor.ts:362-437}} - Execution entry\n* {{packages/compiler/src/platform/constructs/executors/tool-middleware.ts}} - Middleware chain\n* {{packages/compiler/src/platform/llm/types.ts:146-154}} - LLM schema generation\n\n## Acceptance Criteria\n\n* [ ] Phase 1: {{hidden}} and {{defaultSource}} fields added to {{ToolParameter}} interface\n* [ ] Phase 1: LLM schema generation filters hidden parameters\n* [ ] Phase 1: Default value resolution from context works at execution time\n* [ ] Phase 2: {{ToolParamPreProcessor}} middleware implemented and composable\n* [ ] Phase 2: Computed params support session/config/lookup/expression sources\n* [ ] Phase 2: Integration point between reasoning-executor and tool-binding-executor complete\n* [ ] Phase 3: DSL COMPUTED block syntax defined and implemented\n* [ ] Reference implementation: XO 10 webhook nlMeta auto-construction working\n* [ ] Documentation: Tool authoring guide updated with examples\n* [ ] Tests: Unit tests for each phase, E2E test with XO 10 webhook",
+              "to": null,
+              "toString": "h3. Problem\n\nThe ABL Platform currently has NO PARAMETER TRANSFORMATION LAYER between the LLM generating a tool call and the tool being executed. Every value the tool needs must be produced by the LLM as raw JSON in the tool call response.\n\nh4. This creates significant problems:\n\n* Larger schemas in the prompt (more tokens describing nested objects)\n* Higher error rates (wrong nesting, hallucinated envelope fields)\n* Costlier models required (simpler models fail on nested structured output)\n* Longer instructions explaining boilerplate instead of domain logic\n\nEXAMPLE: For an XO 10 webhook, the LLM must generate the entire nlMeta object including botId (static), language (from session), and channelType (always webhook). Only intent and entities are truly dynamic.\n\nh3. Current Architecture Gaps\n\n# NO PARAMETER PRE-PROCESSOR LAYER - Between reasoning-executor.ts:320 and tool-binding-executor.ts:362, parameters pass through unchanged\n# NO COMPUTED/DERIVED PARAMETER DECLARATION - ToolParameter interface has no concept of derived from context/config\n# NO PARAMETER ENRICHMENT MIDDLEWARE - Tool middleware chain only has logging/timing\n# NO PARAMETER SCHEMA FILTERING FOR LLM - All parameters exposed to LLM, even derived ones\n# NO LOOKUP/REGISTRY RESOLUTION - Static values still require LLM generation\n\nh3. Solution (Phased Approach)\n\nPHASE 1 (P1): Hidden params + defaultSource\n\n* Quick win: Add hidden: true + defaultSource to ToolParameter\n* Filter hidden params from LLM schema\n* Resolve defaults from context at execution time\n* EFFORT: Low (2-3 days)\n\nPHASE 2 (P0): Parameter Pre-Processor Middleware\n\n* Add ToolParamPreProcessor middleware type\n* Transform LLM output to full tool params\n* Support computed params from session/config/lookup/expression\n* EFFORT: Medium (1 week)\n\nPHASE 3 (P2): DSL COMPUTED block\n\n* Extend tool DSL with COMPUTED section\n* Best developer experience for tool authors\n* EFFORT: Medium-High (1-2 weeks)\n\nh3. Reference Implementation\n\nh4. Use XO 10 webhook nlMeta construction as validation case:\n\n* CURRENT: LLM generates ~8 fields, nested 2 levels\n* TARGET: LLM generates ~3 fields, flat (message, intent, entities)\n* AUTO-COMPUTED: botId, language, channelType, timezone\n\nh3. Expected Impact\n\nLLM params to generate: ~8 fields nested → ~3 fields flat\nJSON Schema complexity: Nested objects + arrays → Simple flat properties\nPrompt instruction tokens: ~200-300 tokens → ~50 tokens\nModel tier required: Higher (structured output) → Lower (simple key-value)\nError surface area: High → Low\n\nh3. Technical Details\n\nh4. Key Files:\n\n* packages/compiler/src/platform/ir/schema.ts:1095-1108 - ToolParameter interface\n* packages/compiler/src/platform/constructs/executors/reasoning-executor.ts:320 - Integration point\n* packages/compiler/src/platform/constructs/executors/tool-binding-executor.ts:362-437 - Execution entry\n* packages/compiler/src/platform/constructs/executors/tool-middleware.ts - Middleware chain\n* packages/compiler/src/platform/llm/types.ts:146-154 - LLM schema generation"
+            }
+          ]
+        },
+        {
+          "id": "6176918",
+          "author": {
+            "self": "https://koreteam.atlassian.net/rest/api/3/user?accountId=557058%3Ac94a0226-6947-4bc4-af96-0aa24b13be44",
+            "accountId": "557058:c94a0226-6947-4bc4-af96-0aa24b13be44",
+            "emailAddress": "vishnu.nekkanti@kore.com",
+            "avatarUrls": {
+              "48x48": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/557058:c94a0226-6947-4bc4-af96-0aa24b13be44/c39cbf3c-1201-47e9-9750-3f5bc302e7c0/48",
+              "24x24": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/557058:c94a0226-6947-4bc4-af96-0aa24b13be44/c39cbf3c-1201-47e9-9750-3f5bc302e7c0/24",
+              "16x16": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/557058:c94a0226-6947-4bc4-af96-0aa24b13be44/c39cbf3c-1201-47e9-9750-3f5bc302e7c0/16",
+              "32x32": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/557058:c94a0226-6947-4bc4-af96-0aa24b13be44/c39cbf3c-1201-47e9-9750-3f5bc302e7c0/32"
+            },
+            "displayName": "Vishnu Kumar Nekkanti",
+            "active": true,
+            "timeZone": "America/New_York",
+            "accountType": "atlassian"
+          },
+          "created": "2026-05-16T02:29:02.110+0530",
+          "items": [
+            {
+              "field": "description",
+              "fieldtype": "jira",
+              "fieldId": "description",
+              "from": null,
+              "fromString": "h3. Description\n\n## Problem\n\nThe ABL Platform currently has **no parameter transformation layer** between the LLM generating a tool call and the tool being executed. Every value the tool needs — whether it's a user-driven input or a static config value — must be produced by the LLM as raw JSON in the tool call response.\n\nh4. This creates significant problems:\n\n* **Larger schemas in the prompt** (more tokens describing nested objects the LLM shouldn't reason about)\n* **Higher error rates** (wrong nesting, hallucinated envelope fields, stale config values)\n* **Costlier models required** (simpler models fail on deeply nested structured output)\n* **Longer instructions** explaining boilerplate structure instead of domain logic\n\n**Example:** For an XO 10 webhook tool calling an external scheduling API, the LLM must generate the entire {{nlMeta}} object including {{botId}} (static context value), {{language}} (derivable from session), and {{channelType}} (always \"webhook\"). Only {{intent}} and {{entities}} are truly dynamic.\n\n## Current Architecture Gaps\n\n# **No Parameter Pre-Processor Layer** - Between {{reasoning-executor.ts:320}} and {{tool-binding-executor.ts:362}}, parameters pass through unchanged\n# **No Computed/Derived Parameter Declaration** - {{ToolParameter}} interface has no concept of \"derived from context/config\"\n# **No Parameter Enrichment Middleware** - Tool middleware chain only has logging/timing\n# **No Parameter Schema Filtering for LLM** - All parameters exposed to LLM, even derived ones\n# **No Lookup/Registry Resolution** - Static values still require LLM generation\n\n## Solution (Phased Approach)\n\n**Phase 1 (P1):** Hidden params + defaultSource\n\n* Quick win: Add {{hidden: true}} + {{defaultSource}} to {{ToolParameter}}\n* Filter hidden params from LLM schema\n* Resolve defaults from context at execution time\n* **Effort:** Low (2-3 days)\n\n**Phase 2 (P0):** Parameter Pre-Processor Middleware\n\n* Add {{ToolParamPreProcessor}} middleware type\n* Transform LLM output → full tool params\n* Support computed params from session/config/lookup/expression\n* **Effort:** Medium (1 week)\n\n**Phase 3 (P2):** DSL COMPUTED block\n\n* Extend tool DSL with COMPUTED section\n* Best developer experience for tool authors\n* **Effort:** Medium-High (1-2 weeks)\n\n## Reference Implementation\n\nh4. Use XO 10 webhook {{nlMeta}} construction as validation case:\n\n* **Current:** LLM generates ~8 fields, nested 2 levels\n* **Target:** LLM generates ~3 fields, flat (message, intent, entities)\n* **Auto-computed:** botId, language, channelType, timezone\n\n## Expected Impact\n\n| Metric | Before | After |\n|--------|--------|-------|\n| LLM params to generate | ~8 fields, nested 2 levels | ~3 fields, flat |\n| JSON Schema complexity | Object with nested objects + arrays | Simple flat properties |\n| Prompt instruction tokens | ~200-300 tokens | ~50 tokens |\n| Model tier required | Higher (structured output) | Lower (simple key-value) |\n| Error surface area | High | Low |\n\n## Technical Details\n\n**Key Files:**\n\n* {{packages/compiler/src/platform/ir/schema.ts:1095-1108}} - ToolParameter interface\n* {{packages/compiler/src/platform/constructs/executors/reasoning-executor.ts:320}} - Integration point\n* {{packages/compiler/src/platform/constructs/executors/tool-binding-executor.ts:362-437}} - Execution entry\n* {{packages/compiler/src/platform/constructs/executors/tool-middleware.ts}} - Middleware chain\n* {{packages/compiler/src/platform/llm/types.ts:146-154}} - LLM schema generation\n\n## Acceptance Criteria\n\n* [ ] Phase 1: {{hidden}} and {{defaultSource}} fields added to {{ToolParameter}} interface\n* [ ] Phase 1: LLM schema generation filters hidden parameters\n* [ ] Phase 1: Default value resolution from context works at execution time\n* [ ] Phase 2: {{ToolParamPreProcessor}} middleware implemented and composable\n* [ ] Phase 2: Computed params support session/config/lookup/expression sources\n* [ ] Phase 2: Integration point between reasoning-executor and tool-binding-executor complete\n* [ ] Phase 3: DSL COMPUTED block syntax defined and implemented\n* [ ] Reference implementation: XO 10 webhook nlMeta auto-construction working\n* [ ] Documentation: Tool authoring guide updated with examples\n* [ ] Tests: Unit tests for each phase, E2E test with XO 10 webhook",
+              "to": null,
+              "toString": "h3. Description\n\n## Problem\n\nThe ABL Platform currently has **no parameter transformation layer** between the LLM generating a tool call and the tool being executed. Every value the tool needs — whether it's a user-driven input or a static config value — must be produced by the LLM as raw JSON in the tool call response.\n\nh4. This creates significant problems:\n\n* **Larger schemas in the prompt** (more tokens describing nested objects the LLM shouldn't reason about)\n* **Higher error rates** (wrong nesting, hallucinated envelope fields, stale config values)\n* **Costlier models required** (simpler models fail on deeply nested structured output)\n* **Longer instructions** explaining boilerplate structure instead of domain logic\n\n**Example:** For an XO 10 webhook tool calling an external scheduling API, the LLM must generate the entire {{nlMeta}} object including {{botId}} (static context value), {{language}} (derivable from session), and {{channelType}} (always \"webhook\"). Only {{intent}} and {{entities}} are truly dynamic.\n\n## Current Architecture Gaps\n\n# **No Parameter Pre-Processor Layer** - Between {{reasoning-executor.ts:320}} and {{tool-binding-executor.ts:362}}, parameters pass through unchanged\n# **No Computed/Derived Parameter Declaration** - {{ToolParameter}} interface has no concept of \"derived from context/config\"\n# **No Parameter Enrichment Middleware** - Tool middleware chain only has logging/timing\n# **No Parameter Schema Filtering for LLM** - All parameters exposed to LLM, even derived ones\n# **No Lookup/Registry Resolution** - Static values still require LLM generation\n\n## Solution (Phased Approach)\n\n**Phase 1 (P1):** Hidden params + defaultSource\n\n* Quick win: Add {{hidden: true}} + {{defaultSource}} to {{ToolParameter}}\n* Filter hidden params from LLM schema\n* Resolve defaults from context at execution time\n* **Effort:** Low (2-3 days)\n\n**Phase 2 (P0):** Parameter Pre-Processor Middleware\n\n* Add {{ToolParamPreProcessor}} middleware type\n* Transform LLM output → full tool params\n* Support computed params from session/config/lookup/expression\n* **Effort:** Medium (1 week)\n\n**Phase 3 (P2):** DSL COMPUTED block\n\n* Extend tool DSL with COMPUTED section\n* Best developer experience for tool authors\n* **Effort:** Medium-High (1-2 weeks)\n\n## Reference Implementation\n\nh4. Use XO 10 webhook {{nlMeta}} construction as validation case:\n\n* **Current:** LLM generates ~8 fields, nested 2 levels\n* **Target:** LLM generates ~3 fields, flat (message, intent, entities)\n* **Auto-computed:** botId, language, channelType, timezone\n\n## Expected Impact\n\n| Metric | Before | After |\n|--------|--------|-------|\n| LLM params to generate | ~8 fields, nested 2 levels | ~3 fields, flat |\n| JSON Schema complexity | Object with nested objects + arrays | Simple flat properties |\n| Prompt instruction tokens | ~200-300 tokens | ~50 tokens |\n| Model tier required | Higher (structured output) | Lower (simple key-value) |\n| Error surface area | High | Low |\n\n## Technical Details\n\n**Key Files:**\n\n* {{packages/compiler/src/platform/ir/schema.ts:1095-1108}} - ToolParameter interface\n* {{packages/compiler/src/platform/constructs/executors/reasoning-executor.ts:320}} - Integration point\n* {{packages/compiler/src/platform/constructs/executors/tool-binding-executor.ts:362-437}} - Execution entry\n* {{packages/compiler/src/platform/constructs/executors/tool-middleware.ts}} - Middleware chain\n* {{packages/compiler/src/platform/llm/types.ts:146-154}} - LLM schema generation\n\n## Acceptance Criteria\n\n* [ ] Phase 1: {{hidden}} and {{defaultSource}} fields added to {{ToolParameter}} interface\n* [ ] Phase 1: LLM schema generation filters hidden parameters\n* [ ] Phase 1: Default value resolution from context works at execution time\n* [ ] Phase 2: {{ToolParamPreProcessor}} middleware implemented and composable\n* [ ] Phase 2: Computed params support session/config/lookup/expression sources\n* [ ] Phase 2: Integration point between reasoning-executor and tool-binding-executor complete\n* [ ] Phase 3: DSL COMPUTED block syntax defined and implemented\n* [ ] Reference implementation: XO 10 webhook nlMeta auto-construction working\n* [ ] Documentation: Tool authoring guide updated with examples\n* [ ] Tests: Unit tests for each phase, E2E test with XO 10 webhook"
+            }
+          ]
+        },
+        {
+          "id": "6176917",
+          "author": {
+            "self": "https://koreteam.atlassian.net/rest/api/3/user?accountId=557058%3Ac94a0226-6947-4bc4-af96-0aa24b13be44",
+            "accountId": "557058:c94a0226-6947-4bc4-af96-0aa24b13be44",
+            "emailAddress": "vishnu.nekkanti@kore.com",
+            "avatarUrls": {
+              "48x48": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/557058:c94a0226-6947-4bc4-af96-0aa24b13be44/c39cbf3c-1201-47e9-9750-3f5bc302e7c0/48",
+              "24x24": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/557058:c94a0226-6947-4bc4-af96-0aa24b13be44/c39cbf3c-1201-47e9-9750-3f5bc302e7c0/24",
+              "16x16": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/557058:c94a0226-6947-4bc4-af96-0aa24b13be44/c39cbf3c-1201-47e9-9750-3f5bc302e7c0/16",
+              "32x32": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/557058:c94a0226-6947-4bc4-af96-0aa24b13be44/c39cbf3c-1201-47e9-9750-3f5bc302e7c0/32"
+            },
+            "displayName": "Vishnu Kumar Nekkanti",
+            "active": true,
+            "timeZone": "America/New_York",
+            "accountType": "atlassian"
+          },
+          "created": "2026-05-16T02:28:53.460+0530",
+          "items": [
+            {
+              "field": "labels",
+              "fieldtype": "jira",
+              "fieldId": "labels",
+              "from": null,
+              "fromString": "developer-experience llm-optimization parameter-preprocessing tool-execution",
+              "to": null,
+              "toString": "Charter go-agentic-priority"
+            }
+          ]
+        },
+        {
+          "id": "6176916",
+          "author": {
+            "self": "https://koreteam.atlassian.net/rest/api/3/user?accountId=557058%3Ac94a0226-6947-4bc4-af96-0aa24b13be44",
+            "accountId": "557058:c94a0226-6947-4bc4-af96-0aa24b13be44",
+            "emailAddress": "vishnu.nekkanti@kore.com",
+            "avatarUrls": {
+              "48x48": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/557058:c94a0226-6947-4bc4-af96-0aa24b13be44/c39cbf3c-1201-47e9-9750-3f5bc302e7c0/48",
+              "24x24": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/557058:c94a0226-6947-4bc4-af96-0aa24b13be44/c39cbf3c-1201-47e9-9750-3f5bc302e7c0/24",
+              "16x16": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/557058:c94a0226-6947-4bc4-af96-0aa24b13be44/c39cbf3c-1201-47e9-9750-3f5bc302e7c0/16",
+              "32x32": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/557058:c94a0226-6947-4bc4-af96-0aa24b13be44/c39cbf3c-1201-47e9-9750-3f5bc302e7c0/32"
+            },
+            "displayName": "Vishnu Kumar Nekkanti",
+            "active": true,
+            "timeZone": "America/New_York",
+            "accountType": "atlassian"
+          },
+          "created": "2026-05-16T02:28:13.030+0530",
+          "items": [
+            {
+              "field": "description",
+              "fieldtype": "jira",
+              "fieldId": "description",
+              "from": null,
+              "fromString": "h3. Description\n\nh2. Problem\n\nThe ABL Platform currently has *no parameter transformation layer* between the LLM generating a tool call and the tool being executed. Every value the tool needs — whether it's a user-driven input or a static config value — must be produced by the LLM as raw JSON in the tool call response.\n\nh4. This creates significant problems:\n\n* *Larger schemas in the prompt* (more tokens describing nested objects the LLM shouldn't reason about)\n* *Higher error rates* (wrong nesting, hallucinated envelope fields, stale config values)\n* *Costlier models required* (simpler models fail on deeply nested structured output)\n* *Longer instructions* explaining boilerplate structure instead of domain logic\n\n*Example:* For an XO 10 webhook tool calling an external scheduling API, the LLM must generate the entire {{nlMeta}} object including {{botId}} (static context value), {{language}} (derivable from session), and {{channelType}} (always \"webhook\"). Only {{intent}} and {{entities}} are truly dynamic.\n\nh2. Current Architecture Gaps\n\n# *No Parameter Pre-Processor Layer* - Between {{reasoning-executor.ts:320}} and {{tool-binding-executor.ts:362}}, parameters pass through unchanged\n# *No Computed/Derived Parameter Declaration* - {{ToolParameter}} interface has no concept of \"derived from context/config\"\n# *No Parameter Enrichment Middleware* - Tool middleware chain only has logging/timing\n# *No Parameter Schema Filtering for LLM* - All parameters exposed to LLM, even derived ones\n# *No Lookup/Registry Resolution* - Static values still require LLM generation\n\nh2. Solution (Phased Approach)\n\n*Phase 1 (P1):* Hidden params + defaultSource\n\n* Quick win: Add {{hidden: true}} + {{defaultSource}} to {{ToolParameter}}\n* Filter hidden params from LLM schema\n* Resolve defaults from context at execution time\n* *Effort:* Low (2-3 days)\n\n*Phase 2 (P0):* Parameter Pre-Processor Middleware\n\n* Add {{ToolParamPreProcessor}} middleware type\n* Transform LLM output → full tool params\n* Support computed params from session/config/lookup/expression\n* *Effort:* Medium (1 week)\n\n*Phase 3 (P2):* DSL COMPUTED block\n\n* Extend tool DSL with COMPUTED section\n* Best developer experience for tool authors\n* *Effort:* Medium-High (1-2 weeks)\n\nh2. Reference Implementation\n\nh4. Use XO 10 webhook {{nlMeta}} construction as validation case:\n\n* *Current:* LLM generates ~8 fields, nested 2 levels\n* *Target:* LLM generates ~3 fields, flat (message, intent, entities)\n* *Auto-computed:* botId, language, channelType, timezone\n\nh2. Expected Impact\n\n||Metric||Before||After||\n|LLM params to generate|~8 fields, nested 2 levels|~3 fields, flat|\n|JSON Schema complexity|Object with nested objects + arrays|Simple flat properties|\n|Prompt instruction tokens|~200-300 tokens|~50 tokens|\n|Model tier required|Higher (structured output)|Lower (simple key-value)|\n|Error surface area|High|Low|\n\nh2. Technical Details\n\n*Key Files:*\n\n* {{packages/compiler/src/platform/ir/schema.ts:1095-1108}} - ToolParameter interface\n* {{packages/compiler/src/platform/constructs/executors/reasoning-executor.ts:320}} - Integration point\n* {{packages/compiler/src/platform/constructs/executors/tool-binding-executor.ts:362-437}} - Execution entry\n* {{packages/compiler/src/platform/constructs/executors/tool-middleware.ts}} - Middleware chain\n* {{packages/compiler/src/platform/llm/types.ts:146-154}} - LLM schema generation\n\nh2. Acceptance Criteria\n\n* Phase 1: {{hidden}} and {{defaultSource}} fields added to {{ToolParameter}} interface\n* Phase 1: LLM schema generation filters hidden parameters\n* Phase 1: Default value resolution from context works at execution time\n* Phase 2: {{ToolParamPreProcessor}} middleware implemented and composable\n* Phase 2: Computed params support session/config/lookup/expression sources\n* Phase 2: Integration point between reasoning-executor and tool-binding-executor complete\n* Phase 3: DSL COMPUTED block syntax defined and implemented\n* Reference implementation: XO 10 webhook nlMeta auto-construction working\n* Documentation: Tool authoring guide updated with examples\n* Tests: Unit tests for each phase, E2E test with XO 10 webhook",
+              "to": null,
+              "toString": "h3. Description\n\n## Problem\n\nThe ABL Platform currently has **no parameter transformation layer** between the LLM generating a tool call and the tool being executed. Every value the tool needs — whether it's a user-driven input or a static config value — must be produced by the LLM as raw JSON in the tool call response.\n\nh4. This creates significant problems:\n\n* **Larger schemas in the prompt** (more tokens describing nested objects the LLM shouldn't reason about)\n* **Higher error rates** (wrong nesting, hallucinated envelope fields, stale config values)\n* **Costlier models required** (simpler models fail on deeply nested structured output)\n* **Longer instructions** explaining boilerplate structure instead of domain logic\n\n**Example:** For an XO 10 webhook tool calling an external scheduling API, the LLM must generate the entire {{nlMeta}} object including {{botId}} (static context value), {{language}} (derivable from session), and {{channelType}} (always \"webhook\"). Only {{intent}} and {{entities}} are truly dynamic.\n\n## Current Architecture Gaps\n\n# **No Parameter Pre-Processor Layer** - Between {{reasoning-executor.ts:320}} and {{tool-binding-executor.ts:362}}, parameters pass through unchanged\n# **No Computed/Derived Parameter Declaration** - {{ToolParameter}} interface has no concept of \"derived from context/config\"\n# **No Parameter Enrichment Middleware** - Tool middleware chain only has logging/timing\n# **No Parameter Schema Filtering for LLM** - All parameters exposed to LLM, even derived ones\n# **No Lookup/Registry Resolution** - Static values still require LLM generation\n\n## Solution (Phased Approach)\n\n**Phase 1 (P1):** Hidden params + defaultSource\n\n* Quick win: Add {{hidden: true}} + {{defaultSource}} to {{ToolParameter}}\n* Filter hidden params from LLM schema\n* Resolve defaults from context at execution time\n* **Effort:** Low (2-3 days)\n\n**Phase 2 (P0):** Parameter Pre-Processor Middleware\n\n* Add {{ToolParamPreProcessor}} middleware type\n* Transform LLM output → full tool params\n* Support computed params from session/config/lookup/expression\n* **Effort:** Medium (1 week)\n\n**Phase 3 (P2):** DSL COMPUTED block\n\n* Extend tool DSL with COMPUTED section\n* Best developer experience for tool authors\n* **Effort:** Medium-High (1-2 weeks)\n\n## Reference Implementation\n\nh4. Use XO 10 webhook {{nlMeta}} construction as validation case:\n\n* **Current:** LLM generates ~8 fields, nested 2 levels\n* **Target:** LLM generates ~3 fields, flat (message, intent, entities)\n* **Auto-computed:** botId, language, channelType, timezone\n\n## Expected Impact\n\n| Metric | Before | After |\n|--------|--------|-------|\n| LLM params to generate | ~8 fields, nested 2 levels | ~3 fields, flat |\n| JSON Schema complexity | Object with nested objects + arrays | Simple flat properties |\n| Prompt instruction tokens | ~200-300 tokens | ~50 tokens |\n| Model tier required | Higher (structured output) | Lower (simple key-value) |\n| Error surface area | High | Low |\n\n## Technical Details\n\n**Key Files:**\n\n* {{packages/compiler/src/platform/ir/schema.ts:1095-1108}} - ToolParameter interface\n* {{packages/compiler/src/platform/constructs/executors/reasoning-executor.ts:320}} - Integration point\n* {{packages/compiler/src/platform/constructs/executors/tool-binding-executor.ts:362-437}} - Execution entry\n* {{packages/compiler/src/platform/constructs/executors/tool-middleware.ts}} - Middleware chain\n* {{packages/compiler/src/platform/llm/types.ts:146-154}} - LLM schema generation\n\n## Acceptance Criteria\n\n* [ ] Phase 1: {{hidden}} and {{defaultSource}} fields added to {{ToolParameter}} interface\n* [ ] Phase 1: LLM schema generation filters hidden parameters\n* [ ] Phase 1: Default value resolution from context works at execution time\n* [ ] Phase 2: {{ToolParamPreProcessor}} middleware implemented and composable\n* [ ] Phase 2: Computed params support session/config/lookup/expression sources\n* [ ] Phase 2: Integration point between reasoning-executor and tool-binding-executor complete\n* [ ] Phase 3: DSL COMPUTED block syntax defined and implemented\n* [ ] Reference implementation: XO 10 webhook nlMeta auto-construction working\n* [ ] Documentation: Tool authoring guide updated with examples\n* [ ] Tests: Unit tests for each phase, E2E test with XO 10 webhook"
+            }
+          ]
+        },
+        {
+          "id": "6176915",
+          "author": {
+            "self": "https://koreteam.atlassian.net/rest/api/3/user?accountId=557058%3Ac94a0226-6947-4bc4-af96-0aa24b13be44",
+            "accountId": "557058:c94a0226-6947-4bc4-af96-0aa24b13be44",
+            "emailAddress": "vishnu.nekkanti@kore.com",
+            "avatarUrls": {
+              "48x48": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/557058:c94a0226-6947-4bc4-af96-0aa24b13be44/c39cbf3c-1201-47e9-9750-3f5bc302e7c0/48",
+              "24x24": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/557058:c94a0226-6947-4bc4-af96-0aa24b13be44/c39cbf3c-1201-47e9-9750-3f5bc302e7c0/24",
+              "16x16": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/557058:c94a0226-6947-4bc4-af96-0aa24b13be44/c39cbf3c-1201-47e9-9750-3f5bc302e7c0/16",
+              "32x32": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/557058:c94a0226-6947-4bc4-af96-0aa24b13be44/c39cbf3c-1201-47e9-9750-3f5bc302e7c0/32"
+            },
+            "displayName": "Vishnu Kumar Nekkanti",
+            "active": true,
+            "timeZone": "America/New_York",
+            "accountType": "atlassian"
+          },
+          "created": "2026-05-16T02:27:31.255+0530",
+          "items": [
+            {
+              "field": "Attachment",
+              "fieldtype": "jira",
+              "fieldId": "attachment",
+              "from": null,
+              "fromString": null,
+              "to": "760384",
+              "toString": "tool-parameter-preprocessing-gaps.md"
+            }
+          ]
+        }
+      ]
+    },
+    "fields": {
+      "statuscategorychangedate": "2026-05-16T02:26:06.626+0530",
+      "issuetype": {
+        "self": "https://koreteam.atlassian.net/rest/api/3/issuetype/12318",
+        "id": "12318",
+        "description": "A requirement expressed from the user’s perspective",
+        "iconUrl": "https://koreteam.atlassian.net/rest/api/2/universal_avatar/view/type/issuetype/avatar/10700?size=medium",
+        "name": "Story",
+        "subtask": false,
+        "avatarId": 10700,
+        "entityId": "f31224f3-045d-4b21-9aa4-b46d673fca5f",
+        "hierarchyLevel": 0
+      },
+      "timespent": null,
+      "project": {
+        "self": "https://koreteam.atlassian.net/rest/api/3/project/17286",
+        "id": "17286",
+        "key": "ABLP",
+        "name": "Agent-Platform-v2",
+        "projectTypeKey": "software",
+        "simplified": true,
+        "avatarUrls": {
+          "48x48": "https://koreteam.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/15404",
+          "24x24": "https://koreteam.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/15404?size=small",
+          "16x16": "https://koreteam.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/15404?size=xsmall",
+          "32x32": "https://koreteam.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/15404?size=medium"
+        }
+      },
+      "fixVersions": [],
+      "aggregatetimespent": null,
+      "statusCategory": {
+        "self": "https://koreteam.atlassian.net/rest/api/3/statuscategory/2",
+        "id": 2,
+        "key": "new",
+        "colorName": "blue-gray",
+        "name": "To Do"
+      },
+      "resolution": null,
+      "customfield_13700": "{repository={count=3, dataType=repository}, json={\"cachedValue\":{\"errors\":[],\"summary\":{\"repository\":{\"overall\":{\"count\":3,\"lastUpdated\":\"2026-05-16T02:35:43.000+0530\",\"dataType\":\"repository\"},\"byInstanceType\":{\"bitbucket\":{\"count\":3,\"name\":\"Bitbucket Cloud\"}}}}},\"isStale\":true}}",
+      "customfield_15205": null,
+      "resolutiondate": null,
+      "workratio": -1,
+      "issuerestriction": {
+        "issuerestrictions": {},
+        "shouldDisplay": true
+      },
+      "watches": {
+        "self": "https://koreteam.atlassian.net/rest/api/3/issue/ABLP-1100/watchers",
+        "watchCount": 1,
+        "isWatching": false
+      },
+      "lastViewed": "2026-05-16T02:55:14.944+0530",
+      "created": "2026-05-16T02:26:06.001+0530",
+      "customfield_15279": null,
+      "priority": {
+        "self": "https://koreteam.atlassian.net/rest/api/3/priority/10200",
+        "iconUrl": "https://koreteam.atlassian.net/images/icons/priorities/trivial_new.svg",
+        "name": "None",
+        "id": "10200"
+      },
+      "customfield_15514": null,
+      "labels": ["Charter", "go-agentic-priority"],
+      "timeestimate": null,
+      "aggregatetimeoriginalestimate": null,
+      "versions": [],
+      "issuelinks": [],
+      "assignee": {
+        "self": "https://koreteam.atlassian.net/rest/api/3/user?accountId=557058%3A19965570-a9cd-4d76-b059-6af5ae4fdca7",
+        "accountId": "557058:19965570-a9cd-4d76-b059-6af5ae4fdca7",
+        "emailAddress": "prasanna@kore.com",
+        "avatarUrls": {
+          "48x48": "https://secure.gravatar.com/avatar/84aa6c5f7ca4865903e52515ef5499c4?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FPA-6.png",
+          "24x24": "https://secure.gravatar.com/avatar/84aa6c5f7ca4865903e52515ef5499c4?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FPA-6.png",
+          "16x16": "https://secure.gravatar.com/avatar/84aa6c5f7ca4865903e52515ef5499c4?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FPA-6.png",
+          "32x32": "https://secure.gravatar.com/avatar/84aa6c5f7ca4865903e52515ef5499c4?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FPA-6.png"
+        },
+        "displayName": "Prasanna Arikala",
+        "active": true,
+        "timeZone": "Asia/Kolkata",
+        "accountType": "atlassian"
+      },
+      "updated": "2026-05-16T02:38:42.172+0530",
+      "status": {
+        "self": "https://koreteam.atlassian.net/rest/api/3/status/13811",
+        "description": "",
+        "iconUrl": "https://koreteam.atlassian.net/images/icons/statuses/generic.png",
+        "name": "To Do",
+        "id": "13811",
+        "statusCategory": {
+          "self": "https://koreteam.atlassian.net/rest/api/3/statuscategory/2",
+          "id": 2,
+          "key": "new",
+          "colorName": "blue-gray",
+          "name": "To Do"
+        }
+      },
+      "components": [],
+      "timeoriginalestimate": null,
+      "description": {
+        "type": "doc",
+        "version": 1,
+        "content": [
+          {
+            "type": "heading",
+            "attrs": {
+              "level": 3
+            },
+            "content": [
+              {
+                "type": "text",
+                "text": "Problem"
+              }
+            ]
+          },
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "type": "text",
+                "text": "The ABL Platform currently has NO PARAMETER TRANSFORMATION LAYER between the LLM generating a tool call and the tool being executed. Every value the tool needs must be produced by the LLM as raw JSON in the tool call response."
+              }
+            ]
+          },
+          {
+            "type": "heading",
+            "attrs": {
+              "level": 4
+            },
+            "content": [
+              {
+                "type": "text",
+                "text": "This creates significant problems:"
+              }
+            ]
+          },
+          {
+            "type": "bulletList",
+            "content": [
+              {
+                "type": "listItem",
+                "content": [
+                  {
+                    "type": "paragraph",
+                    "content": [
+                      {
+                        "type": "text",
+                        "text": "Larger schemas in the prompt (more tokens describing nested objects)"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "type": "listItem",
+                "content": [
+                  {
+                    "type": "paragraph",
+                    "content": [
+                      {
+                        "type": "text",
+                        "text": "Higher error rates (wrong nesting, hallucinated envelope fields)"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "type": "listItem",
+                "content": [
+                  {
+                    "type": "paragraph",
+                    "content": [
+                      {
+                        "type": "text",
+                        "text": "Costlier models required (simpler models fail on nested structured output)"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "type": "listItem",
+                "content": [
+                  {
+                    "type": "paragraph",
+                    "content": [
+                      {
+                        "type": "text",
+                        "text": "Longer instructions explaining boilerplate instead of domain logic"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "type": "text",
+                "text": "EXAMPLE: For an XO 10 webhook, the LLM must generate the entire nlMeta object including botId (static), language (from session), and channelType (always webhook). Only intent and entities are truly dynamic."
+              }
+            ]
+          },
+          {
+            "type": "heading",
+            "attrs": {
+              "level": 3
+            },
+            "content": [
+              {
+                "type": "text",
+                "text": "Current Architecture Gaps"
+              }
+            ]
+          },
+          {
+            "type": "orderedList",
+            "content": [
+              {
+                "type": "listItem",
+                "content": [
+                  {
+                    "type": "paragraph",
+                    "content": [
+                      {
+                        "type": "text",
+                        "text": "NO PARAMETER PRE-PROCESSOR LAYER - Between reasoning-executor.ts:320 and tool-binding-executor.ts:362, parameters pass through unchanged"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "type": "listItem",
+                "content": [
+                  {
+                    "type": "paragraph",
+                    "content": [
+                      {
+                        "type": "text",
+                        "text": "NO COMPUTED/DERIVED PARAMETER DECLARATION - ToolParameter interface has no concept of derived from context/config"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "type": "listItem",
+                "content": [
+                  {
+                    "type": "paragraph",
+                    "content": [
+                      {
+                        "type": "text",
+                        "text": "NO PARAMETER ENRICHMENT MIDDLEWARE - Tool middleware chain only has logging/timing"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "type": "listItem",
+                "content": [
+                  {
+                    "type": "paragraph",
+                    "content": [
+                      {
+                        "type": "text",
+                        "text": "NO PARAMETER SCHEMA FILTERING FOR LLM - All parameters exposed to LLM, even derived ones"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "type": "listItem",
+                "content": [
+                  {
+                    "type": "paragraph",
+                    "content": [
+                      {
+                        "type": "text",
+                        "text": "NO LOOKUP/REGISTRY RESOLUTION - Static values still require LLM generation"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "heading",
+            "attrs": {
+              "level": 3
+            },
+            "content": [
+              {
+                "type": "text",
+                "text": "Solution (Phased Approach)"
+              }
+            ]
+          },
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "type": "text",
+                "text": "PHASE 1 (P1): Hidden params + defaultSource"
+              }
+            ]
+          },
+          {
+            "type": "bulletList",
+            "content": [
+              {
+                "type": "listItem",
+                "content": [
+                  {
+                    "type": "paragraph",
+                    "content": [
+                      {
+                        "type": "text",
+                        "text": "Quick win: Add hidden: true + defaultSource to ToolParameter"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "type": "listItem",
+                "content": [
+                  {
+                    "type": "paragraph",
+                    "content": [
+                      {
+                        "type": "text",
+                        "text": "Filter hidden params from LLM schema"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "type": "listItem",
+                "content": [
+                  {
+                    "type": "paragraph",
+                    "content": [
+                      {
+                        "type": "text",
+                        "text": "Resolve defaults from context at execution time"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "type": "listItem",
+                "content": [
+                  {
+                    "type": "paragraph",
+                    "content": [
+                      {
+                        "type": "text",
+                        "text": "EFFORT: Low (2-3 days)"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "type": "text",
+                "text": "PHASE 2 (P0): Parameter Pre-Processor Middleware"
+              }
+            ]
+          },
+          {
+            "type": "bulletList",
+            "content": [
+              {
+                "type": "listItem",
+                "content": [
+                  {
+                    "type": "paragraph",
+                    "content": [
+                      {
+                        "type": "text",
+                        "text": "Add ToolParamPreProcessor middleware type"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "type": "listItem",
+                "content": [
+                  {
+                    "type": "paragraph",
+                    "content": [
+                      {
+                        "type": "text",
+                        "text": "Transform LLM output to full tool params"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "type": "listItem",
+                "content": [
+                  {
+                    "type": "paragraph",
+                    "content": [
+                      {
+                        "type": "text",
+                        "text": "Support computed params from session/config/lookup/expression"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "type": "listItem",
+                "content": [
+                  {
+                    "type": "paragraph",
+                    "content": [
+                      {
+                        "type": "text",
+                        "text": "EFFORT: Medium (1 week)"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "type": "text",
+                "text": "PHASE 3 (P2): DSL COMPUTED block"
+              }
+            ]
+          },
+          {
+            "type": "bulletList",
+            "content": [
+              {
+                "type": "listItem",
+                "content": [
+                  {
+                    "type": "paragraph",
+                    "content": [
+                      {
+                        "type": "text",
+                        "text": "Extend tool DSL with COMPUTED section"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "type": "listItem",
+                "content": [
+                  {
+                    "type": "paragraph",
+                    "content": [
+                      {
+                        "type": "text",
+                        "text": "Best developer experience for tool authors"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "type": "listItem",
+                "content": [
+                  {
+                    "type": "paragraph",
+                    "content": [
+                      {
+                        "type": "text",
+                        "text": "EFFORT: Medium-High (1-2 weeks)"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "heading",
+            "attrs": {
+              "level": 3
+            },
+            "content": [
+              {
+                "type": "text",
+                "text": "Reference Implementation"
+              }
+            ]
+          },
+          {
+            "type": "heading",
+            "attrs": {
+              "level": 4
+            },
+            "content": [
+              {
+                "type": "text",
+                "text": "Use XO 10 webhook nlMeta construction as validation case:"
+              }
+            ]
+          },
+          {
+            "type": "bulletList",
+            "content": [
+              {
+                "type": "listItem",
+                "content": [
+                  {
+                    "type": "paragraph",
+                    "content": [
+                      {
+                        "type": "text",
+                        "text": "CURRENT: LLM generates ~8 fields, nested 2 levels"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "type": "listItem",
+                "content": [
+                  {
+                    "type": "paragraph",
+                    "content": [
+                      {
+                        "type": "text",
+                        "text": "TARGET: LLM generates ~3 fields, flat (message, intent, entities)"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "type": "listItem",
+                "content": [
+                  {
+                    "type": "paragraph",
+                    "content": [
+                      {
+                        "type": "text",
+                        "text": "AUTO-COMPUTED: botId, language, channelType, timezone"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "heading",
+            "attrs": {
+              "level": 3
+            },
+            "content": [
+              {
+                "type": "text",
+                "text": "Expected Impact"
+              }
+            ]
+          },
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "type": "text",
+                "text": "LLM params to generate: ~8 fields nested → ~3 fields flat"
+              },
+              {
+                "type": "hardBreak"
+              },
+              {
+                "type": "text",
+                "text": "JSON Schema complexity: Nested objects + arrays → Simple flat properties"
+              },
+              {
+                "type": "hardBreak"
+              },
+              {
+                "type": "text",
+                "text": "Prompt instruction tokens: ~200-300 tokens → ~50 tokens"
+              },
+              {
+                "type": "hardBreak"
+              },
+              {
+                "type": "text",
+                "text": "Model tier required: Higher (structured output) → Lower (simple key-value)"
+              },
+              {
+                "type": "hardBreak"
+              },
+              {
+                "type": "text",
+                "text": "Error surface area: High → Low"
+              }
+            ]
+          },
+          {
+            "type": "heading",
+            "attrs": {
+              "level": 3
+            },
+            "content": [
+              {
+                "type": "text",
+                "text": "Technical Details"
+              }
+            ]
+          },
+          {
+            "type": "heading",
+            "attrs": {
+              "level": 4
+            },
+            "content": [
+              {
+                "type": "text",
+                "text": "Key Files:"
+              }
+            ]
+          },
+          {
+            "type": "bulletList",
+            "content": [
+              {
+                "type": "listItem",
+                "content": [
+                  {
+                    "type": "paragraph",
+                    "content": [
+                      {
+                        "type": "text",
+                        "text": "packages/compiler/src/platform/ir/schema.ts:1095-1108 - ToolParameter interface"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "type": "listItem",
+                "content": [
+                  {
+                    "type": "paragraph",
+                    "content": [
+                      {
+                        "type": "text",
+                        "text": "packages/compiler/src/platform/constructs/executors/reasoning-executor.ts:320 - Integration point"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "type": "listItem",
+                "content": [
+                  {
+                    "type": "paragraph",
+                    "content": [
+                      {
+                        "type": "text",
+                        "text": "packages/compiler/src/platform/constructs/executors/tool-binding-executor.ts:362-437 - Execution entry"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "type": "listItem",
+                "content": [
+                  {
+                    "type": "paragraph",
+                    "content": [
+                      {
+                        "type": "text",
+                        "text": "packages/compiler/src/platform/constructs/executors/tool-middleware.ts - Middleware chain"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "type": "listItem",
+                "content": [
+                  {
+                    "type": "paragraph",
+                    "content": [
+                      {
+                        "type": "text",
+                        "text": "packages/compiler/src/platform/llm/types.ts:146-154 - LLM schema generation"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "customfield_11300": null,
+      "timetracking": {},
+      "security": null,
+      "attachment": [
+        {
+          "self": "https://koreteam.atlassian.net/rest/api/3/attachment/760384",
+          "id": "760384",
+          "filename": "tool-parameter-preprocessing-gaps.md",
+          "author": {
+            "self": "https://koreteam.atlassian.net/rest/api/3/user?accountId=557058%3Ac94a0226-6947-4bc4-af96-0aa24b13be44",
+            "accountId": "557058:c94a0226-6947-4bc4-af96-0aa24b13be44",
+            "emailAddress": "vishnu.nekkanti@kore.com",
+            "avatarUrls": {
+              "48x48": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/557058:c94a0226-6947-4bc4-af96-0aa24b13be44/c39cbf3c-1201-47e9-9750-3f5bc302e7c0/48",
+              "24x24": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/557058:c94a0226-6947-4bc4-af96-0aa24b13be44/c39cbf3c-1201-47e9-9750-3f5bc302e7c0/24",
+              "16x16": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/557058:c94a0226-6947-4bc4-af96-0aa24b13be44/c39cbf3c-1201-47e9-9750-3f5bc302e7c0/16",
+              "32x32": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/557058:c94a0226-6947-4bc4-af96-0aa24b13be44/c39cbf3c-1201-47e9-9750-3f5bc302e7c0/32"
+            },
+            "displayName": "Vishnu Kumar Nekkanti",
+            "active": true,
+            "timeZone": "America/New_York",
+            "accountType": "atlassian"
+          },
+          "created": "2026-05-16T02:27:30.816+0530",
+          "size": 19565,
+          "mimeType": "application/octet-stream",
+          "content": "https://koreteam.atlassian.net/rest/api/3/attachment/content/760384"
+        }
+      ],
+      "aggregatetimeestimate": null,
+      "summary": "Add Tool Parameter Pre-Processing Layer to Reduce LLM Complexity",
+      "creator": {
+        "self": "https://koreteam.atlassian.net/rest/api/3/user?accountId=557058%3Ac94a0226-6947-4bc4-af96-0aa24b13be44",
+        "accountId": "557058:c94a0226-6947-4bc4-af96-0aa24b13be44",
+        "emailAddress": "vishnu.nekkanti@kore.com",
+        "avatarUrls": {
+          "48x48": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/557058:c94a0226-6947-4bc4-af96-0aa24b13be44/c39cbf3c-1201-47e9-9750-3f5bc302e7c0/48",
+          "24x24": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/557058:c94a0226-6947-4bc4-af96-0aa24b13be44/c39cbf3c-1201-47e9-9750-3f5bc302e7c0/24",
+          "16x16": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/557058:c94a0226-6947-4bc4-af96-0aa24b13be44/c39cbf3c-1201-47e9-9750-3f5bc302e7c0/16",
+          "32x32": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/557058:c94a0226-6947-4bc4-af96-0aa24b13be44/c39cbf3c-1201-47e9-9750-3f5bc302e7c0/32"
+        },
+        "displayName": "Vishnu Kumar Nekkanti",
+        "active": true,
+        "timeZone": "America/New_York",
+        "accountType": "atlassian"
+      },
+      "subtasks": [],
+      "reporter": {
+        "self": "https://koreteam.atlassian.net/rest/api/3/user?accountId=557058%3Ac94a0226-6947-4bc4-af96-0aa24b13be44",
+        "accountId": "557058:c94a0226-6947-4bc4-af96-0aa24b13be44",
+        "emailAddress": "vishnu.nekkanti@kore.com",
+        "avatarUrls": {
+          "48x48": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/557058:c94a0226-6947-4bc4-af96-0aa24b13be44/c39cbf3c-1201-47e9-9750-3f5bc302e7c0/48",
+          "24x24": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/557058:c94a0226-6947-4bc4-af96-0aa24b13be44/c39cbf3c-1201-47e9-9750-3f5bc302e7c0/24",
+          "16x16": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/557058:c94a0226-6947-4bc4-af96-0aa24b13be44/c39cbf3c-1201-47e9-9750-3f5bc302e7c0/16",
+          "32x32": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/557058:c94a0226-6947-4bc4-af96-0aa24b13be44/c39cbf3c-1201-47e9-9750-3f5bc302e7c0/32"
+        },
+        "displayName": "Vishnu Kumar Nekkanti",
+        "active": true,
+        "timeZone": "America/New_York",
+        "accountType": "atlassian"
+      },
+      "aggregateprogress": {
+        "progress": 0,
+        "total": 0
+      },
+      "customfield_10002": null,
+      "customfield_10400": "1|i0i0ur:",
+      "customfield_13900": null,
+      "environment": null,
+      "duedate": "2026-05-22",
+      "progress": {
+        "progress": 0,
+        "total": 0
+      },
+      "votes": {
+        "self": "https://koreteam.atlassian.net/rest/api/3/issue/ABLP-1100/votes",
+        "votes": 0,
+        "hasVoted": false
+      },
+      "comment": {
+        "comments": [
+          {
+            "self": "https://koreteam.atlassian.net/rest/api/3/issue/551419/comment/1373209",
+            "id": "1373209",
+            "author": {
+              "self": "https://koreteam.atlassian.net/rest/api/3/user?accountId=557058%3Ac94a0226-6947-4bc4-af96-0aa24b13be44",
+              "accountId": "557058:c94a0226-6947-4bc4-af96-0aa24b13be44",
+              "emailAddress": "vishnu.nekkanti@kore.com",
+              "avatarUrls": {
+                "48x48": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/557058:c94a0226-6947-4bc4-af96-0aa24b13be44/c39cbf3c-1201-47e9-9750-3f5bc302e7c0/48",
+                "24x24": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/557058:c94a0226-6947-4bc4-af96-0aa24b13be44/c39cbf3c-1201-47e9-9750-3f5bc302e7c0/24",
+                "16x16": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/557058:c94a0226-6947-4bc4-af96-0aa24b13be44/c39cbf3c-1201-47e9-9750-3f5bc302e7c0/16",
+                "32x32": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/557058:c94a0226-6947-4bc4-af96-0aa24b13be44/c39cbf3c-1201-47e9-9750-3f5bc302e7c0/32"
+              },
+              "displayName": "Vishnu Kumar Nekkanti",
+              "active": true,
+              "timeZone": "America/New_York",
+              "accountType": "atlassian"
+            },
+            "body": {
+              "type": "doc",
+              "version": 1,
+              "content": [
+                {
+                  "type": "heading",
+                  "attrs": {
+                    "level": 3
+                  },
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "Update"
+                    }
+                  ]
+                },
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "Analysis document attached. This ticket was auto-generated from the analysis document using the /analysis-to-jira skill."
+                    }
+                  ]
+                }
+              ]
+            },
+            "updateAuthor": {
+              "self": "https://koreteam.atlassian.net/rest/api/3/user?accountId=557058%3Ac94a0226-6947-4bc4-af96-0aa24b13be44",
+              "accountId": "557058:c94a0226-6947-4bc4-af96-0aa24b13be44",
+              "emailAddress": "vishnu.nekkanti@kore.com",
+              "avatarUrls": {
+                "48x48": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/557058:c94a0226-6947-4bc4-af96-0aa24b13be44/c39cbf3c-1201-47e9-9750-3f5bc302e7c0/48",
+                "24x24": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/557058:c94a0226-6947-4bc4-af96-0aa24b13be44/c39cbf3c-1201-47e9-9750-3f5bc302e7c0/24",
+                "16x16": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/557058:c94a0226-6947-4bc4-af96-0aa24b13be44/c39cbf3c-1201-47e9-9750-3f5bc302e7c0/16",
+                "32x32": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/557058:c94a0226-6947-4bc4-af96-0aa24b13be44/c39cbf3c-1201-47e9-9750-3f5bc302e7c0/32"
+              },
+              "displayName": "Vishnu Kumar Nekkanti",
+              "active": true,
+              "timeZone": "America/New_York",
+              "accountType": "atlassian"
+            },
+            "created": "2026-05-16T02:27:31.952+0530",
+            "updated": "2026-05-16T02:27:31.952+0530",
+            "jsdPublic": true
+          },
+          {
+            "self": "https://koreteam.atlassian.net/rest/api/3/issue/551419/comment/1373255",
+            "id": "1373255",
+            "author": {
+              "self": "https://koreteam.atlassian.net/rest/api/3/user?accountId=557058%3Ac94a0226-6947-4bc4-af96-0aa24b13be44",
+              "accountId": "557058:c94a0226-6947-4bc4-af96-0aa24b13be44",
+              "emailAddress": "vishnu.nekkanti@kore.com",
+              "avatarUrls": {
+                "48x48": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/557058:c94a0226-6947-4bc4-af96-0aa24b13be44/c39cbf3c-1201-47e9-9750-3f5bc302e7c0/48",
+                "24x24": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/557058:c94a0226-6947-4bc4-af96-0aa24b13be44/c39cbf3c-1201-47e9-9750-3f5bc302e7c0/24",
+                "16x16": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/557058:c94a0226-6947-4bc4-af96-0aa24b13be44/c39cbf3c-1201-47e9-9750-3f5bc302e7c0/16",
+                "32x32": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/557058:c94a0226-6947-4bc4-af96-0aa24b13be44/c39cbf3c-1201-47e9-9750-3f5bc302e7c0/32"
+              },
+              "displayName": "Vishnu Kumar Nekkanti",
+              "active": true,
+              "timeZone": "America/New_York",
+              "accountType": "atlassian"
+            },
+            "body": {
+              "type": "doc",
+              "version": 1,
+              "content": [
+                {
+                  "type": "heading",
+                  "attrs": {
+                    "level": 3,
+                    "localId": "d58a70cbc2cb"
+                  },
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "Update"
+                    }
+                  ]
+                },
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "mention",
+                      "attrs": {
+                        "id": "557058:19965570-a9cd-4d76-b059-6af5ae4fdca7",
+                        "text": "@Prasanna Arikala",
+                        "accessLevel": "",
+                        "localId": "7247f12f-c325-4d6f-a7a0-79edb5310f8d"
+                      }
+                    },
+                    {
+                      "type": "text",
+                      "text": "  , this is the feature gap I mentioned over the phone. Addressing this will significantly improve cost and reliability with respect to tool calling by reducing the complexity of what the LLM needs to generate and minimizing the error surface area for structured outputs."
+                    }
+                  ],
+                  "attrs": {
+                    "localId": "f3d6ff0ff30a"
+                  }
+                }
+              ]
+            },
+            "updateAuthor": {
+              "self": "https://koreteam.atlassian.net/rest/api/3/user?accountId=557058%3Ac94a0226-6947-4bc4-af96-0aa24b13be44",
+              "accountId": "557058:c94a0226-6947-4bc4-af96-0aa24b13be44",
+              "emailAddress": "vishnu.nekkanti@kore.com",
+              "avatarUrls": {
+                "48x48": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/557058:c94a0226-6947-4bc4-af96-0aa24b13be44/c39cbf3c-1201-47e9-9750-3f5bc302e7c0/48",
+                "24x24": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/557058:c94a0226-6947-4bc4-af96-0aa24b13be44/c39cbf3c-1201-47e9-9750-3f5bc302e7c0/24",
+                "16x16": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/557058:c94a0226-6947-4bc4-af96-0aa24b13be44/c39cbf3c-1201-47e9-9750-3f5bc302e7c0/16",
+                "32x32": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/557058:c94a0226-6947-4bc4-af96-0aa24b13be44/c39cbf3c-1201-47e9-9750-3f5bc302e7c0/32"
+              },
+              "displayName": "Vishnu Kumar Nekkanti",
+              "active": true,
+              "timeZone": "America/New_York",
+              "accountType": "atlassian"
+            },
+            "created": "2026-05-16T02:38:16.511+0530",
+            "updated": "2026-05-16T02:38:42.148+0530",
+            "jsdPublic": true
+          }
+        ],
+        "self": "https://koreteam.atlassian.net/rest/api/3/issue/551419/comment",
+        "maxResults": 2,
+        "total": 2,
+        "startAt": 0
+      },
+      "worklog": {
+        "startAt": 0,
+        "maxResults": 20,
+        "total": 0,
+        "worklogs": []
+      }
+    }
+  },
+  "comments": {
+    "startAt": 0,
+    "maxResults": 100,
+    "total": 2,
+    "comments": [
+      {
+        "self": "https://koreteam.atlassian.net/rest/api/3/issue/551419/comment/1373209",
+        "id": "1373209",
+        "author": {
+          "self": "https://koreteam.atlassian.net/rest/api/3/user?accountId=557058%3Ac94a0226-6947-4bc4-af96-0aa24b13be44",
+          "accountId": "557058:c94a0226-6947-4bc4-af96-0aa24b13be44",
+          "emailAddress": "vishnu.nekkanti@kore.com",
+          "avatarUrls": {
+            "48x48": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/557058:c94a0226-6947-4bc4-af96-0aa24b13be44/c39cbf3c-1201-47e9-9750-3f5bc302e7c0/48",
+            "24x24": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/557058:c94a0226-6947-4bc4-af96-0aa24b13be44/c39cbf3c-1201-47e9-9750-3f5bc302e7c0/24",
+            "16x16": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/557058:c94a0226-6947-4bc4-af96-0aa24b13be44/c39cbf3c-1201-47e9-9750-3f5bc302e7c0/16",
+            "32x32": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/557058:c94a0226-6947-4bc4-af96-0aa24b13be44/c39cbf3c-1201-47e9-9750-3f5bc302e7c0/32"
+          },
+          "displayName": "Vishnu Kumar Nekkanti",
+          "active": true,
+          "timeZone": "America/New_York",
+          "accountType": "atlassian"
+        },
+        "body": {
+          "type": "doc",
+          "version": 1,
+          "content": [
+            {
+              "type": "heading",
+              "attrs": {
+                "level": 3
+              },
+              "content": [
+                {
+                  "type": "text",
+                  "text": "Update"
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "content": [
+                {
+                  "type": "text",
+                  "text": "Analysis document attached. This ticket was auto-generated from the analysis document using the /analysis-to-jira skill."
+                }
+              ]
+            }
+          ]
+        },
+        "renderedBody": "<h3><a name=\"Update\"></a>Update</h3>\n\n<p>Analysis document attached. This ticket was auto-generated from the analysis document using the /analysis-to-jira skill.</p>",
+        "updateAuthor": {
+          "self": "https://koreteam.atlassian.net/rest/api/3/user?accountId=557058%3Ac94a0226-6947-4bc4-af96-0aa24b13be44",
+          "accountId": "557058:c94a0226-6947-4bc4-af96-0aa24b13be44",
+          "emailAddress": "vishnu.nekkanti@kore.com",
+          "avatarUrls": {
+            "48x48": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/557058:c94a0226-6947-4bc4-af96-0aa24b13be44/c39cbf3c-1201-47e9-9750-3f5bc302e7c0/48",
+            "24x24": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/557058:c94a0226-6947-4bc4-af96-0aa24b13be44/c39cbf3c-1201-47e9-9750-3f5bc302e7c0/24",
+            "16x16": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/557058:c94a0226-6947-4bc4-af96-0aa24b13be44/c39cbf3c-1201-47e9-9750-3f5bc302e7c0/16",
+            "32x32": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/557058:c94a0226-6947-4bc4-af96-0aa24b13be44/c39cbf3c-1201-47e9-9750-3f5bc302e7c0/32"
+          },
+          "displayName": "Vishnu Kumar Nekkanti",
+          "active": true,
+          "timeZone": "America/New_York",
+          "accountType": "atlassian"
+        },
+        "created": "2026-05-16T02:27:31.952+0530",
+        "updated": "2026-05-16T02:27:31.952+0530",
+        "jsdPublic": true
+      },
+      {
+        "self": "https://koreteam.atlassian.net/rest/api/3/issue/551419/comment/1373255",
+        "id": "1373255",
+        "author": {
+          "self": "https://koreteam.atlassian.net/rest/api/3/user?accountId=557058%3Ac94a0226-6947-4bc4-af96-0aa24b13be44",
+          "accountId": "557058:c94a0226-6947-4bc4-af96-0aa24b13be44",
+          "emailAddress": "vishnu.nekkanti@kore.com",
+          "avatarUrls": {
+            "48x48": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/557058:c94a0226-6947-4bc4-af96-0aa24b13be44/c39cbf3c-1201-47e9-9750-3f5bc302e7c0/48",
+            "24x24": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/557058:c94a0226-6947-4bc4-af96-0aa24b13be44/c39cbf3c-1201-47e9-9750-3f5bc302e7c0/24",
+            "16x16": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/557058:c94a0226-6947-4bc4-af96-0aa24b13be44/c39cbf3c-1201-47e9-9750-3f5bc302e7c0/16",
+            "32x32": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/557058:c94a0226-6947-4bc4-af96-0aa24b13be44/c39cbf3c-1201-47e9-9750-3f5bc302e7c0/32"
+          },
+          "displayName": "Vishnu Kumar Nekkanti",
+          "active": true,
+          "timeZone": "America/New_York",
+          "accountType": "atlassian"
+        },
+        "body": {
+          "type": "doc",
+          "version": 1,
+          "content": [
+            {
+              "type": "heading",
+              "attrs": {
+                "level": 3,
+                "localId": "d58a70cbc2cb"
+              },
+              "content": [
+                {
+                  "type": "text",
+                  "text": "Update"
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "content": [
+                {
+                  "type": "mention",
+                  "attrs": {
+                    "id": "557058:19965570-a9cd-4d76-b059-6af5ae4fdca7",
+                    "text": "@Prasanna Arikala",
+                    "accessLevel": "",
+                    "localId": "7247f12f-c325-4d6f-a7a0-79edb5310f8d"
+                  }
+                },
+                {
+                  "type": "text",
+                  "text": "  , this is the feature gap I mentioned over the phone. Addressing this will significantly improve cost and reliability with respect to tool calling by reducing the complexity of what the LLM needs to generate and minimizing the error surface area for structured outputs."
+                }
+              ],
+              "attrs": {
+                "localId": "f3d6ff0ff30a"
+              }
+            }
+          ]
+        },
+        "renderedBody": "<h3><a name=\"Update\"></a>Update</h3>\n\n<p><a href=\"https://koreteam.atlassian.net/secure/ViewProfile.jspa?accountId=557058%3A19965570-a9cd-4d76-b059-6af5ae4fdca7\" class=\"user-hover\" rel=\"557058:19965570-a9cd-4d76-b059-6af5ae4fdca7\" data-account-id=\"557058:19965570-a9cd-4d76-b059-6af5ae4fdca7\" accountid=\"557058:19965570-a9cd-4d76-b059-6af5ae4fdca7\" rel=\"noreferrer\">Prasanna Arikala</a>  , this is the feature gap I mentioned over the phone. Addressing this will significantly improve cost and reliability with respect to tool calling by reducing the complexity of what the LLM needs to generate and minimizing the error surface area for structured outputs.</p>",
+        "updateAuthor": {
+          "self": "https://koreteam.atlassian.net/rest/api/3/user?accountId=557058%3Ac94a0226-6947-4bc4-af96-0aa24b13be44",
+          "accountId": "557058:c94a0226-6947-4bc4-af96-0aa24b13be44",
+          "emailAddress": "vishnu.nekkanti@kore.com",
+          "avatarUrls": {
+            "48x48": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/557058:c94a0226-6947-4bc4-af96-0aa24b13be44/c39cbf3c-1201-47e9-9750-3f5bc302e7c0/48",
+            "24x24": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/557058:c94a0226-6947-4bc4-af96-0aa24b13be44/c39cbf3c-1201-47e9-9750-3f5bc302e7c0/24",
+            "16x16": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/557058:c94a0226-6947-4bc4-af96-0aa24b13be44/c39cbf3c-1201-47e9-9750-3f5bc302e7c0/16",
+            "32x32": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/557058:c94a0226-6947-4bc4-af96-0aa24b13be44/c39cbf3c-1201-47e9-9750-3f5bc302e7c0/32"
+          },
+          "displayName": "Vishnu Kumar Nekkanti",
+          "active": true,
+          "timeZone": "America/New_York",
+          "accountType": "atlassian"
+        },
+        "created": "2026-05-16T02:38:16.511+0530",
+        "updated": "2026-05-16T02:38:42.148+0530",
+        "jsdPublic": true
+      }
+    ]
+  }
+}

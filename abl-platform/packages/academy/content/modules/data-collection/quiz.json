@@ -1,0 +1,85 @@
+{
+  "moduleId": "data-collection",
+  "passThreshold": 0.8,
+  "questions": [
+    {
+      "id": "data-q1",
+      "type": "mcq",
+      "stem": "A travel booking agent needs to validate that a user's input for 'cabin class' is one of: economy, business, or first. Which two approaches can constrain field values in ABL GATHER?",
+      "options": [
+        {
+          "id": "a",
+          "text": "Using 'type: enum' with 'options: [economy, business, first]' OR using 'validate: enum(economy, business, first)' on a string field",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "Using 'type: string' with 'validation_process: REGEX' and a pattern listing the values"
+        },
+        {
+          "id": "c",
+          "text": "Using 'type: enum' without options, since the compiler auto-detects values from the prompt text"
+        }
+      ],
+      "explanation": "ABL provides two ways to constrain field values to a fixed set: (1) declare the field as 'type: enum' with an explicit 'options' array, or (2) use 'validate: enum(value1, value2, ...)' on a string-typed field. Both inject allowed values into the LLM extraction prompt and JSON Schema. Note that using 'type: enum' without providing 'options' does NOT generate a validation rule — the compiler requires explicit options."
+    },
+    {
+      "id": "data-q2",
+      "type": "fill-blank",
+      "stem": "When a GATHER field has 'infer: true', the LLM can extract the value from conversational context. The minimum confidence threshold for accepting an inferred value defaults to ______.",
+      "answer": "0.8",
+      "acceptAlternatives": ["80%", ".8"],
+      "explanation": "The 'infer_confidence' property controls the minimum confidence the LLM must have to accept an inferred value. It defaults to 0.8 (80%). When the LLM's confidence falls below this threshold, the runtime falls back to explicitly asking the user using the field's 'prompt'. You can raise this value (e.g., 0.9 or 0.95) for fields where incorrect inference would be costly."
+    },
+    {
+      "id": "data-q3",
+      "type": "mcq",
+      "stem": "An e-commerce agent needs to validate product categories against a live external catalog that changes frequently. Which GATHER mechanism is most appropriate?",
+      "options": [
+        {
+          "id": "a",
+          "text": "A LOOKUP_TABLE with 'source: api' pointing to the external catalog endpoint",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "A LOOKUP_TABLE with 'source: inline' containing all current category values"
+        },
+        {
+          "id": "c",
+          "text": "An enum field type with options listing all known categories"
+        }
+      ],
+      "explanation": "For dynamic, externally managed value sets that change frequently, a LOOKUP_TABLE with 'source: api' is the correct choice. It fetches values from an HTTP endpoint at runtime, so the agent always validates against the current catalog without requiring redeployment. Inline sources and enum fields are appropriate for small, static value sets that rarely change — they would become stale as the catalog updates."
+    },
+    {
+      "id": "data-q4",
+      "type": "mcq",
+      "stem": "What happens when a GATHER field has 'prompt_mode: extract_only'?",
+      "options": [
+        {
+          "id": "a",
+          "text": "The prompt is shown to the user but the response is only extracted, never validated"
+        },
+        {
+          "id": "b",
+          "text": "The prompt is used as an instruction to the LLM for silent extraction from context — it is never shown to the user",
+          "correct": true
+        },
+        {
+          "id": "c",
+          "text": "The field is extracted only on the first turn and locked for the rest of the session"
+        }
+      ],
+      "explanation": "When 'prompt_mode' is set to 'extract_only', the prompt serves as an instruction to the LLM rather than a question displayed to the user. The agent silently extracts the value from conversational context without explicitly asking. This is useful for fields like sentiment analysis or intent classification where the value should be inferred from the conversation without the user being aware it's being collected."
+    },
+    {
+      "id": "data-q5",
+      "type": "fill-blank",
+      "stem": "In a GATHER field, the property '______: true' marks the field as carrying PII, enabling special handling such as masking or redaction outside the gather context.",
+      "answer": "sensitive",
+      "acceptAlternatives": ["Sensitive", "SENSITIVE"],
+      "explanation": "Setting 'sensitive: true' on a GATHER field indicates it carries personally identifiable information (PII). This enables special handling through 'sensitive_display' modes: 'redact' replaces the entire value with [REDACTED], 'mask' shows partial value with masking characters (configurable via 'mask_config'), and 'replace' substitutes a generic description. Fields marked 'transient: true' are also automatically cleared from the session after the gather phase completes."
+    }
+  ]
+}

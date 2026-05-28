@@ -1,0 +1,14 @@
+{
+  "variables": [
+    {
+      "key": "NOC_API_BASE_URL",
+      "description": "Base URL for the NOC tools API (default: http://localhost:4100/api/tools)",
+      "required": true
+    },
+    {
+      "key": "NOC_API_BEARER_TOKEN",
+      "description": "Bearer token for authenticating with the NOC tools API",
+      "required": true
+    }
+  ]
+}

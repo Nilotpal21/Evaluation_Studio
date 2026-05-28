@@ -1,0 +1,104 @@
+id: docs-examples-consistency
+title: Docs, Examples, Cross-Module Consistency
+enforcement: advisory
+severity_default: medium
+rubric_concern: 15
+
+protects:
+  - truthfulness of feature docs, examples, READMEs, and fixtures
+  - example code compiling or matching current contracts
+  - post-implementation sync quality
+  - consistency across modules, surfaces, and code paths that claim to implement the same contract
+
+review_when:
+  - public contracts, DSL behavior, or examples change
+  - docs-internal guides, feature specs, or test guides are touched
+  - any change invalidates existing example projects or fixtures
+
+review_questions:
+  - Do docs still describe what production actually does?
+  - Do examples still compile, parse, or validate against the current implementation?
+  - Did the change create new divergence between feature docs and real code paths?
+  - If a route or UI is described as available, is it actually wired?
+  - Do multiple modules implement the same concept differently in a way that creates ambiguity?
+  - If there is ambiguity, duplicate authority, or conflicting behavior, is it called out as an explicit audit finding?
+
+proof_expected:
+  - docs updates in the same change when contracts shifted
+  - example validation or fixture tests where available
+  - explicit path verification for referenced files and routes
+  - explicit audit findings for unresolved ambiguity or duplicate authority
+  - honest status updates when coverage or wiring is still partial
+
+scope:
+  globs:
+    - docs/**/*.md
+    - apps/**/src/**/*.ts
+    - packages/**/src/**/*.ts
+  exclude:
+    - '**/__tests__/**'
+    - '**/*.test.ts'
+    - '**/node_modules/**'
+
+references:
+  docs:
+    - docs/sdlc/change-review-rubric.md#ambiguity-rule
+  related_concerns:
+    - clean-contracts
+    - studio-wiring
+
+detectors:
+  - id: docs-vs-code-drift
+    kind: model-review
+    severity: medium
+    guidance_ref: ../../prompts/docs-drift-lens.md
+    output_schema:
+      rule_id: docs-vs-code-drift
+      severity: high | medium | low
+      location:
+        file: string
+        line: number
+      claim: string
+      reality: string
+      options:
+        A: update the docs to match code behavior
+        B: update the code to match the documented contract
+        C: split the difference by documenting the intentional divergence
+    message: |
+      Docs, examples, or fixtures that no longer match running code must be
+      flagged as an explicit audit finding — not buried as a follow-up. This
+      catches feature spec / README / DSL-example drift that accumulates
+      silently between post-impl-sync runs.
+    fix_hint: |
+      Record as a structured finding with claim (what docs say) vs reality
+      (what code does). Submit to the user with A/B/C options.
+
+  - id: duplicate-authority-across-modules
+    kind: model-review
+    severity: high
+    guidance_ref: ../../prompts/duplicate-authority-lens.md
+    output_schema:
+      rule_id: duplicate-authority-across-modules
+      severity: high | medium
+      location:
+        file: string
+        line: number
+      claim: string
+      reality: string
+      options:
+        A: consolidate to a single authority with explicit migration for the other
+        B: document the precedence order and add an invariant test
+        C: split responsibilities so each module owns a distinct aspect
+    message: |
+      Two modules implementing the same ownership, recall, or precedence
+      logic with different rules creates ambiguity that future reviews cannot
+      resolve. Rubric Ambiguity Rule: this must be an explicit audit finding.
+    fix_hint: |
+      Identify the conflicting modules, propose a consolidation path, and
+      record as a structured finding with A/B/C remediation options.
+
+stage_hooks:
+  - stage: doc-sync
+    inject_checklist: true
+  - stage: oracle-analysis
+    as_review_lens: true

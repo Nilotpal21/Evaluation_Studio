@@ -1,0 +1,62 @@
+id: project-isolation
+title: Project Isolation
+enforcement: blocking
+severity_default: critical
+rubric_concern: 1
+
+scope:
+  globs:
+    - apps/**/src/routes/**/*.ts
+    - apps/**/src/app/api/**/*.ts
+    - packages/**/src/routes/**/*.ts
+  exclude:
+    - '**/__tests__/**'
+    - '**/*.test.ts'
+
+references:
+  docs:
+    - CLAUDE.md#core-invariants
+  related_concerns:
+    - tenant-isolation
+    - user-session
+
+detectors:
+  - id: project-scoped-route-needs-projectId-filter
+    kind: route
+    severity: critical
+    route_pattern: '/api/projects/:projectId/*'
+    assertion: every-db-query-in-handler-must-include-projectId
+    message: |
+      Every Mongo/Prisma query in a project-scoped route (/api/projects/:projectId/...)
+      must include projectId in the filter. Otherwise one project can read or mutate
+      another project's resources within the same tenant.
+    fix_hint: |
+      Add projectId: req.params.projectId to the filter, or call
+      requireProjectPermission(req, res, 'obj:op') which also verifies
+      resource.projectId === req.params.projectId.
+
+  - id: studio-route-handler-explicit-scope
+    kind: grep
+    severity: high
+    # Studio routes do NOT have ALS tenant injection — see CLAUDE.md
+    # "Studio Route Handler Gotchas". This catches route files that
+    # query Mongoose without a tenant or project filter.
+    glob: 'apps/studio/src/app/api/**/*.ts'
+    pattern: '\.(find|findOne|updateOne|deleteOne|findOneAndUpdate|findOneAndDelete)\('
+    message: |
+      Studio Next.js API routes have NO AsyncLocalStorage tenant injection.
+      Every Mongoose query must explicitly scope by tenantId and (when
+      applicable) projectId.
+    fix_hint: |
+      Include tenantId: user.tenantId in every query filter. Do not rely
+      on database plugins to auto-scope Studio requests.
+
+stage_hooks:
+  - stage: implementation
+    inject_checklist: true
+  - stage: security-audit
+    as_review_lens: true
+
+acceptance:
+  - when: 'new route under /api/projects/:projectId'
+    requires: 'authz test verifying cross-project 404'

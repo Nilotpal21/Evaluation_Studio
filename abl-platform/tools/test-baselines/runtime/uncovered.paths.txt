@@ -1,0 +1,15 @@
+apps/runtime/src/__tests__/channels/livekit-voice.integration.test.ts
+apps/runtime/src/__tests__/channels/voice-pipeline-twilio.live.e2e.test.ts
+apps/runtime/src/__tests__/five9-transfer.e2e.test.ts
+apps/runtime/src/__tests__/five9-webhook.e2e.test.ts
+apps/runtime/src/__tests__/integration/searchai/01-discovery-api.integration.test.ts
+apps/runtime/src/__tests__/integration/searchai/02-hybrid-search.integration.test.ts
+apps/runtime/src/__tests__/integration/searchai/03-structured-search.integration.test.ts
+apps/runtime/src/__tests__/integration/searchai/04-semantic-search.integration.test.ts
+apps/runtime/src/__tests__/integration/searchai/05-vocabulary-resolution.integration.test.ts
+apps/runtime/src/__tests__/integration/searchai/06-kb-tool-executor.integration.test.ts
+apps/runtime/src/__tests__/integration/searchai/07-fresh-kb-search.integration.test.ts
+apps/runtime/src/__tests__/integration/searchai/08-aggregation-search.integration.test.ts
+apps/runtime/src/__tests__/integration/searchai/09-agent-adaptive-search.integration.test.ts
+apps/runtime/src/__tests__/integration/searchai/10-developer-wiring.integration.test.ts
+apps/runtime/src/__tests__/pipeline-comparison.test.ts

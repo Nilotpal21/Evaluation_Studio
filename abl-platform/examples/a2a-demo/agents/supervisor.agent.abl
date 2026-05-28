@@ -1,0 +1,92 @@
+SUPERVISOR: Contract_Supervisor
+GOAL: "Route contract analysis requests to the appropriate specialist — local compliance check, streaming risk analysis, or async deep analysis"
+
+EXECUTION:
+  model: gpt-4.1
+  temperature: 0.3
+  max_tokens: 1500
+  max_iterations: 5
+  inline_gather: true
+  pipeline:
+    enabled: true
+    mode: sequential
+    model: qwen35-a3b-35b
+    shortCircuit:
+      enabled: true
+      confidenceThreshold: 0.85
+
+PERSONA: |
+  Expert contract operations coordinator. You quickly determine whether a
+  contract needs a quick compliance check (handled locally), a streaming
+  risk analysis (real-time results), or a deep async analysis (background
+  processing with push notification).
+
+  IMPORTANT routing rules:
+  - If the user says "async" or "background" or "deep" → use Async_Risk_Analyzer
+  - If the user says "risk" or "analysis" (without "async"/"deep") → use Risk_Analyzer
+  - If the user says "compliance" or "check" → use Compliance_Checker
+
+LIMITATIONS:
+  - Cannot analyze contracts directly — must delegate to specialists
+
+ON_START:
+  RESPOND: |
+    Hello! I'm the Contract Operations Coordinator. I can help you with:
+    - **Compliance check** — instant local review
+    - **Risk analysis** — real-time streaming results
+    - **Deep async analysis** — background processing, results delivered when ready
+    What would you like to do?
+
+GATHER:
+  intent:
+    prompt: "Would you like a compliance check, risk analysis, or deep async analysis?"
+    type: string
+    required: true
+  contract_id:
+    prompt: "What is the contract ID?"
+    type: string
+    required: true
+  contract_type:
+    prompt: "What type of contract? (e.g., SaaS, consulting, licensing)"
+    type: string
+    required: false
+    default: "general"
+
+HANDOFF:
+  # Local agent — synchronous, instant response
+  - TO: Compliance_Checker
+    WHEN: intent contains "compliance" OR intent contains "check" OR intent contains "quick"
+    CONTEXT:
+      pass: [contract_id, contract_type]
+      summary: "User needs a quick compliance check on their contract"
+    RETURN: true
+
+  # Remote A2A agent — async with push notifications (background processing)
+  # ASYNC: true forces suspension + push notification callback path
+  - TO: Async_Risk_Analyzer
+    WHEN: intent contains "async" OR intent contains "background" OR intent contains "deep"
+    LOCATION: REMOTE
+    ENDPOINT: "http://localhost:4002"
+    PROTOCOL: A2A
+    ASYNC: true
+    TIMEOUT: 300
+    CONTEXT:
+      pass: [contract_id, contract_type]
+      summary: "User needs deep async risk analysis — background processing"
+    RETURN: true
+
+  # Remote A2A agent — streaming (real-time SSE passthrough)
+  # No ASYNC flag = routing-executor auto-detects streaming from agent card
+  - TO: Risk_Analyzer
+    WHEN: intent contains "risk" OR intent contains "analysis"
+    LOCATION: REMOTE
+    ENDPOINT: "http://localhost:4002"
+    PROTOCOL: A2A
+    CONTEXT:
+      pass: [contract_id, contract_type]
+      summary: "User needs risk analysis — streaming results from remote agent"
+    RETURN: true
+
+COMPLETE:
+  - WHEN: handoff.completed == true
+    RESPOND: "Analysis complete. Is there another contract you'd like me to review?"

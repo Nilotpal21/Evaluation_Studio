@@ -1,0 +1,124 @@
+AGENT: Refund_Status
+VERSION: "1.0"
+DESCRIPTION: "Simple transfer agent for refund status inquiries. Immediately transfers to SAC without performing any lookup."
+
+GOAL: |
+  Immediately transfer refund status inquiries to a human SAC agent.
+  Call save_transfer_sac and trigger agent handoff. Do NOT perform any
+  refund lookup, validation, or authentication. All communication
+  in Ecuadorian Spanish (formal usted).
+
+PERSONA: |
+  Agente de Estado de Reembolso de Saludsa. Transfiere inmediatamente al usuario
+  con un agente de Servicio al Cliente para consultar el estado de su reembolso.
+  No realiza busquedas ni validaciones. Espanol formal (usted).
+
+EXECUTION:
+
+  temperature: 0.3
+  top_p: 0.6
+  max_tokens: 10000
+  max_iterations: 5
+  inline_gather: true
+
+LIMITATIONS:
+  - "Must NOT perform any refund lookup or status check"
+  - "Must NOT ask the user for channel type — read from session"
+  - "Must NOT ask the user for their role — read from session"
+  - "Must immediately transfer to SAC — no additional questions"
+  - "Must not add information from own knowledge"
+  - "All communication in Spanish only"
+  - "If outside business hours, display the business hours message exactly as specified"
+
+# ─────────────────────────────────────────────────────────────────────────────
+# TOOLS — signature-only (no FROM imports)
+# ─────────────────────────────────────────────────────────────────────────────
+
+TOOLS:
+  save_transfer_sac(sacReason: string = "", usecaseName: string = "", intent_identication: boolean = false, ticketNumber: number = 0, channel: string = "", message: string = "") -> {success: string, data: object}
+    description: "Save transfer to SAC details in memory. Computes queue routing based on channel, checks business hours, updates Zendesk, writes transfer_metadata to memory."
+
+# ─────────────────────────────────────────────────────────────────────────────
+# MEMORY — session variables persisted across turns
+# ─────────────────────────────────────────────────────────────────────────────
+
+MEMORY:
+  session:
+    - userRole
+      TYPE: string
+      DESCRIPTION: "Validated user role (Holder, Beneficiary, Payer, Non Client)"
+    - channel
+      TYPE: string
+      DESCRIPTION: "Current channel (whatsapp, voice, WEB, ANDROID, iOS)"
+    - ticketId
+      TYPE: string
+      DESCRIPTION: "Active Zendesk ticket ID"
+    - handsOffStatus
+      TYPE: boolean
+      DESCRIPTION: "Whether agent handoff has been triggered"
+    - isOutsideBusinessHours
+      TYPE: boolean
+      DESCRIPTION: "Whether current time is outside business hours"
+
+# ─────────────────────────────────────────────────────────────────────────────
+# FLOW — single-step immediate transfer
+# ─────────────────────────────────────────────────────────────────────────────
+
+FLOW:
+  entry_point: transfer
+
+  steps:
+    - transfer
+
+  global_digressions:
+    REASONING: false
+    - INTENT: "hablar_con_agente"
+      RESPOND: "Le transfiero con un agente."
+      GOTO: escalate_to_human
+
+  # Step 1: Immediately transfer to SAC
+  transfer:
+    REASONING: false
+    CALL: save_transfer_sac(sacReason: "sac_by_rule", usecaseName: "transfer_sac", intent_identication: true, ticketNumber: session.ticketId, channel: session.channel)
+    ON_SUCCESS:
+      SET: handsOffStatus = true
+      - IF: save_transfer_sac.data.isOutsideBusinessHours == true
+        SET: isOutsideBusinessHours = true
+        RESPOND: "Tenga en cuenta que el horario de Atencion al Cliente es de lunes a viernes, de 8.30 a. m. a 5.30 p. m. Puede contactarnos en cualquier momento a traves de nuestra aplicacion Saludsa y del portal del cliente en saludsa.com, disponible las 24 horas, los 7 dias de la semana."
+        THEN: COMPLETE
+      - ELSE:
+        RESPOND: "Le transfiero con un agente para consultar el estado de su reembolso."
+        THEN: ESCALATE
+    ON_FAIL:
+      RESPOND: "No pudimos procesar su solicitud. Por favor intente mas tarde."
+      THEN: COMPLETE
+
+# ─────────────────────────────────────────────────────────────────────────────
+# ESCALATION — transfer to human agent
+# ─────────────────────────────────────────────────────────────────────────────
+
+ESCALATE:
+  triggers:
+    - WHEN: handsOffStatus == true
+      REASON: "Refund status inquiry — transfer to SAC agent"
+      PRIORITY: high
+
+# ─────────────────────────────────────────────────────────────────────────────
+# ERROR HANDLING
+# ─────────────────────────────────────────────────────────────────────────────
+
+ON_ERROR:
+  tool_error:
+    RESPOND: "Lo sentimos, tenemos dificultades tecnicas. Por favor intente mas tarde."
+    RETRY: 1
+    THEN: COMPLETE
+
+# ─────────────────────────────────────────────────────────────────────────────
+# COMPLETION
+# ─────────────────────────────────────────────────────────────────────────────
+
+COMPLETE:
+  - WHEN: handsOffStatus == true
+    RESPOND: ""
+  - WHEN: isOutsideBusinessHours == true
+    RESPOND: ""

@@ -1,0 +1,23 @@
+{
+  "agent_name": "Hotel Booking",
+  "flow": {
+    "welcome": "Welcome to Hotel Booking! I'll help you find and book the perfect hotel.",
+    "no_hotels_found": "No hotels found. Would you like to try different dates or destination?",
+    "booking_confirmed": "Your booking is complete!",
+    "booking_cancelled": "Booking cancelled. Would you like to start over?",
+    "invalid_hotel_number": "Please enter a valid hotel number",
+    "promo_applied": "Promo code applied! {{discount}}% discount.",
+    "promo_invalid": "Invalid promo code. Try again or say 'skip'.",
+    "payment_select": "Please select 1 (Credit Card), 2 (Pay at Hotel), or 3 (PayPal)"
+  },
+  "constraints": {
+    "max_guests_exceeded": "Sorry, we cannot accommodate more than 10 guests per booking. Please contact our group booking team.",
+    "destination_required": "Please provide a destination first.",
+    "total_exceeded": "Booking exceeds $5000 limit - requires manager approval"
+  },
+  "navigation": {
+    "back": "Going back to previous step",
+    "start_over": "Starting over from the beginning",
+    "first_step": "You're at the first step. Let's continue."
+  }
+}

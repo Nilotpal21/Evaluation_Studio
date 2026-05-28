@@ -1,0 +1,73 @@
+id: encryption
+title: Encryption at Rest and in Transit
+enforcement: blocking
+severity_default: critical
+rubric_concern: 8
+
+scope:
+  globs:
+    - apps/**/src/**/*.ts
+    - packages/**/src/**/*.ts
+  exclude:
+    - '**/__tests__/**'
+    - '**/*.test.ts'
+
+references:
+  docs:
+    - CLAUDE.md#core-invariants
+  related_concerns:
+    - security
+    - retention
+    - audit-log
+
+detectors:
+  - id: no-plaintext-secret-storage
+    kind: grep
+    severity: critical
+    pattern: '(apiKey|secret|token|refreshToken|accessToken|clientSecret|privateKey)\s*:\s*String\s*,?\s*$'
+    multiline: false
+    message: |
+      Fields named apiKey/secret/token/refreshToken/accessToken/clientSecret
+      /privateKey must go through an encrypted-field wrapper, not be stored
+      as plain Strings.
+    fix_hint: |
+      Use the encrypted-string Mongoose type or the EncryptedCredentials
+      helper. See packages/shared-auth for the canonical pattern.
+
+  - id: no-encryption-master-key-log
+    kind: grep
+    severity: critical
+    pattern: 'log\.(info|warn|error|debug)\([^)]*encryption_?master_?key'
+    message: |
+      The encryption master key must never appear in logs.
+    fix_hint: |
+      Remove the log statement. If you must log key rotation events,
+      log the key ID, not the key material.
+
+  - id: raw-token-in-response-body
+    kind: model-review
+    severity: high
+    guidance_ref: ../../prompts/raw-token-response-lens.md
+    output_schema:
+      rule_id: raw-token-in-response-body
+      severity: high | critical
+      location:
+        file: string
+        line: number
+      claim: string
+      reality: string
+      options:
+        A: redact via the shared sanitizer before returning
+        B: confirm this is an auth-bootstrap response (and note why)
+    message: |
+      Response bodies should not contain raw credentials. User-visible
+      surfaces must use the shared sanitizer helpers.
+    fix_hint: |
+      Wrap the response through sanitizeUserFacingError / sanitizeRuntimeResponse
+      before sending. See CLAUDE.md "User-Facing Runtime Error Sanitization".
+
+stage_hooks:
+  - stage: implementation
+    inject_checklist: true
+  - stage: security-audit
+    as_review_lens: true

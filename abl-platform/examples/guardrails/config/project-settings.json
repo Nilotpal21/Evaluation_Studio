@@ -1,0 +1,14 @@
+{
+  "guardrails": {
+    "enabled": true,
+    "fail_open": false,
+    "max_retries": 2,
+    "timeout_ms": 5000
+  },
+  "execution": {
+    "model": "gpt-4.1",
+    "temperature": 0.3,
+    "max_tokens": 1500,
+    "max_iterations": 5
+  }
+}

@@ -1,0 +1,115 @@
+{
+  "kind": "saturation-measurement",
+  "measurementId": "7456464-2026-05-05",
+  "scenarioId": "chat-agent-mock",
+  "scenarioVersion": 1,
+  "capturedAt": "2026-05-05T09:43:33Z",
+  "saturationReportPath": "benchmarks/docs/saturation-run-7456464-2026-05-05.md",
+  "k6RunId": "7456464",
+  "k6Summary": {
+    "totalRequests": 21617,
+    "durationSeconds": 930,
+    "avgRps": 23.2,
+    "peakRps": 36,
+    "overallP95Ms": 1327,
+    "httpFailures": 0,
+    "maxVUs": 65,
+    "loadZone": "Columbus"
+  },
+  "configKey": {
+    "scenarioId": "chat-agent-mock",
+    "llmMode": "mock",
+    "llmModel": "mock",
+    "llmDelayMs": 1000,
+    "turnStructure": "1c+4f",
+    "interMessageDelayMs": 1000,
+    "cpuRequestCores": 1,
+    "cpuLimitCores": 4,
+    "memoryRequestGi": 1,
+    "memoryLimitGi": 2,
+    "mongoPoolSize": 10,
+    "tier": "S",
+    "pods": 2,
+    "nodeType": "Standard_D8s_v5",
+    "diskSku": "StandardSSD_LRS",
+    "infraSnapshotHash": "sha256:live-qa-20260505"
+  },
+  "perPodCapacity": {
+    "maxSafeMsgPerSec": 13.5,
+    "maxSafeVUs": 25,
+    "p95AtMaxMs": 1155,
+    "p99AtMaxMs": 1355,
+    "efficiencyAtMaxPct": 92,
+    "primaryBottleneck": "event-loop",
+    "bottleneckEvidence": "At 50 VUs (25/pod): sustained 27 req/s total (13.5/pod) with p95=1155ms. At 65 VUs (32.5/pod): p95 breaches 1500ms. Event loop 355ms avg / 638ms peak. CPU only 33% of 4c limit — event loop is the binding constraint, not CPU.",
+    "k6DashboardEvidence": "Peak RPS 36, avg RPS 23.2 over 15m30s. At tooltip 52 VUs: 27 req/s, 1.22s response. Overall P95 1327ms (all steps weighted)."
+  },
+  "multiPodScaling": [
+    { "pods": 1, "totalMsgPerSec": 13.5, "scalingFactor": 1.0, "sharedBottleneck": null },
+    { "pods": 2, "totalMsgPerSec": 27.0, "scalingFactor": 1.0, "sharedBottleneck": null }
+  ],
+  "perStepSummary": [
+    {
+      "step": 1,
+      "vus": 25,
+      "avgMsgPerSec": 6.3,
+      "peakMsgPerSec": 14.2,
+      "avgP95Ms": 1105,
+      "peakP95Ms": 1184,
+      "avgCpuMilli": 735,
+      "peakCpuMilli": 837,
+      "status": "GREEN",
+      "efficiency": "OPTIMAL"
+    },
+    {
+      "step": 2,
+      "vus": 50,
+      "avgMsgPerSec": 11.5,
+      "peakMsgPerSec": 23.6,
+      "avgP95Ms": 1156,
+      "peakP95Ms": 1205,
+      "avgCpuMilli": 1496,
+      "peakCpuMilli": 1657,
+      "status": "GREEN",
+      "efficiency": "HEALTHY"
+    },
+    {
+      "step": 3,
+      "vus": 65,
+      "avgMsgPerSec": 20.0,
+      "peakMsgPerSec": 34.8,
+      "avgP95Ms": 1443,
+      "peakP95Ms": 1751,
+      "avgCpuMilli": 2189,
+      "peakCpuMilli": 2503,
+      "status": "RED",
+      "efficiency": "DEGRADING"
+    }
+  ],
+  "workloadIntrinsic": {
+    "mongoCpuMilliPerMsg": 7.85,
+    "redisCpuMilliPerMsg": 5.33,
+    "mongoIopsPerMsg": 4,
+    "source": "derived: Coroot observed (212m Mongo, 144m Redis) / 27 msg/s fleet throughput at 50 VUs"
+  },
+  "datastoreObserved": {
+    "mongoCpuMilli": 212,
+    "mongoCpuPctOfLimit": 21.2,
+    "mongoWriteLatencyMs": null,
+    "mongoIopsWrite": null,
+    "redisCpuMilli": 144,
+    "redisCpuPctOfLimit": 1.8
+  },
+  "corootMetrics": {
+    "eventLoopLagAvgMs": 354.8,
+    "eventLoopLagPeakMs": 637.6,
+    "cpuUsagePeakCores": 1.3,
+    "cpuUsageAvgMilli": 631,
+    "cpuDelayPeakMs": 50.3,
+    "cpuDelayAvgMs": 19.7,
+    "cpuThrottlePeakMs": 33.1,
+    "cpuThrottleAvgMs": 12.4
+  },
+  "validationStatus": "accepted",
+  "validationNotes": "Run on QA cluster with fresh deploy 5d805e4. Per-pod safe capacity 13.5 msg/s derived from k6 dashboard (27 req/s at 50 VUs / 2 pods, p95=1155ms). Event loop is primary bottleneck. Cross-validated: prior run 7455800 identical ceiling. Overall p95 1327ms across all steps confirms sub-target performance at 50 VUs."
+}

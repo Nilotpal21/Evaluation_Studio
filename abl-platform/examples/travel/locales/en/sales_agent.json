@@ -1,0 +1,19 @@
+{
+  "agent": "Sales_Agent",
+  "locale": "en",
+  "strings": {
+    "destination_prompt": "Where would you like to travel to?",
+    "origin_prompt": "Where will you be traveling from?",
+    "departure_date_prompt": "When would you like to depart?",
+    "return_date_prompt": "When would you like to return? (Leave blank for one-way)",
+    "travelers_prompt": "How many travelers?",
+    "budget_prompt": "Do you have a budget in mind? (per person or total)",
+    "travel_type_prompt": "Are you looking for flights only, hotels only, or a package deal?",
+    "booking_confirmed": "Your booking is confirmed! You'll receive a confirmation email shortly.",
+    "quote_saved": "Your quote has been saved and emailed to you.",
+    "search_timeout": "The search is taking longer than usual. Let me try again...",
+    "search_error": "I had trouble searching. Let me try a different approach.",
+    "same_city_error": "Your destination must be different from your origin city. Please choose a different destination.",
+    "budget_warning": "This exceeds your budget. Would you like to see cheaper options or proceed anyway?"
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "name": "Conversation Summary Continuity",
+  "description": "Tests that agent references prior conversation context when conversationSummary metadata is provided (Nike running shoes size 42, 30% discount)",
+  "category": "context",
+  "difficulty": "medium",
+  "entryAgent": "GuardRail_Supervisor",
+  "initialMessage": "Hey there",
+  "expectedOutcome": "Agent acknowledges prior context about Nike running shoes, size 42, and 30% discount, offering to continue the previous conversation",
+  "maxTurns": 2,
+  "maxToolCalls": 0,
+  "tags": ["context-continuity", "conversation-summary", "memory"],
+  "agentPath": ["GuardRail_Supervisor", "Advisor_Agent"],
+  "expectedMilestones": ["prior_context_referenced", "warm_resumption"]
+}

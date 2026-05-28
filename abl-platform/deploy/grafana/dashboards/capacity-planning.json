@@ -1,0 +1,630 @@
+{
+  "__inputs": [
+    {
+      "name": "DS_PROMETHEUS",
+      "label": "Prometheus",
+      "description": "Prometheus datasource for infrastructure and application metrics",
+      "type": "datasource",
+      "pluginId": "prometheus",
+      "pluginName": "Prometheus"
+    }
+  ],
+  "__requires": [
+    { "type": "grafana", "id": "grafana", "name": "Grafana", "version": "12.3.0" },
+    { "type": "datasource", "id": "prometheus", "name": "Prometheus", "version": "1.0.0" },
+    { "type": "panel", "id": "timeseries", "name": "Time series", "version": "5.0.0" },
+    { "type": "panel", "id": "stat", "name": "Stat", "version": "5.0.0" },
+    { "type": "panel", "id": "gauge", "name": "Gauge", "version": "5.0.0" },
+    { "type": "panel", "id": "table", "name": "Table", "version": "5.0.0" }
+  ],
+  "id": null,
+  "uid": "abl-capacity-planning",
+  "title": "ABL Platform - Capacity Planning",
+  "description": "Capacity planning dashboard for production ABL Platform deployments. Tracks disk growth trends per data store, connection pool usage, queue depths, and CPU/memory utilization across all services.",
+  "tags": ["capacity", "planning", "abl-platform", "infrastructure"],
+  "timezone": "browser",
+  "editable": true,
+  "graphTooltip": 1,
+  "refresh": "1m",
+  "schemaVersion": 39,
+  "fiscalYearStartMonth": 0,
+  "time": {
+    "from": "now-7d",
+    "to": "now"
+  },
+  "timepicker": {
+    "refresh_intervals": ["1m", "5m", "15m", "30m"],
+    "time_options": ["1h", "6h", "24h", "7d", "30d", "90d"]
+  },
+  "templating": {
+    "list": [
+      {
+        "name": "namespace",
+        "type": "query",
+        "label": "Namespace",
+        "description": "Kubernetes namespace",
+        "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+        "query": "label_values(kube_pod_info, namespace)",
+        "refresh": 2,
+        "includeAll": false,
+        "current": { "text": "abl-platform", "value": "abl-platform" }
+      },
+      {
+        "name": "node_pool",
+        "type": "custom",
+        "label": "Node Pool",
+        "description": "Kubernetes node pool type",
+        "current": { "text": "All", "value": "$__all" },
+        "options": [
+          { "text": "All", "value": "$__all", "selected": true },
+          { "text": "general", "value": "general", "selected": false },
+          { "text": "compute", "value": "compute", "selected": false },
+          { "text": "data", "value": "data", "selected": false },
+          { "text": "gpu", "value": "gpu", "selected": false }
+        ],
+        "query": "general,compute,data,gpu",
+        "includeAll": true,
+        "multi": true
+      }
+    ]
+  },
+  "panels": [
+    {
+      "id": 100,
+      "title": "Disk Growth Trends",
+      "type": "row",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
+      "collapsed": false
+    },
+    {
+      "id": 1,
+      "title": "MongoDB Disk Usage",
+      "description": "PersistentVolumeClaim usage for MongoDB replica set members. Alert threshold at 80% capacity.",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 1 },
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 15,
+            "axisLabel": ""
+          },
+          "unit": "bytes",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 0.7 },
+              { "color": "red", "value": 0.85 }
+            ]
+          }
+        }
+      },
+      "targets": [
+        {
+          "expr": "kubelet_volume_stats_used_bytes{namespace=\"$namespace\", persistentvolumeclaim=~\".*mongo.*\"}",
+          "legendFormat": "{{persistentvolumeclaim}} - used",
+          "refId": "A"
+        },
+        {
+          "expr": "kubelet_volume_stats_capacity_bytes{namespace=\"$namespace\", persistentvolumeclaim=~\".*mongo.*\"}",
+          "legendFormat": "{{persistentvolumeclaim}} - capacity",
+          "refId": "B"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "ClickHouse Disk Usage",
+      "description": "PVC usage for ClickHouse nodes. ClickHouse has the highest disk growth sensitivity due to append-only trace events, metrics, and usage data.",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 8, "x": 8, "y": 1 },
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 15
+          },
+          "unit": "bytes"
+        }
+      },
+      "targets": [
+        {
+          "expr": "kubelet_volume_stats_used_bytes{namespace=\"$namespace\", persistentvolumeclaim=~\".*clickhouse.*\"}",
+          "legendFormat": "{{persistentvolumeclaim}} - used",
+          "refId": "A"
+        },
+        {
+          "expr": "kubelet_volume_stats_capacity_bytes{namespace=\"$namespace\", persistentvolumeclaim=~\".*clickhouse.*\"}",
+          "legendFormat": "{{persistentvolumeclaim}} - capacity",
+          "refId": "B"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "OpenSearch Disk Usage",
+      "description": "PVC usage for OpenSearch nodes (hot, warm, cold tiers). Vector indices and document chunks are the primary growth drivers.",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 1 },
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 15
+          },
+          "unit": "bytes"
+        }
+      },
+      "targets": [
+        {
+          "expr": "kubelet_volume_stats_used_bytes{namespace=\"$namespace\", persistentvolumeclaim=~\".*opensearch.*\"}",
+          "legendFormat": "{{persistentvolumeclaim}} - used",
+          "refId": "A"
+        },
+        {
+          "expr": "kubelet_volume_stats_capacity_bytes{namespace=\"$namespace\", persistentvolumeclaim=~\".*opensearch.*\"}",
+          "legendFormat": "{{persistentvolumeclaim}} - capacity",
+          "refId": "B"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "title": "Qdrant / Neo4j / Restate Disk Usage",
+      "description": "PVC usage for remaining stateful services. Qdrant grows with vector index count, Neo4j with knowledge graph, Restate with workflow journal.",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 9 },
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 15
+          },
+          "unit": "bytes"
+        }
+      },
+      "targets": [
+        {
+          "expr": "kubelet_volume_stats_used_bytes{namespace=\"$namespace\", persistentvolumeclaim=~\".*(qdrant|neo4j|restate).*\"}",
+          "legendFormat": "{{persistentvolumeclaim}} - used",
+          "refId": "A"
+        },
+        {
+          "expr": "kubelet_volume_stats_capacity_bytes{namespace=\"$namespace\", persistentvolumeclaim=~\".*(qdrant|neo4j|restate).*\"}",
+          "legendFormat": "{{persistentvolumeclaim}} - capacity",
+          "refId": "B"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "title": "Disk Usage % (All Stores)",
+      "description": "Percentage of PVC capacity used per data store. Triggers: alert at 70% (warning) and 85% (critical).",
+      "type": "gauge",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 9 },
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "min": 0,
+          "max": 1,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 0.7 },
+              { "color": "orange", "value": 0.8 },
+              { "color": "red", "value": 0.85 }
+            ]
+          }
+        }
+      },
+      "targets": [
+        {
+          "expr": "kubelet_volume_stats_used_bytes{namespace=\"$namespace\", persistentvolumeclaim=~\".*(mongo|clickhouse|opensearch|qdrant|neo4j|restate).*\"} / kubelet_volume_stats_capacity_bytes{namespace=\"$namespace\", persistentvolumeclaim=~\".*(mongo|clickhouse|opensearch|qdrant|neo4j|restate).*\"}",
+          "legendFormat": "{{persistentvolumeclaim}}",
+          "refId": "A",
+          "instant": true
+        }
+      ]
+    },
+    {
+      "id": 200,
+      "title": "Connection Pools & Queue Depths",
+      "type": "row",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 17 },
+      "collapsed": false
+    },
+    {
+      "id": 6,
+      "title": "MongoDB Connection Pool Usage",
+      "description": "MongoDB driver connection pool: active, available, and waiting connections. Formula: app_replicas x pool_size must stay under mongos connection limit (1,000 per shard node).",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 18 },
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "stacking": { "mode": "normal" }
+          },
+          "unit": "short"
+        }
+      },
+      "targets": [
+        {
+          "expr": "mongodb_ss_connections{conn_type=\"current\", namespace=\"$namespace\"}",
+          "legendFormat": "Active",
+          "refId": "A"
+        },
+        {
+          "expr": "mongodb_ss_connections{conn_type=\"available\", namespace=\"$namespace\"}",
+          "legendFormat": "Available",
+          "refId": "B"
+        },
+        {
+          "expr": "mongodb_mongod_metrics_get_last_error_wtime_totalMillis{namespace=\"$namespace\"} > 0",
+          "legendFormat": "Write concern wait",
+          "refId": "C"
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "title": "Redis Connection Pool & Memory",
+      "description": "Redis connections, memory usage, and eviction tracking. BullMQ requires noeviction policy -- any evictions indicate misconfiguration.",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 8, "x": 8, "y": 18 },
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 10
+          }
+        },
+        "overrides": [
+          {
+            "matcher": { "id": "byRegexp", "options": ".*memory.*" },
+            "properties": [
+              { "id": "unit", "value": "bytes" },
+              { "id": "custom.axisPlacement", "value": "right" }
+            ]
+          },
+          {
+            "matcher": { "id": "byRegexp", "options": ".*connections.*" },
+            "properties": [{ "id": "unit", "value": "short" }]
+          }
+        ]
+      },
+      "targets": [
+        {
+          "expr": "redis_connected_clients{namespace=\"$namespace\"}",
+          "legendFormat": "{{pod}} connections",
+          "refId": "A"
+        },
+        {
+          "expr": "redis_memory_used_bytes{namespace=\"$namespace\"}",
+          "legendFormat": "{{pod}} memory used",
+          "refId": "B"
+        },
+        {
+          "expr": "redis_memory_max_bytes{namespace=\"$namespace\"}",
+          "legendFormat": "{{pod}} memory max",
+          "refId": "C"
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "title": "BullMQ Queue Depths",
+      "description": "BullMQ queue depths for channel-inbound, webhook-delivery, and other job queues. Rising queue depth indicates processing lag. KEDA scales workers based on these metrics.",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 18 },
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 20,
+            "axisLabel": "jobs"
+          },
+          "unit": "short",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 100 },
+              { "color": "red", "value": 1000 }
+            ]
+          }
+        }
+      },
+      "targets": [
+        {
+          "expr": "bullmq_queue_waiting{namespace=\"$namespace\"}",
+          "legendFormat": "{{queue}} - waiting",
+          "refId": "A"
+        },
+        {
+          "expr": "bullmq_queue_active{namespace=\"$namespace\"}",
+          "legendFormat": "{{queue}} - active",
+          "refId": "B"
+        },
+        {
+          "expr": "bullmq_queue_delayed{namespace=\"$namespace\"}",
+          "legendFormat": "{{queue}} - delayed",
+          "refId": "C"
+        },
+        {
+          "expr": "bullmq_queue_failed{namespace=\"$namespace\"}",
+          "legendFormat": "{{queue}} - failed",
+          "refId": "D"
+        }
+      ]
+    },
+    {
+      "id": 300,
+      "title": "CPU & Memory Utilization",
+      "type": "row",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 26 },
+      "collapsed": false
+    },
+    {
+      "id": 9,
+      "title": "CPU Utilization by Service",
+      "description": "CPU usage as a ratio of requested CPU per pod. Services consistently above 80% need either more replicas (HPA) or increased resource requests.",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 27 },
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "lineWidth": 1,
+            "fillOpacity": 10,
+            "axisLabel": "%"
+          },
+          "unit": "percentunit",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 0.7 },
+              { "color": "red", "value": 0.9 }
+            ]
+          }
+        }
+      },
+      "targets": [
+        {
+          "expr": "sum by (container) (rate(container_cpu_usage_seconds_total{namespace=\"$namespace\", container!=\"\", container!=\"POD\"}[5m])) / sum by (container) (kube_pod_container_resource_requests{namespace=\"$namespace\", resource=\"cpu\", container!=\"\"})",
+          "legendFormat": "{{container}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 10,
+      "title": "Memory Utilization by Service",
+      "description": "Memory usage as a ratio of memory limits per pod. OOMKill risk increases above 85%. Watch for gradual upward trends indicating memory leaks.",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 27 },
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "lineWidth": 1,
+            "fillOpacity": 10,
+            "axisLabel": "%"
+          },
+          "unit": "percentunit",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 0.7 },
+              { "color": "red", "value": 0.85 }
+            ]
+          }
+        }
+      },
+      "targets": [
+        {
+          "expr": "sum by (container) (container_memory_working_set_bytes{namespace=\"$namespace\", container!=\"\", container!=\"POD\"}) / sum by (container) (kube_pod_container_resource_limits{namespace=\"$namespace\", resource=\"memory\", container!=\"\"})",
+          "legendFormat": "{{container}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 11,
+      "title": "Node Pool CPU Utilization",
+      "description": "CPU utilization per Kubernetes node, grouped by node pool label. Karpenter uses this to decide when to provision or deprovision nodes.",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 35 },
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "axisLabel": "%"
+          },
+          "unit": "percentunit"
+        }
+      },
+      "targets": [
+        {
+          "expr": "avg by (label_karpenter_sh_nodepool) (1 - rate(node_cpu_seconds_total{mode=\"idle\"}[5m]))",
+          "legendFormat": "{{label_karpenter_sh_nodepool}} - avg CPU",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 12,
+      "title": "Node Pool Memory Utilization",
+      "description": "Memory utilization per Kubernetes node pool",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 35 },
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "axisLabel": "%"
+          },
+          "unit": "percentunit"
+        }
+      },
+      "targets": [
+        {
+          "expr": "avg by (label_karpenter_sh_nodepool) (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes))",
+          "legendFormat": "{{label_karpenter_sh_nodepool}} - avg Memory",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 400,
+      "title": "Growth Projections",
+      "type": "row",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 43 },
+      "collapsed": false
+    },
+    {
+      "id": 13,
+      "title": "Storage Growth Rate (GB/day)",
+      "description": "Daily storage growth rate per data store, calculated from the delta in PVC usage over the last 24 hours. Use this to project when PVC expansion or additional shards are needed.",
+      "type": "table",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 44 },
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "decgbytes",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 5 },
+              { "color": "red", "value": 20 }
+            ]
+          },
+          "custom": { "displayMode": "color-background-solid" }
+        }
+      },
+      "targets": [
+        {
+          "expr": "delta(kubelet_volume_stats_used_bytes{namespace=\"$namespace\", persistentvolumeclaim=~\".*(mongo|clickhouse|opensearch|qdrant|neo4j|restate).*\"}[24h]) / 1073741824",
+          "legendFormat": "{{persistentvolumeclaim}}",
+          "refId": "A",
+          "instant": true,
+          "format": "table"
+        }
+      ],
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "renameByName": {
+              "persistentvolumeclaim": "Data Store PVC",
+              "Value": "Daily Growth (GB)"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": 14,
+      "title": "Days Until 85% Full (Projection)",
+      "description": "Estimated days until each PVC reaches 85% capacity based on current growth rate. Values below 30 days require immediate attention.",
+      "type": "table",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 44 },
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red", "value": null },
+              { "color": "orange", "value": 14 },
+              { "color": "yellow", "value": 30 },
+              { "color": "green", "value": 90 }
+            ]
+          },
+          "custom": { "displayMode": "color-background-solid" }
+        }
+      },
+      "targets": [
+        {
+          "expr": "((kubelet_volume_stats_capacity_bytes{namespace=\"$namespace\", persistentvolumeclaim=~\".*(mongo|clickhouse|opensearch|qdrant|neo4j|restate).*\"} * 0.85) - kubelet_volume_stats_used_bytes{namespace=\"$namespace\", persistentvolumeclaim=~\".*(mongo|clickhouse|opensearch|qdrant|neo4j|restate).*\"}) / clamp_min(deriv(kubelet_volume_stats_used_bytes{namespace=\"$namespace\", persistentvolumeclaim=~\".*(mongo|clickhouse|opensearch|qdrant|neo4j|restate).*\"}[7d]) * 86400, 1)",
+          "legendFormat": "{{persistentvolumeclaim}}",
+          "refId": "A",
+          "instant": true,
+          "format": "table"
+        }
+      ],
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "renameByName": {
+              "persistentvolumeclaim": "Data Store PVC",
+              "Value": "Days to 85%"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": 15,
+      "title": "HPA Replica Counts",
+      "description": "Current vs desired replica counts for HPA-managed deployments. A sustained gap between desired and current indicates the cluster cannot fulfill scaling requests (node shortage).",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 52 },
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 5,
+            "axisLabel": "replicas"
+          },
+          "unit": "short"
+        }
+      },
+      "targets": [
+        {
+          "expr": "kube_horizontalpodautoscaler_status_current_replicas{namespace=\"$namespace\"}",
+          "legendFormat": "{{horizontalpodautoscaler}} - current",
+          "refId": "A"
+        },
+        {
+          "expr": "kube_horizontalpodautoscaler_status_desired_replicas{namespace=\"$namespace\"}",
+          "legendFormat": "{{horizontalpodautoscaler}} - desired",
+          "refId": "B"
+        }
+      ]
+    }
+  ]
+}

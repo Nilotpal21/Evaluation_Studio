@@ -1,0 +1,302 @@
+SUPERVISOR: Samy_Supervisor
+VERSION: "1.0"
+DESCRIPTION: "Saludsa Samy — Supervisor that routes user requests to 16 specialist agents using a 4-level priority cascade"
+
+GOAL: |
+  Route user messages to the correct specialist agent. Never answer users directly.
+  Enforce identity validation before any service on WhatsApp/Voice channels.
+  All communication in Ecuadorian Spanish (formal "usted" register).
+
+PERSONA: |
+  Eres Samy, el asistente virtual de Saludsa. Tu único rol es dirigir las solicitudes
+  del usuario al agente especialista apropiado. Nunca respondes directamente con tu
+  propio conocimiento. Toda comunicación con el usuario es en español ecuatoriano,
+  registro formal ("usted").
+
+EXECUTION:
+
+  temperature: 0.1
+  top_p: 0.7
+  max_tokens: 9999
+  max_iterations: 5
+  inline_gather: true
+  pipeline:
+    enabled: false
+
+LIMITATIONS:
+  - "Must delegate all user requests to specialist agents — never answer directly"
+  - "Cannot modify agent responses — only route"
+  - "Must enforce validation on WhatsApp/Voice before intent routing"
+  - "All communication must be in Ecuadorian Spanish (formal usted)"
+
+# ─────────────────────────────────────────────────────────────────────────────
+# TEMPLATES — reusable messages
+# ─────────────────────────────────────────────────────────────────────────────
+
+TEMPLATES:
+  welcome:
+    DEFAULT: "Hola, mi nombre es Samy; soy su asistente virtual de Saludsa. ¿En qué le puedo servir?"
+    VOICE INSTRUCTIONS: "Greet warmly in Ecuadorian Spanish"
+
+  outside_business_hours:
+    DEFAULT: "Nuestro horario de atención es de lunes a viernes de 8:30 a 17:30. Le invitamos a utilizar nuestra app o portal web para realizar sus gestiones."
+
+# ─────────────────────────────────────────────────────────────────────────────
+# ON_START — greet immediately without waiting for user input
+# ─────────────────────────────────────────────────────────────────────────────
+
+ON_START:
+  RESPOND: TEMPLATE(welcome)
+
+# ─────────────────────────────────────────────────────────────────────────────
+# MEMORY — session variables for routing state
+# ─────────────────────────────────────────────────────────────────────────────
+
+MEMORY:
+  session:
+    - userType
+      TYPE: string
+      DESCRIPTION: "User type from phone validation (Cliente, Broker, Director, Business Representative, non client)"
+    - userValidation
+      TYPE: boolean
+      DESCRIPTION: "Primary validation flag — must be exactly true"
+    - userRole
+      TYPE: string
+      DESCRIPTION: "Validated user role (Holder, Beneficiary, Payer, Non Client)"
+    - channel
+      TYPE: string
+      DESCRIPTION: "Channel type (whatsapp, voice, WEB, iOS, ANDROID)"
+    - priorityTransfer
+      TYPE: string
+      DESCRIPTION: "Priority product flag (XPR, PCA, SAC, or NA)"
+    - handsOffStatus
+      TYPE: boolean
+      DESCRIPTION: "Human handoff trigger flag"
+    - closeConversation
+      TYPE: string
+      DESCRIPTION: "Session termination flag (yes to close)"
+    - isOutsideBusinessHours
+      TYPE: boolean
+      DESCRIPTION: "Outside business hours flag"
+    - phoneNumber
+      TYPE: string
+      DESCRIPTION: "User phone number"
+    - inboundNumber
+      TYPE: string
+      DESCRIPTION: "Inbound call/WhatsApp number"
+    - ticketId
+      TYPE: string
+      DESCRIPTION: "Active Zendesk ticket ID"
+    - contractNumber
+      TYPE: string
+      DESCRIPTION: "Active contract number from validation"
+    - customerName
+      TYPE: string
+      DESCRIPTION: "Customer display name from validation"
+    - customerDetails
+      TYPE: object
+      DESCRIPTION: "Customer details object from validation"
+    - mcpSessionValidated
+      TYPE: boolean
+      DESCRIPTION: "Flag — true once validate_user has registered sessionId on MCP server"
+
+# ─────────────────────────────────────────────────────────────────────────────
+# ROUTING — 4-level priority cascade (first-match-wins)
+# ─────────────────────────────────────────────────────────────────────────────
+
+HANDOFF:
+  # LEVEL 0 — Priority transfer override (highest priority)
+  - TO: PCA_XPR_Transfer
+    WHEN: priorityTransfer IN ["PCA", "XPR", "SAC"]
+    CONTEXT:
+      pass: [priorityTransfer, userRole, channel, ticketId, customerName, customerDetails]
+    RETURN: false
+
+  # LEVEL 1 — Validation enforcement (WhatsApp/Voice ONLY, FORBIDDEN for WEB/iOS/ANDROID)
+  # NOTE: session.channel reads from the platform-injected session namespace (always available)
+  - TO: Client_Entry_Gateway
+    WHEN: session.channel IN ["whatsapp", "voice"] AND userValidation != true AND userType != "Broker" AND userType != "Business Representative"
+    CONTEXT:
+      pass: [channel, userType, phoneNumber, inboundNumber]
+    RETURN: true
+    ON_RETURN:
+      action: resume_intent
+      map:
+        mcpSessionValidated: userValidation
+        userValidation: userValidation
+        userRole: userRole
+        userType: userType
+        priorityTransfer: priorityTransfer
+        ticketId: ticketId
+        contractNumber: contractNumber
+        customerName: customerName
+        customerDetails: customerDetails
+        closeConversation: closeConversation
+
+  - TO: Broker_Entry_Gateway
+    WHEN: session.channel IN ["whatsapp", "voice"] AND userValidation != true AND userType IN ["Broker", "Business Representative"]
+    CONTEXT:
+      pass: [channel, userType, phoneNumber]
+    RETURN: true
+    ON_RETURN:
+      action: resume_intent
+      map:
+        mcpSessionValidated: userValidation
+        userValidation: userValidation
+        userRole: userRole
+        userType: userType
+        priorityTransfer: priorityTransfer
+        ticketId: ticketId
+        contractNumber: contractNumber
+        customerName: customerName
+        customerDetails: customerDetails
+        closeConversation: closeConversation
+
+  # LEVEL 2 — MCP session bootstrap (Web/App/Studio only, once per session)
+  # On digital channels the Gateway is skipped, so validate_user was never called.
+  # Session_Bootstrap calls it once to register sessionId → customer mapping on MCP.
+  - TO: Session_Bootstrap
+    WHEN: session.channel IN ["WEB", "iOS", "ANDROID", "digital", "debug_websocket", "web_chat", "web_debug"] AND mcpSessionValidated != true
+    CONTEXT:
+      pass: [channel]
+    RETURN: true
+    ON_RETURN:
+      action: resume_intent
+      map:
+        mcpSessionValidated: mcpSessionValidated
+        userValidation: userValidation
+        userRole: userRole
+        priorityTransfer: priorityTransfer
+        ticketId: ticketId
+        contractNumber: contractNumber
+        customerName: customerName
+        customerDetails: customerDetails
+
+  # LEVEL 2.5 — Agent Handoff Check
+  # Handled by ESCALATE triggers below (handsOffStatus == true → silent handoff)
+
+  # LEVEL 3 — Intent-based routing (ONLY when userValidation == true OR channel is WEB/iOS/ANDROID)
+  - TO: Transfer_To_SAC
+    WHEN: intent == "speak_to_agent"
+    RETURN: false
+
+  - TO: Transfer_To_Vitality
+    WHEN: intent == "vitality"
+    RETURN: false
+
+  - TO: Transfer_Services
+    WHEN: intent IN ["medical_authorization", "emergency", "telemedicine", "home_visit", "transfer_sales"]
+    RETURN: false
+
+  - TO: Contract_Data_Assistant
+    WHEN: intent == "contract_status"
+    CONTEXT:
+      pass: [userRole, channel, ticketId, contractNumber, customerName, customerDetails]
+    RETURN: true
+
+  - TO: Contract_Sending
+    WHEN: intent == "contract_copy"
+    CONTEXT:
+      pass: [userRole, channel, ticketId, contractNumber, customerName, customerDetails]
+    RETURN: true
+
+  - TO: Pending_Payments
+    WHEN: intent == "payment_inquiry"
+    CONTEXT:
+      pass: [userRole, channel, ticketId, contractNumber, customerName, customerDetails]
+    RETURN: true
+
+  - TO: Password_Reset
+    WHEN: intent == "password_reset"
+    CONTEXT:
+      pass: [userRole, channel, ticketId, customerName]
+    RETURN: true
+
+  - TO: Refund_Guidance
+    WHEN: intent == "refund_guidance"
+    CONTEXT:
+      pass: [userRole, channel, ticketId, contractNumber, customerName, customerDetails]
+    RETURN: true
+
+  - TO: Refund_Status
+    WHEN: intent == "refund_status"
+    CONTEXT:
+      pass: [userRole, channel, ticketId, contractNumber, customerName, customerDetails]
+    RETURN: false
+
+  - TO: Coverage_Certificates
+    WHEN: intent IN ["coverage_certificate", "travel_certificate"]
+    CONTEXT:
+      pass: [userRole, channel, ticketId, contractNumber, customerName, customerDetails]
+    RETURN: true
+
+  - TO: Other_Services
+    WHEN: intent IN ["dental", "funeral", "travel_assistance"]
+    CONTEXT:
+      pass: [userRole, channel, ticketId, customerName]
+    RETURN: true
+
+  - TO: PCA_XPR_Transfer
+    WHEN: intent IN ["pca_product", "xpr_product"]
+    CONTEXT:
+      pass: [priorityTransfer, userRole, channel, customerName]
+    RETURN: false
+
+  - TO: Farewell_Handler
+    WHEN: intent == "farewell" AND previous_system_message_was_offer == true
+    RETURN: false
+
+  # LEVEL 4 — Fallback (must be last)
+  - TO: Fallback_Handler
+    WHEN: true
+    RETURN: true
+
+# ─────────────────────────────────────────────────────────────────────────────
+# ESCALATION — system-level triggers and human handoff context
+# ─────────────────────────────────────────────────────────────────────────────
+
+ESCALATE:
+  triggers:
+    - WHEN: handsOffStatus == true
+      REASON: "Agent handoff flag set"
+      PRIORITY: critical
+      TAGS: [agent_handoff]
+    - WHEN: routing_failures >= 3
+      REASON: "Multiple routing failures"
+      PRIORITY: high
+
+  context_for_human:
+    - conversationSummary
+    - conversationHistory
+    - sac_transfer_menu
+    - reason
+    - ticketId
+    - externalPhoneNumber
+    - queueName
+    - businessUnit
+    - agenticSessionId
+    - highPriorityTransfer
+    - beneficiaryId
+    - beneficiaryName
+    - whatsAppLinkNumber
+    - customerName
+    - userPhoneNumber
+    - userId
+    - userEmail
+    - sacMessage
+    - memberShipType
+    - customerDetails
+
+# ─────────────────────────────────────────────────────────────────────────────
+# ERROR HANDLING
+# ─────────────────────────────────────────────────────────────────────────────
+
+ON_ERROR:
+  routing_failure:
+    RESPOND: "Lo siento, tengo dificultades técnicas. ¿Podría intentarlo de nuevo?"
+    RETRY: 1
+    THEN: ESCALATE
+
+COMPLETE:
+  - WHEN: handoff_successful == true
+    RESPOND: ""

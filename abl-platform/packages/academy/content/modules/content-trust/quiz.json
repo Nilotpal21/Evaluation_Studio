@@ -1,0 +1,98 @@
+{
+  "moduleId": "content-trust",
+  "passThreshold": 0.8,
+  "questions": [
+    {
+      "id": "ct-q1",
+      "type": "mcq",
+      "stem": "An e-commerce company wants their agent to show product recommendations as a scrollable set of cards with images, prices, and 'Buy Now' buttons that work on both their website and WhatsApp. Which rich content approach in Agent Platform achieves this?",
+      "options": [
+        {
+          "id": "a",
+          "text": "Send product details as plain text with URLs and let users click through to the website"
+        },
+        {
+          "id": "b",
+          "text": "Use a carousel rich content block with cards containing images, subtitles, and buttons, plus a WhatsApp-specific RICH_CONTENT block for interactive messages",
+          "correct": true
+        },
+        {
+          "id": "c",
+          "text": "Build separate agent definitions for each channel with different response formats"
+        }
+      ],
+      "explanation": "Agent Platform supports carousel rich content blocks with cards (title, subtitle, image, buttons) that render natively on web channels. For WhatsApp, you provide a channel-specific RICH_CONTENT block with interactive message format. The runtime selects the appropriate format based on the delivery channel, and a plain text RESPOND serves as fallback for unsupported channels -- all from a single agent definition."
+    },
+    {
+      "id": "ct-q2",
+      "type": "mcq",
+      "stem": "A financial services firm requires that all their customer data be encrypted with keys they control, so they can revoke access by destroying keys without locating individual records. Which Agent Platform feature enables this?",
+      "options": [
+        {
+          "id": "a",
+          "text": "Standard platform-managed encryption that encrypts all data at rest"
+        },
+        {
+          "id": "b",
+          "text": "Bring Your Own Key (BYOK) with envelope encryption and crypto-shredding support, available on Enterprise plans",
+          "correct": true
+        },
+        {
+          "id": "c",
+          "text": "Project-level environment variable encryption"
+        }
+      ],
+      "explanation": "Enterprise plans support BYOK (Bring Your Own Key) through AWS KMS, Azure Key Vault, GCP Cloud KMS, or HashiCorp Vault. The platform uses two-layer envelope encryption: your KEK (Key Encryption Key) wraps DEKs (Data Encryption Keys) that encrypt data. Crypto-shredding lets you permanently destroy all data for a tenant or contact by deleting their encryption keys, without needing to find and delete individual records."
+    },
+    {
+      "id": "ct-q3",
+      "type": "fill-blank",
+      "stem": "Agent Platform uses ___ blocks in agent definitions to provide voice-optimized output alongside text responses, supporting SSML markup for fine-grained control over speech pauses, emphasis, and pronunciation.",
+      "answer": "VOICE",
+      "acceptAlternatives": ["voice", "Voice"],
+      "explanation": "VOICE blocks attach to RESPOND statements and provide voice-specific output: SSML markup for precise speech control (pauses via <break>, character-by-character reading via <say-as>), natural language instructions for tone and pacing, and plain text alternatives optimized for speech. The runtime uses the VOICE block for voice channels and the text RESPOND for chat channels."
+    },
+    {
+      "id": "ct-q4",
+      "type": "mcq",
+      "stem": "A developer wants their agent to display a confirmation message differently on web (with HTML formatting), Slack (with Markdown), and voice (with speech instructions). How should they structure this in ABL?",
+      "options": [
+        {
+          "id": "a",
+          "text": "Write three separate RESPOND statements with conditional logic checking the channel type"
+        },
+        {
+          "id": "b",
+          "text": "Define a TEMPLATES block with a named template containing DEFAULT, MARKDOWN, HTML, and VOICE INSTRUCTIONS variants, then reference it with RESPOND: TEMPLATE(name)",
+          "correct": true
+        },
+        {
+          "id": "c",
+          "text": "Use a single RESPOND with plain text and rely on each channel adapter to auto-format the output"
+        }
+      ],
+      "explanation": "ABL's TEMPLATES block enables multi-format content with named templates. Each template can include variants: DEFAULT (plain text fallback), MARKDOWN (for Slack, web markdown renderers), HTML (for email, web HTML), and VOICE INSTRUCTIONS (for phone/voice channels with SSML support). The agent references templates with RESPOND: TEMPLATE(name), and the Runtime selects the appropriate variant based on the delivery channel."
+    },
+    {
+      "id": "ct-q5",
+      "type": "mcq",
+      "stem": "A business analyst is designing an agent that must display booking confirmations across web, Slack, Microsoft Teams, and voice channels. Rather than duplicating the confirmation format in every response, what Agent Platform feature should they recommend?",
+      "options": [
+        {
+          "id": "a",
+          "text": "Create four separate agents, one per channel, each with its own confirmation format"
+        },
+        {
+          "id": "b",
+          "text": "Use a TEMPLATES block to define a reusable booking_summary template with DEFAULT, MARKDOWN, HTML, and VOICE INSTRUCTIONS variants that the agent references via TEMPLATE(booking_summary)",
+          "correct": true
+        },
+        {
+          "id": "c",
+          "text": "Store the confirmation text in an environment variable and reference it across responses"
+        }
+      ],
+      "explanation": "The TEMPLATES block defines reusable, multi-format content with named templates. A booking_summary template can include a DEFAULT (plain text), MARKDOWN (for web and Slack), HTML (for email), and VOICE INSTRUCTIONS (for phone channel). The agent references it with RESPOND: TEMPLATE(booking_summary), and the runtime selects the right format for each channel. This avoids duplication and ensures consistent messaging."
+    }
+  ]
+}

@@ -1,0 +1,35 @@
+AGENT: Farewell_Agent
+GOAL: "End conversations gracefully with Saludsa branding"
+
+EXECUTION:
+  model: gpt-4.1
+  temperature: 0.5
+  max_tokens: 2000
+  max_iterations: 10
+  inline_gather: true
+
+PERSONA: |
+  Warm and professional.
+  Leaves users with a positive impression of Saludsa.
+  Uses formal Spanish (usted).
+
+FLOW:
+  start -> thank_user -> complete
+
+  start:
+    REASONING: false
+    RESPOND: "Gracias por contactar a Saludsa."
+    THEN: thank_user
+
+  thank_user:
+    REASONING: false
+    RESPOND: "Recuerde que estamos para cuidar de su salud. ¡Que tenga un excelente día!"
+    THEN: complete
+
+  complete:
+    REASONING: false
+    RESPOND: "¡Hasta pronto!"
+
+COMPLETE:
+  - WHEN: true
+    RESPOND: "Gracias por contactar a Saludsa. ¡Que tenga un excelente día!"

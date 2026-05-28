@@ -1,0 +1,191 @@
+AGENT: Get_Balance
+VERSION: "2.0"
+DESCRIPTION: "Retrieves and displays account balances with formatted output"
+GOAL: "Fetch customer accounts, display balances with proper formatting, and allow checking multiple accounts"
+
+EXECUTION:
+  model: gpt-4.1
+  temperature: 0.7
+  max_tokens: 2000
+  max_iterations: 10
+  inline_gather: true
+
+PERSONA: |
+  Helpful banking assistant specializing in account information.
+  Presents financial data clearly with proper currency formatting.
+  Masks sensitive account numbers for security.
+  Patient when customers want to check multiple accounts.
+
+LIMITATIONS:
+  - "Cannot modify account balances or initiate transactions"
+  - "Cannot display full account numbers — always masked for security"
+  - "Cannot access accounts belonging to other customers"
+
+TOOLS:
+  get_accounts(customer_id: string) -> {accounts: array, status: string}
+    description: "Retrieve all accounts for a customer"
+
+  get_balance(account_id: string, currency: string) -> {available: number, current: number, pending: number, as_of: string, currency: string}
+    description: "Get detailed balance for a specific account"
+
+MEMORY:
+  session:
+    - customer_id
+    - customer_name
+    - selected_account
+    - selected_account_id
+    - preferred_currency
+  persistent:
+    - PATH: workflow.customer_id
+      SCOPE: execution_tree
+      ACCESS: read
+      TYPE: string
+    - PATH: workflow.customer_name
+      SCOPE: execution_tree
+      ACCESS: read
+      TYPE: string
+    - PATH: workflow.default_account_id
+      SCOPE: execution_tree
+      ACCESS: readwrite
+      TYPE: string
+
+# ─────────────────────────────────────────────────────────────────────────────
+# FLOW — init → fetch accounts → show → select → fetch balance → display
+# ─────────────────────────────────────────────────────────────────────────────
+
+FLOW:
+  entry_point: init
+
+  steps:
+    - init
+    - fetch_accounts
+    - no_accounts
+    - show_accounts
+    - fetch_balance
+    - display_balance
+    - another_account
+
+  init:
+    REASONING: false
+    SET:
+      customer_id = COALESCE(customer_id, workflow.customer_id, user.customer_id, user_id)
+      customer_name = COALESCE(customer_name, workflow.customer_name, user.name, "customer")
+      preferred_currency = COALESCE(preferred_currency, "USD")
+      selected_account_id = COALESCE(selected_account_id, workflow.default_account_id)
+      request_timestamp = NOW()
+    THEN: fetch_accounts
+
+  fetch_accounts:
+    REASONING: false
+    CALL: get_accounts
+      WITH:
+        customer_id: customer_id
+      AS: accountsResult
+    ON_RESULT:
+      - IF: accountsResult.accounts != null AND LENGTH(accountsResult.accounts) > 0
+        SET:
+          account_count = LENGTH(accountsResult.accounts)
+        THEN: show_accounts
+      - IF: accountsResult.accounts != null AND LENGTH(accountsResult.accounts) == 0
+        THEN: no_accounts
+      - ELSE:
+        RESPOND: "I'm sorry, I couldn't retrieve your accounts right now. Please try again later."
+        THEN: COMPLETE
+
+  no_accounts:
+    REASONING: false
+    RESPOND: "It looks like there are no accounts linked to your profile. Please contact your branch for assistance."
+    THEN: COMPLETE
+
+  show_accounts:
+    REASONING: false
+    SET:
+      account_list_label = UPPER("your accounts")
+    RESPOND: |
+      {{account_list_label}} ({{account_count}} found):
+      {{#each accountsResult.accounts}}
+      {{this.id}} — {{this.name}} ({{UPPER(this.type)}})
+      {{/each}}
+      Reply with the account ID you would like to check.
+    GATHER:
+      - selected_account_id: required
+        type: string
+    ON_INPUT:
+      - ELSE:
+        THEN: fetch_balance
+
+  fetch_balance:
+    REASONING: false
+    SET:
+      selected_account = ARRAY_FIND(accountsResult.accounts, "id", selected_account_id)
+      masked_account = MASK(selected_account_id, "last4")
+      workflow.default_account_id = COALESCE(selected_account_id, workflow.default_account_id)
+    CALL: get_balance
+      WITH:
+        account_id: selected_account_id
+        currency: preferred_currency
+      AS: balanceResult
+    ON_RESULT:
+      - IF: balanceResult.available != null
+        THEN: display_balance
+      - ELSE:
+        RESPOND: "Unable to retrieve the balance for this account. Please try again."
+        THEN: show_accounts
+
+  display_balance:
+    REASONING: false
+    SET:
+      formatted_available = FORMAT_CURRENCY(balanceResult.available, balanceResult.currency)
+      formatted_current = FORMAT_CURRENCY(balanceResult.current, balanceResult.currency)
+      formatted_pending = FORMAT_CURRENCY(COALESCE(balanceResult.pending, 0), balanceResult.currency)
+      balance_date = FORMAT_DATE(balanceResult.as_of, "MMM DD, YYYY")
+      account_label = COALESCE(selected_account.name, selected_account_id, "Account")
+    RESPOND: |
+      Balance for {{account_label}} ({{masked_account}}):
+      Available: {{formatted_available}}
+      Current:   {{formatted_current}}
+      Pending:   {{formatted_pending}}
+      As of:     {{balance_date}}
+    THEN: another_account
+
+  another_account:
+    REASONING: false
+    GATHER:
+      - check_another: required
+    ON_INPUT:
+      - IF: input contains "yes" OR input contains "another" OR input contains "sure"
+        CLEAR: selected_account, selected_account_id, balanceResult, masked_account, formatted_available, formatted_current, formatted_pending
+        THEN: show_accounts
+      - ELSE:
+        RESPOND: "Thank you for banking with BankNexus!"
+        THEN: COMPLETE
+
+# ─────────────────────────────────────────────────────────────────────────────
+# ESCALATION
+# ─────────────────────────────────────────────────────────────────────────────
+
+ESCALATE:
+  triggers:
+    - WHEN: user.requests_human == true
+      REASON: "User requested human agent during balance inquiry"
+      PRIORITY: medium
+
+  context_for_human:
+    - customer_id
+    - selected_account
+    - conversation_history
+
+COMPLETE:
+  - WHEN: check_another == "no" OR check_another contains "done"
+    RESPOND: "Have a great day!"
+
+ON_ERROR:
+  tool_timeout:
+    RESPOND: "Our system is running slowly. Let me try again..."
+    RETRY: 2
+    THEN: ESCALATE
+
+  tool_error:
+    RESPOND: "Something went wrong. Let me try a different approach."
+    RETRY: 1
+    THEN: CONTINUE

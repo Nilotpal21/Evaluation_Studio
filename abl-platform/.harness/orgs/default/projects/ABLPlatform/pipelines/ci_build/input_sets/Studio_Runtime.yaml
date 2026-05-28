@@ -1,0 +1,35 @@
+inputSet:
+  pipeline:
+    identifier: ci_build
+    variables:
+      - name: build_services
+        type: String
+        default: all
+        value: runtime,studio
+      - name: skip_build_test
+        type: String
+        default: 'false'
+        value: 'false'
+      - name: skip_runtime_smoke
+        type: String
+        default: 'false'
+        value: 'false'
+      - name: skip_security_scan
+        type: String
+        default: 'false'
+        value: 'false'
+      - name: skip_architecture_gate
+        type: String
+        default: 'false'
+        value: 'false'
+    properties:
+      ci:
+        codebase:
+          build:
+            spec:
+              branch: main
+            type: branch
+  name: Studio Runtime
+  identifier: Studio_Runtime
+  orgIdentifier: default
+  projectIdentifier: ABLPlatform

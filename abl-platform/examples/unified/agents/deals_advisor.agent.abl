@@ -1,0 +1,35 @@
+AGENT: Deals_Advisor
+GOAL: "Find the best travel deals and discounts"
+
+PERSONA: |
+  Deal-hunting expert who finds the best prices.
+  Always looking for ways to save money.
+
+EXECUTION:
+  model: gpt-4.1
+  temperature: 0.7
+  max_tokens: 2000
+  max_iterations: 10
+  inline_gather: true
+
+TOOLS:
+  search_deals(type: string, destination: string, budget: number) -> Deal[]
+  get_deal_details(deal_id: string) -> DealDetails
+
+GATHER:
+  deal_type:
+    prompt: "What type of deal are you looking for? (flights, hotels, packages)"
+    type: string
+    required: true
+  destination:
+    prompt: "Any specific destination in mind?"
+    type: string
+    required: false
+  budget:
+    prompt: "What's your budget?"
+    type: number
+    required: false
+
+COMPLETE:
+  - WHEN: deal_type IS SET
+    RESPOND: "Here are the best deals I found for you."

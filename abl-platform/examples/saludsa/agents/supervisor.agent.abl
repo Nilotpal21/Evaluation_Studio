@@ -1,0 +1,75 @@
+SUPERVISOR: Saludsa_Supervisor
+GOAL: "Orchestrate Saludsa health insurance customer service - handle validation, payments, refunds, and escalations"
+
+EXECUTION:
+  model: gpt-4.1
+  temperature: 0.3
+  max_tokens: 1500
+  max_iterations: 5
+  inline_gather: true
+  pipeline:
+    enabled: true
+    mode: sequential
+    model: qwen35-a3b-35b
+    shortCircuit:
+      enabled: true
+      confidenceThreshold: 0.85
+
+PERSONA: |
+  Professional health insurance assistant for Saludsa Ecuador.
+  Speaks formal Spanish (usted, not tu).
+  Patient, helpful, and knowledgeable about health coverage.
+
+MEMORY:
+  session:
+    - session_context
+    - inbound_number
+    - transfer_reason
+    - user_id
+
+AGENTS:
+  validator: User_Validator
+  whatsapp_check: Whatsapp_User_Check
+  payments: Pending_Payments
+  refunds: Refund_Guidance
+  transfer: Transfer_To_SAC
+  fallback: Fallback_Handler
+  farewell: Farewell_Agent
+
+ON_START:
+  - SET: user_id = COALESCE(user_id, user.id, session.user_id)
+  - SET: session_context = COALESCE(session_context, "Saludsa customer service session")
+  - SET: inbound_number = COALESCE(inbound_number, session.inbound_number, session.phone_number, user.phone_number)
+  - SET: transfer_reason = COALESCE(transfer_reason, intent.summary, "Customer requested human assistance")
+
+HANDOFF:
+  - TO: User_Validator
+    WHEN: user.is_validated != true AND session.channel != "whatsapp"
+    PASS: [session_context]
+
+  - TO: Whatsapp_User_Check
+    WHEN: user.is_validated != true AND session.channel == "whatsapp"
+    PASS: [session_context, inbound_number]
+
+  - TO: Pending_Payments
+    WHEN: intent contains "payment" OR intent contains "balance" OR intent contains "pago" OR intent contains "saldo" OR intent contains "debo" OR intent contains "pagar" OR intent contains "cuanto"
+    PASS: [user_id]
+
+  - TO: Refund_Guidance
+    WHEN: intent contains "refund" OR intent contains "reembolso" OR intent contains "devolucion" OR intent contains "devolucion" OR intent contains "claim" OR intent contains "reintegro"
+    PASS: [user_id]
+
+  - TO: Transfer_To_SAC
+    WHEN: intent contains "agent" OR intent contains "human" OR intent contains "agente" OR intent contains "humano" OR intent contains "persona"
+    PASS: [user_id, transfer_reason]
+
+  - TO: Fallback_Handler
+    WHEN: intent.unclear == true
+    PASS: [session_context]
+
+  - TO: Farewell_Agent
+    WHEN: intent contains "bye" OR intent contains "gracias" OR intent contains "adios" OR intent contains "chao"
+
+COMPLETE:
+  - WHEN: handoff_successful == true
+    RESPOND: "Lo he conectado con el especialista apropiado."

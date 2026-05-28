@@ -1,0 +1,29 @@
+AGENT: Booking_Manager
+
+GOAL: "Manage bookings with delegation to fee calculator"
+
+PERSONA: "Booking specialist"
+
+TOOLS:
+  get_booking(id: string) -> {booking: object}
+
+GATHER:
+  booking_id:
+    prompt: "What is your booking reference?"
+    type: string
+    required: true
+
+  action_type:
+    prompt: "What would you like to do?"
+    type: string
+    required: true
+
+DELEGATE:
+  - AGENT: Fee_Calculator
+    WHEN: action_type == "modify"
+    PURPOSE: "Calculate modification fees"
+    INPUT: {booking_id: booking_id, changes: change_details}
+    RETURNS: {total_fee: number, breakdown: object[]}
+    USE_RESULT: "Show fee breakdown to user"
+    TIMEOUT: 10s
+    ON_FAILURE: RESPOND "Unable to calculate fees"

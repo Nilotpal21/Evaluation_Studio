@@ -1,0 +1,52 @@
+{
+  "organizationName": "Mayo Clinic",
+  "industry": "Healthcare",
+  "keyTerms": [
+    "patient care",
+    "clinical research",
+    "medical education",
+    "specialty care",
+    "diagnosis",
+    "treatment plan",
+    "multidisciplinary team",
+    "clinical trial",
+    "evidence-based medicine",
+    "referral",
+    "second opinion",
+    "integrated practice",
+    "preventive care"
+  ],
+  "acronyms": {
+    "EMR": "Electronic Medical Record",
+    "ICU": "Intensive Care Unit",
+    "OR": "Operating Room",
+    "PCP": "Primary Care Physician",
+    "MRI": "Magnetic Resonance Imaging",
+    "CT": "Computed Tomography",
+    "EHR": "Electronic Health Record",
+    "HIPAA": "Health Insurance Portability and Accountability Act"
+  },
+  "departmentBoundaries": [
+    {
+      "product1": "primary-care",
+      "product2": "specialty-care",
+      "reasoning": "Primary care provides general health management while specialty care focuses on specific conditions; patients often need both and coordinate between them"
+    },
+    {
+      "product1": "inpatient-services",
+      "product2": "outpatient-services",
+      "reasoning": "Inpatient requires hospital admission while outpatient is same-day; care transitions between these settings and patients need clarity on which applies"
+    },
+    {
+      "product1": "clinical-research",
+      "product2": "clinical-care",
+      "reasoning": "Clinical trials are research-focused while clinical care is standard treatment; patients enrolled in trials receive both and need to understand the distinction"
+    }
+  ],
+  "productSpecificNames": {
+    "specialty-care": ["Specialty Centers", "Comprehensive Centers", "Disease-Specific Clinics"],
+    "diagnostics": ["Imaging Services", "Laboratory Services", "Pathology"],
+    "clinical-research": ["Clinical Trials", "Research Studies", "Investigational Treatments"],
+    "patient-resources": ["Patient Education", "Mayo Clinic Health Information", "Symptom Checker"]
+  }
+}

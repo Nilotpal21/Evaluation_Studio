@@ -1,0 +1,72 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`generated code snapshots > adaptive network config snapshot 1`] = `
+"# =============================================================================
+# ADAPTIVE NETWORK CONFIGURATION
+# =============================================================================
+
+NETWORK_CONFIG = {
+    "pattern": "adaptive",
+    "context_preservation": True,
+    "max_handoff_depth": 10,
+    "allow_backtrack": True,
+}
+"
+`;
+
+exports[`generated code snapshots > requirements output snapshot 1`] = `
+"# Agent-Based DSL Requirements
+langgraph>=0.0.40
+langchain>=0.1.0
+langchain-anthropic>=0.1.0
+langchain-core>=0.1.0
+python-dotenv>=1.0.0
+pytest>=7.0.0
+"
+`;
+
+exports[`generated code snapshots > single agent config snapshot 1`] = `
+"# =============================================================================
+# SINGLE AGENT CONFIGURATION
+# =============================================================================
+
+AGENT_NAME = "Snapshot_Agent"
+AGENT_GOAL = "Snapshot testing"
+AGENT_PATTERN = "single"
+
+AGENT_CONFIG = {
+    "name": "Snapshot_Agent",
+    "goal": "Snapshot testing",
+    "persona": "A helpful test assistant",
+    "prompts": {
+        "field_a": "Prompt A",
+    },
+    "required_fields": ["field_a"],
+}
+"
+`;
+
+exports[`generated code snapshots > tool definitions snapshot 1`] = `
+"# =============================================================================
+# TOOL DEFINITIONS
+# =============================================================================
+
+class snapshot_toolTool:
+    """A tool for snapshot testing"""
+
+    def __call__(self, param_a: str, param_b: float = 42) -> Dict[str, Any]:
+        """A tool for snapshot testing"""
+
+        # TODO: Replace with actual implementation
+        # This is a mock that returns realistic test data
+        return {
+            "success": True,
+            "result": None,
+        }
+
+
+TOOLS = {
+    "snapshot_tool": snapshot_toolTool(),
+}
+"
+`;

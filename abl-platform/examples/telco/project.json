@@ -1,0 +1,72 @@
+{
+  "format_version": "2.0",
+  "name": "Telco NOC Platform",
+  "slug": "telco-noc-platform",
+  "description": "AI-powered Network Operations Center with multi-agent orchestration for alarm triage, link diagnostics, capacity planning, incident management, maintenance scheduling, and OS upgrade coordination",
+  "abl_version": "1.0",
+  "exported_at": "2026-03-12T00:00:00.000Z",
+  "dsl_format": "legacy",
+  "layers_included": ["core"],
+  "entry_agent": "NOC_Supervisor",
+  "agents": {
+    "NOC_Supervisor": {
+      "path": "agents/noc_supervisor.agent.abl",
+      "description": "Top-level NOC orchestrator that triages incoming alarms and routes to specialist agents based on priority and category",
+      "type": "supervisor"
+    },
+    "Network_Triage": {
+      "path": "agents/network_triage.agent.abl",
+      "description": "First-line triage agent that assesses incoming alarms, gathers details, classifies severity, and routes to the appropriate specialist"
+    },
+    "Link_Analyzer": {
+      "path": "agents/link_analyzer.agent.abl",
+      "description": "Specialist agent for diagnosing fiber and transport link issues using OTDR, BER, and optical power analysis"
+    },
+    "Capacity_Planner": {
+      "path": "agents/capacity_planner.agent.abl",
+      "description": "Specialist agent for traffic analytics, capacity forecasting, and traffic optimization across the network"
+    },
+    "Maintenance_Scheduler": {
+      "path": "agents/maintenance_scheduler.agent.abl",
+      "description": "Specialist agent for predictive maintenance scheduling, spare parts management, and field team coordination"
+    },
+    "Incident_Manager": {
+      "path": "agents/incident_manager.agent.abl",
+      "description": "Specialist agent for incident lifecycle management, RCA generation, SLA tracking, and customer impact assessment"
+    },
+    "OS_Upgrade_Coordinator": {
+      "path": "agents/os_upgrade_coordinator.agent.abl",
+      "description": "Specialist agent for coordinating large-scale OS upgrades using canary deployment strategy with automated health verification and rollback"
+    }
+  },
+  "tools": {
+    "noc_dashboard": {
+      "path": "tools/noc_dashboard.tools.abl"
+    },
+    "site_inventory": {
+      "path": "tools/site_inventory.tools.abl"
+    },
+    "link_diagnostics": {
+      "path": "tools/link_diagnostics.tools.abl"
+    },
+    "capacity_planning": {
+      "path": "tools/capacity_planning.tools.abl"
+    },
+    "maintenance": {
+      "path": "tools/maintenance.tools.abl"
+    },
+    "incident_management": {
+      "path": "tools/incident_management.tools.abl"
+    },
+    "os_upgrade": {
+      "path": "tools/os_upgrade.tools.abl"
+    }
+  },
+  "metadata": {
+    "entity_counts": {
+      "agents": 7,
+      "tools": 7
+    },
+    "required_env_vars": ["NOC_API_BASE_URL", "NOC_API_BEARER_TOKEN"]
+  }
+}

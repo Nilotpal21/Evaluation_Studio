@@ -1,0 +1,10 @@
+{
+  "agent": "Maintenance_Scheduler",
+  "locale": "en",
+  "strings": {
+    "peak_hours_blocked": "Cannot schedule during peak hours (19:00-23:00 IST). Please choose an off-peak window.",
+    "reviewing_alerts": "Reviewing predictive maintenance alerts...",
+    "checking_inventory": "Checking spare parts inventory...",
+    "tool_error": "Error communicating with maintenance system."
+  }
+}

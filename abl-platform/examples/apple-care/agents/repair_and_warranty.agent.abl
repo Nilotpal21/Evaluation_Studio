@@ -1,0 +1,469 @@
+AGENT: Repair_And_Warranty
+VERSION: "1.0"
+DESCRIPTION: "Scripted agent for warranty checks, repair estimates, in-store service scheduling, and mail-in repairs"
+GOAL: "Check warranty coverage, estimate repair costs, schedule in-store service appointments, and manage mail-in repairs"
+
+PERSONA: |
+  Thorough and organized repair specialist.
+  Provides clear cost breakdowns and timeline expectations.
+  Helps customers understand their warranty coverage.
+  Offers both in-store and mail-in options based on convenience.
+  Transparent about costs — no surprises.
+
+EXECUTION:
+  temperature: 0.7
+  max_tokens: 2000
+  max_iterations: 10
+  inline_gather: true
+
+LIMITATIONS:
+  - "Cannot perform repairs — schedules them or initiates mail-in"
+  - "Cannot extend or modify warranty terms"
+  - "Cannot offer repair pricing different from official Apple pricing"
+  - "Appointment scheduling limited to the next 30 days"
+
+# ─────────────────────────────────────────────────────────────────────────────
+# TEMPLATES — multi-channel repair and warranty display
+# ─────────────────────────────────────────────────────────────────────────────
+
+TEMPLATES:
+  warranty_status:
+    DEFAULT: |
+      Warranty Status for your device:
+      Coverage: {{warranty.type}}
+      Status: {{#if warranty.covered}}Active{{else}}Expired{{/if}}
+      {{#if warranty.expiry_date}}Expiry: {{warranty.expiry_date}}{{/if}}
+      Coverage Details: {{warranty.coverage_details}}
+    MARKDOWN: |
+      ## Warranty Status 🛡️
+
+      | Detail | Value |
+      |--------|-------|
+      | **Coverage** | {{warranty.type}} |
+      | **Status** | {{#if warranty.covered}}Active ✅{{else}}Expired ❌{{/if}} |
+      {{#if warranty.expiry_date}}| **Expiry** | {{warranty.expiry_date}} |{{/if}}
+
+      **Details:** {{warranty.coverage_details}}
+    HTML: |
+      <div class="warranty-status">
+        <h2>Warranty Status</h2>
+        <span class="coverage-badge {{#if warranty.covered}}active{{else}}expired{{/if}}">{{warranty.type}}</span>
+        {{#if warranty.expiry_date}}<p><strong>Expiry:</strong> {{warranty.expiry_date}}</p>{{/if}}
+        <p>{{warranty.coverage_details}}</p>
+      </div>
+    VOICE INSTRUCTIONS: "State the warranty type and whether it's active or expired. If active, mention the expiry date. Briefly describe what's covered."
+
+  repair_estimate:
+    DEFAULT: |
+      Repair Estimate:
+      Issue: {{issue_type}}
+      Estimated Cost: {{customer_cost}} {{currency}}
+      {{#if covered_amount}}Covered by Warranty: {{covered_amount}} {{currency}}{{/if}}
+      Turnaround: {{turnaround_days}} business days
+    MARKDOWN: |
+      ## Repair Estimate 🔧
+
+      | Detail | Value |
+      |--------|-------|
+      | **Issue** | {{issue_type}} |
+      | **Your Cost** | {{customer_cost}} {{currency}} |
+      {{#if covered_amount}}| **Warranty Covers** | {{covered_amount}} {{currency}} |{{/if}}
+      | **Turnaround** | {{turnaround_days}} business days |
+    HTML: |
+      <div class="repair-estimate">
+        <h2>Repair Estimate</h2>
+        <p><strong>Issue:</strong> {{issue_type}}</p>
+        <p class="cost"><strong>Your Cost:</strong> {{customer_cost}} {{currency}}</p>
+        {{#if covered_amount}}<p><strong>Warranty Covers:</strong> {{covered_amount}} {{currency}}</p>{{/if}}
+        <p><strong>Turnaround:</strong> {{turnaround_days}} business days</p>
+        <button data-action="proceed">Proceed with Repair</button>
+        <button data-action="alternatives">See Alternatives</button>
+      </div>
+    VOICE INSTRUCTIONS: "State the estimated cost clearly. If warranty covers part of it, mention that. State the turnaround time. Ask if they'd like to proceed."
+
+  store_list:
+    DEFAULT: |
+      Nearby Apple Stores:
+      {{#each stores}}
+      {{@index}}. {{this.name}} — {{this.distance_miles}} mi
+         {{this.address}}
+         Next available: {{this.next_available}}
+      {{/each}}
+    MARKDOWN: |
+      ## Nearby Apple Stores 📍
+
+      {{#each stores}}
+      ### {{this.name}}
+      - **Distance:** {{this.distance_miles}} mi
+      - **Address:** {{this.address}}
+      - **Next available:** {{this.next_available}}
+      {{/each}}
+    HTML: |
+      <div class="store-list">
+        <h2>Nearby Apple Stores</h2>
+        {{#each stores}}
+        <div class="store-card" data-id="{{this.id}}">
+          <h3>{{this.name}}</h3>
+          <p>{{this.address}} — {{this.distance_miles}} mi</p>
+          <p class="availability">Next available: {{this.next_available}}</p>
+          <button data-action="select_store" data-id="{{this.id}}">Select</button>
+        </div>
+        {{/each}}
+      </div>
+    VOICE INSTRUCTIONS: "Read the top 3 nearest stores with name, distance, and next available time. Pause between each store. Ask which one they prefer."
+
+  appointment_confirmed:
+    DEFAULT: |
+      In-store service appointment confirmed!
+      Store: {{store_name}}
+      Address: {{address}}
+      Date: {{date}}
+      Time: {{time}}
+
+      What to bring:
+      - Your device
+      - A valid photo ID
+      - Your Apple ID password
+    MARKDOWN: |
+      ## In-store Service Appointment Confirmed! ✅
+
+      | Detail | Value |
+      |--------|-------|
+      | **Store** | {{store_name}} |
+      | **Address** | {{address}} |
+      | **Date** | {{date}} |
+      | **Time** | {{time}} |
+
+      **What to bring:**
+      - Your device
+      - A valid photo ID
+      - Your Apple ID password
+    HTML: |
+      <div class="appointment-confirmed">
+        <h2>Appointment Confirmed!</h2>
+        <p><strong>Store:</strong> {{store_name}}</p>
+        <p><strong>Address:</strong> {{address}}</p>
+        <p><strong>Date:</strong> {{date}} at {{time}}</p>
+        <h3>What to bring:</h3>
+        <ul>
+          <li>Your device</li>
+          <li>A valid photo ID</li>
+          <li>Your Apple ID password</li>
+        </ul>
+      </div>
+    VOICE INSTRUCTIONS: "Confirm the appointment details with enthusiasm. Read the store name, date, and time clearly. List what to bring slowly."
+
+  mail_in_confirmation:
+    DEFAULT: |
+      Mail-in Repair Set Up:
+      Repair ID: {{repair_id}}
+      Please print the shipping label and send your device within 5 business days.
+      Shipping Label: {{shipping_label_url}}
+      Instructions: {{instructions}}
+    MARKDOWN: |
+      ## Mail-in Repair Set Up 📦
+
+      | Detail | Value |
+      |--------|-------|
+      | **Repair ID** | `{{repair_id}}` |
+      | **Ship by** | Within 5 business days |
+
+      📋 [Download Shipping Label]({{shipping_label_url}})
+
+      **Instructions:** {{instructions}}
+    HTML: |
+      <div class="mail-in-confirmation">
+        <h2>Mail-in Repair Set Up</h2>
+        <p><strong>Repair ID:</strong> {{repair_id}}</p>
+        <a href="{{shipping_label_url}}" class="btn">Download Shipping Label</a>
+        <p><strong>Instructions:</strong> {{instructions}}</p>
+      </div>
+    VOICE INSTRUCTIONS: "Confirm the mail-in repair has been set up. Read the repair ID clearly. Remind them to ship within 5 business days."
+
+  repair_status_card:
+    DEFAULT: |
+      Repair Status:
+      Repair ID: {{repair_id}}
+      Status: {{status}}
+      Device: {{device_type}}
+      Issue: {{issue}}
+      {{#if estimated_completion}}Estimated Completion: {{estimated_completion}}{{/if}}
+      {{#if tracking}}Tracking: {{tracking}}{{/if}}
+    MARKDOWN: |
+      ## Repair Status 🔧
+
+      | Detail | Value |
+      |--------|-------|
+      | **Repair ID** | `{{repair_id}}` |
+      | **Status** | {{status}} |
+      | **Device** | {{device_type}} |
+      | **Issue** | {{issue}} |
+      {{#if estimated_completion}}| **ETA** | {{estimated_completion}} |{{/if}}
+      {{#if tracking}}| **Tracking** | {{tracking}} |{{/if}}
+    HTML: |
+      <div class="repair-status">
+        <h2>Repair Status</h2>
+        <span class="status-badge">{{status}}</span>
+        <p><strong>Repair ID:</strong> {{repair_id}}</p>
+        <p><strong>Device:</strong> {{device_type}}</p>
+        {{#if estimated_completion}}<p><strong>ETA:</strong> {{estimated_completion}}</p>{{/if}}
+        {{#if tracking}}<p><strong>Tracking:</strong> {{tracking}}</p>{{/if}}
+      </div>
+    VOICE INSTRUCTIONS: "State the repair status clearly. If there's an estimated completion date, read it. Mention tracking info if available."
+
+  out_of_warranty_options:
+    DEFAULT: |
+      Your device is out of warranty. Here are your options:
+      1. Paid repair — {{repair_cost}} {{currency}}
+      2. Trade-in — get credit toward a new device
+      3. Upgrade — check current promotions
+    MARKDOWN: |
+      ## Out of Warranty Options
+
+      | Option | Details |
+      |--------|---------|
+      | **Paid Repair** | {{repair_cost}} {{currency}} |
+      | **Trade-in** | Get credit toward a new device |
+      | **Upgrade** | Check current promotions |
+    HTML: |
+      <div class="warranty-options">
+        <h2>Your Options</h2>
+        <div class="option-card"><h3>Paid Repair</h3><p>{{repair_cost}} {{currency}}</p><button data-action="paid_repair">Choose</button></div>
+        <div class="option-card"><h3>Trade-in</h3><p>Get credit toward a new device</p><button data-action="trade_in">Explore</button></div>
+        <div class="option-card"><h3>Upgrade</h3><p>Check current promotions</p><button data-action="upgrade">Browse</button></div>
+      </div>
+    VOICE INSTRUCTIONS: "Explain that the warranty has expired in a sympathetic tone. Present each option clearly — paid repair with cost, trade-in for credit, or upgrade. Pause between options."
+
+TOOLS:
+  check_warranty(serial_number: string) -> {covered: boolean, type: string, expiry_date: string, coverage_details: string}
+    description: "Check warranty coverage by serial number — returns coverage type and expiry"
+
+  estimate_repair_cost(device_type: string, issue_type: string, warranty_status: string) -> {cost: number, covered_amount: number, customer_cost: number, turnaround_days: number, currency: string}
+    description: "Estimate repair cost based on device, issue, and warranty status"
+
+  schedule_in_store_service(store_id: string, date: string, time_slot: string) -> {appointment_id: string, store_name: string, address: string, date: string, time: string}
+    description: "Schedule an in-store service appointment at an Apple Store"
+
+  find_nearby_stores(zip_code: string) -> {stores: object[]}
+    description: "Find nearby Apple Stores with availability"
+
+  get_repair_status(repair_id: string) -> {status: string, device_type: string, issue: string, estimated_completion: string, tracking: string}
+    description: "Check the status of an ongoing repair"
+
+  submit_mail_in_repair(device_type: string, issue: string, shipping_address: string) -> {repair_id: string, shipping_label_url: string, instructions: string}
+    description: "Submit a mail-in repair request and get a shipping label"
+
+# ─────────────────────────────────────────────────────────────────────────────
+# FLOW — structured repair and warranty flow
+# ─────────────────────────────────────────────────────────────────────────────
+
+FLOW:
+  entry_point: check_need
+
+  steps:
+    - check_need
+    - warranty_check
+    - collect_device_info
+    - estimate_cost
+    - choose_repair_method
+    - schedule_appointment
+    - mail_in_repair
+    - repair_status
+    - offer_repair
+    - offer_paid_repair
+    - offer_alternatives
+
+check_need:
+  REASONING: false
+  ON_INPUT:
+    - IF: input contains "warranty" OR input contains "coverage"
+      THEN: warranty_check
+    - IF: input contains "repair status" OR input contains "check repair"
+      THEN: repair_status
+    - IF: input contains "schedule" OR input contains "in store" OR input contains "store"
+      THEN: collect_device_info
+    - ELSE:
+      THEN: collect_device_info
+
+warranty_check:
+  REASONING: false
+  GATHER:
+    - serial_number:
+        prompt: "What's your device's serial number? (Find it in Settings > General > About)"
+        type: string
+        required: true
+  CALL: check_warranty(serial_number)
+  ON_SUCCESS:
+    SET: warranty = result
+    RESPOND: TEMPLATE(warranty_status)
+    THEN:
+      - IF: warranty.covered == true
+        THEN: offer_repair
+      - ELSE:
+        THEN: offer_paid_repair
+  ON_FAIL:
+    RESPOND: "I couldn't look up that serial number. Please double-check and try again."
+    THEN: warranty_check
+
+collect_device_info:
+  REASONING: false
+  GATHER:
+    - device_type:
+        prompt: "What type of Apple device needs repair?"
+        type: string
+        required: true
+        options:
+          - "iPhone"
+          - "iPad"
+          - "Mac"
+          - "Apple Watch"
+          - "AirPods"
+    - serial_number:
+        prompt: "What's the serial number?"
+        type: string
+        required: true
+    - issue_description:
+        prompt: "What's wrong with the device?"
+        type: string
+        required: true
+  THEN: estimate_cost
+
+estimate_cost:
+  REASONING: false
+  CALL: estimate_repair_cost(device_type, issue_description, warranty.type)
+  ON_SUCCESS:
+    SET: repair_estimate = result
+    RESPOND: TEMPLATE(repair_estimate)
+    ON_INPUT:
+      - IF: input contains "proceed" OR input contains "yes" OR input contains "go ahead"
+        THEN: choose_repair_method
+      - IF: input contains "expensive" OR input contains "too much" OR input contains "no"
+        THEN: offer_alternatives
+      - ELSE:
+        THEN: complete
+  ON_FAIL:
+    RESPOND: "I wasn't able to generate an estimate. Let me connect you with a specialist."
+    THEN: complete
+
+choose_repair_method:
+  REASONING: false
+  RESPOND: "Would you prefer an in-store service appointment or mail-in repair?"
+  ON_INPUT:
+    - IF: input contains "in store" OR input contains "store" OR input contains "appointment"
+      THEN: schedule_appointment
+    - IF: input contains "mail" OR input contains "ship"
+      THEN: mail_in_repair
+    - ELSE:
+      THEN: schedule_appointment
+
+schedule_appointment:
+  REASONING: false
+  GATHER:
+    - zip_code:
+        prompt: "What's your zip code? I'll find nearby Apple Stores."
+        type: string
+        required: true
+  CALL: find_nearby_stores(zip_code)
+  ON_SUCCESS:
+    RESPOND: TEMPLATE(store_list)
+    GATHER:
+      - store_choice:
+          prompt: "Which store would you prefer?"
+          type: string
+          required: true
+      - preferred_date:
+          prompt: "What date works best?"
+          type: string
+          required: true
+      - preferred_time:
+          prompt: "Morning, afternoon, or evening?"
+          type: string
+          required: true
+    CALL: schedule_in_store_service(store_choice, preferred_date, preferred_time)
+    ON_SUCCESS:
+      RESPOND: TEMPLATE(appointment_confirmed)
+      THEN: complete
+    ON_FAIL:
+      RESPOND: "That time slot isn't available. Would you like to try a different date or time?"
+      THEN: schedule_appointment
+  ON_FAIL:
+    RESPOND: "I couldn't find stores near that location. Would you like to try a different zip code or choose mail-in repair?"
+    THEN: choose_repair_method
+
+mail_in_repair:
+  REASONING: false
+  GATHER:
+    - shipping_address:
+        prompt: "What's your shipping address for the repair kit?"
+        type: string
+        required: true
+  CALL: submit_mail_in_repair(device_type, issue_description, shipping_address)
+  ON_SUCCESS:
+    RESPOND: TEMPLATE(mail_in_confirmation)
+    THEN: complete
+  ON_FAIL:
+    RESPOND: "I wasn't able to set up the mail-in repair. Would you like to try scheduling at a store instead?"
+    THEN: choose_repair_method
+
+repair_status:
+  REASONING: false
+  GATHER:
+    - repair_id:
+        prompt: "What's your repair ID?"
+        type: string
+        required: true
+  CALL: get_repair_status(repair_id)
+  ON_SUCCESS:
+    RESPOND: TEMPLATE(repair_status_card)
+    THEN: complete
+  ON_FAIL:
+    RESPOND: "I couldn't find that repair ID. Please double-check and try again."
+    THEN: repair_status
+
+offer_repair:
+  REASONING: false
+  RESPOND: "Your device is covered under warranty. I can help you choose in-store service or mail-in repair."
+  THEN: choose_repair_method
+
+offer_paid_repair:
+  REASONING: false
+  RESPOND: TEMPLATE(out_of_warranty_options)
+  ON_INPUT:
+    - IF: input contains "repair" OR input contains "proceed" OR input contains "yes"
+      THEN: collect_device_info
+    - ELSE:
+      THEN: complete
+
+offer_alternatives:
+  REASONING: false
+  RESPOND: "I understand. Would you like to explore trade-in options or speak with a specialist about other possibilities?"
+  ON_INPUT:
+    - IF: input contains "trade" OR input contains "specialist" OR input contains "yes"
+      THEN: complete
+    - ELSE:
+      THEN: complete
+
+CONSTRAINTS:
+  - REQUIRE serial_number matches "^[A-Z0-9]{10,12}$"
+    ON_FAIL: "That doesn't look like a valid serial number. Apple serial numbers are 10-12 alphanumeric characters. You can find yours in Settings > General > About."
+
+  - REQUIRE preferred_date > today
+    ON_FAIL: "Please select a future date for your appointment."
+
+  - REQUIRE preferred_date <= today + 30
+    ON_FAIL: "Please select a date within the next 30 days."
+
+HANDOFF:
+  - TO: Live_Agent
+    WHEN: user.wants_specialist == true
+    CONTEXT:
+      pass: [device_type, serial_number, issue_description, warranty, repair_estimate]
+      summary: "Customer requesting specialist for repair options"
+    EXPECT_RETURN: false
+
+COMPLETE:
+  - WHEN: appointment_confirmed == true
+    RESPOND: "Your appointment is all set. Is there anything else I can help with?"
+
+  - WHEN: mail_in_submitted == true
+    RESPOND: "Your mail-in repair is set up. Is there anything else I can help with?"

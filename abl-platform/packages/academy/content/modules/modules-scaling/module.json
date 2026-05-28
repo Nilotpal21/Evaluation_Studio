@@ -1,0 +1,24 @@
+{
+  "id": "modules-scaling",
+  "title": "Modules & Scaling",
+  "lessons": [
+    {
+      "id": "01-reusable-modules",
+      "title": "Reusable Modules: Design & Lifecycle",
+      "sourceFile": "guides/13-reusable-modules.md",
+      "minutes": 29
+    },
+    {
+      "id": "02-model-config",
+      "title": "AI Model Configuration & Resolution",
+      "sourceFile": "admin/03-ai-model-configuration.md",
+      "minutes": 9
+    },
+    {
+      "id": "03-testing-scale",
+      "title": "Testing & Evaluation at Scale",
+      "sourceFile": "guides/10-testing-and-evaluation.md",
+      "minutes": 21
+    }
+  ]
+}

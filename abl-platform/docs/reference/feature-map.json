@@ -1,0 +1,501 @@
+{
+  "version": 2,
+  "generatedAt": "2026-03-08",
+  "scope": {
+    "includePrefixes": [
+      "apps/",
+      "packages/",
+      "services/",
+      "benchmarks/",
+      "deploy/",
+      "scripts/",
+      "docker/",
+      "examples/",
+      "tools/",
+      ".harness/",
+      ".husky/"
+    ],
+    "includeFiles": [
+      "package.json",
+      "pnpm-lock.yaml",
+      "pnpm-workspace.yaml",
+      "turbo.json",
+      "tsconfig.json",
+      "docker-compose.yml",
+      "ecosystem.config.js",
+      "vercel.json",
+      "commitlint.config.ts",
+      "coverage-thresholds.json",
+      ".dependency-cruiser.cjs",
+      ".editorconfig",
+      ".gitattributes",
+      ".gitignore",
+      ".gitleaks.toml",
+      ".lintstagedrc.json",
+      ".mcp.json",
+      ".prettierignore",
+      ".prettierrc.json",
+      ".trivyignore",
+      "apx",
+      "test-browser-crawl-e2e.ts",
+      "test-bulk-crawl-e2e.ts",
+      "test-crawler-api.sh",
+      "test-e2e-crawl.js",
+      "test-mcp-crawler-integration.ts"
+    ]
+  },
+  "features": [
+    {
+      "id": "F010",
+      "name": "Evals and Quality Engineering",
+      "rfc": "docs/specs/rfcs/RFC-010-evals-quality-engineering.md",
+      "includes": [
+        "apps/studio/src/components/evals/",
+        "apps/studio/src/app/api/projects/[id]/evals/",
+        "packages/pipeline-engine/src/pipeline/services/eval/",
+        "packages/pipeline-engine/src/pipeline/definitions/eval-pipeline.ts",
+        "packages/pipeline-engine/src/pipeline/handlers/eval-run.workflow.ts",
+        "packages/pipeline-engine/src/pipeline/prompts/evaluation.prompts.ts",
+        "packages/database/src/clickhouse-schemas/tables/eval.ts",
+        "packages/database/src/models/eval-*.model.ts"
+      ]
+    },
+    {
+      "id": "F009",
+      "name": "Guardrails and PII Safety",
+      "rfc": "docs/specs/rfcs/RFC-009-guardrails-pii-safety.md",
+      "includes": [
+        "apps/studio/src/components/guardrails/",
+        "apps/studio/src/components/governance/",
+        "apps/studio/src/app/api/tenant-llm-policy/",
+        "apps/studio/src/app/api/admin/guardrail-policies/",
+        "apps/studio/src/app/api/admin/guardrail-providers/",
+        "apps/runtime/src/services/guardrails/",
+        "apps/runtime/src/routes/guardrail-policies.ts",
+        "apps/runtime/src/routes/guardrail-providers.ts",
+        "apps/runtime/src/services/identity/",
+        "apps/search-ai/src/services/document-permissions/",
+        "apps/search-ai/src/services/noise-detection/",
+        "packages/compiler/src/platform/guardrails/",
+        "packages/compiler/src/platform/security/",
+        "packages/shared/src/security/",
+        "packages/shared/src/encryption/",
+        "packages/pipeline-engine/src/pipeline/definitions/guardrail-pipeline.ts",
+        "packages/database/src/models/guardrail-*.model.ts",
+        "packages/database/src/models/tenant-llm-policy.model.ts",
+        "packages/database/src/models/dek-registry.model.ts",
+        "packages/database/src/models/key-version.model.ts"
+      ]
+    },
+    {
+      "id": "F003",
+      "name": "Threaded Sessions and Memory",
+      "rfc": "docs/specs/rfcs/RFC-003-threaded-sessions-memory.md",
+      "includes": [
+        "apps/studio/src/components/session/",
+        "apps/studio/src/components/sessions/",
+        "apps/studio/src/app/api/runtime/sessions/",
+        "apps/studio/src/app/api/projects/[id]/sessions/",
+        "apps/runtime/src/routes/sessions.ts",
+        "apps/runtime/src/routes/attachments.ts",
+        "apps/runtime/src/routes/transcripts.ts",
+        "apps/runtime/src/routes/memory-api.ts",
+        "apps/runtime/src/routes/contacts.ts",
+        "apps/runtime/src/routes/contact-merge.ts",
+        "apps/runtime/src/routes/merge-suggestions.ts",
+        "apps/runtime/src/services/session/",
+        "apps/runtime/src/contexts/",
+        "apps/runtime/src/attachments/",
+        "apps/runtime/src/services/stores/",
+        "apps/runtime/src/services/metadata/",
+        "packages/shared/src/attachments/",
+        "packages/database/src/models/session*.model.ts",
+        "packages/database/src/models/message.model.ts",
+        "packages/database/src/models/contact.model.ts",
+        "packages/database/src/models/attachment.model.ts",
+        "packages/database/src/models/channel-session.model.ts",
+        "packages/database/src/models/merge-suggestion.model.ts"
+      ]
+    },
+    {
+      "id": "F005",
+      "name": "Agent Tools Platform",
+      "rfc": "docs/specs/rfcs/RFC-005-agent-tools-platform.md",
+      "includes": [
+        "apps/studio/src/components/tools/",
+        "apps/studio/src/components/mcp-servers/",
+        "apps/studio/src/app/api/projects/[id]/tools/",
+        "apps/studio/src/app/api/projects/[id]/mcp-servers/",
+        "apps/runtime/src/tools/",
+        "apps/runtime/src/routes/tool-secrets.ts",
+        "apps/runtime/src/services/mcp/",
+        "packages/compiler/src/tools/",
+        "packages/shared/src/tools/",
+        "packages/database/src/models/project-tool.model.ts",
+        "packages/database/src/models/tool-secret.model.ts",
+        "packages/database/src/models/mcp-server-config.model.ts"
+      ]
+    },
+    {
+      "id": "F018",
+      "name": "AI Architect and Agent Design Automation",
+      "rfc": "docs/specs/rfcs/RFC-018-ai-architect-agent-design-automation.md",
+      "includes": [
+        "apps/studio/src/components/arch/",
+        "apps/studio/src/components/spec-generation/",
+        "apps/studio/src/app/api/arch/",
+        "apps/studio/src/app/api/projects/[id]/arch-conversation/",
+        "packages/kore-platform-cli/src/mcp/architect/",
+        "packages/kore-platform-cli/src/mcp/analysis/",
+        "packages/kore-platform-cli/src/mcp/authoring/",
+        "packages/database/src/models/arch-*.model.ts"
+      ]
+    },
+    {
+      "id": "F013",
+      "name": "Import Export and Project IO",
+      "rfc": "docs/specs/rfcs/RFC-013-import-export-project-io.md",
+      "includes": [
+        "apps/studio/src/app/api/projects/[id]/import/",
+        "apps/studio/src/app/api/projects/[id]/export/",
+        "apps/studio/src/app/api/projects/[id]/git/",
+        "apps/studio/src/app/api/projects/[id]/bundle/",
+        "apps/studio/src/app/api/projects/[id]/dependencies/",
+        "packages/project-io/",
+        "packages/kore-platform-cli/src/commands/import.ts",
+        "packages/kore-platform-cli/src/commands/export.ts",
+        "packages/kore-platform-cli/src/commands/git.ts",
+        "packages/database/src/models/import-operation.model.ts",
+        "packages/database/src/models/git-*.model.ts"
+      ]
+    },
+    {
+      "id": "F012",
+      "name": "Workflow HITL Triggers and Approvals",
+      "rfc": "docs/specs/rfcs/RFC-012-workflow-hitl-triggers-approvals.md",
+      "includes": [
+        "apps/studio/src/app/api/projects/[id]/approvals/",
+        "apps/studio/src/app/api/projects/[id]/human-tasks/",
+        "apps/studio/src/app/api/projects/[id]/workflows/triggers/",
+        "apps/studio/src/app/api/projects/[id]/workflows/[workflowId]/executions/[executionId]/steps/[stepId]/approve/",
+        "apps/workflow-engine/src/routes/workflow-approvals.ts",
+        "apps/workflow-engine/src/routes/human-task-resolution.ts",
+        "apps/workflow-engine/src/routes/triggers.ts",
+        "apps/workflow-engine/src/routes/notification-rules.ts",
+        "apps/workflow-engine/src/notifications/workflow-approval-handler.ts",
+        "apps/workflow-engine/src/services/trigger-engine.ts",
+        "apps/workflow-engine/src/services/trigger-scheduler.ts",
+        "packages/database/src/models/human-task.model.ts",
+        "packages/database/src/models/trigger-registration.model.ts"
+      ]
+    },
+    {
+      "id": "F011",
+      "name": "Workflow Actions Engine",
+      "rfc": "docs/specs/rfcs/RFC-011-workflow-actions-engine.md",
+      "includes": [
+        "apps/studio/src/components/workflows/",
+        "apps/studio/src/app/api/projects/[id]/workflows/",
+        "apps/workflow-engine/",
+        "packages/pipeline-engine/",
+        "packages/database/src/models/workflow*.model.ts"
+      ]
+    },
+    {
+      "id": "F006",
+      "name": "Connectors Platform",
+      "rfc": "docs/specs/rfcs/RFC-006-connectors-platform.md",
+      "includes": [
+        "apps/studio/src/components/connections/",
+        "apps/studio/src/app/api/projects/[id]/connections/",
+        "apps/studio/src/app/api/projects/[id]/connectors/",
+        "apps/studio/src/app/api/projects/[id]/workflows/connectors/",
+        "apps/studio/src/app/api/search-ai/connectors/",
+        "apps/runtime/src/routes/channel-connections.ts",
+        "apps/runtime/src/routes/channel-oauth.ts",
+        "apps/runtime/src/services/channel-oauth/",
+        "apps/runtime/src/services/channel/",
+        "apps/runtime/src/services/channels/",
+        "apps/search-ai/src/routes/connectors.ts",
+        "apps/search-ai/src/routes/connector-discovery.ts",
+        "apps/search-ai/src/routes/webhooks.ts",
+        "apps/workflow-engine/src/routes/connections.ts",
+        "apps/workflow-engine/src/routes/connectors.ts",
+        "apps/workflow-engine/src/services/connection-tester.ts",
+        "packages/connectors/",
+        "packages/database/src/models/connector-*.model.ts",
+        "packages/database/src/models/channel-connection.model.ts",
+        "packages/database/src/models/webhook-subscription*.model.ts",
+        "packages/database/src/models/end-user-oauth-token.model.ts"
+      ]
+    },
+    {
+      "id": "F008",
+      "name": "Knowledgebase Invocation Runtime",
+      "rfc": "docs/specs/rfcs/RFC-008-knowledgebase-invocation-runtime.md",
+      "includes": [
+        "apps/studio/src/app/api/search-ai-runtime/",
+        "apps/search-ai-runtime/",
+        "apps/runtime/src/services/search-ai/",
+        "packages/search-ai-sdk/",
+        "packages/database/src/models/knowledge-base.model.ts"
+      ]
+    },
+    {
+      "id": "F007",
+      "name": "Search AI Ingestion and KB Build",
+      "rfc": "docs/specs/rfcs/RFC-007-search-ai-ingestion-kb-build.md",
+      "includes": [
+        "apps/studio/src/components/search-ai/",
+        "apps/studio/src/app/api/search-ai/",
+        "apps/search-ai/",
+        "apps/multimodal-service/",
+        "apps/nlu-sidecar/",
+        "services/preprocessing-service/",
+        "services/docling-service/",
+        "services/bge-m3-service/",
+        "packages/search-ai-internal/",
+        "packages/database/src/models/search-*.model.ts",
+        "packages/database/src/models/chunk-*.model.ts",
+        "packages/database/src/models/field-mapping.model.ts",
+        "packages/database/src/models/canonical-*.model.ts",
+        "packages/database/src/models/domain-vocabulary.model.ts",
+        "packages/database/src/models/knowledge-graph-*.model.ts",
+        "packages/database/src/models/taxonomy-health-cache.model.ts",
+        "packages/database/src/models/document-page.model.ts",
+        "packages/database/src/models/fact.model.ts",
+        "packages/database/src/models/sync-checkpoint.model.ts",
+        "packages/database/src/models/drive-delta-token.model.ts",
+        "packages/database/src/models/user-crawl-preference.model.ts",
+        "packages/database/src/models/crawl-*.model.ts",
+        "packages/database/src/models/shared-index-tracker.model.ts"
+      ]
+    },
+    {
+      "id": "F024",
+      "name": "Crawler Intelligence and Browser Automation",
+      "rfc": "docs/specs/rfcs/RFC-024-crawler-intelligence-browser-automation.md",
+      "includes": [
+        "packages/crawler/",
+        "apps/crawler-go-worker/",
+        "apps/crawler-mcp-server/",
+        "test-browser-crawl-e2e.ts",
+        "test-bulk-crawl-e2e.ts",
+        "test-crawler-api.sh",
+        "test-e2e-crawl.js",
+        "test-mcp-crawler-integration.ts"
+      ]
+    },
+    {
+      "id": "F014",
+      "name": "Agent Transfer and A2A",
+      "rfc": "docs/specs/rfcs/RFC-014-agent-transfer-a2a.md",
+      "includes": [
+        "packages/agent-transfer/",
+        "packages/a2a/",
+        "apps/runtime/src/routes/agent-transfer-webhooks.ts",
+        "apps/runtime/src/services/agent-transfer/",
+        "packages/database/src/models/tenant-transfer.model.ts"
+      ]
+    },
+    {
+      "id": "F015",
+      "name": "Agent Observability",
+      "rfc": "docs/specs/rfcs/RFC-015-agent-observability.md",
+      "includes": [
+        "apps/studio/src/components/observatory/",
+        "apps/studio/src/components/traces/",
+        "apps/studio/src/app/api/archives/",
+        "apps/runtime/src/observability/",
+        "apps/runtime/src/services/trace/",
+        "packages/observatory/",
+        "apps/observatory-cli/",
+        "packages/database/src/models/debug-token.model.ts",
+        "packages/database/src/models/archive-*.model.ts"
+      ]
+    },
+    {
+      "id": "F016",
+      "name": "System Observability and Reliability",
+      "rfc": "docs/specs/rfcs/RFC-016-system-observability-reliability.md",
+      "includes": [
+        "apps/studio/src/components/analytics/",
+        "apps/studio/src/components/alerts/",
+        "apps/studio/src/app/api/audit/",
+        "apps/studio/src/app/api/pipelines/",
+        "apps/studio/src/app/api/admin/alerts/",
+        "apps/studio/src/app/api/runtime/analytics/",
+        "apps/runtime/src/routes/analytics.ts",
+        "apps/runtime/src/routes/pipeline-analytics.ts",
+        "apps/runtime/src/routes/pipeline-config.ts",
+        "apps/runtime/src/routes/nl-analytics.ts",
+        "apps/runtime/src/routes/alerts.ts",
+        "apps/runtime/src/routes/alert-config.ts",
+        "apps/runtime/src/routes/experiments.ts",
+        "apps/runtime/src/routes/custom-events.ts",
+        "apps/runtime/src/routes/external-events.ts",
+        "apps/runtime/src/routes/roi.ts",
+        "apps/runtime/src/routes/tags.ts",
+        "apps/runtime/src/services/pipeline/",
+        "apps/runtime/src/services/diagnostics/",
+        "apps/runtime/src/services/event-bus/",
+        "apps/runtime/src/services/resilience/",
+        "packages/eventstore/",
+        "packages/circuit-breaker/",
+        "packages/database/src/models/audit-log.model.ts",
+        "packages/database/src/models/alert-config.model.ts",
+        "packages/database/src/models/llm-usage-metric.model.ts",
+        "packages/database/src/models/org-profile-metric.model.ts",
+        "packages/database/src/models/usage-period.model.ts"
+      ]
+    },
+    {
+      "id": "F017",
+      "name": "Developer Tooling MCP LSP CLI",
+      "rfc": "docs/specs/rfcs/RFC-017-developer-tooling-mcp-lsp-cli.md",
+      "includes": [
+        "packages/kore-platform-cli/",
+        "packages/mcp-debug/",
+        "packages/abl-lsp-server/",
+        "packages/abl-vscode/",
+        "packages/openapi/",
+        "packages/web-sdk/",
+        "examples/",
+        "apps/studio/src/app/api/openapi/",
+        "apps/studio/src/components/docs/",
+        "apps/studio/src/app/docs/",
+        "packages/database/src/models/api-key.model.ts",
+        "packages/database/src/models/public-api-key.model.ts",
+        "packages/database/src/models/widget-config.model.ts",
+        "packages/database/src/models/sdk-channel.model.ts",
+        "packages/database/src/models/device-auth-request.model.ts"
+      ]
+    },
+    {
+      "id": "F004",
+      "name": "ABL Language and Compiler",
+      "rfc": "docs/specs/rfcs/RFC-004-abl-language-compiler.md",
+      "includes": [
+        "apps/studio/src/components/abl/",
+        "apps/studio/src/app/api/abl/",
+        "packages/core/",
+        "packages/compiler/",
+        "packages/analyzer/",
+        "packages/editor/",
+        "packages/language-service/",
+        "packages/nl-parser/"
+      ]
+    },
+    {
+      "id": "F002",
+      "name": "Runtime Core Orchestration",
+      "rfc": "docs/specs/rfcs/RFC-002-runtime-core-orchestration.md",
+      "includes": ["apps/runtime/", "packages/execution/", "packages/llm/", "packages/shared/"]
+    },
+    {
+      "id": "F019",
+      "name": "Admin and Governance Surfaces",
+      "rfc": "docs/specs/rfcs/RFC-019-admin-governance-surfaces.md",
+      "includes": [
+        "apps/admin/",
+        "apps/telco-noc/",
+        "packages/admin-ui/",
+        "apps/studio/src/components/admin/",
+        "apps/studio/src/app/api/platform-admin/",
+        "apps/studio/src/app/api/tenant-models/",
+        "apps/studio/src/app/api/tenant-credentials/",
+        "apps/studio/src/app/api/tenant-usage/",
+        "apps/studio/src/app/api/workspaces/",
+        "apps/studio/src/app/api/organizations/",
+        "apps/runtime/src/routes/platform-admin-*.ts",
+        "apps/runtime/src/routes/tenant-*.ts",
+        "apps/runtime/src/routes/workspace-billing.ts",
+        "apps/runtime/src/routes/kms-admin.ts",
+        "apps/runtime/src/routes/model-catalog.ts",
+        "apps/runtime/src/routes/model-capabilities.ts",
+        "apps/runtime/src/routes/project-llm-config.ts",
+        "apps/runtime/src/routes/project-settings.ts",
+        "apps/runtime/src/routes/project-runtime-config.ts",
+        "apps/runtime/src/routes/deployments.ts",
+        "apps/runtime/src/routes/environment-variables.ts",
+        "packages/database/src/models/tenant*.model.ts",
+        "packages/database/src/models/org-*.model.ts",
+        "packages/database/src/models/organization.model.ts",
+        "packages/database/src/models/project-*.model.ts",
+        "packages/database/src/models/resource-*.model.ts",
+        "packages/database/src/models/role-definition.model.ts",
+        "packages/database/src/models/team.model.ts",
+        "packages/database/src/models/workspace-invitation.model.ts",
+        "packages/database/src/models/llm-credential.model.ts",
+        "packages/database/src/models/model-config.model.ts",
+        "packages/database/src/models/materialized-kms-config.model.ts",
+        "packages/database/src/models/tenant-kms-config.model.ts"
+      ]
+    },
+    {
+      "id": "F001",
+      "name": "Studio Core Control Plane",
+      "rfc": "docs/specs/rfcs/RFC-001-studio-core-control-plane.md",
+      "includes": ["apps/studio/", "apps/spec-mock/"]
+    },
+    {
+      "id": "F020",
+      "name": "Data Platform and Persistence",
+      "rfc": "docs/specs/rfcs/RFC-020-data-platform-persistence.md",
+      "includes": ["packages/database/"]
+    },
+    {
+      "id": "F021",
+      "name": "Sandboxed Code Execution",
+      "rfc": "docs/specs/rfcs/RFC-021-sandboxed-code-execution.md",
+      "includes": ["services/codetool-sandbox/"]
+    },
+    {
+      "id": "F022",
+      "name": "Platform Foundations and Shared Config",
+      "rfc": "docs/specs/rfcs/RFC-022-platform-foundations-shared-config.md",
+      "includes": [
+        "packages/config/",
+        "packages/i18n/",
+        "packages/sizing-calculator/",
+        "packages/tailwind-config/",
+        "packages/apps/"
+      ]
+    },
+    {
+      "id": "F023",
+      "name": "Infrastructure Delivery and Operations",
+      "rfc": "docs/specs/rfcs/RFC-023-infrastructure-delivery-operations.md",
+      "includes": [
+        "deploy/",
+        "benchmarks/",
+        "scripts/",
+        "docker/",
+        "tools/",
+        ".harness/",
+        ".husky/",
+        "package.json",
+        "pnpm-lock.yaml",
+        "pnpm-workspace.yaml",
+        "turbo.json",
+        "tsconfig.json",
+        "docker-compose.yml",
+        "ecosystem.config.js",
+        "vercel.json",
+        "commitlint.config.ts",
+        "coverage-thresholds.json",
+        ".dependency-cruiser.cjs",
+        ".editorconfig",
+        ".gitattributes",
+        ".gitignore",
+        ".gitleaks.toml",
+        ".lintstagedrc.json",
+        ".mcp.json",
+        ".prettierignore",
+        ".prettierrc.json",
+        ".trivyignore",
+        "apx"
+      ]
+    }
+  ]
+}

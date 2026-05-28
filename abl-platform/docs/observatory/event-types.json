@@ -1,0 +1,100 @@
+{
+  "$schema": "observatory-spec",
+  "type": "event-type-taxonomy",
+  "version": "2026-03-10",
+  "coreEventTypes": [
+    { "type": "llm_call", "description": "LLM inference call with model, tokens, cost" },
+    { "type": "tool_call", "description": "Tool execution with input/output/success" },
+    { "type": "decision", "description": "Routing/extraction/validation decision with reasoning" },
+    { "type": "constraint_check", "description": "Constraint evaluation with pass/fail" },
+    { "type": "handoff", "description": "Agent-to-agent handoff" },
+    { "type": "escalation", "description": "Escalation to human/external system" },
+    { "type": "error", "description": "Error occurrence" }
+  ],
+  "extendedEventTypes": {
+    "sessionLifecycle": [
+      "session_start",
+      "session_end",
+      "user_message",
+      "agent_response",
+      "session_updated"
+    ],
+    "agentLifecycle": ["agent_enter", "agent_exit", "delegate_start", "delegate_complete"],
+    "flowExecution": ["flow_step_enter", "flow_step_exit", "flow_transition"],
+    "ablConstructs": [
+      "dsl_collect",
+      "dsl_prompt",
+      "dsl_respond",
+      "dsl_set",
+      "dsl_on_input",
+      "dsl_call"
+    ],
+    "engineInternals": [
+      "completion_check",
+      "engine_decision",
+      "handoff_condition_check",
+      "thread_return",
+      "data_stored",
+      "digression",
+      "sub_intent",
+      "correction",
+      "constraint_violation",
+      "warning"
+    ],
+    "voicePipeline": [
+      "voice_session_start",
+      "voice_session_end",
+      "voice_turn",
+      "voice_stt",
+      "voice_tts",
+      "voice_tts_quality",
+      "voice_asr_quality",
+      "voice_asr_cascade",
+      "voice_barge_in"
+    ],
+    "llmReasoning": ["tool_thought"]
+  },
+  "decisionKinds": [
+    { "kind": "field_validation", "description": "Gather field validation result" },
+    { "kind": "gather_extraction", "description": "Entity extraction from user input" },
+    { "kind": "flow_transition", "description": "Step-to-step transition decision" },
+    { "kind": "correction", "description": "User correction handling" },
+    { "kind": "data_mutation", "description": "Context variable mutation" },
+    { "kind": "handoff", "description": "Agent handoff routing" },
+    { "kind": "delegation", "description": "Sub-agent delegation" },
+    { "kind": "constraint_check", "description": "Constraint evaluation" },
+    { "kind": "escalation", "description": "Escalation decision" },
+    { "kind": "guardrail_check", "description": "Guardrail evaluation" },
+    { "kind": "completion", "description": "Completion detection" }
+  ],
+  "platformEventMapping": [
+    { "platformEvent": "llm.call.completed", "traceEventType": "llm_call" },
+    { "platformEvent": "llm.call.failed", "traceEventType": "llm_call" },
+    { "platformEvent": "tool.call.completed", "traceEventType": "tool_call" },
+    { "platformEvent": "tool.call.failed", "traceEventType": "tool_call" },
+    { "platformEvent": "agent.entered", "traceEventType": "agent_enter" },
+    { "platformEvent": "agent.exited", "traceEventType": "agent_exit" },
+    { "platformEvent": "agent.handoff", "traceEventType": "handoff" },
+    { "platformEvent": "agent.escalated", "traceEventType": "escalation" },
+    { "platformEvent": "agent.delegated", "traceEventType": "delegate_start" },
+    { "platformEvent": "agent.decision", "traceEventType": "decision" },
+    { "platformEvent": "agent.constraint.checked", "traceEventType": "constraint_check" },
+    { "platformEvent": "flow.step.entered", "traceEventType": "flow_step_enter" },
+    { "platformEvent": "flow.step.exited", "traceEventType": "flow_step_exit" },
+    { "platformEvent": "flow.transition", "traceEventType": "flow_transition" },
+    { "platformEvent": "session.started", "traceEventType": "session_created" },
+    { "platformEvent": "session.ended", "traceEventType": "session_ended" },
+    { "platformEvent": "session.updated", "traceEventType": "session_updated" },
+    { "platformEvent": "message.user.received", "traceEventType": "user_message" },
+    { "platformEvent": "message.agent.sent", "traceEventType": "agent_response" },
+    { "platformEvent": "voice.session.started", "traceEventType": "voice_session_start" },
+    { "platformEvent": "voice.session.ended", "traceEventType": "voice_session_end" },
+    { "platformEvent": "voice.turn.completed", "traceEventType": "voice_turn" },
+    { "platformEvent": "voice.stt.completed", "traceEventType": "voice_stt" },
+    { "platformEvent": "voice.tts.completed", "traceEventType": "voice_tts" },
+    { "platformEvent": "voice.barge_in.detected", "traceEventType": "voice_barge_in" },
+    { "platformEvent": "voice.asr_quality.analyzed", "traceEventType": "voice_asr_quality" },
+    { "platformEvent": "voice.tts_quality.measured", "traceEventType": "voice_tts_quality" },
+    { "platformEvent": "voice.asr_cascade.detected", "traceEventType": "voice_asr_cascade" }
+  ]
+}

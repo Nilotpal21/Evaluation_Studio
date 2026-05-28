@@ -1,0 +1,7 @@
+packages:
+  - 'packages/*'
+  - '!packages/helix'
+  - 'packages/connectors/*'
+  - 'apps/*'
+  - '!apps/_platform-retired'
+  - 'scripts/conversation-testing'

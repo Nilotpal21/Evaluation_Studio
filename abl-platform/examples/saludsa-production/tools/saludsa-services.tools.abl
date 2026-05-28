@@ -1,0 +1,47 @@
+/**
+ * Saludsa Service Tools
+ * MCP tools for contracts, payments, password reset, refund guidance, and email.
+ */
+
+TOOLS:
+  auth: api_key
+  timeout: 45000
+  auth_config:
+    header_name: "Authorization"
+    api_key: "{{env.SALUDSA_MCP_AUTH}}"
+
+  contract_status(channel: string = "", isAuthQVerified: boolean = false, sessionId: string) -> {success: boolean, contracts: object, activeCount: number, pendingCount: number, cancelCount: number, taxReliefCount: number, donationCount: number, totalContracts: number, apiError: boolean}
+    type: http
+    endpoint: "{{env.SALUDSA_MCP_ENDPOINT}}/contractStatus"
+    method: POST
+    description: "Return contract status details. Contracts include status (Active, Pending, Cancelled, Donated, Tax Relief)."
+
+  sending_contracts(channel: string = "", contractId: string = "", isAuthQVerified: boolean = false, inboundNumber: string = "", outboundNumber: string = "", sessionId: string) -> {success: boolean, contractData: object, totalContracts: number, apiError: boolean}
+    type: http
+    endpoint: "{{env.SALUDSA_MCP_ENDPOINT}}/sending-contracts"
+    method: POST
+    description: "Retrieve and send contract documents."
+
+  pending_payments(channel: string = "", contractId: string = "", sessionId: string) -> {success: boolean, paymentData: object, totalContracts: number, statusCategory: string, apiError: boolean}
+    type: http
+    endpoint: "{{env.SALUDSA_MCP_ENDPOINT}}/pending-payments"
+    method: POST
+    description: "Return pending payment amounts with full classification and account holder data."
+
+  password_reset(codigoTarea: string = "", passwordResetType: string = "", sessionId: string) -> {success: boolean, eligible: boolean, message: string, apiError: boolean}
+    type: http
+    endpoint: "{{env.SALUDSA_MCP_ENDPOINT}}/passwordReset"
+    method: POST
+    description: "Reset user password via email or SMS. passwordResetType: 'Email' or 'SMS'."
+
+  steps_for_refund(channel: string = "", sessionId: string) -> {success: boolean, refundSteps: object, eligibleContracts: object, loggedInLast30Days: boolean, apiError: boolean}
+    type: http
+    endpoint: "{{env.SALUDSA_MCP_ENDPOINT}}/steps-for-refund"
+    method: POST
+    description: "Return reimbursement steps and eligibility data."
+
+  send_email_template(useCaseName: string, codigoTarea: string = "", sessionId: string) -> {success: boolean, message: string}
+    type: http
+    endpoint: "{{env.SALUDSA_MCP_ENDPOINT}}/sendEmailTemplate"
+    method: POST
+    description: "Send templated email to the user."

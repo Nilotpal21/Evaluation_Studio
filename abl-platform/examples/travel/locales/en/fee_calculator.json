@@ -1,0 +1,8 @@
+{
+  "agent": "Fee_Calculator",
+  "locale": "en",
+  "strings": {
+    "fee_calculated": "Fee breakdown:",
+    "fee_error": "Unable to calculate fees. Please try again."
+  }
+}

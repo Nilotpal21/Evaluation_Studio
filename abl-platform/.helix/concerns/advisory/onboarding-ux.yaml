@@ -1,0 +1,70 @@
+id: onboarding-ux
+title: Onboarding and First-Run Experience
+enforcement: advisory
+severity_default: medium
+rubric_concern: 14
+
+scope:
+  globs:
+    - apps/studio/src/components/onboarding/**/*.tsx
+    - apps/studio/src/app/**/*.tsx
+    - apps/admin/src/app/**/*.tsx
+
+references:
+  related_concerns:
+    - ux-design
+    - design-system
+    - localization
+
+detectors:
+  - id: first-run-guidance-present
+    kind: model-review
+    severity: medium
+    guidance_ref: ../../prompts/first-run-lens.md
+    output_schema:
+      rule_id: first-run-guidance-present
+      severity: medium | low
+      location:
+        file: string
+        line: number
+      claim: string
+      reality: string
+      options:
+        A: add an onboarding step / tooltip / empty-state CTA
+        B: confirm the feature is discoverable via an existing tour
+        C: this is an advanced feature gated behind a prior onboarding step
+    message: |
+      New features visible to users on first login should have onboarding
+      affordances — a tooltip, a guided step, an empty-state with a clear
+      call to action. Dropping users onto a blank screen produces a bad
+      first impression and increases churn.
+    fix_hint: |
+      Use the existing onboarding flow (apps/studio/src/components/onboarding).
+      Add your feature as a step or link from an existing step.
+
+  - id: progressive-disclosure
+    kind: model-review
+    severity: low
+    guidance_ref: ../../prompts/progressive-disclosure-lens.md
+    output_schema:
+      rule_id: progressive-disclosure
+      severity: medium | low
+      location:
+        file: string
+        line: number
+      claim: string
+      reality: string
+      options:
+        A: collapse advanced options behind a "Show advanced" toggle
+        B: confirm all options are basic / critical
+        C: move advanced options to a separate settings route
+    message: |
+      New-user forms and configuration dialogs should surface only the basics
+      by default. Advanced options go behind progressive disclosure.
+    fix_hint: |
+      Use the AdvancedDisclosure component or split into tabs. Defaults
+      should "just work" for the common case.
+
+stage_hooks:
+  - stage: ux-design-audit
+    as_review_lens: true

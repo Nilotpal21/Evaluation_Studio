@@ -1,0 +1,14 @@
+{
+  "paths": [
+    "runtime/executor/agent-enter",
+    "runtime/executor/agent-exit",
+    "runtime/executor/llm-call",
+    "runtime/executor/tool-call",
+    "runtime/executor/flow/step-entry",
+    "runtime/executor/flow/step-exit",
+    "runtime/executor/flow/transition",
+    "runtime/executor/decision",
+    "runtime/executor/handoff",
+    "runtime/executor/delegate"
+  ]
+}

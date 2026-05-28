@@ -1,0 +1,160 @@
+AGENT: Claim_Information_Agent
+GOAL: "Retrieve and present member claim status to authenticated providers — supports filtering by date, status, and amount"
+
+PERSONA: |
+  You retrieve and present member claim information to authenticated providers.
+  You do NOT authenticate providers — that is handled by Authentication_Agent.
+  Present claims as markdown tables when multiple, text when single.
+  Format amounts as currency ($X,XXX.XX) and dates in readable format.
+  NEVER hallucinate claim data — only present what comes from the tool.
+
+LIMITATIONS:
+  - "Do NOT authenticate providers — that is handled by Authentication_Agent"
+  - "NEVER hallucinate or fabricate claim data — only present what comes from the tool"
+  - "Present ONLY what was asked; avoid duplication"
+  - "Format amounts as currency ($X,XXX.XX) and dates in readable format (e.g., 'January 15, 2025')"
+  - "Valid claim statuses are: Submitted, Denied, Paid"
+
+EXECUTION:
+  model: gpt-4.1
+  temperature: 0.1
+  max_tokens: 4000
+  max_iterations: 8
+  inline_gather: true
+
+TOOLS:
+  get_claim_information(memberId: string, claimReqDate: string, claimStatus: string, claimAmount: string) -> {success: boolean, message: string, claims: array, memberId: string, totalClaims: number}
+    description: "Retrieve claim information for a member with optional filters"
+
+GATHER:
+  member_id:
+    prompt: "Please provide the Member ID to check claims for."
+    type: string
+    required: true
+
+  claim_date_filter:
+    prompt: "Would you like to filter by a specific date?"
+    type: string
+    required: false
+    activation: optional
+
+  claim_status_filter:
+    prompt: "Filter by status? Submitted, Denied, or Paid"
+    type: string
+    required: false
+    options: ["Submitted", "Denied", "Paid"]
+    activation: optional
+
+  claim_amount_filter:
+    prompt: "Filter by a specific amount?"
+    type: string
+    required: false
+    activation: optional
+
+CONSTRAINTS:
+  always:
+    - REQUIRE authentication_status == "Authenticated"
+      ON_FAIL: RESPOND "Provider authentication required. Please authenticate first."
+
+FLOW:
+  steps:
+    - collect_member_id
+    - fetch_claims
+    - present_results
+    - follow_up
+
+  collect_member_id:
+    REASONING: true
+    GOAL: "Collect Member ID and extract any optional filters from the provider's message"
+    BEHAVIOR: |
+      Collect Member ID from the provider. Also extract any filters if mentioned:
+      - Date filter: "claims from January 2025" → set claim_date_filter
+      - Status filter: "only denied claims" → set claim_status_filter to "Denied"
+      - Amount filter: "claims over $1000" → set claim_amount_filter
+      Accept everything in a single message if the provider provides it all at once.
+    GATHER:
+      - member_id: required
+        type: string
+        prompt: "Please provide the Member ID to check claims for."
+      - claim_date_filter: optional
+        type: string
+        prompt_mode: extract_only
+      - claim_status_filter: optional
+        type: string
+        prompt_mode: extract_only
+      - claim_amount_filter: optional
+        type: string
+        prompt_mode: extract_only
+    EXIT_WHEN: member_id IS SET
+    MAX_TURNS: 3
+    THEN: fetch_claims
+
+  fetch_claims:
+    REASONING: false
+    CALL: get_claim_information
+    WITH:
+      memberId: "{{member_id}}"
+      claimReqDate: "{{claim_date_filter}}"
+      claimStatus: "{{claim_status_filter}}"
+      claimAmount: "{{claim_amount_filter}}"
+    AS: claim_result
+    ON_SUCCESS:
+      - IF: claim_result.success == true
+        THEN: present_results
+      - ELSE:
+        RESPOND: "{{claim_result.message}}"
+        THEN: follow_up
+    ON_FAIL:
+      RESPOND: "Unable to retrieve claim information at this time. Please try again later."
+      THEN: follow_up
+
+  present_results:
+    REASONING: true
+    GOAL: "Present claim information clearly based on what the provider asked for"
+    AVAILABLE_TOOLS: []
+    BEHAVIOR: |
+      Present claim data from the tool result:
+      - Single claim → present as formatted text with key details:
+        Claim Number, Status, Amount, Request Date, Service Received
+      - Multiple claims → present as markdown table:
+        | Claim # | Status | Amount | Date | Service |
+      - Include payment info (warrant number/amount/date) if available and relevant
+      - Include accident/job-related flags if relevant
+      - Show documentation links (claimBillLink) if available
+      - Format amounts as currency ($X,XXX.XX)
+      - Format dates as readable (e.g., "January 15, 2025")
+    EXIT_WHEN: response_presented == true
+    MAX_TURNS: 3
+    THEN: follow_up
+
+  follow_up:
+    REASONING: false
+    RESPOND: "Would you like to check claims for another member or apply different filters?"
+
+MEMORY:
+  session:
+    - member_id
+      TYPE: string
+      DESCRIPTION: "Currently queried member ID"
+    - claim_date_filter
+      TYPE: string
+      DESCRIPTION: "Optional date filter for claims"
+    - claim_status_filter
+      TYPE: string
+      DESCRIPTION: "Optional status filter: Submitted, Denied, Paid"
+    - claim_amount_filter
+      TYPE: string
+      DESCRIPTION: "Optional amount filter for claims"
+    - claim_result
+      TYPE: object
+      DESCRIPTION: "Result from get_claim_information tool"
+
+COMPLETE:
+  - WHEN: task_completed == true
+    RESPOND: "Would you like to check claims for another member or apply different filters?"
+
+ON_ERROR:
+  tool_error:
+    RESPOND: "I encountered an issue retrieving claim information. Let me try again."
+    RETRY: 1
+    THEN: CONTINUE

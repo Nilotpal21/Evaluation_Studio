@@ -1,0 +1,307 @@
+/**
+ * Saludsa Miscellaneous Code Tools (Sandbox)
+ * JavaScript sandbox tools ported from Kore.ai code tools for global error handling
+ * and priority product transfer routing.
+ * These tools contain orchestration logic (business hours checks, conditional queue
+ * routing, Zendesk updates, memory writes) that cannot be expressed as simple HTTP calls.
+ */
+
+TOOLS:
+  // Sandbox tools — no base_url/auth needed
+
+  handle_service_failure() -> {success: string, data: object}
+    description: "A mandatory global API failure handler for all agents. Trigger this tool whenever any MCP tool or API response includes apiError:true. No further intent processing or tool execution should occur before this handler completes. Checks business hours via validate_out_of_hours MCP tool. Sets transfer metadata for SAC with reason Fallo de API. If outside hours: sets isOutsideBusinessHours:true and updates Zendesk."
+    type: sandbox
+    runtime: "javascript"
+    timeout: 45000
+    memory_mb: 128
+    code: |
+      const axios = require("axios");
+      const mcp_baseUrl = env.SALUDSA_MCP_ENDPOINT;
+      const mcp_headers = {
+        "Authorization": env.SALUDSA_MCP_AUTH
+      }
+      const uInfo = await memory.get_content("userInfo");
+      console.log("*** UINFO ***", uInfo);
+      const sessionMetaData = await memory.get_content("sessionMeta");
+      const metaData = sessionMetaData?.data?.content?.metadata;
+      const channel = metaData?.plataforma || uInfo.data?.content?.channel;
+      const sessionInfo = sessionMetaData?.data?.content?.sessionInfo;
+
+      async function transferToSac() {
+        try {
+          let queueName, businessUnit, outputMessage, transferMetadata, queueId = "";
+          if (channel == "WEB") {
+            queueName = "Chat Portal SAC";
+            businessUnit = "SAC";
+            queueId = "qu-ed68b95-5d74-4418-8eaa-a223470244b3";
+          } else if ((channel == "ANDROID" || channel == "iOS")) {
+            queueName = "Chat App Sac";
+            businessUnit = "SAC";
+            queueId = "qu-93668a9-d6b6-4450-9cd7-ddcd7e51a582";
+          } else if (channel == "whatsapp") {
+            queueName = "WhatsappSAC";
+            businessUnit = "SAC";
+            queueId = "qu-25e71c8-6e69-4c28-9e1d-0ad92ab74e78";
+          }
+
+          const sacReason = "Fallo de API";
+          const ticketNumber = uInfo.data?.content?.ticketId;
+
+          // Check business hours via MCP validateoutofhours tool
+          const hoursReqBody = {
+            "channel": channel,
+            "queueId": queueId
+          };
+          const res = await axios.post(`${mcp_baseUrl}/validateoutofhours`, hoursReqBody, { headers: mcp_headers });
+          console.log("res.status", res?.status);
+          console.log("res.data", res?.data);
+
+          if (!res?.data?.isHoursOfOperationValid) {
+            transferMetadata = {
+              isOutsideBusinessHours: true
+            }
+            outputMessage = "Outside business hours!"
+
+            // zendesk ticket update for outside hours
+
+            console.log("sessionInfo?.sessionId", sessionInfo.sessionId)
+            const reqBody = {
+              "sessionId": sessionInfo?.sessionId,
+              "usecase": "transfer_sac",
+              "channel": channel,
+              "requerimientos_samy": "sac_after_hours",
+              "transfer_type": "samy",
+              "note": "se llena con el detalle la conversación entre usuario y Samy",
+              "subject": "Informacion fuera de horario contrato: {{contractNumber}}"
+            }
+
+            console.log("reqBody", reqBody);
+            try {
+              const zendeskUpdateRes = await axios.post(`${mcp_baseUrl}/updateZendeskTicket`, reqBody, { headers: mcp_headers });
+              console.log("zendeskUpdateRes", zendeskUpdateRes?.status);
+              console.log("zendeskUpdateRes", zendeskUpdateRes?.data);
+            } catch (err) {
+              console.log("Error in zendeskUpdateRes: ", err.stack)
+            }
+
+          } else {
+            outputMessage = "Agent hand off inputs successfully saved!!"
+            // save transfer meta data
+            transferMetadata = {
+              isOutsideBusinessHours: false,
+              queueName,
+              externalPhoneNumber: null,
+              businessUnit,
+              reason: sacReason,
+              ticketId: ticketNumber,
+              highPriorityTransfer: false,
+              handsOffMsg: outputMessage,
+              handsOffStatus: true
+            };
+
+          }
+          await memory.set_content("transfer_metadata", transferMetadata);
+
+          return { success: outputMessage, data: transferMetadata };
+        } catch (ex) {
+          return { success: "false", error: ex.message };
+        }
+      }
+
+      return transferToSac();
+
+  handle_priority_product_transfer(priorityTransfer: string = "") -> {success: string, data: object}
+    description: "A mandatory routing tool for priority product handling. Trigger this tool whenever the priorityTransfer input matches any special product (e.g., XPR, PCA, SAC, FIDEVAL). Evaluates priorityTransfer flag and routes to appropriate queue: SAC transfers to channel-specific SAC queue, XPR transfers to Experience queue, PCA returns plan details, Fideval returns flag. Checks business hours and updates Zendesk as needed."
+    type: sandbox
+    runtime: "javascript"
+    timeout: 45000
+    memory_mb: 128
+    params:
+      priorityTransfer:
+        description: "Priority transfer type (SAC, XPR, PCA, FIDEVAL, etc.)."
+    code: |
+      const axios = require("axios");
+      const mcp_baseUrl = env.SALUDSA_MCP_ENDPOINT;
+      const mcp_headers = {
+        "Authorization": env.SALUDSA_MCP_AUTH
+      }
+      const uInfo = await memory.get_content("userInfo");
+      console.log("*** UINFO ***", uInfo);
+      const sessionMetaData = await memory.get_content("sessionMeta");
+      const metaData = sessionMetaData?.data?.content?.metadata;
+      console.log("*** metaData ***", metaData);
+      const channel = metaData?.plataforma || uInfo.data?.content?.channel;
+      console.log("*** channel ***", channel);
+      const sessionInfo = sessionMetaData?.data?.content?.sessionInfo;
+
+      async function transferToXPR(ticketNumber) {
+        const businessUnit = "XPR";
+        let queueName = "";
+        if (channel == 'WEB') {
+          queueName = 'Chat_Portal_Experience';
+        } else {
+          queueName = 'Chat_App_Experience';
+        }
+        let customerName = uInfo.data?.content?.customerName;
+
+        // save transfer meta data
+        const transferMetadata = {
+          queueName,
+          externalPhoneNumber: null,
+          businessUnit,
+          reason: null,
+          ticketId: ticketNumber,
+          highPriorityTransfer: false,
+          handsOffMsg: "Agent hand off inputs successfully saved!!",
+          handsOffStatus: true,
+          sacMessage: `En este momento realizamos la transferencia a nuestra línea exclusiva Experience, para brindarle atención preferencial.
+      Por favor, manténgase en este chat`
+        };
+
+        await memory.set_content("transfer_metadata", transferMetadata);
+
+        return { success: "Agent hand off inputs successfully saved!!", data: transferMetadata };
+      }
+
+      async function transferToSac(sacReason) {
+        try {
+          let queueName, businessUnit, outputMessage, transferMetadata, queueId = "";
+
+          if (channel == "WEB") {
+            queueName = "Chat Portal SAC";
+            businessUnit = "SAC";
+            queueId = "qu-ed68b95-5d74-4418-8eaa-a223470244b3";
+          } else if ((channel == "ANDROID" || channel == "iOS")) {
+            queueName = "Chat App Sac";
+            businessUnit = "SAC";
+            queueId = "qu-93668a9-d6b6-4450-9cd7-ddcd7e51a582";
+          } else {
+            queueName = "WhatsappSAC";
+            businessUnit = "SAC";
+            queueId = "qu-25e71c8-6e69-4c28-9e1d-0ad92ab74e78";
+          }
+
+          const ticketNumber = uInfo.data?.content?.ticketId;
+
+          // Check business hours via MCP validateoutofhours tool
+          const hoursReqBody = {
+            "channel": channel,
+            "queueId": queueId
+          };
+          const res = await axios.post(`${mcp_baseUrl}/validateoutofhours`, hoursReqBody, { headers: mcp_headers });
+          console.log("res.status", res?.status);
+          console.log("res.data", res?.data);
+
+          if (!res?.data?.isHoursOfOperationValid) {
+            transferMetadata = {
+              isOutsideBusinessHours: true
+            }
+            outputMessage = "Outside business hours!"
+
+            // zendesk ticket update for outside hours
+
+            console.log("sessionInfo?.sessionId", sessionInfo.sessionId)
+            const reqBody = {
+              "sessionId": sessionInfo?.sessionId,
+              "usecase": "transfer_sac",
+              "channel": channel,
+              "requerimientos_samy": "sac_after_hours",
+              "transfer_type": "samy",
+              "note": "se llena con el detalle la conversación entre usuario y Samy",
+              "subject": "Informacion fuera de horario contrato: {{contractNumber}}"
+            }
+
+            console.log("reqBody", reqBody);
+            try {
+              const zendeskUpdateRes = await axios.post(`${mcp_baseUrl}/updateZendeskTicket`, reqBody, { headers: mcp_headers });
+              console.log("zendeskUpdateRes", zendeskUpdateRes?.status);
+              console.log("zendeskUpdateRes", zendeskUpdateRes?.data);
+            } catch (err) {
+              console.log("Error in zendeskUpdateRes: ", err.stack)
+            }
+
+          } else {
+            outputMessage = "Agent hand off inputs successfully saved!!"
+            // save transfer meta data
+            transferMetadata = {
+              isOutsideBusinessHours: false,
+              queueName,
+              externalPhoneNumber: null,
+              businessUnit,
+              reason: sacReason,
+              ticketId: ticketNumber,
+              highPriorityTransfer: false,
+              handsOffMsg: outputMessage,
+              handsOffStatus: true
+            };
+
+          }
+          await memory.set_content("transfer_metadata", transferMetadata);
+
+          return { success: outputMessage, data: transferMetadata };
+        } catch (ex) {
+          return { success: "false", error: ex.message };
+        }
+      }
+
+
+      async function checkPriorityTransfer() {
+        const priorityTransfer = $priorityTransfer || metaData?.priorityTransfer || uInfo.data?.content?.priorityTransfer;
+        console.log("*** priorityTransfer ***", priorityTransfer);
+        if (priorityTransfer === "SAC") {
+          return await transferToSac("sac_by_rule");
+        } else {
+          const reqBody = {
+            "codigoTarea": "TransferenciaPca",
+            "sessionId": sessionInfo?.sessionId
+          }
+          const apiRes = await axios.post(`${mcp_baseUrl}/validarElegibilidadTarea`, reqBody, { headers:  mcp_headers});
+          console.log("apiRes status", apiRes?.status);
+
+          if (!apiRes?.data?.eligible && priorityTransfer === "PCA") {
+            return await transferToSac("sac_by_rule");
+          }
+
+          if (!apiRes?.data?.eligible) {
+            return apiRes?.data;
+          }
+          if(!apiRes?.data?.eligible && apiRes?.data?.apiError){
+            return await transferToSac("API Failure");
+          }
+          if (apiRes?.data?.isXPRExist) {
+            return await transferToXPR(apiRes?.data?.ticketId);
+          }
+          if (apiRes?.data?.isPCAExist) {
+            return {
+              priorityTransfer: "PCA",
+              planName: apiRes?.data?.planName,
+              contractNumber: apiRes?.data?.contractNumber,
+              contactNumber: apiRes?.data?.contactNumber
+            };
+          }
+          if (apiRes?.data?.isComplementaryServicesExist) {
+            // Based on plan names matches it transfer to sac as a default
+            return await transferToSac("sac_by_rule");
+          }
+          if (apiRes?.data?.isFidevalExist) {
+            return { priorityTransfer: "Fideval"};
+          }
+
+          if (priorityTransfer === "Fideval" && !apiRes?.data?.isFidevalExist) {
+            return await transferToSac("sac_by_rule");
+          }
+
+
+        }
+      }
+      return checkPriorityTransfer();
+
+  noop() -> {success: boolean}
+    description: "No-op passthrough tool. Returns {success: true} immediately. Used as a deterministic branching anchor in FLOW steps that need IF/ELSE IF conditions without a real tool call — the compiler only supports conditional branches inside ON_SUCCESS."
+    type: sandbox
+    runtime: "javascript"
+    timeout: 5000
+    memory_mb: 32
+    code: |
+      return { success: true };

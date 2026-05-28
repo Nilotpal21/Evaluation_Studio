@@ -1,0 +1,468 @@
+# Saturation Find Report
+
+> **Tier:** {{tier}}
+> **Services:** {{services}}
+> **Date:** {{formatDateTime timestamp}}
+> **Total Runs:** {{totalRuns}}
+> **Total Duration:** {{formatDuration totalDurationSec}}
+
+---
+
+## Configuration
+
+| Parameter | Value |
+| --------- | ----- |
+| Start VUs | {{config.startVUs}} |
+| Max Runs | {{config.maxRuns}} |
+| Duration per Run | {{config.durationMinutes}}m |
+| Min Step | {{config.minStep}} VUs |
+
+---
+
+## Result
+
+{{#if hasTippingPoint}}
+{{#if converged}}
+{{statusIcon 'pass'}} **Converged.** Tipping point found at **~{{tippingPointVUs}} VUs**.
+{{else}}
+{{statusIcon 'warn'}} **Did not fully converge.** Best estimate: **~{{tippingPointVUs}} VUs** (max healthy).
+{{/if}}
+{{else}}
+{{#if hasUnhealthy}}
+{{statusIcon 'fail'}} **Even the lowest VU count tested was unhealthy.** First unhealthy: {{firstUnhealthyVUs}} VUs. Try a lower `--start-vus`.
+{{else}}
+{{statusIcon 'warn'}} **Never reached saturation.** All {{totalRuns}} runs were healthy. Try higher `--start-vus` or more `--max-runs`.
+{{/if}}
+{{/if}}
+
+| Metric | Value |
+| ------ | ----- |
+{{#if hasTippingPoint}}
+| Tipping Point (max healthy VUs) | **{{tippingPointVUs}}** |
+{{/if}}
+{{#if hasUnhealthy}}
+| First Unhealthy VUs | {{firstUnhealthyVUs}} |
+{{/if}}
+| Converged | {{#if converged}}Yes{{else}}No{{/if}} |
+| Algorithm Phase | {{phase}} |
+| Total Runs | {{totalRuns}} |
+| Total Duration | {{formatDuration totalDurationSec}} |
+
+{{#if bestRun}}
+
+### Best Healthy Run
+
+| Metric | Value |
+| ------ | ----: |
+| VUs | {{bestRun.vus}} |
+| Throughput | {{bestRun.throughputRps}} req/s |
+| Error Rate | {{formatPercent bestRun.errorRate}} |
+| Avg Latency | {{formatMs bestRun.avgMs}} ms |
+| p95 Latency | {{formatMs bestRun.p95Ms}} ms |
+| p99 Latency | {{formatMs bestRun.p99Ms}} ms |
+| Total Requests | {{formatNumber bestRun.totalRequests}} |
+
+{{/if}}
+
+---
+
+## Run History
+
+| Run | VUs | Status | Error Rate | p95 (ms) | p99 (ms) | Avg (ms) | RPS | Requests | Trigger |
+| --: | --: | ------ | ---------: | -------: | -------: | -------: | --: | -------: | ------- |
+{{#each runs}}
+| {{add this.runIndex 1}} | {{this.vus}} | {{#if this.healthy}}{{statusIcon 'pass'}}{{else}}{{statusIcon 'fail'}}{{/if}} | {{formatPercent this.errorRate}} | {{formatMs this.p95Ms}} | {{formatMs this.p99Ms}} | {{formatMs this.avgMs}} | {{this.throughputRps}} | {{formatNumber this.totalRequests}} | {{{this.trigger}}} |
+{{/each}}
+
+{{#if hasAnyInfra}}
+
+---
+
+## Infrastructure Metrics per Run
+
+| Run | VUs | Status | CPU Peak | CPU Avg | Mem Peak | Mem Avg | Restarts | OOM Kills | Observed RPS |
+| --: | --: | ------ | -------: | ------: | -------: | ------: | -------: | --------: | -----------: |
+{{#each runs}}
+{{#if this.infra}}
+| {{add this.runIndex 1}} | {{this.vus}} | {{#if this.healthy}}{{statusIcon 'pass'}}{{else}}{{statusIcon 'fail'}}{{/if}} | {{this.infra.cpuPeak}} | {{this.infra.cpuAvg}} | {{this.infra.memoryPeak}} | {{this.infra.memoryAvg}} | {{this.infra.podRestarts}} | {{this.infra.oomKills}} | {{defaultVal this.infra.observedRps 'N/A'}} |
+{{/if}}
+{{/each}}
+
+> CPU and memory are for the tested service. Use this to correlate resource usage with VU load and identify the saturation signal (CPU-bound vs latency-bound vs error-bound).
+
+{{/if}}
+
+{{#if hasAnyLLM}}
+
+---
+
+## LLM Latency per Run
+
+| Run | VUs | Status | LLM Avg | LLM Median | LLM p95 | LLM Max | Input Tokens | Output Tokens | LLM % of Total |
+| --: | --: | ------ | ------: | ---------: | ------: | ------: | -----------: | ------------: | --------------: |
+{{#each runs}}
+{{#if this.llm}}
+| {{add this.runIndex 1}} | {{this.vus}} | {{#if this.healthy}}{{statusIcon 'pass'}}{{else}}{{statusIcon 'fail'}}{{/if}} | {{formatMs this.llm.avgMs}} ms | {{formatMs this.llm.medianMs}} ms | {{formatMs this.llm.p95Ms}} ms | {{formatMs this.llm.maxMs}} ms | {{formatNumber this.llm.inputTokens}} | {{formatNumber this.llm.outputTokens}} | {{llmPercent this.llm.avgMs this.avgMs}}% |
+{{/if}}
+{{/each}}
+
+> **LLM Latency** = server-reported model inference time from SSE `complete` event (excludes network, middleware, and queue time).
+> **LLM % of Total** = LLM avg latency / total avg response time — shows how much of the end-to-end latency is spent waiting for the model.
+
+{{/if}}
+
+{{#if hasAnyScenarios}}
+
+---
+
+## Scenario Breakdown per Run
+
+{{#each runs}}
+{{#if this.scenarios}}
+
+### Run {{add this.runIndex 1}} — {{this.vus}} VUs {{#if this.healthy}}{{statusIcon 'pass'}}{{else}}{{statusIcon 'fail'}}{{/if}}
+
+| Scenario | Requests | Error Rate | RPS | Avg (ms) | Median (ms) | p90 (ms) | p95 (ms) | p99 (ms) | Max (ms) |
+| -------- | -------: | ---------: | --: | -------: | ----------: | -------: | -------: | -------: | -------: |
+{{#each this.scenarios}}
+| {{humanize this.name}} | {{defaultVal this.requests 'N/A'}} | {{formatPercent this.errorRate}} | {{this.throughput}} | {{formatMs this.latency.avgMs}} | {{formatMs this.latency.medianMs}} | {{formatMs this.latency.p90Ms}} | {{formatMs this.latency.p95Ms}} | {{formatMs this.latency.p99Ms}} | {{formatMs this.latency.maxMs}} |
+{{/each}}
+
+{{/if}}
+{{/each}}
+
+> Scenario-level metrics show which workload type degrades first as VUs increase. Compare error rates and p95 across runs to identify the bottleneck scenario.
+
+{{/if}}
+
+{{#each services}}
+{{#if this.websocket}}
+
+---
+
+## WebSocket Capacity ({{@key}})
+
+**Max connections/pod:** {{this.websocket.maxTotalConnectionsPerPod}}
+**Est. memory/connection:** {{this.websocket.estimatedMemoryPerConnection}}
+**Connection errors:** {{this.websocket.connectionErrors}} | **Timeouts:** {{this.websocket.connectionTimeouts}}
+**Unexpected disconnects:** {{this.websocket.unexpectedDisconnects}} | **Heartbeat failures:** {{this.websocket.heartbeatFailures}}
+
+| Endpoint | Configured Max | Measured Max | Saturation Signal | Msg p50 (ms) | Msg p95 (ms) |
+| -------- | -------------: | -----------: | ----------------- | -----------: | -----------: |
+{{#each this.websocket.endpoints}}
+| `{{this.path}}` | {{this.configuredMax}} | {{this.measuredMax}} | {{this.saturationSignal}} | {{formatMs this.messageLatency.p50Ms}} | {{formatMs this.messageLatency.p95Ms}} |
+{{/each}}
+
+{{/if}}
+{{/each}}
+{{#each infraServices}}
+{{#if this.websocket}}
+
+---
+
+## WebSocket Capacity ({{@key}})
+
+**Max connections/pod:** {{this.websocket.maxTotalConnectionsPerPod}}
+**Est. memory/connection:** {{this.websocket.estimatedMemoryPerConnection}}
+**Connection errors:** {{this.websocket.connectionErrors}} | **Timeouts:** {{this.websocket.connectionTimeouts}}
+**Unexpected disconnects:** {{this.websocket.unexpectedDisconnects}} | **Heartbeat failures:** {{this.websocket.heartbeatFailures}}
+
+| Endpoint | Configured Max | Measured Max | Saturation Signal | Msg p50 (ms) | Msg p95 (ms) |
+| -------- | -------------: | -----------: | ----------------- | -----------: | -----------: |
+{{#each this.websocket.endpoints}}
+| `{{this.path}}` | {{this.configuredMax}} | {{this.measuredMax}} | {{this.saturationSignal}} | {{formatMs this.messageLatency.p50Ms}} | {{formatMs this.messageLatency.p95Ms}} |
+{{/each}}
+
+{{/if}}
+{{/each}}
+
+{{#if hasDeployments}}
+
+---
+
+## Infrastructure Overview
+
+| Service | Kind | Replicas | Ready | CPU Request | CPU Limit | Memory Request | Memory Limit |
+| ------- | ---- | -------: | ----: | ----------: | --------: | -------------: | -----------: |
+{{#each deployments}}
+| {{humanize this.name}} | {{this.kind}} | {{this.replicas}} | {{this.readyReplicas}} | {{this.cpuRequest}} | {{this.cpuLimit}} | {{this.memoryRequest}} | {{this.memoryLimit}} |
+{{/each}}
+
+{{/if}}
+
+{{#if hasNodes}}
+
+---
+
+## Cluster Nodes
+
+> **Cloud:** {{clusterCloud}} | **Region:** {{clusterRegion}} | **Nodes:** {{nodeCount}}
+
+| Node | Pool | Instance Type | vCPU | RAM (GiB) | CPU Alloc | RAM Alloc (GiB) | CPU Usage | MEM Usage | AZ |
+| ---- | ---- | ------------- | ---: | --------: | --------: | --------------: | --------: | --------: | -: |
+{{#each nodes}}
+| {{shortNodeName this.name}} | {{this.pool}} | {{this.instanceType}} | {{this.cpuCapacity}} | {{formatGi this.memoryCapacityGi}} | {{this.cpuAllocatable}} | {{formatGi this.memoryAllocatableGi}} | {{this.cpuUsagePercent}}% | {{this.memoryUsagePercent}}% | {{this.availabilityZone}} |
+{{/each}}
+
+{{/if}}
+
+{{#if hasPodPlacement}}
+
+---
+
+## Pod-to-Node Placement
+
+| Service | Pod | Node | CPU Req/Lim | MEM Req/Lim |
+| ------- | --- | ---- | ----------: | ----------: |
+{{#each podPlacement}}
+| {{humanize this.service}} | {{shortPodName this.pod}} | {{shortNodeName this.node}} | {{this.cpuRequest}} / {{this.cpuLimit}} | {{this.memoryRequest}} / {{this.memoryLimit}} |
+{{/each}}
+
+> Pod placement reveals co-location risks (e.g., runtime + redis on the same node) and resource contention patterns. Compare node CPU/MEM usage with pod requests to identify overcommitted nodes.
+
+{{/if}}
+
+{{#if hasInfraMetrics}}
+
+---
+
+## Infrastructure Metrics (Last Run)
+
+*(Source: {{infraMetricsSource}}{{#if corootProject}} — Project: {{corootProject}}{{/if}})*
+
+### Service Resource Usage
+
+| Service | CPU Peak | CPU Avg | Mem Peak | Mem Avg | Restarts | OOM Kills | RPS |
+| ------- | -------: | ------: | -------: | ------: | -------: | --------: | --: |
+{{#each services}}
+{{#if this.infra}}
+| {{humanize @key}} | {{formatCpu this.infra.cpuPeak}} | {{formatCpu this.infra.cpuAvg}} | {{formatMemory this.infra.memoryPeak}} | {{formatMemory this.infra.memoryAvg}} | {{this.infra.podRestarts}} | {{this.infra.oomKills}} | {{defaultVal this.infra.observedRps 'N/A'}} |
+{{/if}}
+{{/each}}
+{{#each infraServices}}
+{{#if this.infra}}
+| {{humanize @key}} | {{formatCpu this.infra.cpuPeak}} | {{formatCpu this.infra.cpuAvg}} | {{formatMemory this.infra.memoryPeak}} | {{formatMemory this.infra.memoryAvg}} | {{this.infra.podRestarts}} | {{this.infra.oomKills}} | {{defaultVal this.infra.observedRps 'N/A'}} |
+{{/if}}
+{{/each}}
+
+### Data Store Resource Usage
+
+| Service | CPU | Memory | Connections (avg / peak) | Disk |
+| ------- | --: | -----: | -----------------------: | ---: |
+{{#each services}}
+{{#if this.dataStoreInfra}}
+| {{humanize @key}} | {{defaultVal this.dataStoreInfra.resources.cpuUsage 'N/A'}} | {{defaultVal this.dataStoreInfra.resources.memoryUsage 'N/A'}} | {{this.dataStoreInfra.connections.used}} / {{this.dataStoreInfra.connections.max}} | {{formatDiskGB this.dataStoreInfra.resources.diskUsageGB}} |
+{{/if}}
+{{/each}}
+{{#each infraServices}}
+{{#if this.dataStoreInfra}}
+| {{humanize @key}} | {{defaultVal this.dataStoreInfra.resources.cpuUsage 'N/A'}} | {{defaultVal this.dataStoreInfra.resources.memoryUsage 'N/A'}} | {{this.dataStoreInfra.connections.used}} / {{this.dataStoreInfra.connections.max}} | {{formatDiskGB this.dataStoreInfra.resources.diskUsageGB}} |
+{{/if}}
+{{/each}}
+
+### Connection Breakdown by Client
+
+| Data Store | Client | Connections (avg / peak) |
+| ---------- | ------ | -----------------------: |
+{{#each services}}
+{{#if this.dataStoreInfra}}
+{{#each this.dataStoreInfra.connectionBreakdown}}
+| {{humanize @../key}} | {{humanize this.client}} | {{this.used}} / {{this.max}} |
+{{/each}}
+{{/if}}
+{{/each}}
+{{#each infraServices}}
+{{#if this.dataStoreInfra}}
+{{#each this.dataStoreInfra.connectionBreakdown}}
+| {{humanize @../key}} | {{humanize this.client}} | {{this.used}} / {{this.max}} |
+{{/each}}
+{{/if}}
+{{/each}}
+
+{{#if hasServiceLatency}}
+
+### Service-to-DataStore Latency
+
+| Client | Data Store | Request Latency | TCP Latency | RPS |
+| ------ | ---------- | --------------: | ----------: | --: |
+{{#each serviceLatency}}
+| {{humanize this.client}} | {{humanize this.dataStore}} | {{formatLatencyMs this.requestLatencyMs}} | {{formatLatencyMs this.tcpLatencyMs}} | {{defaultVal this.rps '—'}} |
+{{/each}}
+
+> **Request Latency** = application-level query time as seen by the data store.
+> **TCP Latency** = network-level TCP connection setup time between client and data store.
+> **RPS** = requests per second from the client to the data store.
+
+{{/if}}
+{{#each services}}
+{{#if this.infra}}
+{{#if (gt this.infra.oomKills 0)}}
+
+> **WARNING:** {{humanize @key}} experienced {{this.infra.oomKills}} OOM kill(s) during the test. Consider increasing memory limits.
+
+{{/if}}
+{{#if (gt this.infra.podRestarts 0)}}
+
+> **WARNING:** {{humanize @key}} had {{this.infra.podRestarts}} pod restart(s) during the test.
+
+{{/if}}
+{{/if}}
+{{/each}}
+{{#each infraServices}}
+{{#if this.infra}}
+{{#if (gt this.infra.oomKills 0)}}
+
+> **WARNING:** {{humanize @key}} experienced {{this.infra.oomKills}} OOM kill(s) during the test. Consider increasing memory limits.
+
+{{/if}}
+{{#if (gt this.infra.podRestarts 0)}}
+
+> **WARNING:** {{humanize @key}} had {{this.infra.podRestarts}} pod restart(s) during the test.
+
+{{/if}}
+{{/if}}
+{{/each}}
+{{/if}}
+
+{{#if integrationFlows}}
+
+---
+
+## Integration Flow Results
+
+{{#each integrationFlows}}
+
+### {{this.name}}
+
+**Services in path:** {{join this.servicesInPath ' → '}}
+**System ceiling:** {{this.systemCeiling.maxRps}} RPS / {{this.systemCeiling.maxConcurrentUsers}} concurrent (trigger: {{this.systemCeiling.trigger}})
+**Bottleneck:** {{this.bottleneck.service}} — {{this.bottleneck.reason}}
+
+| Percentile | Value (ms) | Baseline p95 (ms) |
+| ---------- | ---------: | -----------------: |
+| p50 | {{formatMs this.latency.p50Ms}} | — |
+| p95 | {{formatMs this.latency.p95Ms}} | {{formatMs this.latency.baselineP95Ms}} |
+| p99 | {{formatMs this.latency.p99Ms}} | — |
+
+#### Per-Service Metrics
+
+| Service | CPU % | Memory % | Error Rate | p95 (ms) | Connections |
+| ------- | ----: | -------: | ---------: | -------: | ----------: |
+{{#each this.serviceMetrics}}
+| {{@key}} | {{formatPercent (divide this.cpuUtilization 100)}} | {{formatPercent (divide this.memoryUtilization 100)}} | {{formatPercent this.errorRate}} | {{formatMs this.p95Ms}} | {{this.activeConnections}} |
+{{/each}}
+
+#### Scenario Breakdown
+
+| Scenario | Weight | Max RPS | Concurrent | Trigger | Bottleneck | p95 (ms) |
+| -------- | -----: | ------: | ---------: | ------- | ---------- | -------: |
+{{#each this.scenarios}}
+| {{this.name}} | {{formatPercent this.weight}} | {{this.maxRps}} | {{this.maxConcurrentUsers}} | {{this.trigger}} | {{this.bottleneckService}} | {{formatMs this.latency.p95Ms}} |
+{{/each}}
+
+{{/each}}
+
+{{/if}}
+
+{{#if hasRecommendations}}
+
+---
+
+## Per-Pod Capacity
+
+| Service | Replicas | Total RPS | RPS/Pod | Total VUs | VUs/Pod | p95 | p99 | Error Rate | Status |
+| ------- | -------: | --------: | ------: | --------: | ------: | --: | --: | ---------: | ------ |
+{{#each recommendations}}
+| {{humanize this.service}} | {{this.replicas}} | {{this.totalRps}} | {{this.perPodRps}} | {{this.totalVUs}} | {{this.perPodVUs}} | {{this.p95Ms}} ms | {{this.p99Ms}} ms | {{this.errorRate}}% | {{#if this.healthy}}{{statusIcon 'pass'}}{{else}}{{statusIcon 'warn'}}{{/if}} |
+{{/each}}
+
+> **How to read:** RPS/Pod = measured throughput per replica at the tested VU load (from best healthy run).
+> Use this to estimate replica count for a target throughput: `replicas = target_rps / rps_per_pod`.
+> Status is healthy if error rate < 1% and p95 < 2s.
+
+{{/if}}
+
+{{#if hasInsights}}
+
+---
+
+## Insights & Recommendations
+
+{{#if insights.hasCriticals}}
+### Critical Issues
+
+{{#each insights.criticals}}
+- **{{this.area}}**: {{this.message}}
+{{/each}}
+
+{{/if}}
+{{#if insights.hasWarnings}}
+### Warnings
+
+{{#each insights.warnings}}
+- **{{this.area}}**: {{this.message}}
+{{/each}}
+
+{{/if}}
+{{#if insights.hasPositives}}
+### What Went Well
+
+{{#each insights.positives}}
+- **{{this.area}}**: {{this.message}}
+{{/each}}
+
+{{/if}}
+{{#if insights.hasImprovements}}
+### Suggested Improvements
+
+{{#each insights.improvements}}
+- **{{this.area}}**: {{this.message}}
+{{/each}}
+
+{{/if}}
+{{/if}}
+
+---
+
+## SLA Compliance
+
+{{#if slaTargets}}
+
+| Metric | Target | Measured | Status |
+| ------ | -----: | -------: | ------ |
+{{#each slaTargets}}
+| {{this.name}} | {{this.target}} | {{this.measured}} | {{#if this.passed}}{{statusIcon 'pass'}} Met{{else}}{{statusIcon 'fail'}} Not met{{/if}} |
+{{/each}}
+
+{{else}}
+
+> No SLA targets defined.
+
+{{/if}}
+
+---
+
+## Convergence Path
+
+```
+{{#each runs}}
+Run {{add this.runIndex 1}}: {{this.vus}} VUs → {{#if this.healthy}}HEALTHY{{else}}UNHEALTHY ({{{this.trigger}}}){{/if}}{{#if this.infra}} | CPU: {{this.infra.cpuPeak}} peak{{/if}}
+{{/each}}
+{{#if hasTippingPoint}}
+Result: Tipping point ≈ {{tippingPointVUs}} VUs
+{{/if}}
+```
+
+### Health Criteria
+
+| Criterion | Threshold |
+| --------- | --------- |
+| Error Rate | < 1% |
+| p95 Latency | < 2,000 ms |
+| OOM Kills | 0 |
+
+> **Algorithm:** Exponential growth (double VUs each run) until unhealthy, then binary refinement between last healthy and first unhealthy VU counts. Stops when the search band narrows to the minimum step size or max runs reached.
+
+---
+
+*Generated {{formatDateTime generatedAt}}*

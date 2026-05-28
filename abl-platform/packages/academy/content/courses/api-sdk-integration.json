@@ -1,0 +1,14 @@
+{
+  "id": "api-sdk-integration",
+  "title": "API, SDK & Integration Architecture",
+  "description": "Master the conversation API, management APIs, channel architecture, and Web SDK transport layer.",
+  "level": "advanced",
+  "estimatedMinutes": 183,
+  "prerequisites": ["multi-agent-design"],
+  "modules": ["api-fundamentals", "channel-architecture", "sdk-transport", "python-sdk"],
+  "certification": {
+    "required": true,
+    "passCriteria": "all-modules-passed",
+    "badge": "course-api-sdk"
+  }
+}

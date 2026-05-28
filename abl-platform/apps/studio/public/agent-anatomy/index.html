@@ -1,0 +1,2646 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ABL Agent Anatomy</title>
+    <style>
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      :root {
+        --bg: #0c0c0c;
+        --bg2: #141414;
+        --bg3: #1c1c1c;
+        --bg4: #252525;
+        --fg: #e8e8e8;
+        --fg2: #aaa;
+        --fg3: #777;
+        --fg4: #555;
+        --accent: #5a8eff;
+        --accent-dim: rgba(90, 142, 255, 0.08);
+        --border: #1e1e1e;
+        --border2: #2a2a2a;
+        --mono: 'Berkeley Mono', 'JetBrains Mono', 'SF Mono', 'Fira Code', monospace;
+        --sans: 'Inter', -apple-system, 'Segoe UI', sans-serif;
+      }
+      body {
+        font-family: var(--sans);
+        background: var(--bg);
+        color: var(--fg);
+        line-height: 1.6;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      header {
+        padding: 48px 32px 40px;
+        text-align: center;
+        border-bottom: 1px solid var(--border);
+      }
+      header h1 {
+        font-size: 1.8rem;
+        font-weight: 600;
+        letter-spacing: -0.02em;
+      }
+      header p {
+        font-size: 0.95rem;
+        color: var(--fg3);
+        margin-top: 6px;
+        max-width: 520px;
+        margin-left: auto;
+        margin-right: auto;
+      }
+      .counts {
+        display: flex;
+        justify-content: center;
+        gap: 36px;
+        margin-top: 22px;
+      }
+      .counts .c {
+        text-align: center;
+      }
+      .counts .c .num {
+        font-size: 1.6rem;
+        font-weight: 600;
+        font-variant-numeric: tabular-nums;
+      }
+      .counts .c .lbl {
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: var(--fg3);
+        margin-top: 2px;
+      }
+
+      /* TREE */
+      .tree-wrap {
+        padding: 36px 24px 32px;
+        border-bottom: 1px solid var(--border);
+        overflow-x: auto;
+        background: var(--bg2);
+      }
+      .tree-title {
+        text-align: center;
+        font-size: 0.72rem;
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        color: var(--fg4);
+        margin-bottom: 22px;
+      }
+      .tree {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        min-width: 920px;
+      }
+      .tree-root {
+        background: var(--bg3);
+        border: 1px solid var(--border2);
+        padding: 10px 32px;
+        border-radius: 6px;
+        font-size: 0.95rem;
+        font-weight: 600;
+      }
+      .tree-root::after {
+        content: '';
+        display: block;
+        width: 1px;
+        height: 18px;
+        background: var(--fg4);
+        margin: 0 auto;
+      }
+      .tree-row {
+        display: flex;
+        gap: 0;
+        position: relative;
+      }
+      .tree-row::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        height: 1px;
+        background: var(--fg4);
+        left: 48px;
+        right: 48px;
+      }
+      .tree-col {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        width: 96px;
+      }
+      .tree-col::before {
+        content: '';
+        width: 1px;
+        height: 14px;
+        background: var(--fg4);
+      }
+      .tree-node {
+        font-size: 0.7rem;
+        padding: 6px 4px;
+        text-align: center;
+        color: var(--fg2);
+        cursor: pointer;
+        border-radius: 4px;
+        transition: color 0.15s;
+        width: 90px;
+        line-height: 1.3;
+        font-weight: 500;
+      }
+      .tree-node:hover {
+        color: var(--fg);
+      }
+      .tree-node .tn {
+        display: block;
+        font-weight: 600;
+        font-size: 0.72rem;
+        color: var(--fg);
+        margin-bottom: 2px;
+      }
+      .tree-leaves {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        margin-top: 5px;
+        align-items: center;
+      }
+      .tree-leaf {
+        font-size: 0.62rem;
+        font-family: var(--mono);
+        color: var(--fg4);
+        padding: 2px 6px;
+        cursor: pointer;
+        transition: color 0.15s;
+      }
+      .tree-leaf:hover {
+        color: var(--fg2);
+      }
+      .tree-leaf.req {
+        color: var(--fg3);
+      }
+
+      /* FULL DSL EXAMPLE (after tree) */
+      .dsl-section {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 36px 24px 0;
+      }
+      .dsl-header {
+        font-size: 0.72rem;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: var(--fg4);
+        margin-bottom: 12px;
+        padding-bottom: 8px;
+        border-bottom: 1px solid var(--border);
+      }
+
+      /* CONTENT */
+      .content {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 36px 24px 80px;
+      }
+      .group {
+        margin-bottom: 40px;
+      }
+      .group-label {
+        font-size: 0.72rem;
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        color: var(--fg4);
+        margin-bottom: 14px;
+        padding-bottom: 8px;
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+      .group-label a {
+        font-size: 0.68rem;
+        color: var(--fg4);
+        text-decoration: none;
+        letter-spacing: 0;
+        text-transform: none;
+        font-weight: 400;
+        transition: color 0.15s;
+      }
+      .group-label a:hover {
+        color: var(--accent);
+      }
+
+      /* CARDS */
+      .card {
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        margin-bottom: 8px;
+        background: var(--bg2);
+        transition: border-color 0.15s;
+      }
+      .card:hover {
+        border-color: var(--border2);
+      }
+      .card-head {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        padding: 12px 16px;
+        cursor: pointer;
+        user-select: none;
+      }
+      .card-head .mono {
+        font-family: var(--mono);
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: var(--fg);
+        white-space: nowrap;
+      }
+      .card-head .req-tag {
+        font-size: 0.62rem;
+        padding: 2px 6px;
+        border-radius: 3px;
+        border: 1px solid rgba(200, 80, 80, 0.25);
+        color: #b07070;
+        font-weight: 500;
+      }
+      .card-head .opt-tag {
+        font-size: 0.62rem;
+        padding: 2px 6px;
+        border-radius: 3px;
+        border: 1px solid var(--border2);
+        color: var(--fg4);
+        font-weight: 500;
+      }
+      .card-head .desc {
+        flex: 1;
+        font-size: 0.82rem;
+        color: var(--fg3);
+        margin-left: 4px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .card-head .arrow {
+        color: var(--fg4);
+        font-size: 0.85rem;
+        transition: transform 0.2s;
+        flex-shrink: 0;
+      }
+
+      .card-body {
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.35s ease;
+      }
+      .card.open .card-body {
+        max-height: 4000px;
+      }
+      .card.open .arrow {
+        transform: rotate(90deg);
+      }
+      .card-inner {
+        padding: 2px 16px 16px;
+        border-top: 1px solid var(--border);
+      }
+
+      /* YAML */
+      pre.y {
+        background: var(--bg);
+        border: 1px solid var(--border);
+        border-radius: 5px;
+        padding: 14px 16px;
+        font-family: var(--mono);
+        font-size: 0.78rem;
+        line-height: 1.7;
+        overflow-x: auto;
+        color: var(--fg3);
+        margin: 10px 0;
+        white-space: pre;
+      }
+      .k {
+        color: #8a8aff;
+        font-weight: 500;
+      }
+      .s {
+        color: #b8a070;
+      }
+      .t {
+        color: #70b080;
+      }
+      .c {
+        color: #444;
+        font-style: italic;
+      }
+      .n {
+        color: #7090c0;
+      }
+      .v {
+        color: #a080a0;
+      }
+
+      /* TABLES */
+      .tbl {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.78rem;
+        margin: 10px 0;
+      }
+      .tbl th {
+        text-align: left;
+        padding: 6px 10px;
+        border-bottom: 1px solid var(--border2);
+        color: var(--fg4);
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 0.66rem;
+        letter-spacing: 0.06em;
+      }
+      .tbl td {
+        padding: 5px 10px;
+        border-bottom: 1px solid var(--border);
+        color: var(--fg3);
+      }
+      .tbl td:first-child {
+        font-family: var(--mono);
+        color: var(--fg2);
+        font-size: 0.76rem;
+      }
+
+      /* TAGS */
+      .tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px;
+        margin: 8px 0;
+      }
+      .tag {
+        font-size: 0.68rem;
+        padding: 3px 8px;
+        border-radius: 3px;
+        font-weight: 500;
+        background: var(--bg3);
+        border: 1px solid var(--border2);
+        color: var(--fg3);
+      }
+
+      /* INFO BOXES */
+      .info-box {
+        border-radius: 5px;
+        padding: 10px 13px;
+        font-size: 0.78rem;
+        color: var(--fg3);
+        margin: 8px 0;
+        border: 1px solid var(--border);
+        line-height: 1.5;
+      }
+      .info-box.rt {
+        border-left: 2px solid #506040;
+      }
+      .info-box.rt::before {
+        content: 'Runtime  ';
+        font-weight: 600;
+        color: #7a9a6a;
+      }
+      .info-box.vl {
+        border-left: 2px solid #805050;
+      }
+      .info-box.vl::before {
+        content: 'Validation  ';
+        font-weight: 600;
+        color: #b07070;
+      }
+      .info-box.ed {
+        border-left: 2px solid #506080;
+      }
+      .info-box.ed::before {
+        content: 'Editor  ';
+        font-weight: 600;
+        color: #7090b0;
+      }
+
+      .sub-label {
+        font-size: 0.72rem;
+        font-weight: 600;
+        color: var(--fg4);
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        margin: 12px 0 6px;
+      }
+
+      .example-block {
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        overflow: hidden;
+        background: var(--bg2);
+      }
+      .example-header {
+        padding: 12px 16px;
+        border-bottom: 1px solid var(--border);
+        font-size: 0.82rem;
+        font-weight: 600;
+        color: var(--fg2);
+      }
+    </style>
+  </head>
+  <body>
+    <nav
+      style="
+        position: sticky;
+        top: 0;
+        z-index: 50;
+        background: var(--bg);
+        border-bottom: 1px solid var(--border);
+        padding: 6px 16px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        overflow-x: auto;
+        flex-wrap: nowrap;
+      "
+    >
+      <a
+        href="index.html"
+        style="
+          font-size: 0.72rem;
+          font-weight: 600;
+          color: var(--fg);
+          text-decoration: none;
+          padding: 4px 10px;
+          border-radius: 4px;
+          white-space: nowrap;
+          background: var(--bg3);
+          border: 1px solid var(--border2);
+        "
+        >Overview</a
+      >
+      <a
+        href="tools.html"
+        style="
+          font-size: 0.68rem;
+          color: var(--fg3);
+          text-decoration: none;
+          padding: 4px 8px;
+          border-radius: 4px;
+          white-space: nowrap;
+        "
+        >Tools</a
+      >
+      <a
+        href="flow.html"
+        style="
+          font-size: 0.68rem;
+          color: var(--fg3);
+          text-decoration: none;
+          padding: 4px 8px;
+          border-radius: 4px;
+          white-space: nowrap;
+        "
+        >Flow</a
+      >
+      <a
+        href="guardrails.html"
+        style="
+          font-size: 0.68rem;
+          color: var(--fg3);
+          text-decoration: none;
+          padding: 4px 8px;
+          border-radius: 4px;
+          white-space: nowrap;
+        "
+        >Guardrails</a
+      >
+      <a
+        href="gather.html"
+        style="
+          font-size: 0.68rem;
+          color: var(--fg3);
+          text-decoration: none;
+          padding: 4px 8px;
+          border-radius: 4px;
+          white-space: nowrap;
+        "
+        >Gather</a
+      >
+      <a
+        href="templates.html"
+        style="
+          font-size: 0.68rem;
+          color: var(--fg3);
+          text-decoration: none;
+          padding: 4px 8px;
+          border-radius: 4px;
+          white-space: nowrap;
+        "
+        >Templates</a
+      >
+      <a
+        href="memory.html"
+        style="
+          font-size: 0.68rem;
+          color: var(--fg3);
+          text-decoration: none;
+          padding: 4px 8px;
+          border-radius: 4px;
+          white-space: nowrap;
+        "
+        >Memory</a
+      >
+      <a
+        href="coordination.html"
+        style="
+          font-size: 0.68rem;
+          color: var(--fg3);
+          text-decoration: none;
+          padding: 4px 8px;
+          border-radius: 4px;
+          white-space: nowrap;
+        "
+        >Coordination</a
+      >
+      <a
+        href="lifecycle.html"
+        style="
+          font-size: 0.68rem;
+          color: var(--fg3);
+          text-decoration: none;
+          padding: 4px 8px;
+          border-radius: 4px;
+          white-space: nowrap;
+        "
+        >Lifecycle</a
+      >
+      <a
+        href="output.html"
+        style="
+          font-size: 0.68rem;
+          color: var(--fg3);
+          text-decoration: none;
+          padding: 4px 8px;
+          border-radius: 4px;
+          white-space: nowrap;
+        "
+        >Output</a
+      >
+      <a
+        href="execution.html"
+        style="
+          font-size: 0.68rem;
+          color: var(--fg3);
+          text-decoration: none;
+          padding: 4px 8px;
+          border-radius: 4px;
+          white-space: nowrap;
+        "
+        >Execution</a
+      >
+      <a
+        href="advanced.html"
+        style="
+          font-size: 0.68rem;
+          color: var(--fg3);
+          text-decoration: none;
+          padding: 4px 8px;
+          border-radius: 4px;
+          white-space: nowrap;
+        "
+        >Advanced</a
+      >
+      <span style="color: var(--border2); margin: 0 2px">|</span>
+      <a
+        href="workflows.html"
+        style="
+          font-size: 0.68rem;
+          color: var(--fg3);
+          text-decoration: none;
+          padding: 4px 8px;
+          border-radius: 4px;
+          white-space: nowrap;
+        "
+        >Workflows</a
+      >
+      <a
+        href="monaco-editor-wireframe.html"
+        style="
+          font-size: 0.68rem;
+          color: var(--fg3);
+          text-decoration: none;
+          padding: 4px 8px;
+          border-radius: 4px;
+          white-space: nowrap;
+        "
+        >Editor</a
+      >
+      <a
+        href="rich-text-fields.html"
+        style="
+          font-size: 0.68rem;
+          color: var(--fg3);
+          text-decoration: none;
+          padding: 4px 8px;
+          border-radius: 4px;
+          white-space: nowrap;
+        "
+        >Rich Text + AI</a
+      >
+    </nav>
+
+    <style id="theme-auto">
+      @media (prefers-color-scheme: light) {
+        :root {
+          --bg: #fafafa !important;
+          --bg2: #f4f4f5 !important;
+          --bg3: #e4e4e7 !important;
+          --bg4: #d4d4d8 !important;
+          --fg: #18181b !important;
+          --fg2: #52525b !important;
+          --fg3: #71717a !important;
+          --fg4: #a1a1aa !important;
+          --border: #e4e4e7 !important;
+          --border2: #d4d4d8 !important;
+        }
+        pre,
+        pre.y,
+        pre.pc,
+        .code-block,
+        pre.preview-code {
+          background: #f4f4f5 !important;
+          border-color: #e4e4e7 !important;
+        }
+        .kw,
+        .k {
+          color: #6366f1 !important;
+        }
+        .str,
+        .s {
+          color: #b45309 !important;
+        }
+        .typ,
+        .t,
+        .type {
+          color: #059669 !important;
+        }
+        .num,
+        .n {
+          color: #2563eb !important;
+        }
+        .vr,
+        .v,
+        .var {
+          color: #9333ea !important;
+        }
+        .cmt,
+        .c,
+        .comment {
+          color: #a1a1aa !important;
+        }
+        nav {
+          background: #fafafa !important;
+          border-bottom-color: #e4e4e7 !important;
+        }
+        nav a {
+          color: #52525b !important;
+        }
+      }
+    </style>
+
+    <nav
+      style="
+        position: sticky;
+        top: 0;
+        z-index: 50;
+        background: #0c0c0c;
+        border-bottom: 1px solid #1e1e1e;
+        padding: 6px 16px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        overflow-x: auto;
+        flex-wrap: nowrap;
+      "
+    >
+      <a
+        href="index.html"
+        style="
+          font-size: 0.72rem;
+          font-weight: 600;
+          color: #e8e8e8;
+          text-decoration: none;
+          padding: 4px 10px;
+          border-radius: 4px;
+          white-space: nowrap;
+          background: #1c1c1c;
+          border: 1px solid #2a2a2a;
+        "
+        >Overview</a
+      >
+      <a
+        href="tools.html"
+        style="
+          font-size: 0.68rem;
+          color: #aaa;
+          text-decoration: none;
+          padding: 4px 8px;
+          border-radius: 4px;
+          white-space: nowrap;
+        "
+        onmouseover="this.style.background = '#1c1c1c'"
+        onmouseout="this.style.background = ''"
+        >Tools</a
+      >
+      <a
+        href="flow.html"
+        style="
+          font-size: 0.68rem;
+          color: #aaa;
+          text-decoration: none;
+          padding: 4px 8px;
+          border-radius: 4px;
+          white-space: nowrap;
+        "
+        onmouseover="this.style.background = '#1c1c1c'"
+        onmouseout="this.style.background = ''"
+        >Flow</a
+      >
+      <a
+        href="guardrails.html"
+        style="
+          font-size: 0.68rem;
+          color: #aaa;
+          text-decoration: none;
+          padding: 4px 8px;
+          border-radius: 4px;
+          white-space: nowrap;
+        "
+        onmouseover="this.style.background = '#1c1c1c'"
+        onmouseout="this.style.background = ''"
+        >Guardrails</a
+      >
+      <a
+        href="gather.html"
+        style="
+          font-size: 0.68rem;
+          color: #aaa;
+          text-decoration: none;
+          padding: 4px 8px;
+          border-radius: 4px;
+          white-space: nowrap;
+        "
+        onmouseover="this.style.background = '#1c1c1c'"
+        onmouseout="this.style.background = ''"
+        >Gather</a
+      >
+      <a
+        href="templates.html"
+        style="
+          font-size: 0.68rem;
+          color: #aaa;
+          text-decoration: none;
+          padding: 4px 8px;
+          border-radius: 4px;
+          white-space: nowrap;
+        "
+        onmouseover="this.style.background = '#1c1c1c'"
+        onmouseout="this.style.background = ''"
+        >Templates</a
+      >
+      <a
+        href="memory.html"
+        style="
+          font-size: 0.68rem;
+          color: #aaa;
+          text-decoration: none;
+          padding: 4px 8px;
+          border-radius: 4px;
+          white-space: nowrap;
+        "
+        onmouseover="this.style.background = '#1c1c1c'"
+        onmouseout="this.style.background = ''"
+        >Memory</a
+      >
+      <a
+        href="coordination.html"
+        style="
+          font-size: 0.68rem;
+          color: #aaa;
+          text-decoration: none;
+          padding: 4px 8px;
+          border-radius: 4px;
+          white-space: nowrap;
+        "
+        onmouseover="this.style.background = '#1c1c1c'"
+        onmouseout="this.style.background = ''"
+        >Coordination</a
+      >
+      <a
+        href="lifecycle.html"
+        style="
+          font-size: 0.68rem;
+          color: #aaa;
+          text-decoration: none;
+          padding: 4px 8px;
+          border-radius: 4px;
+          white-space: nowrap;
+        "
+        onmouseover="this.style.background = '#1c1c1c'"
+        onmouseout="this.style.background = ''"
+        >Lifecycle</a
+      >
+      <a
+        href="output.html"
+        style="
+          font-size: 0.68rem;
+          color: #aaa;
+          text-decoration: none;
+          padding: 4px 8px;
+          border-radius: 4px;
+          white-space: nowrap;
+        "
+        onmouseover="this.style.background = '#1c1c1c'"
+        onmouseout="this.style.background = ''"
+        >Output</a
+      >
+      <a
+        href="execution.html"
+        style="
+          font-size: 0.68rem;
+          color: #aaa;
+          text-decoration: none;
+          padding: 4px 8px;
+          border-radius: 4px;
+          white-space: nowrap;
+        "
+        onmouseover="this.style.background = '#1c1c1c'"
+        onmouseout="this.style.background = ''"
+        >Execution</a
+      >
+      <a
+        href="advanced.html"
+        style="
+          font-size: 0.68rem;
+          color: #aaa;
+          text-decoration: none;
+          padding: 4px 8px;
+          border-radius: 4px;
+          white-space: nowrap;
+        "
+        onmouseover="this.style.background = '#1c1c1c'"
+        onmouseout="this.style.background = ''"
+        >Advanced</a
+      >
+      <span style="color: #2a2a2a; margin: 0 2px">|</span>
+      <a
+        href="workflows.html"
+        style="
+          font-size: 0.68rem;
+          color: #aaa;
+          text-decoration: none;
+          padding: 4px 8px;
+          border-radius: 4px;
+          white-space: nowrap;
+        "
+        onmouseover="this.style.background = '#1c1c1c'"
+        onmouseout="this.style.background = ''"
+        >Workflows</a
+      >
+      <a
+        href="monaco-editor-wireframe.html"
+        style="
+          font-size: 0.68rem;
+          color: #7090c0;
+          text-decoration: none;
+          padding: 4px 8px;
+          border-radius: 4px;
+          white-space: nowrap;
+        "
+        onmouseover="this.style.background = '#1c1c1c'"
+        onmouseout="this.style.background = ''"
+        >Editor</a
+      >
+    </nav>
+
+    <header>
+      <h1>Agent Anatomy</h1>
+      <p>
+        Complete reference — every ABL DSL construct with fields, YAML, runtime behavior, and
+        validation.
+      </p>
+      <div class="counts">
+        <div class="c">
+          <div class="num">27</div>
+          <div class="lbl">Constructs</div>
+        </div>
+        <div class="c">
+          <div class="num">2</div>
+          <div class="lbl">Required</div>
+        </div>
+        <div class="c">
+          <div class="num">5</div>
+          <div class="lbl">Tool Types</div>
+        </div>
+        <div class="c">
+          <div class="num">3</div>
+          <div class="lbl">Guard Tiers</div>
+        </div>
+        <div class="c">
+          <div class="num">2</div>
+          <div class="lbl">Exec Modes</div>
+        </div>
+      </div>
+    </header>
+
+    <!-- TREE -->
+    <div class="tree-wrap">
+      <div class="tree-title">Construct Hierarchy</div>
+      <div class="tree">
+        <div class="tree-root">AGENT</div>
+        <div class="tree-row">
+          <div class="tree-col">
+            <div class="tree-node" onclick="go('required')">
+              <span class="tn">Required</span>2 fields
+            </div>
+            <div class="tree-leaves">
+              <div class="tree-leaf req" onclick="open('agent')">AGENT:</div>
+              <div class="tree-leaf req" onclick="open('goal')">GOAL:</div>
+            </div>
+          </div>
+          <div class="tree-col">
+            <div class="tree-node" onclick="go('identity')">
+              <span class="tn">Identity</span>who it is
+            </div>
+            <div class="tree-leaves">
+              <div class="tree-leaf" onclick="open('persona')">PERSONA:</div>
+              <div class="tree-leaf" onclick="open('identity-s')">IDENTITY:</div>
+              <div class="tree-leaf" onclick="open('limits')">LIMITATIONS:</div>
+            </div>
+          </div>
+          <div class="tree-col">
+            <div class="tree-node" onclick="go('capabilities')">
+              <span class="tn">Capabilities</span>what it does
+            </div>
+            <div class="tree-leaves">
+              <div class="tree-leaf" onclick="open('tools')">TOOLS:</div>
+              <div class="tree-leaf" onclick="open('gather')">GATHER:</div>
+              <div class="tree-leaf" onclick="open('attach')">ATTACH:</div>
+            </div>
+          </div>
+          <div class="tree-col">
+            <div class="tree-node" onclick="go('execution')">
+              <span class="tn">Execution</span>how it runs
+            </div>
+            <div class="tree-leaves">
+              <div class="tree-leaf" onclick="open('exec')">EXECUTION:</div>
+              <div class="tree-leaf" onclick="open('flow')">FLOW:</div>
+            </div>
+          </div>
+          <div class="tree-col">
+            <div class="tree-node" onclick="go('safety')"><span class="tn">Safety</span>rules</div>
+            <div class="tree-leaves">
+              <div class="tree-leaf" onclick="open('guardrails')">GUARDRAILS:</div>
+              <div class="tree-leaf" onclick="open('constraints')">CONSTRAINTS:</div>
+            </div>
+          </div>
+          <div class="tree-col">
+            <div class="tree-node" onclick="go('memory')">
+              <span class="tn">Memory</span>4 systems
+            </div>
+            <div class="tree-leaves">
+              <div class="tree-leaf" onclick="open('mem')">SESSION:</div>
+              <div class="tree-leaf" onclick="open('mem')">PERSISTENT:</div>
+              <div class="tree-leaf" onclick="open('mem')">REMEMBER:</div>
+              <div class="tree-leaf" onclick="open('mem')">RECALL:</div>
+            </div>
+          </div>
+          <div class="tree-col">
+            <div class="tree-node" onclick="go('coordination')">
+              <span class="tn">Multi-Agent</span>coordination
+            </div>
+            <div class="tree-leaves">
+              <div class="tree-leaf" onclick="open('handoff')">HANDOFF:</div>
+              <div class="tree-leaf" onclick="open('delegate')">DELEGATE:</div>
+              <div class="tree-leaf" onclick="open('escalate')">ESCALATE:</div>
+            </div>
+          </div>
+          <div class="tree-col">
+            <div class="tree-node" onclick="go('lifecycle')">
+              <span class="tn">Lifecycle</span>start / end
+            </div>
+            <div class="tree-leaves">
+              <div class="tree-leaf" onclick="open('onstart')">ON_START:</div>
+              <div class="tree-leaf" onclick="open('complete')">COMPLETE:</div>
+              <div class="tree-leaf" onclick="open('onerror')">ON_ERROR:</div>
+              <div class="tree-leaf" onclick="open('hooks')">HOOKS:</div>
+            </div>
+          </div>
+          <div class="tree-col">
+            <div class="tree-node" onclick="go('output')">
+              <span class="tn">Output</span>responses
+            </div>
+            <div class="tree-leaves">
+              <div class="tree-leaf" onclick="open('templates')">TEMPLATES:</div>
+              <div class="tree-leaf" onclick="open('messages')">MESSAGES:</div>
+              <div class="tree-leaf" onclick="open('sysprompt')">SYS_PROMPT:</div>
+            </div>
+          </div>
+          <div class="tree-col">
+            <div class="tree-node" onclick="go('advanced')">
+              <span class="tn">Advanced</span>NLU +
+            </div>
+            <div class="tree-leaves">
+              <div class="tree-leaf" onclick="open('nlu')">NLU:</div>
+              <div class="tree-leaf" onclick="open('behavior')">BEHAVIOR:</div>
+              <div class="tree-leaf" onclick="open('lookup')">LOOKUP:</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- DSL EXAMPLE — moved to right after tree -->
+    <div class="dsl-section">
+      <div class="dsl-header">Full Agent DSL Example</div>
+      <div class="example-block">
+        <pre
+          class="y"
+          style="margin: 0; border: 0; border-radius: 0; max-height: 520px; overflow-y: auto"
+        >
+<span class="k">AGENT:</span> Insurance_Claim_Agent
+<span class="k">GOAL:</span> <span class="s">"Help users file insurance claims"</span>
+
+<span class="k">PERSONA:</span> |
+  Professional, empathetic claims assistant.
+
+<span class="k">LIMITATIONS:</span>
+  - <span class="s">"Cannot approve claims over $50,000"</span>
+
+<span class="k">EXECUTION:</span>
+  model: <span class="s">"claude-sonnet-4-20250514"</span>
+  temperature: <span class="n">0.3</span>
+
+<span class="k">TOOLS:</span>
+  <span class="t">fetch_policy</span>(policyId: <span class="t">string</span>) -> <span class="t">object</span>
+    description: <span class="s">"Retrieve policy details"</span>
+  <span class="t">submit_claim</span>(data: <span class="t">object</span>) -> <span class="t">{claimId: string}</span>
+    description: <span class="s">"Submit insurance claim"</span>
+
+<span class="k">GATHER:</span>
+  <span class="t">policy_number</span>:
+    prompt: <span class="s">"Policy number?"</span>
+    type: <span class="t">string</span>
+    required: <span class="n">true</span>
+    validate: <span class="s">"matches(value, '^POL-[0-9]{6}$')"</span>
+  <span class="t">damage_amount</span>:
+    prompt: <span class="s">"Estimated damage?"</span>
+    type: <span class="t">number</span>
+    required: <span class="n">true</span>
+
+<span class="k">MEMORY:</span>
+  <span class="k">SESSION:</span>
+    - claim_status: <span class="t">string</span> = <span class="s">"pending"</span>
+  <span class="k">PERSISTENT:</span>
+    - user.claim_history
+
+<span class="k">CONSTRAINTS:</span>
+  <span class="t">pre_submit</span>:
+    - <span class="k">REQUIRE:</span> <span class="s">damage_amount &lt; 50000</span>
+      <span class="k">ON_FAIL:</span> <span class="s">"Needs manager approval."</span>
+
+<span class="k">GUARDRAILS:</span>
+  <span class="t">pii_protection</span>:
+    kind: <span class="v">input</span>
+    check: <span class="s">not_matches_pattern(input, "\\b\\d{3}-\\d{2}-\\d{4}\\b")</span>
+    action: <span class="v">redact</span>
+
+<span class="k">HANDOFF:</span>
+  - <span class="k">TO:</span> <span class="t">Billing_Agent</span>
+    <span class="k">WHEN:</span> <span class="s">"billing questions"</span>
+    <span class="k">CONTEXT:</span>
+      pass: [<span class="s">"policy_number"</span>]
+
+<span class="k">ON_START:</span>
+  <span class="k">RESPOND:</span> <span class="s">"Hello! I'm your claims assistant."</span>
+
+<span class="k">COMPLETE:</span>
+  - <span class="k">WHEN:</span> <span class="s">claim_submitted == true</span>
+    <span class="k">RESPOND:</span> <span class="s">"Claim submitted! Ref: {{claim_id}}"</span>
+
+<span class="k">ON_ERROR:</span>
+  - type: <span class="v">tool_timeout</span>
+    retry: <span class="n">2</span>
+    respond: <span class="s">"Retrying..."</span></pre>
+      </div>
+    </div>
+
+    <!-- DETAILED REFERENCE -->
+    <div class="content">
+      <!-- REQUIRED -->
+      <div class="group" id="g-required">
+        <div class="group-label">Required</div>
+        <div class="card" id="c-agent">
+          <div class="card-head" onclick="toggle(this)">
+            <span class="mono">AGENT:</span><span class="req-tag">required</span
+            ><span class="desc">Agent name and type declaration</span><span class="arrow">›</span>
+          </div>
+          <div class="card-body">
+            <div class="card-inner">
+              <pre class="y"><span class="k">AGENT:</span> Insurance_Claim_Agent
+
+<span class="c"># Variants</span>
+<span class="k">SUPERVISOR:</span> Claims_Router
+<span class="k">BEHAVIOR_PROFILE:</span> Voice_Mode</pre>
+              <table class="tbl">
+                <tr>
+                  <th>Field</th>
+                  <th>Type</th>
+                  <th>Notes</th>
+                </tr>
+                <tr>
+                  <td>name</td>
+                  <td>string</td>
+                  <td>
+                    Must be first non-comment line. Sets meta.kind: agent | supervisor |
+                    behavior_profile
+                  </td>
+                </tr>
+              </table>
+              <div class="info-box vl">
+                Parser error if missing: <code>"Missing required AGENT: declaration"</code>
+              </div>
+              <div class="info-box rt">
+                Used in handoff routing, trace events, prompt template selection (supervisor vs
+                specialist vs standalone).
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" id="c-goal">
+          <div class="card-head" onclick="toggle(this)">
+            <span class="mono">GOAL:</span><span class="req-tag">required</span
+            ><span class="desc">What the agent is trying to achieve</span
+            ><span class="arrow">›</span>
+          </div>
+          <div class="card-body">
+            <div class="card-inner">
+              <pre
+                class="y"
+              ><span class="k">GOAL:</span> <span class="s">"Help users file insurance claims quickly and accurately"</span>
+
+<span class="c"># Multi-line</span>
+<span class="k">GOAL:</span> |
+  Help customers discover products through guided engagement,
+  personalized search, and relevant offers.</pre>
+              <div class="info-box vl">
+                Parser error if missing: <code>"GOAL is required on every agent"</code>. Exception:
+                BEHAVIOR_PROFILE documents.
+              </div>
+              <div class="info-box rt">
+                Injected as <code>{{goal}}</code> in system prompt. Default goal for REASONING:true
+                flow steps without their own.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" id="c-version">
+          <div class="card-head" onclick="toggle(this)">
+            <span class="mono">VERSION:</span><span class="opt-tag">optional</span
+            ><span class="desc">Semantic version of the agent</span><span class="arrow">›</span>
+          </div>
+          <div class="card-body">
+            <div class="card-inner">
+              <pre class="y"><span class="k">VERSION:</span> <span class="s">"1.0.0"</span></pre>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" id="c-description">
+          <div class="card-head" onclick="toggle(this)">
+            <span class="mono">DESCRIPTION:</span><span class="opt-tag">optional</span
+            ><span class="desc">Human-readable description of what the agent does</span
+            ><span class="arrow">›</span>
+          </div>
+          <div class="card-body">
+            <div class="card-inner">
+              <pre
+                class="y"
+              ><span class="k">DESCRIPTION:</span> <span class="s">"Product search and recommendation agent for multi-brand retail"</span></pre>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- IDENTITY -->
+      <div class="group" id="g-identity">
+        <div class="group-label">Identity</div>
+        <div class="card" id="c-persona">
+          <div class="card-head" onclick="toggle(this)">
+            <span class="mono">PERSONA:</span><span class="opt-tag">optional</span
+            ><span class="desc">Personality, tone, communication style</span
+            ><span class="arrow">›</span>
+          </div>
+          <div class="card-body">
+            <div class="card-inner">
+              <pre class="y"><span class="k">PERSONA:</span> |
+  Professional and empathetic claims assistant.
+  Uses clear, jargon-free language.
+  Keeps responses concise — 2-3 sentences max.</pre>
+              <div class="info-box rt">
+                Injected as <code>{{persona}}</code> in system prompt. Shapes tone of all LLM
+                responses.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" id="c-identity-s">
+          <div class="card-head" onclick="toggle(this)">
+            <span class="mono">IDENTITY:</span><span class="opt-tag">optional</span
+            ><span class="desc">Structured alternative to GOAL + PERSONA + LIMITATIONS</span
+            ><span class="arrow">›</span>
+          </div>
+          <div class="card-body">
+            <div class="card-inner">
+              <pre class="y"><span class="k">IDENTITY:</span>
+  <span class="k">role:</span> <span class="s">"Claims Processing Specialist"</span>
+  <span class="k">persona:</span> <span class="s">"Empathetic, detail-oriented, patient"</span>
+  <span class="k">expertise:</span>
+    - <span class="s">"insurance claims"</span>
+    - <span class="s">"policy interpretation"</span>
+  <span class="k">limitations:</span>
+    - <span class="s">"Cannot approve claims over $50,000"</span></pre>
+              <table class="tbl">
+                <tr>
+                  <th>Field</th>
+                  <th>Maps To</th>
+                </tr>
+                <tr>
+                  <td>role</td>
+                  <td>→ goal.description</td>
+                </tr>
+                <tr>
+                  <td>persona</td>
+                  <td>→ persona.description</td>
+                </tr>
+                <tr>
+                  <td>expertise</td>
+                  <td>→ appended to persona</td>
+                </tr>
+                <tr>
+                  <td>limitations</td>
+                  <td>→ limitations[]</td>
+                </tr>
+              </table>
+              <div class="info-box ed">
+                If IDENTITY is used, gray out standalone GOAL / PERSONA / LIMITATIONS — they
+                conflict.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" id="c-limits">
+          <div class="card-head" onclick="toggle(this)">
+            <span class="mono">LIMITATIONS:</span><span class="opt-tag">optional</span
+            ><span class="desc"
+              >Prompt-level boundaries for what the agent should avoid, decline, or explain</span
+            ><span class="arrow">›</span>
+          </div>
+          <div class="card-body">
+            <div class="card-inner">
+              <pre class="y"><span class="k">LIMITATIONS:</span>
+  - <span class="s">"Cannot process payments directly"</span>
+  - <span class="s">"Cannot access medical records"</span>
+  - <span class="s">"Must escalate claims over $50,000"</span></pre>
+              <div class="info-box rt">
+                Injected as <code>{{limitations}}</code> in system prompt. Shapes the LLM's scope
+                and refusal behavior, but is not deterministic runtime enforcement.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" id="c-language">
+          <div class="card-head" onclick="toggle(this)">
+            <span class="mono">LANGUAGE:</span><span class="opt-tag">optional</span
+            ><span class="desc">Primary language for the agent</span><span class="arrow">›</span>
+          </div>
+          <div class="card-body">
+            <div class="card-inner">
+              <pre
+                class="y"
+              ><span class="k">LANGUAGE:</span> <span class="s">"es-EC"</span>  <span class="c"># Ecuadorian Spanish</span></pre>
+              <div
+                class="info-box rt"
+                style="
+                  border-radius: 5px;
+                  padding: 8px 12px;
+                  font-size: 0.78rem;
+                  color: var(--fg3);
+                  margin: 8px 0;
+                  border: 1px solid var(--border);
+                  border-left: 2px solid #506040;
+                "
+              >
+                Runtime: Sets the default language for NLU, date parsing, and response formatting.
+                Injected as <code>{{language}}</code> context variable.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CAPABILITIES -->
+      <div class="group" id="g-capabilities">
+        <div class="group-label">
+          Capabilities
+          <a
+            href="tools.html"
+            style="
+              color: #555;
+              font-size: 0.65rem;
+              letter-spacing: 0;
+              text-transform: none;
+              font-weight: 400;
+            "
+            >→ Tools Deep Dive</a
+          >
+          <a
+            href="gather.html"
+            style="
+              color: #555;
+              font-size: 0.65rem;
+              letter-spacing: 0;
+              text-transform: none;
+              font-weight: 400;
+              margin-left: 6px;
+            "
+            >→ Gather</a
+          >
+          <a
+            href="templates.html"
+            style="
+              color: #555;
+              font-size: 0.65rem;
+              letter-spacing: 0;
+              text-transform: none;
+              font-weight: 400;
+              margin-left: 6px;
+            "
+            >→ Templates</a
+          >
+        </div>
+        <div class="card" id="c-tools">
+          <div class="card-head" onclick="toggle(this)">
+            <span class="mono">TOOLS:</span><span class="opt-tag">optional</span
+            ><span class="desc">External integrations — 5 binding types</span
+            ><span class="arrow">›</span>
+          </div>
+          <div class="card-body">
+            <div class="card-inner">
+              <pre class="y"><span class="k">TOOLS:</span>
+  <span class="c"># HTTP</span>
+  <span class="t">fetch_policy</span>(policyId: <span class="t">string</span>) -> <span class="t">object</span>
+    description: <span class="s">"Retrieve policy details"</span>
+    type: <span class="v">http</span>
+    http:
+      method: <span class="v">GET</span>
+      endpoint: <span class="s">"https://api.insurance.com/policies/{{policyId}}"</span>
+      auth: <span class="v">bearer</span>
+      timeout: <span class="n">15000</span>
+
+  <span class="c"># MCP</span>
+  <span class="t">search_kb</span>(query: <span class="t">string</span>) -> <span class="t">object</span>
+    description: <span class="s">"Search knowledge base"</span>
+    type: <span class="v">mcp</span>
+    mcp:
+      server: <span class="s">"knowledge-base"</span>
+
+  <span class="c"># Sandbox</span>
+  <span class="t">calc_premium</span>(age: <span class="t">number</span>, coverage: <span class="t">number</span>) -> <span class="t">number</span>
+    type: <span class="v">sandbox</span>
+    sandbox:
+      runtime: <span class="v">javascript</span>
+      code: |
+        return age * coverage * 0.02;</pre>
+              <div class="sub-label">Binding Types</div>
+              <div class="tags">
+                <span class="tag">HTTP</span><span class="tag">MCP</span
+                ><span class="tag">Lambda</span><span class="tag">Sandbox</span
+                ><span class="tag">Async Webhook</span>
+              </div>
+              <div class="sub-label">Per-Tool Fields</div>
+              <table class="tbl">
+                <tr>
+                  <th>Field</th>
+                  <th>Type</th>
+                  <th>Purpose</th>
+                </tr>
+                <tr>
+                  <td>name</td>
+                  <td>string</td>
+                  <td>Unique identifier</td>
+                </tr>
+                <tr>
+                  <td>description</td>
+                  <td>string</td>
+                  <td>Tells LLM when to use it</td>
+                </tr>
+                <tr>
+                  <td>parameters</td>
+                  <td>ToolParam[]</td>
+                  <td>name, type, required, default, validate</td>
+                </tr>
+                <tr>
+                  <td>returns</td>
+                  <td>ToolReturn</td>
+                  <td>Return type and structure</td>
+                </tr>
+                <tr>
+                  <td>hints</td>
+                  <td>object</td>
+                  <td>cacheable, latency, side_effects, timeout</td>
+                </tr>
+                <tr>
+                  <td>confirmation</td>
+                  <td>object</td>
+                  <td>always | never | when_side_effects</td>
+                </tr>
+                <tr>
+                  <td>piiAccess</td>
+                  <td>enum</td>
+                  <td>tools | user | logs | llm</td>
+                </tr>
+              </table>
+              <div class="info-box vl">
+                Compiler: name required, no duplicates, valid tool_type, valid HTTP method, valid
+                sandbox runtime.
+              </div>
+              <div class="info-box rt">
+                Converted to JSON Schema for LLM. Executed via ToolExecutor with timeout + retry.
+                Parallel execution.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" id="c-gather">
+          <div class="card-head" onclick="toggle(this)">
+            <span class="mono">GATHER:</span><span class="opt-tag">optional</span
+            ><span class="desc"
+              >Collect user input — typed fields with validation and inference</span
+            ><span class="arrow">›</span>
+          </div>
+          <div class="card-body">
+            <div class="card-inner">
+              <pre class="y"><span class="k">GATHER:</span>
+  <span class="t">policy_number</span>:
+    prompt: <span class="s">"What is your policy number?"</span>
+    type: <span class="t">string</span>
+    required: <span class="n">true</span>
+    validate: <span class="s">"matches(value, '^POL-[0-9]{6}$')"</span>
+    retryPrompt: <span class="s">"Format: POL-123456"</span>
+    maxRetries: <span class="n">3</span>
+
+  <span class="t">incident_date</span>:
+    prompt: <span class="s">"When did the incident occur?"</span>
+    type: <span class="t">date</span>
+    required: <span class="n">true</span>
+    infer: <span class="n">true</span>
+    inferConfidence: <span class="n">0.8</span></pre>
+              <div class="sub-label">Field Types</div>
+              <div class="tags">
+                <span class="tag">string</span><span class="tag">number</span
+                ><span class="tag">boolean</span><span class="tag">date</span
+                ><span class="tag">email</span><span class="tag">phone</span
+                ><span class="tag">enum</span><span class="tag">array</span>
+              </div>
+              <div class="info-box rt">
+                Reasoning: entities extracted before first loop. Flow: per-step GATHER blocks.
+                Validated via regex/code/LLM + lookup tables.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" id="c-attach">
+          <div class="card-head" onclick="toggle(this)">
+            <span class="mono">ATTACHMENTS:</span><span class="opt-tag">optional</span
+            ><span class="desc">Collect files — images, documents, audio, video</span
+            ><span class="arrow">›</span>
+          </div>
+          <div class="card-body">
+            <div class="card-inner">
+              <pre class="y"><span class="k">ATTACHMENTS:</span>
+  <span class="t">damage_photos</span>:
+    prompt: <span class="s">"Upload photos of the damage"</span>
+    category: <span class="v">image</span>
+    required: <span class="n">true</span>
+    maxFileSizeMb: <span class="n">10</span>
+  <span class="t">police_report</span>:
+    category: <span class="v">document</span>
+    ocrEnabled: <span class="n">true</span></pre>
+              <div class="tags">
+                <span class="tag">image</span><span class="tag">document</span
+                ><span class="tag">audio</span><span class="tag">video</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- EXECUTION -->
+      <div class="group" id="g-execution">
+        <div class="group-label">
+          Execution
+          <a
+            href="execution.html"
+            style="
+              color: #555;
+              font-size: 0.65rem;
+              letter-spacing: 0;
+              text-transform: none;
+              font-weight: 400;
+            "
+            >→ Execution Deep Dive</a
+          >
+          <a
+            href="flow.html"
+            style="
+              color: #555;
+              font-size: 0.65rem;
+              letter-spacing: 0;
+              text-transform: none;
+              font-weight: 400;
+              margin-left: 6px;
+            "
+            >→ Flow</a
+          >
+        </div>
+        <div class="card" id="c-exec">
+          <div class="card-head" onclick="toggle(this)">
+            <span class="mono">EXECUTION:</span><span class="opt-tag">optional</span
+            ><span class="desc">LLM configuration — model, temperature, timeouts, thinking</span
+            ><span class="arrow">›</span>
+          </div>
+          <div class="card-body">
+            <div class="card-inner">
+              <pre class="y"><span class="k">EXECUTION:</span>
+  model: <span class="s">"claude-sonnet-4-20250514"</span>
+  temperature: <span class="n">0.3</span>
+  max_tokens: <span class="n">4096</span>
+  tool_timeout: <span class="n">30000</span>
+  llm_timeout: <span class="n">60000</span>
+  max_reasoning_iterations: <span class="n">10</span>
+  enable_thinking: <span class="n">true</span>
+  thinking_budget: <span class="n">2048</span>
+  fallback_model: <span class="s">"gpt-4o-mini"</span>
+  inline_gather: <span class="n">true</span></pre>
+              <table class="tbl">
+                <tr>
+                  <th>Field</th>
+                  <th>Default</th>
+                  <th>Purpose</th>
+                </tr>
+                <tr>
+                  <td>model</td>
+                  <td>project default</td>
+                  <td>LLM model identifier</td>
+                </tr>
+                <tr>
+                  <td>temperature</td>
+                  <td>0.7</td>
+                  <td>Response randomness (0–2)</td>
+                </tr>
+                <tr>
+                  <td>max_tokens</td>
+                  <td>4096</td>
+                  <td>Max response tokens</td>
+                </tr>
+                <tr>
+                  <td>tool_timeout</td>
+                  <td>30000</td>
+                  <td>Per-tool timeout (ms)</td>
+                </tr>
+                <tr>
+                  <td>max_reasoning_iterations</td>
+                  <td>10</td>
+                  <td>Max LLM loops</td>
+                </tr>
+                <tr>
+                  <td>enable_thinking</td>
+                  <td>false</td>
+                  <td>Claude extended thinking</td>
+                </tr>
+                <tr>
+                  <td>fallback_model</td>
+                  <td>—</td>
+                  <td>Backup if primary fails</td>
+                </tr>
+              </table>
+              <div class="info-box vl">
+                <code>MODEL:</code> as top-level is an error — use <code>EXECUTION:</code> with
+                <code>model:</code>.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" id="c-flow">
+          <div class="card-head" onclick="toggle(this)">
+            <span class="mono">FLOW:</span><span class="opt-tag">determines mode</span
+            ><span class="desc"
+              >Step-by-step conversation — without → reasoning, with → scripted/mixed</span
+            ><span class="arrow">›</span>
+          </div>
+          <div class="card-body">
+            <div class="card-inner">
+              <pre class="y"><span class="k">FLOW:</span>
+  steps: [welcome, collect_info, search, confirm]
+
+  <span class="t">welcome</span>:
+    <span class="k">REASONING:</span> <span class="n">false</span>
+    <span class="k">RESPOND:</span> <span class="s">"Welcome! How can I help?"</span>
+    <span class="k">THEN:</span> collect_info
+
+  <span class="t">collect_info</span>:
+    <span class="k">REASONING:</span> <span class="n">false</span>
+    <span class="k">GATHER:</span>
+      - destination: required
+      - checkin_date: required
+        type: <span class="t">date</span>
+    <span class="k">COMPLETE_WHEN:</span> destination AND checkin_date
+    <span class="k">THEN:</span> search
+
+  <span class="t">search</span>:
+    <span class="k">REASONING:</span> <span class="n">true</span>              <span class="c"># LLM-powered</span>
+    <span class="k">GOAL:</span> <span class="s">"Find best matching hotels"</span>
+    <span class="k">AVAILABLE_TOOLS:</span> [search_hotels]
+    <span class="k">EXIT_WHEN:</span> hotel_selected == true
+    <span class="k">MAX_TURNS:</span> <span class="n">5</span>
+    <span class="k">THEN:</span> confirm
+
+  <span class="t">confirm</span>:
+    <span class="k">REASONING:</span> <span class="n">false</span>
+    <span class="k">CALL:</span> create_booking(hotel_id, guest_name)
+    <span class="k">ON_SUCCESS:</span>
+      <span class="k">RESPOND:</span> <span class="s">"Booked! ID: {{booking_id}}"</span>
+      <span class="k">THEN:</span> COMPLETE</pre>
+              <div class="sub-label">Step Compatibility</div>
+              <table class="tbl">
+                <tr>
+                  <th>Field</th>
+                  <th>REASONING: true</th>
+                  <th>REASONING: false</th>
+                </tr>
+                <tr>
+                  <td>GOAL</td>
+                  <td>required</td>
+                  <td>ignored</td>
+                </tr>
+                <tr>
+                  <td>AVAILABLE_TOOLS</td>
+                  <td>limits tools</td>
+                  <td>ignored (use CALL)</td>
+                </tr>
+                <tr>
+                  <td>GATHER</td>
+                  <td>—</td>
+                  <td>collect input</td>
+                </tr>
+                <tr>
+                  <td>CALL</td>
+                  <td>—</td>
+                  <td>execute tool</td>
+                </tr>
+                <tr>
+                  <td>RESPOND</td>
+                  <td>—</td>
+                  <td>send message</td>
+                </tr>
+                <tr>
+                  <td>THEN</td>
+                  <td>next step</td>
+                  <td>next step</td>
+                </tr>
+                <tr>
+                  <td>DIGRESSIONS</td>
+                  <td>—</td>
+                  <td>off-topic handling</td>
+                </tr>
+              </table>
+              <div class="info-box vl">
+                Every step must declare REASONING. REASONING:true requires GOAL. Invalid THEN
+                targets → error.
+              </div>
+              <div class="info-box rt">
+                FlowStepExecutor traverses. Reasoning steps → ReasoningExecutor. Max 100 iterations.
+                COMPLETE always valid.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SAFETY -->
+      <div class="group" id="g-safety">
+        <div class="group-label">
+          Safety
+          <a
+            href="guardrails.html"
+            style="
+              color: #555;
+              font-size: 0.65rem;
+              letter-spacing: 0;
+              text-transform: none;
+              font-weight: 400;
+            "
+            >→ Guardrails Deep Dive</a
+          >
+        </div>
+        <div class="card" id="c-guardrails">
+          <div class="card-head" onclick="toggle(this)">
+            <span class="mono">GUARDRAILS:</span><span class="opt-tag">optional</span
+            ><span class="desc">Content safety — 6 kinds, 3 tiers, 7 actions</span
+            ><span class="arrow">›</span>
+          </div>
+          <div class="card-body">
+            <div class="card-inner">
+              <pre class="y"><span class="k">GUARDRAILS:</span>
+  <span class="c"># Tier 1 — Pattern (zero cost)</span>
+  <span class="t">ssn_detection</span>:
+    kind: <span class="v">input</span>
+    check: <span class="s">not_matches_pattern(input, "\\b\\d{3}-\\d{2}-\\d{4}\\b")</span>
+    action: <span class="v">redact</span>
+    message: <span class="s">"SSN redacted for security."</span>
+
+  <span class="c"># Tier 2 — Model-based (~100ms)</span>
+  <span class="t">toxicity</span>:
+    kind: <span class="v">output</span>
+    provider: <span class="s">"openai-moderation"</span>
+    category: <span class="s">"hate"</span>
+    threshold: <span class="n">0.7</span>
+    action: <span class="v">block</span>
+
+  <span class="c"># Tier 3 — LLM-based (~1-3s)</span>
+  <span class="t">compliance</span>:
+    kind: <span class="v">output</span>
+    llm_check: <span class="s">"Does the response make unauthorized commitments?"</span>
+    action: <span class="v">reask</span>
+    max_reasks: <span class="n">2</span></pre>
+              <div class="sub-label">Kinds</div>
+              <div class="tags">
+                <span class="tag">input</span><span class="tag">output</span
+                ><span class="tag">both</span><span class="tag">tool_input</span
+                ><span class="tag">tool_output</span><span class="tag">handoff</span>
+              </div>
+              <div class="sub-label">Actions</div>
+              <div class="tags">
+                <span class="tag">block</span><span class="tag">warn</span
+                ><span class="tag">redact</span><span class="tag">escalate</span
+                ><span class="tag">fix</span><span class="tag">reask</span
+                ><span class="tag">filter</span>
+              </div>
+              <div class="info-box rt">
+                Input: before LLM call. Output: streaming + final batch. Pipeline: Tier1→2→3. 5
+                built-in templates.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" id="c-constraints">
+          <div class="card-head" onclick="toggle(this)">
+            <span class="mono">CONSTRAINTS:</span><span class="opt-tag">optional</span
+            ><span class="desc">Runtime checks — labels, CEL conditions, and 7 action types</span
+            ><span class="arrow">›</span>
+          </div>
+          <div class="card-body">
+            <div class="card-inner">
+              <pre class="y"><span class="k">CONSTRAINTS:</span>
+  <span class="t">pre_submit</span>:
+    - <span class="k">REQUIRE:</span> <span class="s">damage_amount &lt; 50000</span>
+      <span class="k">ON_FAIL:</span>
+        respond: <span class="s">"Claims over $50K need approval."</span>
+        collect: [<span class="s">"manager_email"</span>]
+  <span class="t">always</span>:
+    - <span class="k">WARN:</span> <span class="s">turn_count > 20</span>
+      <span class="k">ON_FAIL:</span> <span class="s">"Conversation getting long."</span></pre>
+              <div class="sub-label">ON_FAIL Actions</div>
+              <div class="tags">
+                <span class="tag">respond</span><span class="tag">block</span
+                ><span class="tag">escalate</span><span class="tag">handoff</span
+                ><span class="tag">collect_field</span><span class="tag">goto_step</span
+                ><span class="tag">retry_step</span>
+              </div>
+              <div class="info-box rt">
+                Evaluated before processing + after extraction + between steps. REQUIRE blocks. WARN
+                injects into prompt.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- MEMORY -->
+      <div class="group" id="g-memory">
+        <div class="group-label">
+          Memory
+          <a
+            href="memory.html"
+            style="
+              color: #555;
+              font-size: 0.65rem;
+              letter-spacing: 0;
+              text-transform: none;
+              font-weight: 400;
+            "
+            >→ Memory Deep Dive</a
+          >
+        </div>
+        <div class="card" id="c-mem">
+          <div class="card-head" onclick="toggle(this)">
+            <span class="mono">MEMORY:</span><span class="opt-tag">optional</span
+            ><span class="desc">4 sub-systems — SESSION, PERSISTENT, REMEMBER, RECALL</span
+            ><span class="arrow">›</span>
+          </div>
+          <div class="card-body">
+            <div class="card-inner">
+              <pre class="y"><span class="k">MEMORY:</span>
+  <span class="k">SESSION:</span>
+    - claim_status: <span class="t">string</span> = <span class="s">"pending"</span>
+    - attempts: <span class="t">number</span> = <span class="n">0</span>
+
+  <span class="k">PERSISTENT:</span>
+    - user.preferred_language
+      scope: <span class="v">user</span>
+      access: <span class="v">readwrite</span>
+
+  <span class="k">REMEMBER:</span>
+    - <span class="k">WHEN:</span> <span class="s">claim_type != null</span>
+      <span class="k">STORE:</span> { value: <span class="s">"{{claim_type}}"</span>, target: <span class="s">"user.last_claim_type"</span> }
+      <span class="k">TTL:</span> <span class="s">"30d"</span>
+
+  <span class="k">RECALL:</span>
+    - <span class="k">ON:</span> <span class="v">session:start</span>
+      <span class="k">INSTRUCTION:</span> <span class="s">"Check if user has previous claims."</span></pre>
+              <table class="tbl">
+                <tr>
+                  <th>System</th>
+                  <th>Scope</th>
+                  <th>Lifetime</th>
+                </tr>
+                <tr>
+                  <td>SESSION</td>
+                  <td>Per-session</td>
+                  <td>Session duration. Types + defaults + per-step reset.</td>
+                </tr>
+                <tr>
+                  <td>PERSISTENT</td>
+                  <td>Per-user / project</td>
+                  <td>Permanent. FactStore. Batch-loaded at start.</td>
+                </tr>
+                <tr>
+                  <td>REMEMBER</td>
+                  <td>Cross-session</td>
+                  <td>TTL-based. Event-driven writes.</td>
+                </tr>
+                <tr>
+                  <td>RECALL</td>
+                  <td>Per-session</td>
+                  <td>On-demand. Injected as prompt instructions.</td>
+                </tr>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- COORDINATION -->
+      <div class="group" id="g-coordination">
+        <div class="group-label">
+          Multi-Agent Coordination
+          <a
+            href="coordination.html"
+            style="
+              color: #555;
+              font-size: 0.65rem;
+              letter-spacing: 0;
+              text-transform: none;
+              font-weight: 400;
+            "
+            >→ Coordination Deep Dive</a
+          >
+        </div>
+        <div class="card" id="c-handoff">
+          <div class="card-head" onclick="toggle(this)">
+            <span class="mono">HANDOFF:</span><span class="opt-tag">optional</span
+            ><span class="desc">Transfer conversation to another agent</span
+            ><span class="arrow">›</span>
+          </div>
+          <div class="card-body">
+            <div class="card-inner">
+              <pre class="y"><span class="k">RETURN_HANDLERS:</span>
+  <span class="t">billing_follow_up</span>:
+    <span class="k">RESPOND:</span> <span class="s">"Billing resolved. Anything else?"</span>
+    <span class="k">CONTINUE:</span> <span class="v">true</span>
+
+<span class="k">HANDOFF:</span>
+  - <span class="k">TO:</span> <span class="t">Billing_Agent</span>
+    <span class="k">WHEN:</span> <span class="s">"user asks about billing"</span>
+    <span class="k">PRIORITY:</span> <span class="n">1</span>
+    <span class="k">CONTEXT:</span>
+      pass: [<span class="s">"customer_id"</span>, <span class="s">"policy_number"</span>]
+      summary: <span class="s">"Customer needs billing help"</span>
+      history: <span class="v">auto</span>
+    <span class="k">RETURN:</span> <span class="n">true</span>
+    <span class="k">ON_RETURN:</span>
+      <span class="k">handler:</span> <span class="t">billing_follow_up</span></pre>
+              <div class="info-box rt">
+                Creates thread, pushes to handoffStack. RETURN:true → child gets
+                __return_to_parent__. Prevents cycles. Supports A2A.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" id="c-delegate">
+          <div class="card-head" onclick="toggle(this)">
+            <span class="mono">DELEGATE:</span><span class="opt-tag">optional</span
+            ><span class="desc">Run sub-agent to completion, get result</span
+            ><span class="arrow">›</span>
+          </div>
+          <div class="card-body">
+            <div class="card-inner">
+              <pre class="y"><span class="k">DELEGATE:</span>
+  - <span class="k">AGENT:</span> <span class="t">Policy_Lookup_Agent</span>
+    <span class="k">WHEN:</span> <span class="s">"need to verify policy"</span>
+    <span class="k">INPUT:</span> { policyId: <span class="s">"{{policy_number}}"</span> }
+    <span class="k">RETURNS:</span> { policyData: <span class="s">"result.policy"</span> }
+    <span class="k">TIMEOUT:</span> <span class="s">"30s"</span>
+    <span class="k">ON_FAILURE:</span> { type: <span class="v">respond</span>, message: <span class="s">"Lookup failed."</span> }</pre>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" id="c-escalate">
+          <div class="card-head" onclick="toggle(this)">
+            <span class="mono">ESCALATE:</span><span class="opt-tag">optional</span
+            ><span class="desc">Transfer to human agent with priority</span
+            ><span class="arrow">›</span>
+          </div>
+          <div class="card-body">
+            <div class="card-inner">
+              <pre class="y"><span class="k">ESCALATE:</span>
+  <span class="k">triggers:</span>
+    - <span class="k">WHEN:</span> <span class="s">"damage_amount > 50000"</span>
+      reason: <span class="s">"High-value claim"</span>
+      priority: <span class="v">high</span>
+  <span class="k">contextForHuman:</span>
+    - name: <span class="s">"claim_summary"</span>
+      include: [<span class="s">"policy_number"</span>, <span class="s">"damage_amount"</span>]
+  <span class="k">onHumanComplete:</span>
+    - condition: <span class="s">"resolution == 'approved'"</span>
+      action: <span class="s">"Notify customer."</span></pre>
+              <div class="tags">
+                <span class="tag">low</span><span class="tag">medium</span
+                ><span class="tag">high</span><span class="tag">critical</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- LIFECYCLE -->
+      <div class="group" id="g-lifecycle">
+        <div class="group-label">
+          Lifecycle
+          <a
+            href="lifecycle.html"
+            style="
+              color: #555;
+              font-size: 0.65rem;
+              letter-spacing: 0;
+              text-transform: none;
+              font-weight: 400;
+            "
+            >→ Lifecycle Deep Dive</a
+          >
+        </div>
+        <div class="card" id="c-onstart">
+          <div class="card-head" onclick="toggle(this)">
+            <span class="mono">ON_START:</span><span class="opt-tag">optional</span
+            ><span class="desc">Welcome message, initial setup — runs once</span
+            ><span class="arrow">›</span>
+          </div>
+          <div class="card-body">
+            <div class="card-inner">
+              <pre class="y"><span class="k">ON_START:</span>
+  <span class="k">SET:</span> { session_type: <span class="s">"claims"</span> }
+  <span class="k">CALL:</span> load_customer_profile
+  <span class="k">RESPOND:</span> <span class="s">"Hello! I'm your claims assistant."</span></pre>
+              <div class="info-box rt">
+                Runs once (idempotent). Sequence: SET → CALL → RESPOND → DELEGATE. In flow mode,
+                also executes first step.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" id="c-complete">
+          <div class="card-head" onclick="toggle(this)">
+            <span class="mono">COMPLETE:</span><span class="opt-tag">optional</span
+            ><span class="desc">Completion conditions — runtime-evaluated, not LLM</span
+            ><span class="arrow">›</span>
+          </div>
+          <div class="card-body">
+            <div class="card-inner">
+              <pre class="y"><span class="k">COMPLETE:</span>
+  - <span class="k">WHEN:</span> <span class="s">claim_submitted == true</span>
+    <span class="k">RESPOND:</span> <span class="s">"Claim submitted! Ref: {{claim_id}}"</span>
+    <span class="k">STORE:</span> <span class="s">"user.last_claim_id"</span></pre>
+              <div class="info-box rt">
+                CompletionDetector evaluates after each turn. No LLM tool. In flow: THEN: COMPLETE
+                triggers same.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" id="c-onerror">
+          <div class="card-head" onclick="toggle(this)">
+            <span class="mono">ON_ERROR:</span><span class="opt-tag">optional</span
+            ><span class="desc">Error handlers with retry and backoff</span
+            ><span class="arrow">›</span>
+          </div>
+          <div class="card-body">
+            <div class="card-inner">
+              <pre class="y"><span class="k">ON_ERROR:</span>
+  - type: <span class="v">tool_timeout</span>
+    retry: <span class="n">2</span>
+    retryDelay: <span class="n">1000</span>
+    retryBackoff: <span class="v">exponential</span>
+    respond: <span class="s">"Service slow, retrying..."</span>
+  - type: <span class="v">tool_error</span>
+    respond: <span class="s">"Something went wrong."</span>
+    then: <span class="v">escalate</span></pre>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" id="c-hooks">
+          <div class="card-head" onclick="toggle(this)">
+            <span class="mono">HOOKS:</span><span class="opt-tag">optional</span
+            ><span class="desc">before/after agent and turn lifecycle hooks</span
+            ><span class="arrow">›</span>
+          </div>
+          <div class="card-body">
+            <div class="card-inner">
+              <pre class="y"><span class="k">HOOKS:</span>
+  <span class="k">before_turn:</span>
+    call: <span class="t">refresh_token</span>
+  <span class="k">after_turn:</span>
+    set: { last_activity: <span class="s">"{{abl.now()}}"</span> }</pre>
+              <div class="tags">
+                <span class="tag">before_agent</span><span class="tag">after_agent</span
+                ><span class="tag">before_turn</span><span class="tag">after_turn</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- OUTPUT -->
+      <div class="group" id="g-output">
+        <div class="group-label">
+          Output
+          <a
+            href="output.html"
+            style="
+              color: #555;
+              font-size: 0.65rem;
+              letter-spacing: 0;
+              text-transform: none;
+              font-weight: 400;
+            "
+            >→ Output Deep Dive</a
+          >
+          <a
+            href="templates.html"
+            style="
+              color: #555;
+              font-size: 0.65rem;
+              letter-spacing: 0;
+              text-transform: none;
+              font-weight: 400;
+              margin-left: 6px;
+            "
+            >→ Templates</a
+          >
+        </div>
+        <div class="card" id="c-templates">
+          <div class="card-head" onclick="toggle(this)">
+            <span class="mono">TEMPLATES:</span><span class="opt-tag">optional</span
+            ><span class="desc">Named response templates — multi-format, interpolation</span
+            ><span class="arrow">›</span>
+          </div>
+          <div class="card-body">
+            <div class="card-inner">
+              <pre class="y"><span class="k">TEMPLATES:</span>
+  <span class="t">claim_confirmation</span>:
+    content: |
+      Claim <span class="v">{{claim_id}}</span> submitted. Status: <span class="v">{{claim_status}}</span>.
+    formats:
+      markdown: |
+        ## Claim Submitted
+        **ID:** <span class="v">{{claim_id}}</span>
+      voice: |
+        Your claim has been submitted. Reference: <span class="v">{{claim_id}}</span>.</pre>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" id="c-messages">
+          <div class="card-head" onclick="toggle(this)">
+            <span class="mono">MESSAGES:</span><span class="opt-tag">optional</span
+            ><span class="desc">Override default system messages</span><span class="arrow">›</span>
+          </div>
+          <div class="card-body">
+            <div class="card-inner">
+              <pre class="y"><span class="k">MESSAGES:</span>
+  error_default: <span class="s">"Oops! Let me try again."</span>
+  constraint_blocked: <span class="s">"I can't do that per policy."</span>
+  gather_prompt: <span class="s">"I need a bit more info:"</span>
+  conversation_complete: <span class="s">"All done! Anything else?"</span></pre>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" id="c-sysprompt">
+          <div class="card-head" onclick="toggle(this)">
+            <span class="mono">SYSTEM_PROMPT:</span><span class="opt-tag">optional</span
+            ><span class="desc">Full custom prompt override — replaces auto-generated</span
+            ><span class="arrow">›</span>
+          </div>
+          <div class="card-body">
+            <div class="card-inner">
+              <pre class="y"><span class="k">SYSTEM_PROMPT:</span> |
+  You are a claims specialist. Follow these rules:
+  1. Always verify policy number first
+  2. Never approve claims over $50,000</pre>
+              <div class="info-box rt">
+                Replaces the entire auto-generated prompt. You lose gather injection, constraint
+                warnings, tool descriptions. Use with caution.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ADVANCED -->
+      <div class="group" id="g-advanced">
+        <div class="group-label">
+          Advanced
+          <a
+            href="advanced.html"
+            style="
+              color: #555;
+              font-size: 0.65rem;
+              letter-spacing: 0;
+              text-transform: none;
+              font-weight: 400;
+            "
+            >→ Advanced Deep Dive</a
+          >
+        </div>
+        <div class="card" id="c-nlu">
+          <div class="card-head" onclick="toggle(this)">
+            <span class="mono">NLU:</span><span class="opt-tag">optional</span
+            ><span class="desc">Intent detection, entities, embeddings</span
+            ><span class="arrow">›</span>
+          </div>
+          <div class="card-body">
+            <div class="card-inner">
+              <pre class="y"><span class="k">NLU:</span>
+  intents:
+    - name: <span class="s">"file_claim"</span>
+      patterns: [<span class="s">"file a claim"</span>, <span class="s">"submit claim"</span>]
+  entities:
+    - name: <span class="s">"claim_type"</span>
+      type: <span class="v">enum</span>
+      values: [<span class="s">"auto"</span>, <span class="s">"home"</span>, <span class="s">"health"</span>]
+  embeddings:
+    enabled: <span class="n">true</span>
+    threshold: <span class="n">0.75</span></pre>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" id="c-behavior">
+          <div class="card-head" onclick="toggle(this)">
+            <span class="mono">BEHAVIOR_PROFILE:</span><span class="opt-tag">optional</span
+            ><span class="desc">Channel/context-aware overrides</span><span class="arrow">›</span>
+          </div>
+          <div class="card-body">
+            <div class="card-inner">
+              <pre class="y"><span class="k">BEHAVIOR_PROFILE:</span> Voice_Channel
+<span class="k">PRIORITY:</span> <span class="n">10</span>
+<span class="k">WHEN:</span> <span class="s">channel == "voice"</span>
+
+tools:
+  hide: [<span class="s">"generate_pdf"</span>]
+voice:
+  instructions: <span class="s">"Speak clearly and slowly."</span>
+flow:
+  skip: [<span class="s">"show_images"</span>]</pre>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" id="c-lookup">
+          <div class="card-head" onclick="toggle(this)">
+            <span class="mono">LOOKUP_TABLES:</span><span class="opt-tag">optional</span
+            ><span class="desc">Validation sources — inline, DB, API with fuzzy matching</span
+            ><span class="arrow">›</span>
+          </div>
+          <div class="card-body">
+            <div class="card-inner">
+              <pre class="y"><span class="k">LOOKUP_TABLES:</span>
+  <span class="t">valid_states</span>:
+    source: <span class="v">inline</span>
+    values: [<span class="s">"CA"</span>, <span class="s">"NY"</span>, <span class="s">"TX"</span>, <span class="s">"FL"</span>]
+    fuzzyMatch: <span class="n">true</span>
+    fuzzyThreshold: <span class="n">0.85</span></pre>
+              <div class="tags">
+                <span class="tag">inline</span><span class="tag">collection</span
+                ><span class="tag">api</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" id="c-multiintent">
+          <div class="card-head" onclick="toggle(this)">
+            <span class="mono">MULTI_INTENT:</span><span class="opt-tag">optional</span
+            ><span class="desc">Handle multiple user intents per message</span
+            ><span class="arrow">›</span>
+          </div>
+          <div class="card-body">
+            <div class="card-inner">
+              <pre class="y"><span class="k">MULTI_INTENT:</span>
+  strategy: <span class="v">sequential</span>    <span class="c"># sequential | parallel | disambiguate | auto</span>
+  max_intents: <span class="n">3</span>
+  confidence_threshold: <span class="n">0.6</span>
+  queue_max_age_ms: <span class="n">600000</span></pre>
+              <div class="tags">
+                <span class="tag">sequential</span><span class="tag">parallel</span
+                ><span class="tag">primary_queue</span><span class="tag">disambiguate</span
+                ><span class="tag">auto</span>
+              </div>
+              <div
+                class="info-box rt"
+                style="
+                  border-radius: 5px;
+                  padding: 8px 12px;
+                  font-size: 0.78rem;
+                  color: var(--fg3);
+                  margin: 8px 0;
+                  border: 1px solid var(--border);
+                  border-left: 2px solid #506040;
+                "
+              >
+                Runtime: When user says "book a hotel and check the weather", both intents are
+                queued and processed based on strategy.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- QUICK REFERENCE -->
+      <div style="margin-top: 48px; padding-top: 24px; border-top: 1px solid var(--border)">
+        <div
+          style="
+            font-size: 0.72rem;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            color: var(--fg4);
+            margin-bottom: 14px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border);
+          "
+        >
+          Quick Reference — All 27 Constructs
+        </div>
+        <div
+          style="
+            background: var(--bg2);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 16px;
+          "
+        >
+          <div style="display: flex; flex-wrap: wrap; gap: 4px">
+            <span class="tag">AGENT</span><span class="tag">GOAL</span
+            ><span class="tag">PERSONA</span><span class="tag">IDENTITY</span
+            ><span class="tag">LIMITATIONS</span><span class="tag">EXECUTION</span
+            ><span class="tag">TOOLS</span><span class="tag">GATHER</span
+            ><span class="tag">ATTACHMENTS</span><span class="tag">MEMORY</span
+            ><span class="tag">CONSTRAINTS</span><span class="tag">GUARDRAILS</span
+            ><span class="tag">FLOW</span><span class="tag">DELEGATE</span
+            ><span class="tag">HANDOFF</span><span class="tag">ESCALATE</span
+            ><span class="tag">COMPLETE</span><span class="tag">ON_ERROR</span
+            ><span class="tag">ON_START</span><span class="tag">HOOKS</span
+            ><span class="tag">MESSAGES</span><span class="tag">TEMPLATES</span
+            ><span class="tag">SYSTEM_PROMPT</span><span class="tag">NLU</span
+            ><span class="tag">BEHAVIOR_PROFILE</span><span class="tag">LOOKUP_TABLES</span
+            ><span class="tag">MULTI_INTENT</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- DEEP DIVES -->
+      <div style="margin-top: 36px">
+        <div
+          style="
+            font-size: 0.72rem;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            color: var(--fg4);
+            margin-bottom: 14px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border);
+          "
+        >
+          Construct Deep Dives
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px">
+          <a
+            href="tools.html"
+            style="
+              display: block;
+              padding: 14px 16px;
+              background: var(--bg2);
+              border: 1px solid var(--border);
+              border-radius: 6px;
+              text-decoration: none;
+              transition: all 0.15s;
+            "
+            ><div style="font-size: 0.85rem; font-weight: 600; color: var(--fg)">Tools</div>
+            <div style="font-size: 0.72rem; color: var(--fg3); margin-top: 3px">
+              HTTP, MCP, Lambda, Sandbox, Async Webhook
+            </div>
+            <div class="tag" style="margin-top: 6px">5 binding types</div></a
+          >
+          <a
+            href="flow.html"
+            style="
+              display: block;
+              padding: 14px 16px;
+              background: var(--bg2);
+              border: 1px solid var(--border);
+              border-radius: 6px;
+              text-decoration: none;
+              transition: all 0.15s;
+            "
+            ><div style="font-size: 0.85rem; font-weight: 600; color: var(--fg)">Flow</div>
+            <div style="font-size: 0.72rem; color: var(--fg3); margin-top: 3px">
+              Reasoning vs scripted. Branching, digressions.
+            </div>
+            <div class="tag" style="margin-top: 6px">2 step modes</div></a
+          >
+          <a
+            href="guardrails.html"
+            style="
+              display: block;
+              padding: 14px 16px;
+              background: var(--bg2);
+              border: 1px solid var(--border);
+              border-radius: 6px;
+              text-decoration: none;
+              transition: all 0.15s;
+            "
+            ><div style="font-size: 0.85rem; font-weight: 600; color: var(--fg)">Guardrails</div>
+            <div style="font-size: 0.72rem; color: var(--fg3); margin-top: 3px">
+              3 tiers, 7 actions, 5 built-in templates
+            </div>
+            <div class="tag" style="margin-top: 6px">content safety</div></a
+          >
+          <a
+            href="gather.html"
+            style="
+              display: block;
+              padding: 14px 16px;
+              background: var(--bg2);
+              border: 1px solid var(--border);
+              border-radius: 6px;
+              text-decoration: none;
+              transition: all 0.15s;
+            "
+            ><div style="font-size: 0.85rem; font-weight: 600; color: var(--fg)">Gather</div>
+            <div style="font-size: 0.72rem; color: var(--fg3); margin-top: 3px">
+              8 types, validation, inference, sensitivity
+            </div>
+            <div class="tag" style="margin-top: 6px">user input</div></a
+          >
+          <a
+            href="templates.html"
+            style="
+              display: block;
+              padding: 14px 16px;
+              background: var(--bg2);
+              border: 1px solid var(--border);
+              border-radius: 6px;
+              text-decoration: none;
+              transition: all 0.15s;
+            "
+            ><div style="font-size: 0.85rem; font-weight: 600; color: var(--fg)">Templates</div>
+            <div style="font-size: 0.72rem; color: var(--fg3); margin-top: 3px">
+              7 channels, rich markdown, voice SSML, actions, variable picker
+            </div>
+            <div class="tag" style="margin-top: 6px">channel builder</div></a
+          >
+          <a
+            href="memory.html"
+            style="
+              display: block;
+              padding: 14px 16px;
+              background: var(--bg2);
+              border: 1px solid var(--border);
+              border-radius: 6px;
+              text-decoration: none;
+              transition: all 0.15s;
+            "
+            ><div style="font-size: 0.85rem; font-weight: 600; color: var(--fg)">Memory</div>
+            <div style="font-size: 0.72rem; color: var(--fg3); margin-top: 3px">
+              SESSION, PERSISTENT, REMEMBER, RECALL
+            </div>
+            <div class="tag" style="margin-top: 6px">4 sub-systems</div></a
+          >
+          <a
+            href="coordination.html"
+            style="
+              display: block;
+              padding: 14px 16px;
+              background: var(--bg2);
+              border: 1px solid var(--border);
+              border-radius: 6px;
+              text-decoration: none;
+              transition: all 0.15s;
+            "
+            ><div style="font-size: 0.85rem; font-weight: 600; color: var(--fg)">Coordination</div>
+            <div style="font-size: 0.72rem; color: var(--fg3); margin-top: 3px">
+              Handoff, delegate, escalate, A2A
+            </div>
+            <div class="tag" style="margin-top: 6px">multi-agent</div></a
+          >
+          <a
+            href="lifecycle.html"
+            style="
+              display: block;
+              padding: 14px 16px;
+              background: var(--bg2);
+              border: 1px solid var(--border);
+              border-radius: 6px;
+              text-decoration: none;
+              transition: all 0.15s;
+            "
+            ><div style="font-size: 0.85rem; font-weight: 600; color: var(--fg)">Lifecycle</div>
+            <div style="font-size: 0.72rem; color: var(--fg3); margin-top: 3px">
+              ON_START, COMPLETE, ON_ERROR, HOOKS
+            </div>
+            <div class="tag" style="margin-top: 6px">4 constructs</div></a
+          >
+          <a
+            href="output.html"
+            style="
+              display: block;
+              padding: 14px 16px;
+              background: var(--bg2);
+              border: 1px solid var(--border);
+              border-radius: 6px;
+              text-decoration: none;
+              transition: all 0.15s;
+            "
+            ><div style="font-size: 0.85rem; font-weight: 600; color: var(--fg)">Output</div>
+            <div style="font-size: 0.72rem; color: var(--fg3); margin-top: 3px">
+              Templates, messages, system prompt
+            </div>
+            <div class="tag" style="margin-top: 6px">responses</div></a
+          >
+          <a
+            href="execution.html"
+            style="
+              display: block;
+              padding: 14px 16px;
+              background: var(--bg2);
+              border: 1px solid var(--border);
+              border-radius: 6px;
+              text-decoration: none;
+              transition: all 0.15s;
+            "
+            ><div style="font-size: 0.85rem; font-weight: 600; color: var(--fg)">Execution</div>
+            <div style="font-size: 0.72rem; color: var(--fg3); margin-top: 3px">
+              Model, temperature, thinking, compaction
+            </div>
+            <div class="tag" style="margin-top: 6px">15 fields</div></a
+          >
+          <a
+            href="advanced.html"
+            style="
+              display: block;
+              padding: 14px 16px;
+              background: var(--bg2);
+              border: 1px solid var(--border);
+              border-radius: 6px;
+              text-decoration: none;
+              transition: all 0.15s;
+            "
+            ><div style="font-size: 0.85rem; font-weight: 600; color: var(--fg)">Advanced</div>
+            <div style="font-size: 0.72rem; color: var(--fg3); margin-top: 3px">
+              NLU, behavior profiles, lookup tables
+            </div>
+            <div class="tag" style="margin-top: 6px">4 constructs</div></a
+          >
+        </div>
+      </div>
+
+      <!-- PATTERNS & WIREFRAMES -->
+      <div style="margin-top: 36px">
+        <div
+          style="
+            font-size: 0.72rem;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            color: var(--fg4);
+            margin-bottom: 14px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border);
+          "
+        >
+          Patterns &amp; Wireframes
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px">
+          <a
+            href="workflows.html"
+            style="
+              display: block;
+              padding: 14px 16px;
+              background: var(--bg2);
+              border: 1px solid var(--border);
+              border-radius: 6px;
+              text-decoration: none;
+              transition: all 0.15s;
+            "
+            ><div style="font-size: 0.85rem; font-weight: 600; color: var(--fg)">
+              Agent Workflows
+            </div>
+            <div style="font-size: 0.72rem; color: var(--fg3); margin-top: 3px">
+              Simple → Expert. Decision guide + pipeline mapping.
+            </div>
+            <div class="tag" style="margin-top: 6px">4 levels</div></a
+          >
+          <a
+            href="monaco-editor-wireframe.html"
+            style="
+              display: block;
+              padding: 14px 16px;
+              background: rgba(90, 142, 255, 0.04);
+              border: 1px solid rgba(90, 142, 255, 0.2);
+              border-radius: 6px;
+              text-decoration: none;
+              transition: all 0.15s;
+            "
+            ><div style="font-size: 0.85rem; font-weight: 600; color: #7090c0">
+              Monaco Editor Wireframe
+            </div>
+            <div style="font-size: 0.72rem; color: var(--fg3); margin-top: 3px">
+              Slash commands, pickers, preview, snippet insertion.
+            </div>
+            <div class="tag" style="margin-top: 6px">9 wireframes</div></a
+          >
+        </div>
+      </div>
+    </div>
+
+    <script>
+      function toggle(h) {
+        h.parentElement.classList.toggle('open');
+      }
+      function go(id) {
+        const e = document.getElementById('g-' + id);
+        if (e) e.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+      function open(id) {
+        const e = document.getElementById('c-' + id);
+        if (e) {
+          e.classList.add('open');
+          e.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }
+    </script>
+  </body>
+</html>

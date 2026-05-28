@@ -1,0 +1,199 @@
+{
+  "nav": {
+    "templateStore": "Template Store",
+    "marketplace": "Marketplace"
+  },
+  "search": {
+    "placeholder": "Search templates...",
+    "results": "{count} templates found",
+    "resultsCount": "{count, plural, one {# template} other {# templates}}",
+    "loading": "Loading...",
+    "noResults": "No templates found",
+    "noResultsDescription": "Try adjusting your search or filters",
+    "filters": "Filters",
+    "clearFilters": "Clear Filters"
+  },
+  "filters": {
+    "category": "Category",
+    "allCategories": "All Categories",
+    "type": "Type",
+    "allTypes": "All Types",
+    "complexity": "Complexity",
+    "allComplexity": "All Levels",
+    "sort": "Sort By",
+    "sortPopular": "Most Popular",
+    "sortRating": "Highest Rated",
+    "sortNewest": "Newest",
+    "sortUpdated": "Recently Updated",
+    "reset": "Reset Filters"
+  },
+  "type": {
+    "agent": "Agent",
+    "project": "Project"
+  },
+  "complexity": {
+    "starter": "Starter",
+    "standard": "Standard",
+    "advanced": "Advanced"
+  },
+  "card": {
+    "installs": "{count} installs",
+    "agents": "{count} agents",
+    "agent": "{count} agent",
+    "rating": "{rating} stars",
+    "byPublisher": "by {publisher}",
+    "verified": "Verified"
+  },
+  "detail": {
+    "overview": "Overview",
+    "screenshots": "Screenshots",
+    "configPreview": "Configuration",
+    "changelog": "Changelog",
+    "whatsIncluded": "What's Included",
+    "agentCount": "{count, plural, one {# Agent} other {# Agents}}",
+    "supervisor": "Includes Supervisor",
+    "flowBased": "Flow-Based",
+    "publishedBy": "Published by {publisher}",
+    "lastUpdated": "Last updated {date}",
+    "version": "Version {version}",
+    "comingSoon": "Coming Soon",
+    "installComingSoon": "Installation will be available in a future update",
+    "views": "{count} views",
+    "demoConversation": "Demo Conversation",
+    "demos": "Demos"
+  },
+  "categories": {
+    "customer-service": "Customer Service",
+    "sales": "Sales",
+    "hr": "Human Resources",
+    "it-support": "IT Support",
+    "retail": "Retail",
+    "general": "General",
+    "finance": "Finance",
+    "marketing": "Marketing",
+    "operations": "Operations",
+    "healthcare": "Healthcare",
+    "knowledge-management": "Knowledge Management",
+    "technical-support": "Technical Support"
+  },
+  "sidebar": {
+    "title": "Template Store",
+    "search": "Search templates...",
+    "filterByType": "Filter by Type",
+    "categories": "Categories",
+    "showMore": "Show more",
+    "showLess": "Show less",
+    "clearAll": "Clear all",
+    "backToStudio": "Back to Studio",
+    "allTemplates": "All Templates",
+    "publisher": "Publisher",
+    "publisherGlobal": "Kore.ai",
+    "publisherWorkspace": "My Workspace"
+  },
+  "sort": {
+    "label": "Sort by",
+    "name": "Name",
+    "downloads": "Downloads",
+    "views": "Views",
+    "ascending": "Ascending",
+    "descending": "Descending"
+  },
+  "topology": {
+    "title": "Topology",
+    "agents": "Agents",
+    "tools": "Tools",
+    "noAgents": "No agent information available",
+    "noTools": "No tool information available",
+    "supervisor": "Supervisor",
+    "entry": "Entry",
+    "flowBased": "Flow-Based"
+  },
+  "demoConversation": {
+    "title": "Demo Conversation",
+    "description": "See this template in action"
+  },
+  "configPreview": {
+    "title": "Configuration Preview",
+    "description": "Customizable settings available during installation",
+    "noConfig": "This template has no configurable options",
+    "columnVariable": "Variable",
+    "columnType": "Type",
+    "columnDefault": "Default",
+    "columnDescription": "Description"
+  },
+  "screenshots": {
+    "title": "Screenshots",
+    "noScreenshots": "No screenshots available",
+    "close": "Close"
+  },
+  "media": {
+    "title": "Media",
+    "noMedia": "No media available",
+    "playVideo": "Play video",
+    "close": "Close"
+  },
+  "prerequisites": {
+    "title": "Prerequisites",
+    "noPrerequisites": "No prerequisites — ready to install",
+    "envVars": "Required Environment Variables",
+    "connectors": "Required Connectors",
+    "mcpServers": "Required MCP Servers",
+    "authProfiles": "Required Auth Profiles",
+    "models": "Required Models"
+  },
+  "typeFilter": {
+    "all": "All",
+    "projects": "Projects",
+    "agents": "Agents"
+  },
+  "pagination": {
+    "previous": "Previous",
+    "next": "Next",
+    "page": "Page {page} of {total}"
+  },
+  "errors": {
+    "loadFailed": "Failed to load templates",
+    "detailLoadFailed": "Failed to load template details",
+    "retry": "Try Again"
+  },
+  "install": {
+    "createProject": "Create Project from Template",
+    "addToProject": "Add to Project",
+    "createAndInstall": "Create & Install",
+    "installing": "Installing template...",
+    "generatingPreview": "Generating preview...",
+    "applying": "Applying template...",
+    "installComplete": "Template installed successfully",
+    "goToProject": "Go to Project",
+    "selectProject": "Select a target project",
+    "searchProjects": "Search projects...",
+    "noProjects": "No projects found. Create a project first.",
+    "previewTitle": "Install Preview",
+    "previewDescription": "Review what will be added to your project",
+    "agentsToAdd": "{count, plural, one {# agent will be added} other {# agents will be added}}",
+    "agentsToModify": "{count, plural, one {# agent will be modified} other {# agents will be modified}}",
+    "toolsToAdd": "{count, plural, one {# tool will be added} other {# tools will be added}}",
+    "toolsToModify": "{count, plural, one {# tool will be modified} other {# tools will be modified}}",
+    "noChanges": "No changes detected",
+    "blockingIssues": "Cannot install: blocking issues detected",
+    "confirm": "Install",
+    "cancel": "Cancel",
+    "retry": "Retry",
+    "done": "Done",
+    "provisioningRequired": "Post-install setup required",
+    "noProvisioning": "No additional setup required — ready to use",
+    "provisioningEnvVars": "Environment Variables",
+    "provisioningConnectors": "Connectors",
+    "provisioningMcpServers": "MCP Servers",
+    "provisioningAuthProfiles": "Auth Profiles",
+    "installSummary": "{agents, plural, one {# agent} other {# agents}} and {tools, plural, one {# tool} other {# tools}} created",
+    "entryAgent": "Entry Agent: {name}",
+    "installFailed": "Installation failed",
+    "installFailedDescription": "An error occurred during installation. Your project may have been partially created.",
+    "projectCreated": "Project \"{name}\" created",
+    "projectName": "Project Name",
+    "projectNamePlaceholder": "Enter a name for your project",
+    "noVersionAvailable": "No published version available",
+    "loadingProjects": "Loading projects..."
+  }
+}

@@ -1,0 +1,22 @@
+AGENT: Reasoning_Specialist
+MODE: reasoning
+
+GOAL: "Handle specialist tasks including booking and support"
+
+PERSONA: "A knowledgeable specialist who gathers details and completes tasks"
+
+GATHER:
+  destination:
+    prompt: "Where would you like to go?"
+    type: string
+    required: true
+
+  travel_date:
+    prompt: "When would you like to travel?"
+    type: string
+    required: true
+
+  num_guests:
+    prompt: "How many guests?"
+    type: number
+    required: false

@@ -1,0 +1,130 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "ABL YAML",
+  "scopeName": "source.abl.yaml",
+  "patterns": [
+    { "include": "#comments" },
+    { "include": "#template-variables" },
+    { "include": "#top-level-keys" },
+    { "include": "#sub-keys" },
+    { "include": "#block-scalars" },
+    { "include": "#list-items" },
+    { "include": "#constants" },
+    { "include": "#numbers" },
+    { "include": "#strings" },
+    { "include": "#arrows" },
+    { "include": "#cel-expressions" }
+  ],
+  "repository": {
+    "comments": {
+      "patterns": [
+        {
+          "name": "comment.line.number-sign.abl",
+          "match": "#.*$"
+        }
+      ]
+    },
+    "template-variables": {
+      "patterns": [
+        {
+          "name": "variable.other.template.abl",
+          "match": "\\{\\{[^}]+\\}\\}"
+        },
+        {
+          "name": "variable.other.template.abl",
+          "match": "\\$\\{[^}]+\\}"
+        }
+      ]
+    },
+    "top-level-keys": {
+      "patterns": [
+        {
+          "name": "keyword.control.section.abl",
+          "match": "^(agent|supervisor|mode|goal|persona|identity|limitations|tools|gather|memory|constraints|flow|steps|delegate|handoff|escalate|complete|on_error|on_start|guardrails|tests)\\s*:"
+        }
+      ]
+    },
+    "sub-keys": {
+      "patterns": [
+        {
+          "name": "entity.name.tag.abl",
+          "match": "^\\s+(entry_point|fields|strategy|rule|action|to|respond|call|then|when|store|return|require|on_fail|on_success|check|collect|input|returns|purpose|reason|priority|timeout|ttl|context|on_input|prompt|present|set|if|else|as|name|type|description|steps|next|condition|success_when|fail_when|max_retries|retry_delay|parameters|required|optional|default|validation|extraction_hints|confirm|format|message|target|routing|agents|model|temperature|max_tokens|system_prompt|constraints|tools|handoffs|escalations)\\s*:"
+        }
+      ]
+    },
+    "block-scalars": {
+      "patterns": [
+        {
+          "name": "keyword.operator.block-scalar.abl",
+          "match": "[|>][-+]?\\s*$"
+        }
+      ]
+    },
+    "list-items": {
+      "patterns": [
+        {
+          "name": "punctuation.definition.list.abl",
+          "match": "^\\s*-\\s"
+        }
+      ]
+    },
+    "constants": {
+      "patterns": [
+        {
+          "name": "constant.language.abl",
+          "match": "\\b(true|false|yes|no|null)\\b"
+        }
+      ]
+    },
+    "numbers": {
+      "patterns": [
+        {
+          "name": "constant.numeric.abl",
+          "match": "\\b\\d+(\\.\\d+)?\\b"
+        }
+      ]
+    },
+    "strings": {
+      "patterns": [
+        {
+          "name": "string.quoted.double.abl",
+          "begin": "\"",
+          "end": "\"",
+          "patterns": [
+            {
+              "name": "constant.character.escape.abl",
+              "match": "\\\\."
+            }
+          ]
+        },
+        {
+          "name": "string.quoted.single.abl",
+          "begin": "'",
+          "end": "'",
+          "patterns": [
+            {
+              "name": "constant.character.escape.abl",
+              "match": "\\\\."
+            }
+          ]
+        }
+      ]
+    },
+    "arrows": {
+      "patterns": [
+        {
+          "name": "keyword.operator.arrow.abl",
+          "match": "->|=>|→"
+        }
+      ]
+    },
+    "cel-expressions": {
+      "patterns": [
+        {
+          "name": "variable.other.dotted.abl",
+          "match": "\\b(context|abl)\\.[a-zA-Z_][a-zA-Z0-9_.]*"
+        }
+      ]
+    }
+  }
+}

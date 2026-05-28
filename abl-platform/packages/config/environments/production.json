@@ -1,0 +1,14 @@
+{
+  "env": "production",
+  "observability": {
+    "loggingLevel": "warn",
+    "enabled": true,
+    "traceSamplingRate": 0.1
+  },
+  "features": {
+    "voiceEnabled": true,
+    "debugTracesEnabled": false,
+    "streamingEnabled": true,
+    "multiAgentEnabled": true
+  }
+}

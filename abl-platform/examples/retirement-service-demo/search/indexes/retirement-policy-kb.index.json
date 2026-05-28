@@ -1,0 +1,22 @@
+{
+  "slug": "retirement-policy-kb",
+  "name": "Retirement Policy KB Index",
+  "description": "Retirement-service policy guidance for the hosted demo",
+  "embeddingModel": "text-embedding-3-small",
+  "embeddingDimensions": 1536,
+  "vectorStore": {
+    "provider": "opensearch",
+    "collectionName": "search-vectors-v1"
+  },
+  "searchDefaults": {
+    "topK": 10,
+    "similarityThreshold": 0.7,
+    "includeMetadata": true,
+    "includeContent": true
+  },
+  "llmConfig": {
+    "enabled": true
+  },
+  "status": "active",
+  "_exportedId": "019daa13-2b1b-7b9e-a5f7-622dfde8eb79"
+}

@@ -1,0 +1,4086 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Monaco Editor — Complete Wireframe</title>
+    <style>
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      :root {
+        --bg: #0c0c0c;
+        --bg2: #141414;
+        --bg3: #1c1c1c;
+        --bg4: #252525;
+        --fg: #e8e8e8;
+        --fg2: #aaa;
+        --fg3: #777;
+        --fg4: #555;
+        --border: #1e1e1e;
+        --border2: #2a2a2a;
+        --accent: rgba(90, 142, 255, 0.15);
+        --accent-b: rgba(90, 142, 255, 0.25);
+        --accent-c: #7090c0;
+        --ins: rgba(112, 176, 128, 0.06);
+        --ins-b: rgba(112, 176, 128, 0.25);
+        --mono: 'Berkeley Mono', 'JetBrains Mono', 'SF Mono', 'Fira Code', monospace;
+        --sans: 'Inter', -apple-system, sans-serif;
+      }
+      body {
+        font-family: var(--sans);
+        background: var(--bg);
+        color: var(--fg);
+        line-height: 1.65;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      /* Layout */
+      header {
+        padding: 36px 32px 32px;
+        border-bottom: 1px solid var(--border);
+      }
+      header h1 {
+        font-size: 1.5rem;
+        font-weight: 600;
+        letter-spacing: -0.02em;
+      }
+      header .sub {
+        font-size: 0.88rem;
+        color: var(--fg3);
+        margin-top: 4px;
+        max-width: 640px;
+      }
+      .container {
+        max-width: 960px;
+        margin: 0 auto;
+        padding: 28px 24px 80px;
+      }
+      .section {
+        margin-bottom: 48px;
+      }
+      .st {
+        font-size: 0.72rem;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: var(--fg4);
+        margin-bottom: 14px;
+        padding-bottom: 8px;
+        border-bottom: 1px solid var(--border);
+      }
+      .desc {
+        font-size: 0.82rem;
+        color: var(--fg3);
+        margin-bottom: 14px;
+      }
+
+      /* Editor shell */
+      .ed {
+        background: var(--bg2);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        overflow: hidden;
+        margin: 12px 0;
+      }
+      .ed-bar {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 7px 12px;
+        background: var(--bg3);
+        border-bottom: 1px solid var(--border);
+        font-size: 0.7rem;
+        color: var(--fg3);
+      }
+      .ed-bar .sp {
+        flex: 1;
+      }
+      .ed-bar .b {
+        padding: 3px 8px;
+        border-radius: 3px;
+        border: 1px solid var(--border2);
+        background: var(--bg4);
+        color: var(--fg3);
+        font-size: 0.66rem;
+        cursor: pointer;
+      }
+      .ed-bar .b:hover {
+        color: var(--fg2);
+      }
+      .ed-bar .b.p {
+        background: var(--accent);
+        border-color: var(--accent-b);
+        color: var(--accent-c);
+      }
+      .ed-body {
+        display: flex;
+        position: relative;
+      }
+      .ed-side {
+        width: 160px;
+        border-right: 1px solid var(--border);
+        background: var(--bg3);
+        padding: 6px 0;
+        font-size: 0.66rem;
+      }
+      .ed-side .si {
+        padding: 3px 8px 3px 16px;
+        color: var(--fg4);
+        cursor: pointer;
+      }
+      .ed-side .si:hover {
+        color: var(--fg3);
+        background: var(--bg4);
+      }
+      .ed-side .si.a {
+        color: var(--fg2);
+        background: var(--bg4);
+        font-weight: 500;
+      }
+      .ed-side .si.h {
+        padding-left: 26px;
+      }
+      .ed-side .si.hh {
+        padding-left: 36px;
+      }
+      .ed-code {
+        flex: 1;
+        padding: 8px 0;
+        min-height: 280px;
+        position: relative;
+        overflow: hidden;
+      }
+      .cl {
+        display: flex;
+        padding: 0 14px;
+        min-height: 19px;
+        font-family: var(--mono);
+        font-size: 12.5px;
+        line-height: 19px;
+      }
+      .cl:hover {
+        background: rgba(255, 255, 255, 0.012);
+      }
+      .cl.hl {
+        background: rgba(90, 142, 255, 0.05);
+        border-left: 2px solid rgba(90, 142, 255, 0.25);
+      }
+      .cl.ins {
+        background: var(--ins);
+        border-left: 2px solid var(--ins-b);
+      }
+      .ln {
+        width: 32px;
+        text-align: right;
+        padding-right: 12px;
+        color: #333;
+        user-select: none;
+        flex-shrink: 0;
+        font-size: 11.5px;
+      }
+      .lc {
+        flex: 1;
+        white-space: pre;
+        color: var(--fg3);
+      }
+      .kw {
+        color: #8a8aff;
+        font-weight: 500;
+      }
+      .str {
+        color: #b8a070;
+      }
+      .typ {
+        color: #70b080;
+      }
+      .cmt {
+        color: #333;
+        font-style: italic;
+      }
+      .num {
+        color: #7090c0;
+      }
+      .vr {
+        color: #a080a0;
+      }
+      .cur {
+        border-right: 2px solid var(--accent-c);
+        animation: bk 1s step-end infinite;
+      }
+      @keyframes bk {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0;
+        }
+      }
+      .ed-status {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 3px 12px;
+        border-top: 1px solid var(--border);
+        font-size: 0.62rem;
+        color: var(--fg4);
+        background: var(--bg3);
+      }
+
+      /* Command palette */
+      .cp {
+        position: absolute;
+        z-index: 10;
+        width: 310px;
+        background: var(--bg3);
+        border: 1px solid var(--border2);
+        border-radius: 6px;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+        overflow: hidden;
+      }
+      .cp-ctx {
+        padding: 4px 10px;
+        font-size: 0.6rem;
+        color: var(--accent-c);
+        background: var(--accent);
+        border-bottom: 1px solid var(--border);
+      }
+      .cp-sep {
+        padding: 3px 10px;
+        font-size: 0.56rem;
+        font-weight: 600;
+        color: var(--fg4);
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        background: var(--bg2);
+      }
+      .ci {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 10px;
+        cursor: pointer;
+        font-size: 0.72rem;
+        transition: background 0.1s;
+      }
+      .ci:hover,
+      .ci.f {
+        background: var(--accent);
+      }
+      .ci.f {
+        border-left: 2px solid var(--accent-c);
+      }
+      .ci .ic {
+        width: 16px;
+        text-align: center;
+        color: var(--fg4);
+        font-size: 0.66rem;
+      }
+      .ci .cm {
+        font-family: var(--mono);
+        font-weight: 600;
+        color: var(--fg2);
+        font-size: 0.68rem;
+      }
+      .ci .cd {
+        color: var(--fg4);
+        font-size: 0.68rem;
+        margin-left: auto;
+      }
+      .cp-ft {
+        padding: 4px 10px;
+        font-size: 0.56rem;
+        color: var(--fg4);
+        border-top: 1px solid var(--border);
+        display: flex;
+        gap: 12px;
+      }
+      .cp-ft kbd {
+        background: var(--bg4);
+        padding: 0 3px;
+        border-radius: 2px;
+        font-family: var(--mono);
+      }
+
+      /* Picker modal */
+      .mo {
+        background: rgba(0, 0, 0, 0.45);
+        border-radius: 8px;
+        padding: 16px;
+        margin: 12px 0;
+      }
+      .pk {
+        background: var(--bg2);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        overflow: hidden;
+        max-width: 860px;
+        margin: 0 auto;
+      }
+      .pk-h {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 10px 14px;
+        border-bottom: 1px solid var(--border);
+      }
+      .pk-h h3 {
+        font-size: 0.88rem;
+        font-weight: 600;
+      }
+      .pk-s {
+        padding: 10px 14px;
+        border-bottom: 1px solid var(--border);
+      }
+      .pk-s input {
+        width: 100%;
+        padding: 7px 10px;
+        background: var(--bg3);
+        border: 1px solid var(--border2);
+        border-radius: 4px;
+        color: var(--fg);
+        font-size: 0.78rem;
+        font-family: var(--sans);
+        outline: none;
+      }
+      .pk-tabs {
+        display: flex;
+        gap: 3px;
+        padding: 6px 14px;
+        border-bottom: 1px solid var(--border);
+      }
+      .pk-t {
+        padding: 3px 8px;
+        font-size: 0.66rem;
+        border-radius: 3px;
+        cursor: pointer;
+        color: var(--fg4);
+        border: none;
+        background: none;
+      }
+      .pk-t.a {
+        background: var(--accent);
+        color: var(--accent-c);
+      }
+      .pk-body {
+        display: flex;
+        min-height: 320px;
+      }
+      .pk-list {
+        flex: 1;
+        padding: 10px 14px;
+        overflow-y: auto;
+        border-right: 1px solid var(--border);
+      }
+      .pk-prev {
+        width: 360px;
+        padding: 10px 14px;
+        overflow-y: auto;
+      }
+      .pi {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 10px;
+        border: 1px solid var(--border);
+        border-radius: 4px;
+        margin-bottom: 5px;
+        cursor: pointer;
+        background: var(--bg3);
+        transition: border-color 0.15s;
+        font-size: 0.76rem;
+      }
+      .pi:hover {
+        border-color: var(--border2);
+      }
+      .pi.sel {
+        border-color: var(--accent-b);
+        background: var(--accent);
+      }
+      .pi .nm {
+        font-family: var(--mono);
+        font-weight: 600;
+        color: var(--fg2);
+        font-size: 0.74rem;
+      }
+      .pi .ds {
+        font-size: 0.68rem;
+        color: var(--fg4);
+        margin-top: 1px;
+      }
+      .pi .bd {
+        font-size: 0.58rem;
+        padding: 2px 5px;
+        border-radius: 3px;
+        background: var(--bg4);
+        color: var(--fg3);
+        margin-left: auto;
+        flex-shrink: 0;
+      }
+      .pi-c {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 10px;
+        border: 1px dashed var(--border2);
+        border-radius: 4px;
+        margin-bottom: 4px;
+        cursor: pointer;
+        color: var(--fg4);
+        font-size: 0.72rem;
+      }
+      .pi-c:hover {
+        border-color: var(--accent-c);
+        color: var(--accent-c);
+      }
+      .cat {
+        font-size: 0.58rem;
+        color: var(--fg4);
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        margin: 10px 0 5px;
+      }
+      .cat:first-child {
+        margin-top: 0;
+      }
+      .pv-t {
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: var(--fg2);
+        margin-bottom: 8px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .pv-m {
+        font-size: 0.7rem;
+        color: var(--fg3);
+        margin-bottom: 8px;
+      }
+      .pv-m dt {
+        color: var(--fg4);
+        display: inline;
+      }
+      .pv-m dd {
+        color: var(--fg2);
+        display: inline;
+        margin-right: 12px;
+      }
+      pre.pc {
+        background: var(--bg);
+        border: 1px solid var(--border);
+        border-radius: 4px;
+        padding: 10px 12px;
+        font-family: var(--mono);
+        font-size: 0.68rem;
+        line-height: 1.65;
+        overflow-x: auto;
+        color: var(--fg3);
+        margin: 8px 0;
+        white-space: pre;
+      }
+      .pv-a {
+        display: flex;
+        gap: 6px;
+        justify-content: flex-end;
+        margin-top: 10px;
+      }
+      .pv-a .btn {
+        padding: 5px 12px;
+        border-radius: 4px;
+        font-size: 0.7rem;
+        font-weight: 500;
+        cursor: pointer;
+        border: 1px solid var(--border2);
+      }
+      .pv-a .btn.p {
+        background: var(--accent);
+        border-color: var(--accent-b);
+        color: var(--accent-c);
+      }
+      .pv-a .btn.s {
+        background: var(--bg3);
+        color: var(--fg3);
+      }
+      .pk-ft {
+        display: flex;
+        gap: 12px;
+        padding: 6px 14px;
+        border-top: 1px solid var(--border);
+        font-size: 0.58rem;
+        color: var(--fg4);
+      }
+      .pk-ft kbd {
+        background: var(--bg4);
+        padding: 0 3px;
+        border-radius: 2px;
+        font-family: var(--mono);
+      }
+
+      /* Form */
+      .form-row {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 10px;
+      }
+      .form-col {
+        flex: 1;
+      }
+      .form-label {
+        font-size: 0.62rem;
+        color: var(--fg4);
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        margin-bottom: 3px;
+      }
+      .form-input {
+        width: 100%;
+        padding: 6px 10px;
+        background: var(--bg3);
+        border: 1px solid var(--border2);
+        border-radius: 4px;
+        color: var(--fg);
+        font-size: 0.76rem;
+        font-family: var(--sans);
+        outline: none;
+      }
+      .form-input.mono {
+        font-family: var(--mono);
+      }
+      .form-select {
+        padding: 6px 10px;
+        background: var(--bg3);
+        border: 1px solid var(--border2);
+        border-radius: 4px;
+        color: var(--fg2);
+        font-size: 0.76rem;
+      }
+      .form-row-item {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 5px 8px;
+        background: var(--bg3);
+        border: 1px solid var(--border2);
+        border-radius: 4px;
+        font-size: 0.72rem;
+      }
+      .form-row-item .n {
+        font-family: var(--mono);
+        color: var(--fg2);
+        flex: 1;
+      }
+
+      /* Tags */
+      .tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 3px;
+        margin: 6px 0;
+      }
+      .tag {
+        font-size: 0.62rem;
+        padding: 2px 6px;
+        border-radius: 3px;
+        background: var(--bg3);
+        border: 1px solid var(--border2);
+        color: var(--fg3);
+      }
+
+      /* Channel tabs */
+      .ch-tabs {
+        display: flex;
+        gap: 0;
+        border-bottom: 1px solid var(--border);
+        background: var(--bg3);
+      }
+      .ch-tab {
+        padding: 8px 14px;
+        font-size: 0.7rem;
+        color: var(--fg4);
+        cursor: pointer;
+        border-bottom: 2px solid transparent;
+      }
+      .ch-tab.a {
+        color: var(--fg2);
+        border-bottom-color: var(--fg2);
+      }
+
+      /* Editor area for template */
+      .te-area {
+        display: flex;
+        min-height: 240px;
+      }
+      .te-left {
+        flex: 1;
+        border-right: 1px solid var(--border);
+        display: flex;
+        flex-direction: column;
+      }
+      .te-right {
+        width: 340px;
+        display: flex;
+        flex-direction: column;
+      }
+      .te-bar {
+        display: flex;
+        gap: 3px;
+        padding: 5px 8px;
+        border-bottom: 1px solid var(--border);
+        background: var(--bg3);
+      }
+      .te-btn {
+        padding: 2px 6px;
+        border-radius: 3px;
+        font-size: 0.64rem;
+        color: var(--fg4);
+        cursor: pointer;
+      }
+      .te-btn:hover {
+        background: var(--bg4);
+        color: var(--fg3);
+      }
+      .te-btn.a {
+        background: var(--bg4);
+        color: var(--fg2);
+      }
+      .te-content {
+        flex: 1;
+        padding: 10px 12px;
+        font-family: var(--mono);
+        font-size: 0.72rem;
+        line-height: 1.65;
+        color: var(--fg3);
+        overflow-y: auto;
+      }
+      .te-ph {
+        padding: 5px 8px;
+        border-bottom: 1px solid var(--border);
+        background: var(--bg3);
+        font-size: 0.6rem;
+        color: var(--fg4);
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+      }
+      .te-prev {
+        flex: 1;
+        padding: 12px;
+        font-size: 0.78rem;
+        color: var(--fg2);
+        line-height: 1.55;
+        overflow-y: auto;
+      }
+
+      /* Var chip */
+      .vc {
+        display: inline-flex;
+        padding: 1px 4px;
+        background: var(--accent);
+        border: 1px solid var(--accent-b);
+        border-radius: 2px;
+        font-family: var(--mono);
+        font-size: 0.64rem;
+        color: var(--accent-c);
+      }
+    </style>
+  </head>
+  <body>
+    <nav
+      style="
+        position: sticky;
+        top: 0;
+        z-index: 50;
+        background: var(--bg);
+        border-bottom: 1px solid var(--border);
+        padding: 6px 16px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        overflow-x: auto;
+        flex-wrap: nowrap;
+      "
+    >
+      <a
+        href="index.html"
+        style="
+          font-size: 0.72rem;
+          color: var(--fg3);
+          text-decoration: none;
+          padding: 4px 8px;
+          border-radius: 4px;
+          white-space: nowrap;
+        "
+        >Overview</a
+      >
+      <a
+        href="tools.html"
+        style="
+          font-size: 0.68rem;
+          color: var(--fg3);
+          text-decoration: none;
+          padding: 4px 8px;
+          border-radius: 4px;
+          white-space: nowrap;
+        "
+        >Tools</a
+      >
+      <a
+        href="flow.html"
+        style="
+          font-size: 0.68rem;
+          color: var(--fg3);
+          text-decoration: none;
+          padding: 4px 8px;
+          border-radius: 4px;
+          white-space: nowrap;
+        "
+        >Flow</a
+      >
+      <a
+        href="guardrails.html"
+        style="
+          font-size: 0.68rem;
+          color: var(--fg3);
+          text-decoration: none;
+          padding: 4px 8px;
+          border-radius: 4px;
+          white-space: nowrap;
+        "
+        >Guardrails</a
+      >
+      <a
+        href="gather.html"
+        style="
+          font-size: 0.68rem;
+          color: var(--fg3);
+          text-decoration: none;
+          padding: 4px 8px;
+          border-radius: 4px;
+          white-space: nowrap;
+        "
+        >Gather</a
+      >
+      <a
+        href="templates.html"
+        style="
+          font-size: 0.68rem;
+          color: var(--fg3);
+          text-decoration: none;
+          padding: 4px 8px;
+          border-radius: 4px;
+          white-space: nowrap;
+        "
+        >Templates</a
+      >
+      <a
+        href="memory.html"
+        style="
+          font-size: 0.68rem;
+          color: var(--fg3);
+          text-decoration: none;
+          padding: 4px 8px;
+          border-radius: 4px;
+          white-space: nowrap;
+        "
+        >Memory</a
+      >
+      <a
+        href="coordination.html"
+        style="
+          font-size: 0.68rem;
+          color: var(--fg3);
+          text-decoration: none;
+          padding: 4px 8px;
+          border-radius: 4px;
+          white-space: nowrap;
+        "
+        >Coordination</a
+      >
+      <a
+        href="lifecycle.html"
+        style="
+          font-size: 0.68rem;
+          color: var(--fg3);
+          text-decoration: none;
+          padding: 4px 8px;
+          border-radius: 4px;
+          white-space: nowrap;
+        "
+        >Lifecycle</a
+      >
+      <a
+        href="output.html"
+        style="
+          font-size: 0.68rem;
+          color: var(--fg3);
+          text-decoration: none;
+          padding: 4px 8px;
+          border-radius: 4px;
+          white-space: nowrap;
+        "
+        >Output</a
+      >
+      <a
+        href="execution.html"
+        style="
+          font-size: 0.68rem;
+          color: var(--fg3);
+          text-decoration: none;
+          padding: 4px 8px;
+          border-radius: 4px;
+          white-space: nowrap;
+        "
+        >Execution</a
+      >
+      <a
+        href="advanced.html"
+        style="
+          font-size: 0.68rem;
+          color: var(--fg3);
+          text-decoration: none;
+          padding: 4px 8px;
+          border-radius: 4px;
+          white-space: nowrap;
+        "
+        >Advanced</a
+      >
+      <span style="color: var(--border2); margin: 0 2px">|</span>
+      <a
+        href="workflows.html"
+        style="
+          font-size: 0.68rem;
+          color: var(--fg3);
+          text-decoration: none;
+          padding: 4px 8px;
+          border-radius: 4px;
+          white-space: nowrap;
+        "
+        >Workflows</a
+      >
+      <a
+        href="monaco-editor-wireframe.html"
+        style="
+          font-size: 0.68rem;
+          font-weight: 600;
+          color: var(--fg);
+          text-decoration: none;
+          padding: 4px 10px;
+          border-radius: 4px;
+          white-space: nowrap;
+          background: var(--bg3);
+          border: 1px solid var(--border2);
+        "
+        >Editor</a
+      >
+      <a
+        href="rich-text-fields.html"
+        style="
+          font-size: 0.68rem;
+          color: var(--fg3);
+          text-decoration: none;
+          padding: 4px 8px;
+          border-radius: 4px;
+          white-space: nowrap;
+        "
+        >Rich Text + AI</a
+      >
+    </nav>
+
+    <style id="theme-auto">
+      @media (prefers-color-scheme: light) {
+        :root {
+          --bg: #fafafa !important;
+          --bg2: #f4f4f5 !important;
+          --bg3: #e4e4e7 !important;
+          --bg4: #d4d4d8 !important;
+          --fg: #18181b !important;
+          --fg2: #52525b !important;
+          --fg3: #71717a !important;
+          --fg4: #a1a1aa !important;
+          --border: #e4e4e7 !important;
+          --border2: #d4d4d8 !important;
+        }
+        pre,
+        pre.y,
+        pre.pc,
+        .code-block,
+        pre.preview-code {
+          background: #f4f4f5 !important;
+          border-color: #e4e4e7 !important;
+        }
+        .kw,
+        .k {
+          color: #6366f1 !important;
+        }
+        .str,
+        .s {
+          color: #b45309 !important;
+        }
+        .typ,
+        .t,
+        .type {
+          color: #059669 !important;
+        }
+        .num,
+        .n {
+          color: #2563eb !important;
+        }
+        .vr,
+        .v,
+        .var {
+          color: #9333ea !important;
+        }
+        .cmt,
+        .c,
+        .comment {
+          color: #a1a1aa !important;
+        }
+        nav {
+          background: #fafafa !important;
+          border-bottom-color: #e4e4e7 !important;
+        }
+        nav a {
+          color: #52525b !important;
+        }
+      }
+    </style>
+
+    <nav
+      style="
+        position: sticky;
+        top: 0;
+        z-index: 50;
+        background: #0c0c0c;
+        border-bottom: 1px solid #1e1e1e;
+        padding: 6px 16px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        overflow-x: auto;
+        flex-wrap: nowrap;
+      "
+    >
+      <a
+        href="index.html"
+        style="
+          font-size: 0.72rem;
+          font-weight: 600;
+          color: #aaa;
+          text-decoration: none;
+          padding: 4px 10px;
+          border-radius: 4px;
+          white-space: nowrap;
+        "
+        >Overview</a
+      >
+      <a
+        href="tools.html"
+        style="
+          font-size: 0.68rem;
+          color: #aaa;
+          text-decoration: none;
+          padding: 4px 8px;
+          border-radius: 4px;
+          white-space: nowrap;
+        "
+        onmouseover="this.style.background = '#1c1c1c'"
+        onmouseout="this.style.background = ''"
+        >Tools</a
+      >
+      <a
+        href="flow.html"
+        style="
+          font-size: 0.68rem;
+          color: #aaa;
+          text-decoration: none;
+          padding: 4px 8px;
+          border-radius: 4px;
+          white-space: nowrap;
+        "
+        onmouseover="this.style.background = '#1c1c1c'"
+        onmouseout="this.style.background = ''"
+        >Flow</a
+      >
+      <a
+        href="guardrails.html"
+        style="
+          font-size: 0.68rem;
+          color: #aaa;
+          text-decoration: none;
+          padding: 4px 8px;
+          border-radius: 4px;
+          white-space: nowrap;
+        "
+        onmouseover="this.style.background = '#1c1c1c'"
+        onmouseout="this.style.background = ''"
+        >Guardrails</a
+      >
+      <a
+        href="gather.html"
+        style="
+          font-size: 0.68rem;
+          color: #aaa;
+          text-decoration: none;
+          padding: 4px 8px;
+          border-radius: 4px;
+          white-space: nowrap;
+        "
+        onmouseover="this.style.background = '#1c1c1c'"
+        onmouseout="this.style.background = ''"
+        >Gather</a
+      >
+      <a
+        href="templates.html"
+        style="
+          font-size: 0.68rem;
+          color: #aaa;
+          text-decoration: none;
+          padding: 4px 8px;
+          border-radius: 4px;
+          white-space: nowrap;
+        "
+        onmouseover="this.style.background = '#1c1c1c'"
+        onmouseout="this.style.background = ''"
+        >Templates</a
+      >
+      <a
+        href="memory.html"
+        style="
+          font-size: 0.68rem;
+          color: #aaa;
+          text-decoration: none;
+          padding: 4px 8px;
+          border-radius: 4px;
+          white-space: nowrap;
+        "
+        onmouseover="this.style.background = '#1c1c1c'"
+        onmouseout="this.style.background = ''"
+        >Memory</a
+      >
+      <a
+        href="coordination.html"
+        style="
+          font-size: 0.68rem;
+          color: #aaa;
+          text-decoration: none;
+          padding: 4px 8px;
+          border-radius: 4px;
+          white-space: nowrap;
+        "
+        onmouseover="this.style.background = '#1c1c1c'"
+        onmouseout="this.style.background = ''"
+        >Coordination</a
+      >
+      <a
+        href="lifecycle.html"
+        style="
+          font-size: 0.68rem;
+          color: #aaa;
+          text-decoration: none;
+          padding: 4px 8px;
+          border-radius: 4px;
+          white-space: nowrap;
+        "
+        onmouseover="this.style.background = '#1c1c1c'"
+        onmouseout="this.style.background = ''"
+        >Lifecycle</a
+      >
+      <a
+        href="output.html"
+        style="
+          font-size: 0.68rem;
+          color: #aaa;
+          text-decoration: none;
+          padding: 4px 8px;
+          border-radius: 4px;
+          white-space: nowrap;
+        "
+        onmouseover="this.style.background = '#1c1c1c'"
+        onmouseout="this.style.background = ''"
+        >Output</a
+      >
+      <a
+        href="execution.html"
+        style="
+          font-size: 0.68rem;
+          color: #aaa;
+          text-decoration: none;
+          padding: 4px 8px;
+          border-radius: 4px;
+          white-space: nowrap;
+        "
+        onmouseover="this.style.background = '#1c1c1c'"
+        onmouseout="this.style.background = ''"
+        >Execution</a
+      >
+      <a
+        href="advanced.html"
+        style="
+          font-size: 0.68rem;
+          color: #aaa;
+          text-decoration: none;
+          padding: 4px 8px;
+          border-radius: 4px;
+          white-space: nowrap;
+        "
+        onmouseover="this.style.background = '#1c1c1c'"
+        onmouseout="this.style.background = ''"
+        >Advanced</a
+      >
+      <span style="color: #2a2a2a; margin: 0 2px">|</span>
+      <a
+        href="workflows.html"
+        style="
+          font-size: 0.68rem;
+          color: #aaa;
+          text-decoration: none;
+          padding: 4px 8px;
+          border-radius: 4px;
+          white-space: nowrap;
+        "
+        onmouseover="this.style.background = '#1c1c1c'"
+        onmouseout="this.style.background = ''"
+        >Workflows</a
+      >
+      <a
+        href="monaco-editor-wireframe.html"
+        style="
+          font-size: 0.68rem;
+          color: #7090c0;
+          text-decoration: none;
+          padding: 4px 8px;
+          border-radius: 4px;
+          white-space: nowrap;
+        "
+        onmouseover="this.style.background = '#1c1c1c'"
+        onmouseout="this.style.background = ''"
+        >Editor</a
+      >
+    </nav>
+
+    <header>
+      <h1>Monaco Editor — Complete Wireframe</h1>
+      <div class="sub">
+        Every slash command, picker modal, creation form, and preview panel for all 27 DSL
+        constructs.
+      </div>
+    </header>
+
+    <div class="container">
+      <!-- ═══════════════════════════════════════════ -->
+      <!-- 1. TOOLS CONTEXT -->
+      <!-- ═══════════════════════════════════════════ -->
+      <div class="section">
+        <div class="st">1. Editor Layout — Root Level Command Palette</div>
+        <div class="ed">
+          <div class="ed-body">
+            <div class="ed-side">
+              <div class="si a">▼ Agent</div>
+              <div class="si h">▼ TOOLS</div>
+              <div class="si hh">fetch_policy</div>
+              <div class="si hh">submit_claim</div>
+              <div class="si h">▼ GUARDRAILS</div>
+              <div class="si hh">pii_guard</div>
+              <div class="si h">▶ GATHER</div>
+              <div class="si h">▶ FLOW</div>
+              <div class="si h">▶ MEMORY</div>
+              <div class="si h">▶ COMPLETE</div>
+            </div>
+            <div class="ed-code" style="padding-bottom: 380px">
+              <div class="cl">
+                <span class="ln">1</span
+                ><span class="lc"><span class="kw">AGENT:</span> My_Agent</span>
+              </div>
+              <div class="cl">
+                <span class="ln">2</span
+                ><span class="lc"
+                  ><span class="kw">GOAL:</span> <span class="str">"Help users"</span></span
+                >
+              </div>
+              <div class="cl"><span class="ln">3</span><span class="lc"></span></div>
+              <div class="cl hl">
+                <span class="ln">4</span><span class="lc">/<span class="cur"> </span></span>
+              </div>
+              <div class="cp" style="top: 58px; left: 42px; width: 340px">
+                <div class="cp-ctx">Root level — all commands</div>
+                <div class="cp-sep">Capabilities</div>
+                <div class="ci f">
+                  <span class="ic">⚙</span><span class="cm">/tool</span
+                  ><span class="cd">Add tool</span>
+                </div>
+                <div class="ci">
+                  <span class="ic">⊕</span><span class="cm">/guardrail</span
+                  ><span class="cd">Add guardrail</span>
+                </div>
+                <div class="ci">
+                  <span class="ic">⊕</span><span class="cm">/template</span
+                  ><span class="cd">Add template</span>
+                </div>
+                <div class="ci">
+                  <span class="ic">⊕</span><span class="cm">/field</span
+                  ><span class="cd">Add gather field</span>
+                </div>
+                <div class="ci">
+                  <span class="ic">⊕</span><span class="cm">/attachment</span
+                  ><span class="cd">Add attachment field</span>
+                </div>
+                <div class="cp-sep">Flow</div>
+                <div class="ci">
+                  <span class="ic">⊕</span><span class="cm">/step</span
+                  ><span class="cd">Add flow step</span>
+                </div>
+                <div class="ci">
+                  <span class="ic">⊕</span><span class="cm">/reasoning-step</span
+                  ><span class="cd">LLM step</span>
+                </div>
+                <div class="cp-sep">Safety</div>
+                <div class="ci">
+                  <span class="ic">⊕</span><span class="cm">/constraint</span
+                  ><span class="cd">Business rule</span>
+                </div>
+                <div class="ci">
+                  <span class="ic">⊕</span><span class="cm">/builtin-guard</span
+                  ><span class="cd">Built-in guard</span>
+                </div>
+                <div class="cp-sep">Memory</div>
+                <div class="ci">
+                  <span class="ic">⊕</span><span class="cm">/memory-var</span
+                  ><span class="cd">Session var</span>
+                </div>
+                <div class="ci">
+                  <span class="ic">⊕</span><span class="cm">/persistent</span
+                  ><span class="cd">Persistent path</span>
+                </div>
+                <div class="cp-sep">Coordination</div>
+                <div class="ci">
+                  <span class="ic">⊕</span><span class="cm">/handoff</span
+                  ><span class="cd">Agent transfer</span>
+                </div>
+                <div class="ci">
+                  <span class="ic">⊕</span><span class="cm">/delegate</span
+                  ><span class="cd">Sub-agent</span>
+                </div>
+                <div class="ci">
+                  <span class="ic">⊕</span><span class="cm">/escalate</span
+                  ><span class="cd">Human</span>
+                </div>
+                <div class="cp-sep">Lifecycle</div>
+                <div class="ci">
+                  <span class="ic">⊕</span><span class="cm">/onstart</span
+                  ><span class="cd">Init</span>
+                </div>
+                <div class="ci">
+                  <span class="ic">⊕</span><span class="cm">/complete</span
+                  ><span class="cd">Completion</span>
+                </div>
+                <div class="ci">
+                  <span class="ic">⊕</span><span class="cm">/onerror</span
+                  ><span class="cd">Error handler</span>
+                </div>
+                <div class="cp-ft">
+                  <span><kbd>↑↓</kbd> Nav</span><span><kbd>⏎</kbd> Select</span
+                  ><span><kbd>Esc</kbd> Close</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══════════════════════════════════════════ -->
+      <!-- 6. TOOL PICKER MODAL -->
+      <!-- ═══════════════════════════════════════════ -->
+      <div class="section">
+        <div class="st">2. Identity — Rich Text Editor (PERSONA, GOAL, INSTRUCTIONS)</div>
+        <div class="desc" style="font-size: 0.82rem; color: var(--fg3); margin-bottom: 14px">
+          When cursor enters a multi-line text field like PERSONA or INSTRUCTIONS, a Notion-style
+          rich editor overlay appears with markdown formatting.
+        </div>
+        <div class="mo">
+          <div class="pk" style="max-width: 880px">
+            <div class="pk-h">
+              <h3>PERSONA — Rich Text Editor</h3>
+              <span
+                style="
+                  font-size: 0.62rem;
+                  padding: 2px 6px;
+                  background: var(--bg4);
+                  border-radius: 3px;
+                  color: var(--fg3);
+                "
+                >LLM Instruction Mode</span
+              ><span style="color: var(--fg4); cursor: pointer; margin-left: auto">✕</span>
+            </div>
+            <div class="pk-body" style="flex-direction: row; min-height: 300px">
+              <div
+                style="
+                  flex: 1;
+                  border-right: 1px solid var(--border);
+                  display: flex;
+                  flex-direction: column;
+                "
+              >
+                <!-- Toolbar -->
+                <div
+                  style="
+                    display: flex;
+                    gap: 3px;
+                    padding: 5px 8px;
+                    border-bottom: 1px solid var(--border);
+                    background: var(--bg3);
+                    flex-wrap: wrap;
+                    align-items: center;
+                  "
+                >
+                  <div class="pk-t" style="padding: 2px 6px; font-size: 0.64rem">
+                    <strong>B</strong>
+                  </div>
+                  <div class="pk-t" style="padding: 2px 6px; font-size: 0.64rem"><em>I</em></div>
+                  <span
+                    style="width: 1px; height: 12px; background: var(--border2); margin: 0 2px"
+                  ></span>
+                  <div class="pk-t" style="padding: 2px 6px; font-size: 0.64rem">H1</div>
+                  <div class="pk-t" style="padding: 2px 6px; font-size: 0.64rem">H2</div>
+                  <span
+                    style="width: 1px; height: 12px; background: var(--border2); margin: 0 2px"
+                  ></span>
+                  <div class="pk-t" style="padding: 2px 6px; font-size: 0.64rem">• List</div>
+                  <div class="pk-t" style="padding: 2px 6px; font-size: 0.64rem">1. List</div>
+                  <span
+                    style="width: 1px; height: 12px; background: var(--border2); margin: 0 2px"
+                  ></span>
+                  <div class="pk-t" style="padding: 2px 6px; font-size: 0.64rem">&lt;/&gt;</div>
+                  <div class="pk-t" style="padding: 2px 6px; font-size: 0.64rem">—</div>
+                  <div style="flex: 1"></div>
+                  <div class="pk-t a" style="padding: 2px 6px; font-size: 0.62rem">Edit</div>
+                  <div class="pk-t" style="padding: 2px 6px; font-size: 0.62rem">YAML</div>
+                </div>
+                <!-- Content -->
+                <div
+                  style="
+                    flex: 1;
+                    padding: 12px 14px;
+                    font-size: 0.82rem;
+                    line-height: 1.7;
+                    color: var(--fg2);
+                    overflow-y: auto;
+                    font-family: var(--sans);
+                  "
+                >
+                  <div style="font-size: 0.92rem; font-weight: 600; margin-bottom: 6px">Role</div>
+                  <div>
+                    You are a <strong>professional claims assistant</strong> for ABC Insurance.
+                  </div>
+                  <div style="margin-top: 10px">Your responsibilities:</div>
+                  <ul style="margin: 4px 0 0 18px; color: var(--fg3)">
+                    <li>Guide customers through the claims process</li>
+                    <li>Verify policy information before proceeding</li>
+                    <li>Maintain empathetic, clear communication</li>
+                  </ul>
+                  <div
+                    style="
+                      margin-top: 14px;
+                      font-size: 0.92rem;
+                      font-weight: 600;
+                      margin-bottom: 6px;
+                    "
+                  >
+                    Tone
+                  </div>
+                  <div>
+                    Keep responses <strong>concise</strong> — 2-3 sentences max. Use simple
+                    language, avoid jargon.
+                  </div>
+                  <div
+                    style="margin-top: 14px; color: var(--fg4); font-size: 0.76rem; opacity: 0.5"
+                  >
+                    Type / for formatting commands...
+                  </div>
+                </div>
+              </div>
+              <!-- YAML Preview -->
+              <div style="width: 340px; display: flex; flex-direction: column">
+                <div
+                  style="
+                    padding: 5px 8px;
+                    border-bottom: 1px solid var(--border);
+                    background: var(--bg3);
+                    font-size: 0.6rem;
+                    color: var(--fg4);
+                    text-transform: uppercase;
+                    letter-spacing: 0.06em;
+                  "
+                >
+                  Generated YAML
+                </div>
+                <div
+                  style="
+                    flex: 1;
+                    padding: 10px 12px;
+                    font-family: var(--mono);
+                    font-size: 0.7rem;
+                    color: var(--fg3);
+                    line-height: 1.6;
+                    overflow-y: auto;
+                    white-space: pre;
+                  "
+                >
+                  <span class="kw">PERSONA:</span> | ## Role You are a **professional claims
+                  assistant** for ABC Insurance. Your responsibilities: - Guide customers through
+                  claims - Verify policy information - Maintain empathetic communication ## Tone
+                  Keep responses **concise** — 2-3 sentences max. Simple language.
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══════════════════════════════════════════ -->
+      <!-- 17. RICH TEXT — RESPOND (User Response Mode) -->
+      <!-- ═══════════════════════════════════════════ -->
+      <div class="section">
+        <div class="st">3. Identity — / Commands Inside Rich Text</div>
+        <div class="desc" style="font-size: 0.82rem; color: var(--fg3); margin-bottom: 14px">
+          When user types / inside the rich text overlay, a Notion-style popup shows text-specific
+          commands (not DSL construct commands).
+        </div>
+        <div class="mo">
+          <div style="padding: 16px; min-height: 280px">
+            <div
+              style="
+                font-size: 0.82rem;
+                color: var(--fg2);
+                line-height: 1.8;
+                font-family: var(--sans);
+              "
+            >
+              <div>
+                Your claim
+                <span
+                  style="
+                    display: inline;
+                    padding: 1px 4px;
+                    background: var(--accent);
+                    border: 1px solid var(--accent-b);
+                    border-radius: 3px;
+                    font-family: var(--mono);
+                    font-size: 0.7rem;
+                    color: var(--accent-c);
+                  "
+                  >{{claim_id}}</span
+                >
+                has been submitted.
+              </div>
+              <div style="margin-top: 6px; color: var(--fg3)">/</div>
+              <!-- Slash popup -->
+              <div
+                style="
+                  width: 260px;
+                  background: var(--bg3);
+                  border: 1px solid var(--border2);
+                  border-radius: 6px;
+                  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+                  overflow: hidden;
+                  margin-top: 4px;
+                "
+              >
+                <div
+                  style="
+                    padding: 4px 10px;
+                    font-size: 0.6rem;
+                    color: var(--accent-c);
+                    background: var(--accent);
+                    border-bottom: 1px solid var(--border);
+                  "
+                >
+                  Insert in text
+                </div>
+                <div class="ci f" style="font-size: 0.72rem">
+                  <span style="font-weight: 600; color: var(--fg2)">{{ }} Variable</span
+                  ><span style="color: var(--fg4); margin-left: auto; font-size: 0.66rem"
+                    >Insert variable</span
+                  >
+                </div>
+                <div class="ci" style="font-size: 0.72rem">
+                  <span style="font-weight: 600; color: var(--fg2)">{{#if}}</span
+                  ><span style="color: var(--fg4); margin-left: auto; font-size: 0.66rem"
+                    >Conditional</span
+                  >
+                </div>
+                <div class="ci" style="font-size: 0.72rem">
+                  <span style="font-weight: 600; color: var(--fg2)">{{#each}}</span
+                  ><span style="color: var(--fg4); margin-left: auto; font-size: 0.66rem"
+                    >Loop</span
+                  >
+                </div>
+                <div
+                  style="
+                    padding: 3px 10px;
+                    font-size: 0.56rem;
+                    font-weight: 600;
+                    color: var(--fg4);
+                    text-transform: uppercase;
+                    background: var(--bg2);
+                  "
+                >
+                  Formatting
+                </div>
+                <div class="ci" style="font-size: 0.72rem">
+                  <span style="font-weight: 600; color: var(--fg2)">Heading</span
+                  ><span style="color: var(--fg4); margin-left: auto; font-size: 0.66rem"
+                    >H1, H2, H3</span
+                  >
+                </div>
+                <div class="ci" style="font-size: 0.72rem">
+                  <span style="font-weight: 600; color: var(--fg2)">Bullet List</span
+                  ><span style="color: var(--fg4); margin-left: auto; font-size: 0.66rem"
+                    >Unordered</span
+                  >
+                </div>
+                <div class="ci" style="font-size: 0.72rem">
+                  <span style="font-weight: 600; color: var(--fg2)">Numbered List</span
+                  ><span style="color: var(--fg4); margin-left: auto; font-size: 0.66rem"
+                    >Ordered</span
+                  >
+                </div>
+                <div class="ci" style="font-size: 0.72rem">
+                  <span style="font-weight: 600; color: var(--fg2)">Divider</span
+                  ><span style="color: var(--fg4); margin-left: auto; font-size: 0.66rem">---</span>
+                </div>
+                <div class="ci" style="font-size: 0.72rem">
+                  <span style="font-weight: 600; color: var(--fg2)">Code Block</span
+                  ><span style="color: var(--fg4); margin-left: auto; font-size: 0.66rem"
+                    >Monospace</span
+                  >
+                </div>
+                <div
+                  style="
+                    padding: 4px 10px;
+                    font-size: 0.56rem;
+                    color: var(--fg4);
+                    border-top: 1px solid var(--border);
+                    display: flex;
+                    gap: 12px;
+                  "
+                >
+                  <span
+                    ><kbd
+                      style="
+                        background: var(--bg4);
+                        padding: 0 3px;
+                        border-radius: 2px;
+                        font-family: var(--mono);
+                        font-size: 0.52rem;
+                      "
+                      >↑↓</kbd
+                    >
+                    Nav</span
+                  ><span
+                    ><kbd
+                      style="
+                        background: var(--bg4);
+                        padding: 0 3px;
+                        border-radius: 2px;
+                        font-family: var(--mono);
+                        font-size: 0.52rem;
+                      "
+                      >⏎</kbd
+                    >
+                    Insert</span
+                  >
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══════════════════════════════════════════ -->
+      <!-- 19. RICH TEXT — VARIABLE PICKER -->
+      <!-- ═══════════════════════════════════════════ -->
+      <div class="section">
+        <div class="st">4. Identity — Variable Picker</div>
+        <div class="desc" style="font-size: 0.82rem; color: var(--fg3); margin-bottom: 14px">
+          Appears when user clicks {{ }} button or types {{ in the rich text editor. Shows all
+          available variables from agent context.
+        </div>
+        <div style="display: flex; gap: 12px">
+          <div class="mo" style="width: 300px; margin: 0">
+            <div
+              style="
+                padding: 8px 10px;
+                border-bottom: 1px solid var(--border);
+                background: var(--bg3);
+                font-size: 0.7rem;
+                font-weight: 600;
+                color: var(--fg2);
+              "
+            >
+              Insert Variable
+            </div>
+            <div style="padding: 6px 10px; border-bottom: 1px solid var(--border)">
+              <input
+                style="
+                  width: 100%;
+                  padding: 5px 8px;
+                  background: var(--bg3);
+                  border: 1px solid var(--border2);
+                  border-radius: 4px;
+                  color: var(--fg);
+                  font-size: 0.76rem;
+                  outline: none;
+                  font-family: var(--sans);
+                "
+                placeholder="Search variables..."
+                readonly
+              />
+            </div>
+            <div style="padding: 4px 0; max-height: 260px; overflow-y: auto">
+              <div
+                style="
+                  padding: 3px 10px;
+                  font-size: 0.58rem;
+                  color: var(--fg4);
+                  text-transform: uppercase;
+                "
+              >
+                Gather Fields
+              </div>
+              <div
+                style="
+                  padding: 5px 10px;
+                  font-size: 0.76rem;
+                  cursor: pointer;
+                  display: flex;
+                  gap: 6px;
+                  align-items: center;
+                "
+                class="ci f"
+              >
+                <span style="font-family: var(--mono); color: var(--accent-c)">claim_id</span
+                ><span style="color: var(--fg4); font-size: 0.64rem">string</span>
+              </div>
+              <div
+                style="
+                  padding: 5px 10px;
+                  font-size: 0.76rem;
+                  cursor: pointer;
+                  display: flex;
+                  gap: 6px;
+                  align-items: center;
+                "
+                class="ci"
+              >
+                <span style="font-family: var(--mono); color: var(--accent-c)">claim_status</span
+                ><span style="color: var(--fg4); font-size: 0.64rem">string</span>
+              </div>
+              <div
+                style="
+                  padding: 5px 10px;
+                  font-size: 0.76rem;
+                  cursor: pointer;
+                  display: flex;
+                  gap: 6px;
+                  align-items: center;
+                "
+                class="ci"
+              >
+                <span style="font-family: var(--mono); color: var(--accent-c)">customer_name</span
+                ><span style="color: var(--fg4); font-size: 0.64rem">string</span>
+              </div>
+              <div
+                style="
+                  padding: 5px 10px;
+                  font-size: 0.76rem;
+                  cursor: pointer;
+                  display: flex;
+                  gap: 6px;
+                  align-items: center;
+                "
+                class="ci"
+              >
+                <span style="font-family: var(--mono); color: var(--accent-c)">damage_amount</span
+                ><span style="color: var(--fg4); font-size: 0.64rem">number</span>
+              </div>
+              <div
+                style="
+                  padding: 3px 10px;
+                  font-size: 0.58rem;
+                  color: var(--fg4);
+                  text-transform: uppercase;
+                  margin-top: 4px;
+                "
+              >
+                Session Memory
+              </div>
+              <div
+                style="
+                  padding: 5px 10px;
+                  font-size: 0.76rem;
+                  cursor: pointer;
+                  display: flex;
+                  gap: 6px;
+                  align-items: center;
+                "
+                class="ci"
+              >
+                <span style="font-family: var(--mono); color: #a080a0">claim_status</span
+                ><span style="color: var(--fg4); font-size: 0.64rem">string</span>
+              </div>
+              <div
+                style="
+                  padding: 5px 10px;
+                  font-size: 0.76rem;
+                  cursor: pointer;
+                  display: flex;
+                  gap: 6px;
+                  align-items: center;
+                "
+                class="ci"
+              >
+                <span style="font-family: var(--mono); color: #a080a0">attempts</span
+                ><span style="color: var(--fg4); font-size: 0.64rem">number</span>
+              </div>
+              <div
+                style="
+                  padding: 3px 10px;
+                  font-size: 0.58rem;
+                  color: var(--fg4);
+                  text-transform: uppercase;
+                  margin-top: 4px;
+                "
+              >
+                Tool Results
+              </div>
+              <div
+                style="
+                  padding: 5px 10px;
+                  font-size: 0.76rem;
+                  cursor: pointer;
+                  display: flex;
+                  gap: 6px;
+                  align-items: center;
+                "
+                class="ci"
+              >
+                <span style="font-family: var(--mono); color: var(--fg3)">result.hotels</span
+                ><span style="color: var(--fg4); font-size: 0.64rem">array</span>
+              </div>
+              <div
+                style="
+                  padding: 3px 10px;
+                  font-size: 0.58rem;
+                  color: var(--fg4);
+                  text-transform: uppercase;
+                  margin-top: 4px;
+                "
+              >
+                Built-in
+              </div>
+              <div
+                style="
+                  padding: 5px 10px;
+                  font-size: 0.76rem;
+                  cursor: pointer;
+                  display: flex;
+                  gap: 6px;
+                "
+                class="ci"
+              >
+                <span style="font-family: var(--mono); color: var(--fg4)">channel</span>
+              </div>
+              <div
+                style="
+                  padding: 5px 10px;
+                  font-size: 0.76rem;
+                  cursor: pointer;
+                  display: flex;
+                  gap: 6px;
+                "
+                class="ci"
+              >
+                <span style="font-family: var(--mono); color: var(--fg4)">turn_count</span>
+              </div>
+              <div
+                style="
+                  padding: 5px 10px;
+                  font-size: 0.76rem;
+                  cursor: pointer;
+                  display: flex;
+                  gap: 6px;
+                "
+                class="ci"
+              >
+                <span style="font-family: var(--mono); color: var(--fg4)">session_id</span>
+              </div>
+            </div>
+          </div>
+          <!-- Field Map -->
+          <div style="flex: 1">
+            <div
+              style="
+                font-size: 0.72rem;
+                font-weight: 600;
+                color: var(--fg4);
+                text-transform: uppercase;
+                letter-spacing: 0.06em;
+                margin-bottom: 8px;
+              "
+            >
+              Fields that support rich text editing
+            </div>
+            <table style="width: 100%; border-collapse: collapse; font-size: 0.74rem">
+              <tr
+                style="
+                  font-size: 0.62rem;
+                  text-transform: uppercase;
+                  letter-spacing: 0.06em;
+                  color: var(--fg4);
+                "
+              >
+                <th
+                  style="
+                    padding: 4px 8px;
+                    text-align: left;
+                    border-bottom: 1px solid var(--border2);
+                  "
+                >
+                  Field
+                </th>
+                <th
+                  style="
+                    padding: 4px 8px;
+                    text-align: left;
+                    border-bottom: 1px solid var(--border2);
+                  "
+                >
+                  Mode
+                </th>
+                <th
+                  style="
+                    padding: 4px 8px;
+                    text-align: left;
+                    border-bottom: 1px solid var(--border2);
+                  "
+                >
+                  Variables
+                </th>
+              </tr>
+              <tr>
+                <td
+                  style="
+                    padding: 3px 8px;
+                    border-bottom: 1px solid var(--border);
+                    font-family: var(--mono);
+                    color: var(--fg2);
+                  "
+                >
+                  PERSONA:
+                </td>
+                <td
+                  style="
+                    padding: 3px 8px;
+                    border-bottom: 1px solid var(--border);
+                    color: var(--fg3);
+                  "
+                >
+                  LLM Instruction
+                </td>
+                <td
+                  style="
+                    padding: 3px 8px;
+                    border-bottom: 1px solid var(--border);
+                    color: var(--fg4);
+                  "
+                >
+                  No
+                </td>
+              </tr>
+              <tr>
+                <td
+                  style="
+                    padding: 3px 8px;
+                    border-bottom: 1px solid var(--border);
+                    font-family: var(--mono);
+                    color: var(--fg2);
+                  "
+                >
+                  GOAL:
+                </td>
+                <td
+                  style="
+                    padding: 3px 8px;
+                    border-bottom: 1px solid var(--border);
+                    color: var(--fg3);
+                  "
+                >
+                  LLM Instruction
+                </td>
+                <td
+                  style="
+                    padding: 3px 8px;
+                    border-bottom: 1px solid var(--border);
+                    color: var(--fg4);
+                  "
+                >
+                  No
+                </td>
+              </tr>
+              <tr>
+                <td
+                  style="
+                    padding: 3px 8px;
+                    border-bottom: 1px solid var(--border);
+                    font-family: var(--mono);
+                    color: var(--fg2);
+                  "
+                >
+                  INSTRUCTIONS:
+                </td>
+                <td
+                  style="
+                    padding: 3px 8px;
+                    border-bottom: 1px solid var(--border);
+                    color: var(--fg3);
+                  "
+                >
+                  LLM Instruction
+                </td>
+                <td
+                  style="
+                    padding: 3px 8px;
+                    border-bottom: 1px solid var(--border);
+                    color: var(--accent-c);
+                  "
+                >
+                  Yes
+                </td>
+              </tr>
+              <tr>
+                <td
+                  style="
+                    padding: 3px 8px;
+                    border-bottom: 1px solid var(--border);
+                    font-family: var(--mono);
+                    color: var(--fg2);
+                  "
+                >
+                  SYSTEM_PROMPT:
+                </td>
+                <td
+                  style="
+                    padding: 3px 8px;
+                    border-bottom: 1px solid var(--border);
+                    color: var(--fg3);
+                  "
+                >
+                  LLM Instruction
+                </td>
+                <td
+                  style="
+                    padding: 3px 8px;
+                    border-bottom: 1px solid var(--border);
+                    color: var(--accent-c);
+                  "
+                >
+                  Yes
+                </td>
+              </tr>
+              <tr>
+                <td
+                  style="
+                    padding: 3px 8px;
+                    border-bottom: 1px solid var(--border);
+                    font-family: var(--mono);
+                    color: var(--fg2);
+                  "
+                >
+                  RESPOND:
+                </td>
+                <td
+                  style="
+                    padding: 3px 8px;
+                    border-bottom: 1px solid var(--border);
+                    color: var(--fg3);
+                  "
+                >
+                  User Response
+                </td>
+                <td
+                  style="
+                    padding: 3px 8px;
+                    border-bottom: 1px solid var(--border);
+                    color: var(--accent-c);
+                  "
+                >
+                  Yes + Helpers
+                </td>
+              </tr>
+              <tr>
+                <td
+                  style="
+                    padding: 3px 8px;
+                    border-bottom: 1px solid var(--border);
+                    font-family: var(--mono);
+                    color: var(--fg2);
+                  "
+                >
+                  TEMPLATES:
+                </td>
+                <td
+                  style="
+                    padding: 3px 8px;
+                    border-bottom: 1px solid var(--border);
+                    color: var(--fg3);
+                  "
+                >
+                  User Response
+                </td>
+                <td
+                  style="
+                    padding: 3px 8px;
+                    border-bottom: 1px solid var(--border);
+                    color: var(--accent-c);
+                  "
+                >
+                  Yes + Helpers
+                </td>
+              </tr>
+              <tr>
+                <td
+                  style="
+                    padding: 3px 8px;
+                    border-bottom: 1px solid var(--border);
+                    font-family: var(--mono);
+                    color: var(--fg2);
+                  "
+                >
+                  PRESENT:
+                </td>
+                <td
+                  style="
+                    padding: 3px 8px;
+                    border-bottom: 1px solid var(--border);
+                    color: var(--fg3);
+                  "
+                >
+                  User Response
+                </td>
+                <td
+                  style="
+                    padding: 3px 8px;
+                    border-bottom: 1px solid var(--border);
+                    color: var(--accent-c);
+                  "
+                >
+                  Yes + Helpers
+                </td>
+              </tr>
+              <tr>
+                <td
+                  style="
+                    padding: 3px 8px;
+                    border-bottom: 1px solid var(--border);
+                    font-family: var(--mono);
+                    color: var(--fg2);
+                  "
+                >
+                  ON_START RESPOND:
+                </td>
+                <td
+                  style="
+                    padding: 3px 8px;
+                    border-bottom: 1px solid var(--border);
+                    color: var(--fg3);
+                  "
+                >
+                  User Response
+                </td>
+                <td
+                  style="
+                    padding: 3px 8px;
+                    border-bottom: 1px solid var(--border);
+                    color: var(--accent-c);
+                  "
+                >
+                  Yes
+                </td>
+              </tr>
+              <tr>
+                <td
+                  style="
+                    padding: 3px 8px;
+                    border-bottom: 1px solid var(--border);
+                    font-family: var(--mono);
+                    color: var(--fg2);
+                  "
+                >
+                  COMPLETE RESPOND:
+                </td>
+                <td
+                  style="
+                    padding: 3px 8px;
+                    border-bottom: 1px solid var(--border);
+                    color: var(--fg3);
+                  "
+                >
+                  User Response
+                </td>
+                <td
+                  style="
+                    padding: 3px 8px;
+                    border-bottom: 1px solid var(--border);
+                    color: var(--accent-c);
+                  "
+                >
+                  Yes
+                </td>
+              </tr>
+              <tr>
+                <td style="padding: 3px 8px; font-family: var(--mono); color: var(--fg2)">
+                  MESSAGES:
+                </td>
+                <td style="padding: 3px 8px; color: var(--fg3)">User Response (lite)</td>
+                <td style="padding: 3px 8px; color: var(--accent-c)">Yes</td>
+              </tr>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══════════════════════════════════════════ -->
+      <div class="section">
+        <div class="st">5. Tools — Slash Commands in TOOLS Section</div>
+        <div class="ed">
+          <div class="ed-bar">
+            <span style="font-weight: 600; color: var(--fg2)">ABL Editor</span
+            ><span style="color: #b8a070">● Modified</span>
+            <div class="sp"></div>
+            <div class="b">Outline</div>
+            <div class="b">Diagnostics</div>
+            <div class="b p">Compile</div>
+          </div>
+          <div class="ed-body">
+            <div class="ed-side">
+              <div class="si a">▼ Agent</div>
+              <div class="si h">▼ TOOLS</div>
+              <div class="si hh">fetch_policy</div>
+              <div class="si hh">submit_claim</div>
+              <div class="si h">▼ GUARDRAILS</div>
+              <div class="si hh">pii_guard</div>
+              <div class="si h">▶ GATHER</div>
+              <div class="si h">▶ FLOW</div>
+              <div class="si h">▶ MEMORY</div>
+              <div class="si h">▶ COMPLETE</div>
+            </div>
+            <div class="ed-code">
+              <div class="cl">
+                <span class="ln">7</span><span class="lc"><span class="kw">TOOLS:</span></span>
+              </div>
+              <div class="cl">
+                <span class="ln">8</span
+                ><span class="lc">
+                  <span class="typ">fetch_policy</span>(policyId: <span class="typ">string</span>)
+                  -> <span class="typ">object</span></span
+                >
+              </div>
+              <div class="cl">
+                <span class="ln">9</span
+                ><span class="lc"> description: <span class="str">"Get policy details"</span></span>
+              </div>
+              <div class="cl"><span class="ln">10</span><span class="lc"></span></div>
+              <div class="cl hl">
+                <span class="ln">11</span><span class="lc"> /<span class="cur"> </span></span>
+              </div>
+              <div class="cp" style="top: 82px; left: 54px">
+                <div class="cp-ctx">Context: TOOLS section</div>
+                <div class="ci f">
+                  <span class="ic">⚙</span><span class="cm">/tool</span
+                  ><span class="cd">Browse + insert</span>
+                </div>
+                <div class="ci">
+                  <span class="ic">⊕</span><span class="cm">/http-tool</span
+                  ><span class="cd">REST API</span>
+                </div>
+                <div class="ci">
+                  <span class="ic">⊕</span><span class="cm">/mcp-tool</span
+                  ><span class="cd">MCP server</span>
+                </div>
+                <div class="ci">
+                  <span class="ic">⊕</span><span class="cm">/sandbox-tool</span
+                  ><span class="cd">Inline code</span>
+                </div>
+                <div class="ci">
+                  <span class="ic">⊕</span><span class="cm">/lambda-tool</span
+                  ><span class="cd">Serverless</span>
+                </div>
+                <div class="ci">
+                  <span class="ic">⊕</span><span class="cm">/async-tool</span
+                  ><span class="cd">Webhook</span>
+                </div>
+                <div class="cp-ft">
+                  <span><kbd>↑↓</kbd> Nav</span><span><kbd>⏎</kbd> Select</span
+                  ><span><kbd>Esc</kbd> Close</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══════════════════════════════════════════ -->
+      <!-- 2. GUARDRAILS CONTEXT -->
+      <!-- ═══════════════════════════════════════════ -->
+      <div class="section">
+        <div class="st">6. Tools — Picker Modal (Browse + Preview)</div>
+        <div class="mo">
+          <div class="pk">
+            <div class="pk-h">
+              <h3>Insert Tool</h3>
+              <span style="color: var(--fg4); cursor: pointer">✕</span>
+            </div>
+            <div class="pk-s"><input placeholder="Search tools..." readonly /></div>
+            <div class="pk-tabs">
+              <div class="pk-t a">All</div>
+              <div class="pk-t">HTTP</div>
+              <div class="pk-t">MCP</div>
+              <div class="pk-t">Lambda</div>
+              <div class="pk-t">Sandbox</div>
+              <div class="pk-t">Webhook</div>
+            </div>
+            <div class="pk-body">
+              <div class="pk-list">
+                <div class="cat">Project Tools (4)</div>
+                <div class="pi sel">
+                  <div>
+                    <div class="nm">fetch_customer</div>
+                    <div class="ds">Fetch customer profile</div>
+                  </div>
+                  <span class="bd">HTTP</span>
+                </div>
+                <div class="pi">
+                  <div>
+                    <div class="nm">create_ticket</div>
+                    <div class="ds">Create Zendesk ticket</div>
+                  </div>
+                  <span class="bd">MCP</span>
+                </div>
+                <div class="pi">
+                  <div>
+                    <div class="nm">calc_premium</div>
+                    <div class="ds">Calculate premium</div>
+                  </div>
+                  <span class="bd">Sandbox</span>
+                </div>
+                <div class="pi">
+                  <div>
+                    <div class="nm">gen_report</div>
+                    <div class="ds">Generate PDF report</div>
+                  </div>
+                  <span class="bd">Lambda</span>
+                </div>
+                <div class="cat">Create New</div>
+                <div class="pi-c">⊕ New HTTP Tool</div>
+                <div class="pi-c">⊕ New MCP Tool</div>
+                <div class="pi-c">⊕ New Sandbox Tool</div>
+              </div>
+              <div class="pk-prev">
+                <div class="pv-t">fetch_customer <span class="bd">HTTP</span></div>
+                <div class="pv-m">
+                  <dt>Method</dt>
+                  <dd>POST</dd>
+                  <dt>Endpoint</dt>
+                  <dd style="font-family: var(--mono); font-size: 0.66rem">/api/customers/{id}</dd>
+                </div>
+                <div style="font-size: 0.66rem; color: var(--fg4); margin: 8px 0">Parameters</div>
+                <div style="font-size: 0.7rem; color: var(--fg3)">
+                  <span style="font-family: var(--mono); color: var(--fg2)">customerId</span> string
+                  <span style="color: #70b080">required</span>
+                </div>
+                <div style="font-size: 0.66rem; color: var(--fg4); margin: 10px 0 4px">
+                  Generated DSL
+                </div>
+                <pre
+                  class="pc"
+                ><span class="typ">fetch_customer</span>(customerId: <span class="typ">string</span>) -> <span class="typ">object</span>
+  description: <span class="str">"Fetch customer profile"</span>
+  type: <span class="vr">http</span>
+  http:
+    method: <span class="vr">POST</span>
+    endpoint: <span class="str">"/api/customers/{id}"</span>
+    auth: <span class="vr">bearer</span></pre>
+                <div class="pv-a">
+                  <div class="btn s">Copy</div>
+                  <div class="btn p">Insert at Cursor</div>
+                </div>
+              </div>
+            </div>
+            <div class="pk-ft">
+              <span><kbd>↑↓</kbd> Nav</span><span><kbd>Tab</kbd> Preview</span
+              ><span><kbd>⏎</kbd> Insert</span><span><kbd>Esc</kbd> Close</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══════════════════════════════════════════ -->
+      <!-- 7. GUARDRAIL PICKER -->
+      <!-- ═══════════════════════════════════════════ -->
+      <div class="section">
+        <div class="st">7. Tools — HTTP Tool Creation Form</div>
+        <div class="mo">
+          <div class="pk" style="max-width: 620px">
+            <div class="pk-h">
+              <h3>Create HTTP Tool</h3>
+              <span style="color: var(--fg4)">← Back</span>
+            </div>
+            <div style="padding: 14px">
+              <div class="form-row">
+                <div class="form-col">
+                  <div class="form-label">Tool Name</div>
+                  <input class="form-input mono" value="check_inventory" readonly />
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-col">
+                  <div class="form-label">Description</div>
+                  <input class="form-input" value="Check product inventory levels" readonly />
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-col" style="max-width: 110px">
+                  <div class="form-label">Method</div>
+                  <div class="form-select" style="width: 100%">GET ▾</div>
+                </div>
+                <div class="form-col">
+                  <div class="form-label">Endpoint</div>
+                  <input
+                    class="form-input mono"
+                    value="https://api.warehouse.com/inventory/{sku}"
+                    readonly
+                  />
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-col">
+                  <div class="form-label">Auth</div>
+                  <div class="form-select" style="width: 100%">Bearer ▾</div>
+                </div>
+                <div class="form-col">
+                  <div class="form-label">Timeout (ms)</div>
+                  <input class="form-input" value="15000" readonly />
+                </div>
+              </div>
+              <div style="margin: 10px 0">
+                <div style="display: flex; justify-content: space-between; align-items: center">
+                  <div class="form-label">Parameters</div>
+                  <span style="font-size: 0.66rem; color: var(--accent-c); cursor: pointer"
+                    >+ Add Parameter</span
+                  >
+                </div>
+                <div class="form-row-item" style="margin-top: 4px">
+                  <span class="n">sku</span><span style="color: var(--fg3)">string</span
+                  ><span style="color: #70b080; font-size: 0.64rem">required</span
+                  ><span style="color: var(--fg4); cursor: pointer">✕</span>
+                </div>
+              </div>
+              <div
+                style="
+                  display: flex;
+                  gap: 12px;
+                  margin: 10px 0;
+                  font-size: 0.72rem;
+                  color: var(--fg3);
+                "
+              >
+                <label style="display: flex; align-items: center; gap: 4px"
+                  ><input type="checkbox" /> Cacheable</label
+                >
+                <label style="display: flex; align-items: center; gap: 4px"
+                  ><input type="checkbox" checked /> Side effects</label
+                >
+                <label style="display: flex; align-items: center; gap: 4px"
+                  ><input type="checkbox" /> Confirmation required</label
+                >
+              </div>
+              <pre
+                class="pc"
+              ><span class="typ">check_inventory</span>(sku: <span class="typ">string</span>) -> <span class="typ">object</span>
+  description: <span class="str">"Check product inventory levels"</span>
+  type: <span class="vr">http</span>
+  http:
+    method: <span class="vr">GET</span>
+    endpoint: <span class="str">"https://api.warehouse.com/inventory/{sku}"</span>
+    auth: <span class="vr">bearer</span>
+    timeout: <span class="num">15000</span></pre>
+              <div class="pv-a">
+                <div class="btn s">Cancel</div>
+                <div class="btn p">Insert at Cursor</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══════════════════════════════════════════ -->
+      <!-- 13. POST-INSERTION STATE -->
+      <!-- ═══════════════════════════════════════════ -->
+      <div class="section">
+        <div class="st">8. Gather — Field Builder</div>
+        <div class="mo">
+          <div class="pk" style="max-width: 620px">
+            <div class="pk-h">
+              <h3>Create Gather Field</h3>
+              <span style="color: var(--fg4)">✕</span>
+            </div>
+            <div style="padding: 14px">
+              <div class="form-row">
+                <div class="form-col">
+                  <div class="form-label">Field Name</div>
+                  <input class="form-input mono" value="incident_date" readonly />
+                </div>
+                <div class="form-col" style="max-width: 140px">
+                  <div class="form-label">Type</div>
+                  <div class="form-select" style="width: 100%">date ▾</div>
+                </div>
+                <div class="form-col" style="max-width: 100px">
+                  <div class="form-label">Required</div>
+                  <div class="form-select" style="width: 100%">✓ Yes</div>
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-col">
+                  <div class="form-label">Prompt</div>
+                  <input class="form-input" value="When did the incident occur?" readonly />
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-col">
+                  <div class="form-label">Validation (CEL)</div>
+                  <input
+                    class="form-input mono"
+                    value=""
+                    placeholder="e.g. value > abl.now() - 365"
+                    readonly
+                  />
+                </div>
+                <div class="form-col" style="max-width: 120px">
+                  <div class="form-label">Mode</div>
+                  <div class="form-select" style="width: 100%">REGEX ▾</div>
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-col">
+                  <div class="form-label">Retry Prompt</div>
+                  <input
+                    class="form-input"
+                    value=""
+                    placeholder="Message when validation fails"
+                    readonly
+                  />
+                </div>
+              </div>
+              <div
+                style="
+                  display: flex;
+                  gap: 12px;
+                  margin: 12px 0;
+                  font-size: 0.72rem;
+                  color: var(--fg3);
+                "
+              >
+                <label style="display: flex; align-items: center; gap: 4px; cursor: pointer"
+                  ><input type="checkbox" /> Infer from context</label
+                >
+                <label style="display: flex; align-items: center; gap: 4px; cursor: pointer"
+                  ><input type="checkbox" /> Sensitive (PII)</label
+                >
+                <label style="display: flex; align-items: center; gap: 4px; cursor: pointer"
+                  ><input type="checkbox" /> Progressive activation</label
+                >
+              </div>
+              <div
+                style="
+                  font-size: 0.62rem;
+                  color: var(--fg4);
+                  text-transform: uppercase;
+                  letter-spacing: 0.06em;
+                  margin: 14px 0 6px;
+                "
+              >
+                Live Preview
+              </div>
+              <pre class="pc"><span class="typ">incident_date</span>:
+  prompt: <span class="str">"When did the incident occur?"</span>
+  type: <span class="typ">date</span>
+  required: <span class="num">true</span></pre>
+              <div class="pv-a">
+                <div class="btn s">Cancel</div>
+                <div class="btn p">Insert at Cursor</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══════════════════════════════════════════ -->
+      <!-- 10. FLOW STEP BUILDER -->
+      <!-- ═══════════════════════════════════════════ -->
+      <div class="section">
+        <div class="st">9. Memory — Variable Builder</div>
+        <div class="mo">
+          <div class="pk" style="max-width: 560px">
+            <div class="pk-h">
+              <h3>Add Memory</h3>
+              <span style="color: var(--fg4)">✕</span>
+            </div>
+            <div class="pk-tabs">
+              <div class="pk-t a">Session Var</div>
+              <div class="pk-t">Persistent</div>
+              <div class="pk-t">Remember</div>
+              <div class="pk-t">Recall</div>
+            </div>
+            <div style="padding: 14px">
+              <div class="form-row">
+                <div class="form-col">
+                  <div class="form-label">Variable Name</div>
+                  <input class="form-input mono" value="claim_status" readonly />
+                </div>
+                <div class="form-col" style="max-width: 120px">
+                  <div class="form-label">Type</div>
+                  <div class="form-select" style="width: 100%">string ▾</div>
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-col">
+                  <div class="form-label">Initial Value</div>
+                  <input class="form-input mono" value='"pending"' readonly />
+                </div>
+                <div class="form-col" style="max-width: 140px">
+                  <div class="form-label">Reset</div>
+                  <div class="form-select" style="width: 100%">per_session ▾</div>
+                </div>
+              </div>
+              <pre class="pc"><span class="kw">SESSION:</span>
+  - claim_status: <span class="typ">string</span> = <span class="str">"pending"</span></pre>
+              <div class="pv-a">
+                <div class="btn s">Cancel</div>
+                <div class="btn p">Insert at Cursor</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══════════════════════════════════════════ -->
+      <!-- 16. COMPLETE COMMAND MAP -->
+
+      <!-- ═══════════════════════════════════════════ -->
+      <!-- 16. RICH TEXT — PERSONA / INSTRUCTIONS (LLM Mode) -->
+      <!-- ═══════════════════════════════════════════ -->
+      <div class="section">
+        <div class="st">10. Constraints — Rule Builder</div>
+        <div class="mo">
+          <div class="pk" style="max-width: 580px">
+            <div class="pk-h">
+              <h3>Create Constraint</h3>
+              <span style="color: var(--fg4)">✕</span>
+            </div>
+            <div style="padding: 14px">
+              <div class="form-row">
+                <div class="form-col">
+                  <div class="form-label">Phase Name</div>
+                  <input class="form-input mono" value="pre_submit" readonly />
+                </div>
+                <div class="form-col" style="max-width: 140px">
+                  <div class="form-label">Severity</div>
+                  <div style="display: flex; gap: 4px">
+                    <div
+                      style="
+                        flex: 1;
+                        padding: 5px;
+                        text-align: center;
+                        background: rgba(176, 112, 112, 0.1);
+                        border: 1px solid rgba(176, 112, 112, 0.2);
+                        border-radius: 4px;
+                        font-size: 0.68rem;
+                        color: #b07070;
+                      "
+                    >
+                      REQUIRE
+                    </div>
+                    <div
+                      style="
+                        flex: 1;
+                        padding: 5px;
+                        text-align: center;
+                        background: var(--bg3);
+                        border: 1px solid var(--border2);
+                        border-radius: 4px;
+                        font-size: 0.68rem;
+                        color: var(--fg3);
+                      "
+                    >
+                      WARN
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-col">
+                  <div class="form-label">Condition (CEL)</div>
+                  <input class="form-input mono" value="damage_amount < 50000" readonly />
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-col">
+                  <div class="form-label">On Fail — Action</div>
+                  <div class="form-select" style="width: 100%">respond ▾</div>
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-col">
+                  <div class="form-label">Message</div>
+                  <input
+                    class="form-input"
+                    value="Claims over $50K need manager approval."
+                    readonly
+                  />
+                </div>
+              </div>
+              <pre class="pc"><span class="typ">pre_submit</span>:
+  - <span class="kw">REQUIRE:</span> <span class="str">damage_amount &lt; 50000</span>
+    <span class="kw">ON_FAIL:</span> <span class="str">"Claims over $50K need manager approval."</span></pre>
+              <div class="pv-a">
+                <div class="btn s">Cancel</div>
+                <div class="btn p">Insert at Cursor</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══════════════════════════════════════════ -->
+      <!-- 15. MEMORY BUILDER -->
+      <!-- ═══════════════════════════════════════════ -->
+      <div class="section">
+        <div class="st">11. Guardrails — Slash Commands in GUARDRAILS Section</div>
+        <div class="ed">
+          <div class="ed-body">
+            <div class="ed-side">
+              <div class="si a">▼ Agent</div>
+              <div class="si h">▼ TOOLS</div>
+              <div class="si hh">fetch_policy</div>
+              <div class="si hh">submit_claim</div>
+              <div class="si h">▼ GUARDRAILS</div>
+              <div class="si hh">pii_guard</div>
+              <div class="si h">▶ GATHER</div>
+              <div class="si h">▶ FLOW</div>
+              <div class="si h">▶ MEMORY</div>
+              <div class="si h">▶ COMPLETE</div>
+            </div>
+            <div class="ed-code">
+              <div class="cl">
+                <span class="ln">14</span
+                ><span class="lc"><span class="kw">GUARDRAILS:</span></span>
+              </div>
+              <div class="cl">
+                <span class="ln">15</span
+                ><span class="lc"> <span class="typ">pii_guard</span>:</span>
+              </div>
+              <div class="cl">
+                <span class="ln">16</span
+                ><span class="lc"> kind: <span class="vr">input</span></span>
+              </div>
+              <div class="cl">
+                <span class="ln">17</span
+                ><span class="lc"> action: <span class="vr">redact</span></span>
+              </div>
+              <div class="cl"><span class="ln">18</span><span class="lc"></span></div>
+              <div class="cl hl">
+                <span class="ln">19</span><span class="lc"> /<span class="cur"> </span></span>
+              </div>
+              <div class="cp" style="top: 100px; left: 54px">
+                <div class="cp-ctx">Context: GUARDRAILS section</div>
+                <div class="ci f">
+                  <span class="ic">⚙</span><span class="cm">/guardrail</span
+                  ><span class="cd">Browse + insert</span>
+                </div>
+                <div class="ci">
+                  <span class="ic">⊕</span><span class="cm">/builtin-guard</span
+                  ><span class="cd">5 built-in templates</span>
+                </div>
+                <div class="ci">
+                  <span class="ic">⊕</span><span class="cm">/input-guard</span
+                  ><span class="cd">New input check</span>
+                </div>
+                <div class="ci">
+                  <span class="ic">⊕</span><span class="cm">/output-guard</span
+                  ><span class="cd">New output check</span>
+                </div>
+                <div class="cp-ft">
+                  <span><kbd>↑↓</kbd> Nav</span><span><kbd>⏎</kbd> Select</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══════════════════════════════════════════ -->
+      <!-- 3. FLOW CONTEXT -->
+      <!-- ═══════════════════════════════════════════ -->
+      <div class="section">
+        <div class="st">12. Guardrails — Picker Modal (Built-in + Custom)</div>
+        <div class="mo">
+          <div class="pk">
+            <div class="pk-h">
+              <h3>Insert Guardrail</h3>
+              <span style="color: var(--fg4)">✕</span>
+            </div>
+            <div class="pk-s"><input placeholder="Search guardrails..." readonly /></div>
+            <div class="pk-tabs">
+              <div class="pk-t a">All</div>
+              <div class="pk-t">Input</div>
+              <div class="pk-t">Output</div>
+              <div class="pk-t">Both</div>
+            </div>
+            <div class="pk-body">
+              <div class="pk-list">
+                <div class="cat">Built-in (5)</div>
+                <div class="pi sel">
+                  <div>
+                    <div class="nm">detect_instruction_override</div>
+                    <div class="ds">Prompt injection detection</div>
+                  </div>
+                  <span class="bd">Input · Block</span>
+                </div>
+                <div class="pi">
+                  <div>
+                    <div class="nm">detect_role_manipulation</div>
+                    <div class="ds">"Act as admin" attacks</div>
+                  </div>
+                  <span class="bd">Input · Block</span>
+                </div>
+                <div class="pi">
+                  <div>
+                    <div class="nm">detect_credential_leak</div>
+                    <div class="ds">API keys in output</div>
+                  </div>
+                  <span class="bd">Output · Redact</span>
+                </div>
+                <div class="pi">
+                  <div>
+                    <div class="nm">detect_encoding_tricks</div>
+                    <div class="ds">Base64/rot13 obfuscation</div>
+                  </div>
+                  <span class="bd">Input · Warn</span>
+                </div>
+                <div class="cat">Create New</div>
+                <div class="pi-c">⊕ Custom Input Guard</div>
+                <div class="pi-c">⊕ Custom Output Guard</div>
+                <div class="pi-c">⊕ PII Protection</div>
+              </div>
+              <div class="pk-prev">
+                <div class="pv-t">detect_instruction_override</div>
+                <div class="pv-m">
+                  <dt>Kind</dt>
+                  <dd>input</dd>
+                  <dt>Action</dt>
+                  <dd>block</dd>
+                  <dt>Tier</dt>
+                  <dd>1 (zero cost)</dd>
+                </div>
+                <div style="font-size: 0.7rem; color: var(--fg3); margin: 6px 0">
+                  Detects prompt injection. Zero-cost CEL pattern matching.
+                </div>
+                <div style="font-size: 0.66rem; margin: 8px 0">
+                  <span style="color: #b07070">✗ "ignore previous instructions"</span><br /><span
+                    style="color: #70b080"
+                    >✓ "what are your instructions?"</span
+                  >
+                </div>
+                <pre class="pc"><span class="typ">detect_instruction_override</span>:
+  kind: <span class="vr">input</span>
+  check: |
+    <span class="str">not_matches_pattern(input.lower(),
+      "ignore (previous|prior|all)
+       (instructions|rules|prompts)")</span>
+  action: <span class="vr">block</span>
+  message: <span class="str">"Cannot process."</span></pre>
+                <div class="pv-a">
+                  <div class="btn s">Copy</div>
+                  <div class="btn p">Insert at Cursor</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══════════════════════════════════════════ -->
+      <!-- 8. TEMPLATE PICKER + CHANNEL BUILDER -->
+      <!-- ═══════════════════════════════════════════ -->
+      <div class="section">
+        <div class="st">13. Flow — Slash Commands in FLOW Section</div>
+        <div class="ed">
+          <div class="ed-body">
+            <div class="ed-side">
+              <div class="si a">▼ Agent</div>
+              <div class="si h">▼ TOOLS</div>
+              <div class="si hh">fetch_policy</div>
+              <div class="si hh">submit_claim</div>
+              <div class="si h">▼ GUARDRAILS</div>
+              <div class="si hh">pii_guard</div>
+              <div class="si h">▶ GATHER</div>
+              <div class="si h">▶ FLOW</div>
+              <div class="si h">▶ MEMORY</div>
+              <div class="si h">▶ COMPLETE</div>
+            </div>
+            <div class="ed-code">
+              <div class="cl">
+                <span class="ln">22</span><span class="lc"><span class="kw">FLOW:</span></span>
+              </div>
+              <div class="cl">
+                <span class="ln">23</span><span class="lc"> steps: [welcome, collect, search]</span>
+              </div>
+              <div class="cl"><span class="ln">24</span><span class="lc"></span></div>
+              <div class="cl">
+                <span class="ln">25</span><span class="lc"> <span class="typ">welcome</span>:</span>
+              </div>
+              <div class="cl">
+                <span class="ln">26</span
+                ><span class="lc">
+                  <span class="kw">REASONING:</span> <span class="num">false</span></span
+                >
+              </div>
+              <div class="cl">
+                <span class="ln">27</span
+                ><span class="lc">
+                  <span class="kw">RESPOND:</span> <span class="str">"Welcome!"</span></span
+                >
+              </div>
+              <div class="cl">
+                <span class="ln">28</span
+                ><span class="lc"> <span class="kw">THEN:</span> collect</span>
+              </div>
+              <div class="cl"><span class="ln">29</span><span class="lc"></span></div>
+              <div class="cl hl">
+                <span class="ln">30</span><span class="lc"> /<span class="cur"> </span></span>
+              </div>
+              <div class="cp" style="top: 170px; left: 54px">
+                <div class="cp-ctx">Context: FLOW section</div>
+                <div class="ci f">
+                  <span class="ic">⊕</span><span class="cm">/step</span
+                  ><span class="cd">New flow step</span>
+                </div>
+                <div class="ci">
+                  <span class="ic">⊕</span><span class="cm">/reasoning-step</span
+                  ><span class="cd">LLM-powered step</span>
+                </div>
+                <div class="ci">
+                  <span class="ic">⊕</span><span class="cm">/scripted-step</span
+                  ><span class="cd">Deterministic step</span>
+                </div>
+                <div class="ci">
+                  <span class="ic">⊕</span><span class="cm">/gather-step</span
+                  ><span class="cd">Data collection step</span>
+                </div>
+                <div class="ci">
+                  <span class="ic">⊕</span><span class="cm">/digression</span
+                  ><span class="cd">Off-topic handler</span>
+                </div>
+                <div class="cp-ft">
+                  <span><kbd>↑↓</kbd> Nav</span><span><kbd>⏎</kbd> Select</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══════════════════════════════════════════ -->
+      <!-- 4. GATHER / MEMORY / CONSTRAINTS / ROOT -->
+      <!-- ═══════════════════════════════════════════ -->
+      <div class="section">
+        <div class="st">14. Flow — Step Builder (Reasoning / Scripted)</div>
+        <div class="mo">
+          <div class="pk" style="max-width: 620px">
+            <div class="pk-h">
+              <h3>Create Flow Step</h3>
+              <span style="color: var(--fg4)">✕</span>
+            </div>
+            <div style="padding: 14px">
+              <div class="form-row">
+                <div class="form-col">
+                  <div class="form-label">Step Name</div>
+                  <input class="form-input mono" value="verify_identity" readonly />
+                </div>
+                <div class="form-col" style="max-width: 180px">
+                  <div class="form-label">Mode</div>
+                  <div style="display: flex; gap: 4px">
+                    <div
+                      style="
+                        flex: 1;
+                        padding: 6px;
+                        text-align: center;
+                        background: var(--accent);
+                        border: 1px solid var(--accent-b);
+                        border-radius: 4px;
+                        font-size: 0.7rem;
+                        color: var(--accent-c);
+                        cursor: pointer;
+                      "
+                    >
+                      Reasoning
+                    </div>
+                    <div
+                      style="
+                        flex: 1;
+                        padding: 6px;
+                        text-align: center;
+                        background: var(--bg3);
+                        border: 1px solid var(--border2);
+                        border-radius: 4px;
+                        font-size: 0.7rem;
+                        color: var(--fg3);
+                        cursor: pointer;
+                      "
+                    >
+                      Scripted
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-col">
+                  <div class="form-label">Goal (required for reasoning)</div>
+                  <input
+                    class="form-input"
+                    value="Verify the customer's identity using policy number and name"
+                    readonly
+                  />
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-col">
+                  <div class="form-label">Available Tools</div>
+                  <div style="display: flex; flex-wrap: wrap; gap: 4px">
+                    <span class="tag" style="cursor: pointer">fetch_policy ✕</span>
+                    <span class="tag" style="cursor: pointer">verify_identity ✕</span>
+                    <span
+                      style="
+                        font-size: 0.68rem;
+                        color: var(--accent-c);
+                        cursor: pointer;
+                        padding: 2px 6px;
+                      "
+                      >+ Add tool</span
+                    >
+                  </div>
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-col">
+                  <div class="form-label">Exit When (CEL)</div>
+                  <input class="form-input mono" value="identity_verified == true" readonly />
+                </div>
+                <div class="form-col" style="max-width: 100px">
+                  <div class="form-label">Max Turns</div>
+                  <input class="form-input" value="5" readonly />
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-col">
+                  <div class="form-label">Then (next step)</div>
+                  <div class="form-select" style="width: 100%">
+                    collect_details ▾
+                    <span style="font-size: 0.6rem; color: var(--fg4)">from steps[]</span>
+                  </div>
+                </div>
+              </div>
+              <div
+                style="
+                  font-size: 0.62rem;
+                  color: var(--fg4);
+                  text-transform: uppercase;
+                  letter-spacing: 0.06em;
+                  margin: 14px 0 6px;
+                "
+              >
+                Live Preview
+              </div>
+              <pre class="pc"><span class="typ">verify_identity</span>:
+  <span class="kw">REASONING:</span> <span class="num">true</span>
+  <span class="kw">GOAL:</span> <span class="str">"Verify customer identity"</span>
+  <span class="kw">AVAILABLE_TOOLS:</span> [fetch_policy, verify_identity]
+  <span class="kw">EXIT_WHEN:</span> identity_verified == true
+  <span class="kw">MAX_TURNS:</span> <span class="num">5</span>
+  <span class="kw">THEN:</span> collect_details</pre>
+              <div class="pv-a">
+                <div class="btn s">Cancel</div>
+                <div class="btn p">Insert at Cursor</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══════════════════════════════════════════ -->
+      <!-- 11. HANDOFF BUILDER -->
+      <!-- ═══════════════════════════════════════════ -->
+      <div class="section">
+        <div class="st">15. Coordination — Handoff Builder</div>
+        <div class="mo">
+          <div class="pk" style="max-width: 620px">
+            <div class="pk-h">
+              <h3>Create Handoff</h3>
+              <span style="color: var(--fg4)">✕</span>
+            </div>
+            <div style="padding: 14px">
+              <div class="form-row">
+                <div class="form-col">
+                  <div class="form-label">Target Agent</div>
+                  <div class="form-select" style="width: 100%">
+                    Billing_Agent ▾
+                    <span style="font-size: 0.6rem; color: var(--fg4)">from project</span>
+                  </div>
+                </div>
+                <div class="form-col" style="max-width: 100px">
+                  <div class="form-label">Priority</div>
+                  <input class="form-input" value="1" readonly />
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-col">
+                  <div class="form-label">When (condition)</div>
+                  <input class="form-input" value="user asks about billing or payment" readonly />
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-col">
+                  <div class="form-label">Context Pass</div>
+                  <div style="display: flex; flex-wrap: wrap; gap: 4px">
+                    <span class="tag">customer_id ✕</span><span class="tag">policy_number ✕</span
+                    ><span
+                      style="
+                        font-size: 0.68rem;
+                        color: var(--accent-c);
+                        cursor: pointer;
+                        padding: 2px 6px;
+                      "
+                      >+ Add</span
+                    >
+                  </div>
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-col">
+                  <div class="form-label">History</div>
+                  <div class="form-select" style="width: 100%">auto ▾</div>
+                </div>
+                <div class="form-col" style="max-width: 120px">
+                  <div class="form-label">Return</div>
+                  <div style="display: flex; gap: 4px">
+                    <div
+                      style="
+                        flex: 1;
+                        padding: 5px;
+                        text-align: center;
+                        background: var(--accent);
+                        border: 1px solid var(--accent-b);
+                        border-radius: 4px;
+                        font-size: 0.68rem;
+                        color: var(--accent-c);
+                      "
+                    >
+                      Yes
+                    </div>
+                    <div
+                      style="
+                        flex: 1;
+                        padding: 5px;
+                        text-align: center;
+                        background: var(--bg3);
+                        border: 1px solid var(--border2);
+                        border-radius: 4px;
+                        font-size: 0.68rem;
+                        color: var(--fg3);
+                      "
+                    >
+                      No
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <pre class="pc">- <span class="kw">TO:</span> <span class="typ">Billing_Agent</span>
+  <span class="kw">WHEN:</span> <span class="str">"user asks about billing"</span>
+  <span class="kw">PRIORITY:</span> <span class="num">1</span>
+  <span class="kw">CONTEXT:</span>
+    pass: [<span class="str">"customer_id"</span>, <span class="str">"policy_number"</span>]
+    history: <span class="vr">auto</span>
+  <span class="kw">RETURN:</span> <span class="num">true</span></pre>
+              <div class="pv-a">
+                <div class="btn s">Cancel</div>
+                <div class="btn p">Insert at Cursor</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══════════════════════════════════════════ -->
+      <!-- 12. HTTP TOOL CREATION FORM -->
+      <!-- ═══════════════════════════════════════════ -->
+      <div class="section">
+        <div class="st">16. All Contexts — Remaining Slash Commands</div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px">
+          <!-- GATHER -->
+          <div class="ed" style="margin: 0">
+            <div class="ed-bar" style="padding: 5px 8px">
+              <span style="font-weight: 500; font-size: 0.66rem">GATHER: context</span>
+            </div>
+            <div style="padding: 6px 0">
+              <div class="ci f" style="font-size: 0.68rem">
+                <span class="cm">/field</span
+                ><span class="cd" style="font-size: 0.62rem">Add gather field</span>
+              </div>
+              <div class="ci" style="font-size: 0.68rem">
+                <span class="cm">/string-field</span
+                ><span class="cd" style="font-size: 0.62rem">Text input</span>
+              </div>
+              <div class="ci" style="font-size: 0.68rem">
+                <span class="cm">/number-field</span
+                ><span class="cd" style="font-size: 0.62rem">Numeric</span>
+              </div>
+              <div class="ci" style="font-size: 0.68rem">
+                <span class="cm">/date-field</span
+                ><span class="cd" style="font-size: 0.62rem">Date picker</span>
+              </div>
+              <div class="ci" style="font-size: 0.68rem">
+                <span class="cm">/email-field</span
+                ><span class="cd" style="font-size: 0.62rem">Email</span>
+              </div>
+              <div class="ci" style="font-size: 0.68rem">
+                <span class="cm">/enum-field</span
+                ><span class="cd" style="font-size: 0.62rem">Selection</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- MEMORY -->
+          <div class="ed" style="margin: 0">
+            <div class="ed-bar" style="padding: 5px 8px">
+              <span style="font-weight: 500; font-size: 0.66rem">MEMORY: context</span>
+            </div>
+            <div style="padding: 6px 0">
+              <div class="ci f" style="font-size: 0.68rem">
+                <span class="cm">/memory-var</span
+                ><span class="cd" style="font-size: 0.62rem">Session variable</span>
+              </div>
+              <div class="ci" style="font-size: 0.68rem">
+                <span class="cm">/persistent</span
+                ><span class="cd" style="font-size: 0.62rem">Persistent path</span>
+              </div>
+              <div class="ci" style="font-size: 0.68rem">
+                <span class="cm">/remember</span
+                ><span class="cd" style="font-size: 0.62rem">Remember trigger</span>
+              </div>
+              <div class="ci" style="font-size: 0.68rem">
+                <span class="cm">/recall</span
+                ><span class="cd" style="font-size: 0.62rem">Recall instruction</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- CONSTRAINTS -->
+          <div class="ed" style="margin: 0">
+            <div class="ed-bar" style="padding: 5px 8px">
+              <span style="font-weight: 500; font-size: 0.66rem">CONSTRAINTS: context</span>
+            </div>
+            <div style="padding: 6px 0">
+              <div class="ci f" style="font-size: 0.68rem">
+                <span class="cm">/constraint</span
+                ><span class="cd" style="font-size: 0.62rem">Add rule</span>
+              </div>
+              <div class="ci" style="font-size: 0.68rem">
+                <span class="cm">/require</span
+                ><span class="cd" style="font-size: 0.62rem">Blocking rule</span>
+              </div>
+              <div class="ci" style="font-size: 0.68rem">
+                <span class="cm">/warn</span
+                ><span class="cd" style="font-size: 0.62rem">Warning rule</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- COORDINATION -->
+          <div class="ed" style="margin: 0">
+            <div class="ed-bar" style="padding: 5px 8px">
+              <span style="font-weight: 500; font-size: 0.66rem"
+                >HANDOFF / DELEGATE / ESCALATE</span
+              >
+            </div>
+            <div style="padding: 6px 0">
+              <div class="ci f" style="font-size: 0.68rem">
+                <span class="cm">/handoff</span
+                ><span class="cd" style="font-size: 0.62rem">Transfer to agent</span>
+              </div>
+              <div class="ci" style="font-size: 0.68rem">
+                <span class="cm">/delegate</span
+                ><span class="cd" style="font-size: 0.62rem">Sub-agent task</span>
+              </div>
+              <div class="ci" style="font-size: 0.68rem">
+                <span class="cm">/escalate</span
+                ><span class="cd" style="font-size: 0.62rem">Human handoff</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- TEMPLATES -->
+          <div class="ed" style="margin: 0">
+            <div class="ed-bar" style="padding: 5px 8px">
+              <span style="font-weight: 500; font-size: 0.66rem">TEMPLATES: context</span>
+            </div>
+            <div style="padding: 6px 0">
+              <div class="ci f" style="font-size: 0.68rem">
+                <span class="cm">/template</span
+                ><span class="cd" style="font-size: 0.62rem">Browse gallery</span>
+              </div>
+              <div class="ci" style="font-size: 0.68rem">
+                <span class="cm">/multiformat</span
+                ><span class="cd" style="font-size: 0.62rem">All channels</span>
+              </div>
+              <div class="ci" style="font-size: 0.68rem">
+                <span class="cm">/voice-template</span
+                ><span class="cd" style="font-size: 0.62rem">Voice only</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- LIFECYCLE -->
+          <div class="ed" style="margin: 0">
+            <div class="ed-bar" style="padding: 5px 8px">
+              <span style="font-weight: 500; font-size: 0.66rem">Lifecycle context</span>
+            </div>
+            <div style="padding: 6px 0">
+              <div class="ci f" style="font-size: 0.68rem">
+                <span class="cm">/onstart</span
+                ><span class="cd" style="font-size: 0.62rem">Welcome + init</span>
+              </div>
+              <div class="ci" style="font-size: 0.68rem">
+                <span class="cm">/complete</span
+                ><span class="cd" style="font-size: 0.62rem">Completion cond</span>
+              </div>
+              <div class="ci" style="font-size: 0.68rem">
+                <span class="cm">/onerror</span
+                ><span class="cd" style="font-size: 0.62rem">Error handler</span>
+              </div>
+              <div class="ci" style="font-size: 0.68rem">
+                <span class="cm">/hook</span
+                ><span class="cd" style="font-size: 0.62rem">Lifecycle hook</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══════════════════════════════════════════ -->
+      <!-- 5. ROOT LEVEL — ALL COMMANDS -->
+      <!-- ═══════════════════════════════════════════ -->
+      <div class="section">
+        <div class="st">17. Templates — Picker + Channel Builder</div>
+        <div class="mo">
+          <div class="pk" style="max-width: 900px">
+            <div class="pk-h">
+              <h3>Insert Template</h3>
+              <span style="color: var(--fg4)">✕</span>
+            </div>
+            <div class="pk-s"><input placeholder="Search templates..." readonly /></div>
+            <div class="pk-body" style="flex-direction: column">
+              <!-- Gallery row -->
+              <div style="padding: 10px 14px; border-bottom: 1px solid var(--border)">
+                <div class="cat" style="margin-top: 0">Start from Gallery</div>
+                <div style="display: flex; gap: 6px; overflow-x: auto; padding: 4px 0">
+                  <div
+                    style="
+                      min-width: 140px;
+                      padding: 10px;
+                      background: var(--bg3);
+                      border: 1px solid var(--accent-b);
+                      border-radius: 5px;
+                      cursor: pointer;
+                    "
+                  >
+                    <div style="font-size: 0.74rem; font-weight: 600; color: var(--fg2)">
+                      Confirmation
+                    </div>
+                    <div style="font-size: 0.64rem; color: var(--fg4)">All channels</div>
+                  </div>
+                  <div
+                    style="
+                      min-width: 140px;
+                      padding: 10px;
+                      background: var(--bg3);
+                      border: 1px solid var(--border2);
+                      border-radius: 5px;
+                      cursor: pointer;
+                    "
+                  >
+                    <div style="font-size: 0.74rem; font-weight: 600; color: var(--fg2)">
+                      Greeting
+                    </div>
+                    <div style="font-size: 0.64rem; color: var(--fg4)">Default + Voice</div>
+                  </div>
+                  <div
+                    style="
+                      min-width: 140px;
+                      padding: 10px;
+                      background: var(--bg3);
+                      border: 1px solid var(--border2);
+                      border-radius: 5px;
+                      cursor: pointer;
+                    "
+                  >
+                    <div style="font-size: 0.74rem; font-weight: 600; color: var(--fg2)">
+                      Error Fallback
+                    </div>
+                    <div style="font-size: 0.64rem; color: var(--fg4)">Default</div>
+                  </div>
+                  <div
+                    style="
+                      min-width: 140px;
+                      padding: 10px;
+                      background: var(--bg3);
+                      border: 1px solid var(--border2);
+                      border-radius: 5px;
+                      cursor: pointer;
+                    "
+                  >
+                    <div style="font-size: 0.74rem; font-weight: 600; color: var(--fg2)">
+                      Escalation
+                    </div>
+                    <div style="font-size: 0.64rem; color: var(--fg4)">Default + Voice</div>
+                  </div>
+                  <div
+                    style="
+                      min-width: 140px;
+                      padding: 10px;
+                      background: var(--bg3);
+                      border: 1px solid var(--border2);
+                      border-radius: 5px;
+                      cursor: pointer;
+                    "
+                  >
+                    <div style="font-size: 0.74rem; font-weight: 600; color: var(--fg2)">
+                      Carousel
+                    </div>
+                    <div style="font-size: 0.64rem; color: var(--fg4)">Cards</div>
+                  </div>
+                </div>
+              </div>
+              <!-- Channel builder -->
+              <div>
+                <div
+                  style="
+                    padding: 8px 14px;
+                    font-size: 0.66rem;
+                    color: var(--fg4);
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    border-bottom: 1px solid var(--border);
+                  "
+                >
+                  <span>Template Name:</span>
+                  <input
+                    style="
+                      padding: 4px 8px;
+                      background: var(--bg3);
+                      border: 1px solid var(--border2);
+                      border-radius: 3px;
+                      color: var(--fg);
+                      font-family: var(--mono);
+                      font-size: 0.74rem;
+                      width: 200px;
+                      outline: none;
+                    "
+                    value="claim_confirmation"
+                    readonly
+                  />
+                </div>
+                <div class="ch-tabs">
+                  <div class="ch-tab">Default</div>
+                  <div class="ch-tab a">Markdown</div>
+                  <div class="ch-tab">HTML</div>
+                  <div class="ch-tab">Voice</div>
+                  <div class="ch-tab">Slack</div>
+                  <div class="ch-tab">WhatsApp</div>
+                  <div class="ch-tab">Adaptive</div>
+                </div>
+                <div class="te-area">
+                  <div class="te-left">
+                    <div class="te-bar">
+                      <div class="te-btn"><strong>B</strong></div>
+                      <div class="te-btn"><em>I</em></div>
+                      <div class="te-btn">H</div>
+                      <div class="te-btn">≡</div>
+                      <div class="te-btn">&lt;/&gt;</div>
+                      <div class="te-btn">🔗</div>
+                      <div class="te-btn">—</div>
+                      <div class="te-btn" style="color: var(--accent-c); margin-left: 6px">
+                        {{ }}
+                      </div>
+                      <div class="te-btn" style="color: var(--accent-c)">⊕ Action</div>
+                      <div style="flex: 1"></div>
+                      <div class="te-btn a">Edit</div>
+                      <div class="te-btn">Preview</div>
+                    </div>
+                    <div class="te-content">
+                      <span style="color: #8a8aff">## </span>Claim Submitted ✅
+
+                      <span style="color: #8a8aff">**</span>Claim ID:<span style="color: #8a8aff"
+                        >**</span
+                      >
+                      <span class="vc">{{claim_id}}</span>
+                      <span style="color: #8a8aff">**</span>Status:<span style="color: #8a8aff"
+                        >**</span
+                      >
+                      <span class="vc">{{claim_status}}</span>
+                      <span style="color: #8a8aff">**</span>Processing:<span style="color: #8a8aff"
+                        >**</span
+                      >
+                      3-5 business days
+
+                      <span style="color: #333">---</span>
+                      <span style="color: #333">_</span>Email updates at
+                      <span class="vc">{{customer_email}}</span><span style="color: #333">_</span>
+                    </div>
+                  </div>
+                  <div class="te-right">
+                    <div class="te-ph">Live Preview (sample data)</div>
+                    <div class="te-prev">
+                      <h2 style="font-size: 0.95rem; font-weight: 600; margin: 0 0 8px">
+                        Claim Submitted ✅
+                      </h2>
+                      <p style="margin: 0 0 4px"><strong>Claim ID:</strong> CLM-2024-00847</p>
+                      <p style="margin: 0 0 4px"><strong>Status:</strong> Under Review</p>
+                      <p style="margin: 0 0 8px"><strong>Processing:</strong> 3-5 business days</p>
+                      <hr
+                        style="border: none; border-top: 1px solid var(--border); margin: 8px 0"
+                      />
+                      <p style="font-style: italic; color: var(--fg3); font-size: 0.76rem">
+                        Email updates at john@example.com
+                      </p>
+                      <div style="display: flex; gap: 4px; margin-top: 10px">
+                        <div
+                          style="
+                            padding: 5px 10px;
+                            background: var(--accent);
+                            border: 1px solid var(--accent-b);
+                            border-radius: 4px;
+                            font-size: 0.68rem;
+                            color: var(--accent-c);
+                          "
+                        >
+                          Track Claim
+                        </div>
+                        <div
+                          style="
+                            padding: 5px 10px;
+                            background: var(--bg3);
+                            border: 1px solid var(--border2);
+                            border-radius: 4px;
+                            font-size: 0.68rem;
+                            color: var(--fg3);
+                          "
+                        >
+                          Support
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="pk-ft">
+              <span><kbd>Tab</kbd> Next channel</span><span><kbd>⌘⏎</kbd> Insert all</span
+              ><span><kbd>Esc</kbd> Close</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══════════════════════════════════════════ -->
+      <!-- 9. GATHER FIELD BUILDER -->
+      <!-- ═══════════════════════════════════════════ -->
+      <div class="section">
+        <div class="st">18. Response — Rich Text User Mode (RESPOND, PRESENT)</div>
+        <div class="desc" style="font-size: 0.82rem; color: var(--fg3); margin-bottom: 14px">
+          For user-facing text fields. Adds {{variable}} insertion, {{#if}} conditionals, and
+          {{#each}} loops alongside markdown formatting.
+        </div>
+        <div class="mo">
+          <div class="pk" style="max-width: 880px">
+            <div class="pk-h">
+              <h3>RESPOND — Rich Text Editor</h3>
+              <span
+                style="
+                  font-size: 0.62rem;
+                  padding: 2px 6px;
+                  background: var(--bg4);
+                  border-radius: 3px;
+                  color: var(--fg3);
+                "
+                >User Response Mode</span
+              ><span style="color: var(--fg4); cursor: pointer; margin-left: auto">✕</span>
+            </div>
+            <div class="pk-body" style="flex-direction: row; min-height: 320px">
+              <div
+                style="
+                  flex: 1;
+                  border-right: 1px solid var(--border);
+                  display: flex;
+                  flex-direction: column;
+                "
+              >
+                <!-- Toolbar -->
+                <div
+                  style="
+                    display: flex;
+                    gap: 3px;
+                    padding: 5px 8px;
+                    border-bottom: 1px solid var(--border);
+                    background: var(--bg3);
+                    flex-wrap: wrap;
+                    align-items: center;
+                  "
+                >
+                  <div class="pk-t" style="padding: 2px 6px; font-size: 0.64rem">
+                    <strong>B</strong>
+                  </div>
+                  <div class="pk-t" style="padding: 2px 6px; font-size: 0.64rem"><em>I</em></div>
+                  <span
+                    style="width: 1px; height: 12px; background: var(--border2); margin: 0 2px"
+                  ></span>
+                  <div class="pk-t" style="padding: 2px 6px; font-size: 0.64rem">H1</div>
+                  <div class="pk-t" style="padding: 2px 6px; font-size: 0.64rem">H2</div>
+                  <span
+                    style="width: 1px; height: 12px; background: var(--border2); margin: 0 2px"
+                  ></span>
+                  <div class="pk-t" style="padding: 2px 6px; font-size: 0.64rem">• List</div>
+                  <div class="pk-t" style="padding: 2px 6px; font-size: 0.64rem">1. List</div>
+                  <span
+                    style="width: 1px; height: 12px; background: var(--border2); margin: 0 2px"
+                  ></span>
+                  <div
+                    class="pk-t"
+                    style="padding: 2px 6px; font-size: 0.64rem; color: var(--accent-c)"
+                  >
+                    {{ }} Var
+                  </div>
+                  <div
+                    class="pk-t"
+                    style="padding: 2px 6px; font-size: 0.64rem; color: var(--accent-c)"
+                  >
+                    {{#if}}
+                  </div>
+                  <div
+                    class="pk-t"
+                    style="padding: 2px 6px; font-size: 0.64rem; color: var(--accent-c)"
+                  >
+                    {{#each}}
+                  </div>
+                  <div style="flex: 1"></div>
+                  <div class="pk-t a" style="padding: 2px 6px; font-size: 0.62rem">Edit</div>
+                  <div class="pk-t" style="padding: 2px 6px; font-size: 0.62rem">YAML</div>
+                </div>
+                <!-- Content -->
+                <div
+                  style="
+                    flex: 1;
+                    padding: 12px 14px;
+                    font-size: 0.82rem;
+                    line-height: 1.8;
+                    color: var(--fg2);
+                    overflow-y: auto;
+                    font-family: var(--sans);
+                  "
+                >
+                  <div>I found these hotels for you:</div>
+                  <div
+                    style="
+                      margin-top: 8px;
+                      padding: 4px 8px;
+                      background: rgba(160, 128, 160, 0.06);
+                      border: 1px solid rgba(160, 128, 160, 0.12);
+                      border-radius: 4px;
+                      font-family: var(--mono);
+                      font-size: 0.72rem;
+                      color: #a080a0;
+                    "
+                  >
+                    {{#each hotels}}
+                  </div>
+                  <div style="margin: 4px 0 4px 14px">
+                    <span
+                      style="
+                        display: inline;
+                        padding: 1px 4px;
+                        background: var(--accent);
+                        border: 1px solid var(--accent-b);
+                        border-radius: 3px;
+                        font-family: var(--mono);
+                        font-size: 0.7rem;
+                        color: var(--accent-c);
+                      "
+                      >{{@index}}</span
+                    >.
+                    <strong
+                      ><span
+                        style="
+                          display: inline;
+                          padding: 1px 4px;
+                          background: var(--accent);
+                          border: 1px solid var(--accent-b);
+                          border-radius: 3px;
+                          font-family: var(--mono);
+                          font-size: 0.7rem;
+                          color: var(--accent-c);
+                        "
+                        >{{name}}</span
+                      ></strong
+                    >
+                    — $<span
+                      style="
+                        display: inline;
+                        padding: 1px 4px;
+                        background: var(--accent);
+                        border: 1px solid var(--accent-b);
+                        border-radius: 3px;
+                        font-family: var(--mono);
+                        font-size: 0.7rem;
+                        color: var(--accent-c);
+                      "
+                      >{{price}}</span
+                    >/night
+                  </div>
+                  <div
+                    style="
+                      padding: 4px 8px;
+                      background: rgba(160, 128, 160, 0.06);
+                      border: 1px solid rgba(160, 128, 160, 0.12);
+                      border-radius: 4px;
+                      font-family: var(--mono);
+                      font-size: 0.72rem;
+                      color: #a080a0;
+                    "
+                  >
+                    {{/each}}
+                  </div>
+                  <div style="margin-top: 10px">Which hotel would you like to book?</div>
+                  <div
+                    style="
+                      margin-top: 10px;
+                      padding: 4px 8px;
+                      background: rgba(160, 128, 160, 0.06);
+                      border: 1px solid rgba(160, 128, 160, 0.12);
+                      border-radius: 4px;
+                      font-family: var(--mono);
+                      font-size: 0.72rem;
+                      color: #a080a0;
+                    "
+                  >
+                    {{#if has_loyalty}}
+                  </div>
+                  <div style="margin-left: 14px; color: var(--fg3)">
+                    Your loyalty discount of
+                    <span
+                      style="
+                        display: inline;
+                        padding: 1px 4px;
+                        background: var(--accent);
+                        border: 1px solid var(--accent-b);
+                        border-radius: 3px;
+                        font-family: var(--mono);
+                        font-size: 0.7rem;
+                        color: var(--accent-c);
+                      "
+                      >{{discount}}</span
+                    >% applied!
+                  </div>
+                  <div
+                    style="
+                      padding: 4px 8px;
+                      background: rgba(160, 128, 160, 0.06);
+                      border: 1px solid rgba(160, 128, 160, 0.12);
+                      border-radius: 4px;
+                      font-family: var(--mono);
+                      font-size: 0.72rem;
+                      color: #a080a0;
+                    "
+                  >
+                    {{/if}}
+                  </div>
+                </div>
+              </div>
+              <!-- YAML Preview -->
+              <div style="width: 340px; display: flex; flex-direction: column">
+                <div
+                  style="
+                    padding: 5px 8px;
+                    border-bottom: 1px solid var(--border);
+                    background: var(--bg3);
+                    font-size: 0.6rem;
+                    color: var(--fg4);
+                    text-transform: uppercase;
+                    letter-spacing: 0.06em;
+                  "
+                >
+                  Generated YAML
+                </div>
+                <div
+                  style="
+                    flex: 1;
+                    padding: 10px 12px;
+                    font-family: var(--mono);
+                    font-size: 0.7rem;
+                    color: var(--fg3);
+                    line-height: 1.6;
+                    overflow-y: auto;
+                    white-space: pre;
+                  "
+                >
+                  <span class="kw">RESPOND:</span> | I found these hotels for you: {{#each hotels}}
+                  {{@index}}. **{{name}}** — ${{price}}/night {{/each}} Which hotel would you like?
+                  {{#if has_loyalty}} Your loyalty discount of {{discount}}% applied! {{/if}}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══════════════════════════════════════════ -->
+      <!-- 18. RICH TEXT — / COMMANDS IN TEXT -->
+      <!-- ═══════════════════════════════════════════ -->
+      <div class="section">
+        <div class="st">19. Post-Insertion — Success State</div>
+        <div class="ed">
+          <div class="ed-bar">
+            <span style="font-weight: 600; color: var(--fg2)">ABL Editor</span
+            ><span style="color: #b8a070">● Modified</span>
+            <div class="sp"></div>
+            <div class="b p">Compile</div>
+          </div>
+          <div class="ed-body">
+            <div class="ed-side">
+              <div class="si a">▼ Agent</div>
+              <div class="si h">▼ TOOLS</div>
+              <div class="si hh">fetch_policy</div>
+              <div class="si hh">submit_claim</div>
+              <div class="si h">▼ GUARDRAILS</div>
+              <div class="si hh">pii_guard</div>
+              <div class="si h">▶ GATHER</div>
+              <div class="si h">▶ FLOW</div>
+              <div class="si h">▶ MEMORY</div>
+              <div class="si h">▶ COMPLETE</div>
+            </div>
+            <div class="ed-code">
+              <div class="cl">
+                <span class="ln">14</span
+                ><span class="lc"><span class="kw">GUARDRAILS:</span></span>
+              </div>
+              <div class="cl">
+                <span class="ln">15</span
+                ><span class="lc"> <span class="typ">pii_guard</span>:</span>
+              </div>
+              <div class="cl">
+                <span class="ln">16</span
+                ><span class="lc"> kind: <span class="vr">input</span></span>
+              </div>
+              <div class="cl">
+                <span class="ln">17</span
+                ><span class="lc"> action: <span class="vr">redact</span></span>
+              </div>
+              <div class="cl"><span class="ln">18</span><span class="lc"></span></div>
+              <div class="cl ins">
+                <span class="ln">19</span
+                ><span class="lc"> <span class="typ">detect_instruction_override</span>:</span>
+              </div>
+              <div class="cl ins">
+                <span class="ln">20</span
+                ><span class="lc"> kind: <span class="vr">input</span></span>
+              </div>
+              <div class="cl ins"><span class="ln">21</span><span class="lc"> check: |</span></div>
+              <div class="cl ins">
+                <span class="ln">22</span
+                ><span class="lc">
+                  <span class="str">not_matches_pattern(input.lower(),</span></span
+                >
+              </div>
+              <div class="cl ins">
+                <span class="ln">23</span
+                ><span class="lc"> <span class="str">"ignore (previous|prior|all)")</span></span>
+              </div>
+              <div class="cl ins">
+                <span class="ln">24</span
+                ><span class="lc"> action: <span class="vr">block</span></span>
+              </div>
+              <div class="cl ins">
+                <span class="ln">25</span
+                ><span class="lc">
+                  message: <span class="str">"Cannot process."</span><span class="cur"> </span
+                ></span>
+              </div>
+              <div class="cl"><span class="ln">26</span><span class="lc"></span></div>
+              <div class="cl">
+                <span class="ln">27</span><span class="lc"><span class="kw">COMPLETE:</span></span>
+              </div>
+            </div>
+          </div>
+          <div class="ed-status">
+            <span style="color: #70b080">✓ Inserted 7 lines</span>
+            <span>Ln 25, Col 30 · GUARDRAILS · ⌘Z Undo</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══════════════════════════════════════════ -->
+      <!-- 14. CONSTRAINT BUILDER -->
+      <!-- ═══════════════════════════════════════════ -->
+      <div class="section">
+        <div class="st">20. Reference — Complete Command Map</div>
+        <table style="width: 100%; border-collapse: collapse; font-size: 0.74rem">
+          <tr
+            style="
+              font-size: 0.62rem;
+              text-transform: uppercase;
+              letter-spacing: 0.06em;
+              color: var(--fg4);
+            "
+          >
+            <th style="padding: 5px 8px; text-align: left; border-bottom: 1px solid var(--border2)">
+              Section
+            </th>
+            <th style="padding: 5px 8px; text-align: left; border-bottom: 1px solid var(--border2)">
+              Commands
+            </th>
+            <th style="padding: 5px 8px; text-align: left; border-bottom: 1px solid var(--border2)">
+              Modal Type
+            </th>
+          </tr>
+          <tr>
+            <td
+              style="
+                padding: 4px 8px;
+                border-bottom: 1px solid var(--border);
+                font-family: var(--mono);
+                color: var(--fg2);
+              "
+            >
+              TOOLS:
+            </td>
+            <td style="padding: 4px 8px; border-bottom: 1px solid var(--border); color: var(--fg3)">
+              /tool /http-tool /mcp-tool /sandbox-tool /lambda-tool /async-tool
+            </td>
+            <td style="padding: 4px 8px; border-bottom: 1px solid var(--border); color: var(--fg3)">
+              Browse picker + creation forms
+            </td>
+          </tr>
+          <tr>
+            <td
+              style="
+                padding: 4px 8px;
+                border-bottom: 1px solid var(--border);
+                font-family: var(--mono);
+                color: var(--fg2);
+              "
+            >
+              GUARDRAILS:
+            </td>
+            <td style="padding: 4px 8px; border-bottom: 1px solid var(--border); color: var(--fg3)">
+              /guardrail /builtin-guard /input-guard /output-guard
+            </td>
+            <td style="padding: 4px 8px; border-bottom: 1px solid var(--border); color: var(--fg3)">
+              Browse 5 built-in + create
+            </td>
+          </tr>
+          <tr>
+            <td
+              style="
+                padding: 4px 8px;
+                border-bottom: 1px solid var(--border);
+                font-family: var(--mono);
+                color: var(--fg2);
+              "
+            >
+              TEMPLATES:
+            </td>
+            <td style="padding: 4px 8px; border-bottom: 1px solid var(--border); color: var(--fg3)">
+              /template /multiformat /voice-template
+            </td>
+            <td style="padding: 4px 8px; border-bottom: 1px solid var(--border); color: var(--fg3)">
+              Gallery + channel builder
+            </td>
+          </tr>
+          <tr>
+            <td
+              style="
+                padding: 4px 8px;
+                border-bottom: 1px solid var(--border);
+                font-family: var(--mono);
+                color: var(--fg2);
+              "
+            >
+              GATHER:
+            </td>
+            <td style="padding: 4px 8px; border-bottom: 1px solid var(--border); color: var(--fg3)">
+              /field /string-field /number-field /date-field /email-field /enum-field
+            </td>
+            <td style="padding: 4px 8px; border-bottom: 1px solid var(--border); color: var(--fg3)">
+              Field builder form
+            </td>
+          </tr>
+          <tr>
+            <td
+              style="
+                padding: 4px 8px;
+                border-bottom: 1px solid var(--border);
+                font-family: var(--mono);
+                color: var(--fg2);
+              "
+            >
+              FLOW:
+            </td>
+            <td style="padding: 4px 8px; border-bottom: 1px solid var(--border); color: var(--fg3)">
+              /step /reasoning-step /scripted-step /gather-step /digression
+            </td>
+            <td style="padding: 4px 8px; border-bottom: 1px solid var(--border); color: var(--fg3)">
+              Step builder (mode toggle)
+            </td>
+          </tr>
+          <tr>
+            <td
+              style="
+                padding: 4px 8px;
+                border-bottom: 1px solid var(--border);
+                font-family: var(--mono);
+                color: var(--fg2);
+              "
+            >
+              MEMORY:
+            </td>
+            <td style="padding: 4px 8px; border-bottom: 1px solid var(--border); color: var(--fg3)">
+              /memory-var /persistent /remember /recall
+            </td>
+            <td style="padding: 4px 8px; border-bottom: 1px solid var(--border); color: var(--fg3)">
+              Memory builder (tabbed)
+            </td>
+          </tr>
+          <tr>
+            <td
+              style="
+                padding: 4px 8px;
+                border-bottom: 1px solid var(--border);
+                font-family: var(--mono);
+                color: var(--fg2);
+              "
+            >
+              CONSTRAINTS:
+            </td>
+            <td style="padding: 4px 8px; border-bottom: 1px solid var(--border); color: var(--fg3)">
+              /constraint /require /warn
+            </td>
+            <td style="padding: 4px 8px; border-bottom: 1px solid var(--border); color: var(--fg3)">
+              Constraint builder
+            </td>
+          </tr>
+          <tr>
+            <td
+              style="
+                padding: 4px 8px;
+                border-bottom: 1px solid var(--border);
+                font-family: var(--mono);
+                color: var(--fg2);
+              "
+            >
+              HANDOFF:
+            </td>
+            <td style="padding: 4px 8px; border-bottom: 1px solid var(--border); color: var(--fg3)">
+              /handoff
+            </td>
+            <td style="padding: 4px 8px; border-bottom: 1px solid var(--border); color: var(--fg3)">
+              Handoff builder (agent picker)
+            </td>
+          </tr>
+          <tr>
+            <td
+              style="
+                padding: 4px 8px;
+                border-bottom: 1px solid var(--border);
+                font-family: var(--mono);
+                color: var(--fg2);
+              "
+            >
+              DELEGATE:
+            </td>
+            <td style="padding: 4px 8px; border-bottom: 1px solid var(--border); color: var(--fg3)">
+              /delegate
+            </td>
+            <td style="padding: 4px 8px; border-bottom: 1px solid var(--border); color: var(--fg3)">
+              Delegate builder (I/O mapping)
+            </td>
+          </tr>
+          <tr>
+            <td
+              style="
+                padding: 4px 8px;
+                border-bottom: 1px solid var(--border);
+                font-family: var(--mono);
+                color: var(--fg2);
+              "
+            >
+              ESCALATE:
+            </td>
+            <td style="padding: 4px 8px; border-bottom: 1px solid var(--border); color: var(--fg3)">
+              /escalate
+            </td>
+            <td style="padding: 4px 8px; border-bottom: 1px solid var(--border); color: var(--fg3)">
+              Escalation builder (priority)
+            </td>
+          </tr>
+          <tr>
+            <td
+              style="
+                padding: 4px 8px;
+                border-bottom: 1px solid var(--border);
+                font-family: var(--mono);
+                color: var(--fg2);
+              "
+            >
+              Lifecycle
+            </td>
+            <td style="padding: 4px 8px; border-bottom: 1px solid var(--border); color: var(--fg3)">
+              /onstart /complete /onerror /hook
+            </td>
+            <td style="padding: 4px 8px; border-bottom: 1px solid var(--border); color: var(--fg3)">
+              Template snippets
+            </td>
+          </tr>
+          <tr>
+            <td style="padding: 4px 8px; font-family: var(--mono); color: var(--fg2)">Root</td>
+            <td style="padding: 4px 8px; color: var(--fg3)">All 35+ commands grouped</td>
+            <td style="padding: 4px 8px; color: var(--fg3)">Full palette → section modals</td>
+          </tr>
+        </table>
+      </div>
+    </div>
+  </body>
+</html>

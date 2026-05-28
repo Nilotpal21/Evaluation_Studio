@@ -1,0 +1,14 @@
+{
+  "id": "use-cases-industry",
+  "title": "Use Cases & Industry Applications",
+  "description": "Explore agent patterns, industry-specific use cases, multi-agent concepts, and knowledge base capabilities.",
+  "level": "beginner-intermediate",
+  "estimatedMinutes": 114,
+  "prerequisites": ["platform-foundations"],
+  "modules": ["agent-patterns", "platform-concepts"],
+  "certification": {
+    "required": true,
+    "passCriteria": "all-modules-passed",
+    "badge": "course-use-cases"
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "env": "staging",
+  "observability": {
+    "loggingLevel": "info",
+    "enabled": true,
+    "traceSamplingRate": 0.5
+  },
+  "features": {
+    "voiceEnabled": true,
+    "debugTracesEnabled": false,
+    "streamingEnabled": true,
+    "multiAgentEnabled": true
+  }
+}
