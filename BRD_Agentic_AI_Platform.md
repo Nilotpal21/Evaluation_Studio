@@ -8,12 +8,11 @@
 | Field | Detail |
 |---|---|
 | Document Title | BRD — SOP-Driven Agentic AI Platform for Credit Unions |
-| Version | 0.5 (Draft) |
-| Author | [Product Manager] |
+| Author | Nilotpal Prakash |
 | Reviewers | Engineering Lead, AI/ML Lead, Design, Compliance, Security, CX Operations |
 | Approvers | VP Product, CTO, CISO, Head of Compliance |
-| Status | Draft for Review |
-| Date | [DD-MMM-YYYY] |
+| Status | Done |
+| Date | 28-05-2026 |
 
 ---
 
@@ -98,6 +97,9 @@ Build a platform where a credit union employee can:
 - **Post-Deployment Assistance** — the AI Helper continues to help users debug, improve, and expand apps after go-live.
 - **Marketplace** — platform-curated apps, templates, sub-agents, knowledge packs, guardrail packs, and **evaluation scenario packs**.
 - **Member Experience (Agentic MX)** and **Employee Experience (Agentic EX)**.
+- **Application Spec / Manifest** — a read-only YAML view of each app's derived configuration (§9.22), with a draft-vs-deployed diff to support re-approval transparency.
+- **Sandbox Chat with Orchestration Trace** — sandbox conversations at app or project scope, with a Debug rail exposing routing, tool calls, knowledge hits, guardrails, hand-offs, and token/LLM accounting (§9.23).
+- **Deployment Environments & API Keys** — Base / Development / Staging / Production environments with per-environment variables, plus SDK and Platform API keys for external consumption (§9.24).
 
 ### 5.2 Out of Scope (Initial Release)
 - Any market segment other than credit unions.
@@ -231,6 +233,12 @@ Orchestrator agent, live observability, governance, immutable audit, version con
 
 ### 8.8 Marketplace
 The Marketplace surfaces curated, pre-built apps and components, all credit-union-specific: Templates, Sub-Agents, Skills, Knowledge Packs, Guardrail Packs, **Evaluation Scenario Packs**. At launch the Marketplace is curated by the platform team.
+
+### 8.9 Transparency Artifacts
+Every derived app exposes a read-only **application spec** (YAML manifest) capturing the full configuration — identity, source SOP, audience, channels, memory, knowledge, guardrails, sub-agents (with tools), evaluation snapshot, approval state, and deployment metadata. When the draft differs from the last deployed version, the spec view surfaces a structured "Pending changes since v{N}" diff. The Sandbox Chat (§9.23) produces an **orchestration trace** for every turn — routing decisions, tool calls, knowledge hits, guardrails fired, hand-offs, and token accounting. Combined, the spec + trace give Compliance, audit, and internal architecture one inspectable artifact per deployment record (FR-DEP-02).
+
+### 8.10 Deployment Environments
+A project can promote an app through **Base (default / fallback)**, **Development**, **Staging**, and **Production** environments (§9.24). Each environment carries its own variables; environments inherit Base unless overridden. Promotion to Production requires the approvals defined in §9.7 and the step-up re-authentication defined in FR-AUT-04. External consumers reach deployed apps via **SDK keys** (client-side, scoped to non-sensitive operations) or **Platform keys** (server-to-server, scoped to one or more environments) — created, rotated, and revoked under audit.
 
 ---
 
@@ -653,6 +661,41 @@ Every other route requires a live session and redirects to `/login?next=<origina
 - **Audit completeness:** every auth event is permanently audited per FR-AUT-11; auth audit cannot be disabled.
 - **Cross-tenant prevention:** sessions are bound to a single tenant; tenant-switching requires sign-out + sign-in.
 - **Recovery:** an admin lockout-recovery path is documented (out-of-band identity verification) but tightly controlled.
+
+### 9.22 Application Spec / Manifest
+
+| ID | Requirement | Priority | Acceptance Criteria |
+|---|---|---|---|
+| FR-SPEC-01 | The platform shall expose a read-only **application spec** (YAML manifest) derived deterministically from an app's current effective configuration. | M | Identical inputs produce byte-identical YAML across renders. |
+| FR-SPEC-02 | The spec shall include app identity, status, source SOP, audience, channels, memory mode, attached knowledge, baseline + custom guardrails, sub-agents (with bound tools, knowledge, guardrails), evaluation snapshot, approval state, and deployment metadata. | M | Content audit against the rendered YAML. |
+| FR-SPEC-03 | The spec is read-only — edits happen in the Review Studio and re-derive the spec. The platform shall not accept the YAML as an input format. | M | No file-upload edit path; ingest endpoint absent. |
+| FR-SPEC-04 | When the draft configuration differs from the deployed baseline, the spec view shall surface a "Pending changes since v{N}" diff (changed / added / removed fields). | M | Diff renders before re-deploy; verifies FR-DEP-05. |
+| FR-SPEC-05 | The spec is exportable (copy / download) for offline review by compliance, audit, or internal architecture. | S | Copy verified; download attaches to deployment record. |
+| FR-SPEC-06 | The deployment record (FR-DEP-02) shall reference the exact spec snapshot at deploy time, making the spec the immutable configuration of record for that version. | M | Spec hash matches stored snapshot. |
+
+### 9.23 Sandbox Chat & Orchestration Trace
+
+| ID | Requirement | Priority | Acceptance Criteria |
+|---|---|---|---|
+| FR-CHAT-01 | Process Owners shall be able to launch a **sandbox conversation** against any individual app or against the project's full app-set, without affecting members or production data. | M | Sandbox-only data isolation verified per FR-SBX-01. |
+| FR-CHAT-02 | At project scope, the sandbox shall route each turn to the appropriate app based on intent; within that app, to the appropriate sub-agent(s). Multi-agent hand-offs shall be supported. | M | Routing trace produced and observable per turn. |
+| FR-CHAT-03 | The sandbox shall expose a **Debug** rail with: session overview (id, message count, trace event count, connection state), model(s) used, token breakdown (in / out / total / LLM calls), per-turn orchestration trace (route, tool calls, knowledge sources, guardrail triggers, hand-offs), errors, and a conversation summary. | M | Debug rail fields populated per turn. |
+| FR-CHAT-04 | Sandbox conversations are scoped to the simulating user and are not persisted to the production audit log unless the user explicitly promotes a transcript. | M | Audit scope verified. |
+| FR-CHAT-05 | A user-promoted sandbox transcript shall become a user-defined test case in the Evaluation Harness (per FR-SBX-03 / FR-EVL). | M | Round-trip into Evaluation verified. |
+| FR-CHAT-06 | The sandbox shall obey the same guardrails (§9.11) and memory configuration (§9.12) as the deployed app — the trace shall show when a guardrail would have intervened. | M | Guardrail-fire visible in trace. |
+| FR-CHAT-07 | The sandbox is available to Process Owner, CU Admin, and Compliance Reviewer roles. Compliance Reviewers may use it during approval (§9.7) to probe the app before voting. | M | Role gating verified. |
+
+### 9.24 Deployment Environments & External Access
+
+| ID | Requirement | Priority | Acceptance Criteria |
+|---|---|---|---|
+| FR-ENV-01 | The platform shall support distinct **deployment environments** per project: **Base (default / fallback)**, **Development**, **Staging**, **Production**. Environments inherit Base values unless overridden. | M | Override resolution verified across all four. |
+| FR-ENV-02 | Each environment shall carry its own **variables** (non-secret configuration values). Secrets are managed separately through the platform's secrets store and are never echoed in the UI. | M | Variables UI exposed; secrets surface tested for non-disclosure. |
+| FR-ENV-03 | A deployment action targets exactly one environment. **Production** deployments require the approvals defined in §9.7 and the step-up re-authentication defined in FR-AUT-04. | M | Cannot deploy to Production without approval + step-up MFA. |
+| FR-ENV-04 | The platform shall manage **API keys** for external applications to consume deployed apps: **SDK keys** (embedded in client surfaces, scoped to non-sensitive operations) and **Platform keys** (server-to-server, scoped to one or more environments). | M | Both key types creatable; scope enforced at runtime. |
+| FR-ENV-05 | API key creation, rotation, and revocation shall be auditable and shall require Project Admin or CU Admin role; SDK keys exposed in client code shall be restricted to non-sensitive operations. | M | Role + audit verified; SDK key scope tested against a sensitive endpoint. |
+| FR-ENV-06 | Per-environment **channel** toggles (digital / voice / sms / email) shall exist at the project level; per-app channel availability remains governed by §9.5 and §9.8. | M | Channels surface respects per-app gating. |
+| FR-ENV-07 | Environments shall not bypass governance: continuous evaluation (FR-EVL-07), audit (FR-MC-03), guardrails (§9.11), and kill switches (FR-MC-04) apply uniformly across Development, Staging, and Production. | M | Cross-environment uniformity verified. |
 
 ---
 
