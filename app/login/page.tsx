@@ -13,7 +13,8 @@ export default function LoginPage() {
   const router = useRouter();
   const [stage, setStage] = useState<Stage>('credentials');
   const [showPassword, setShowPassword] = useState(false);
-  const [email, setEmail] = useState('nilotpal@cornerstone.cu');
+  const [email, setEmail] = useState('demo@cornerstone.cu');
+  const [password, setPassword] = useState('demo-password');
   const [otp, setOtp] = useState('');
 
   const handleSSO = () => {
@@ -84,7 +85,9 @@ export default function LoginPage() {
               <div className="relative">
                 <input
                   type={showPassword ? 'text' : 'password'}
-                  defaultValue="••••••••"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Enter your password"
                   className="w-full h-9 bg-background-muted/60 border border-border-muted rounded-md px-3 pr-9 text-sm text-foreground placeholder:text-foreground-subtle focus:outline-none focus:ring-1 focus:ring-border-focus/40"
                 />
                 <button

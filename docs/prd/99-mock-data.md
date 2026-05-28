@@ -19,7 +19,7 @@ export const personas = {
   processOwner: {
     id: 'u_np',
     name: 'Nilotpal Prakash',
-    email: 'nilotpal@cornerstone.cu',
+    email: 'demo@cornerstone.cu',
     role: 'Process Owner',
     initials: 'NP',
     avatarHue: 'purple',

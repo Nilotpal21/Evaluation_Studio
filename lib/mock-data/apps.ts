@@ -55,7 +55,7 @@ export const apps: App[] = [
     deployedAt: '2026-05-22',
     deployedVersion: 3,
     lastEvaluatedAt: '14 min ago',
-    ownerInitials: 'NP',
+    ownerInitials: 'DU',
   },
   {
     id: 'app_account_opening',
@@ -79,7 +79,7 @@ export const apps: App[] = [
     deployedAt: '2026-05-15',
     deployedVersion: 2,
     lastEvaluatedAt: '1 hr ago',
-    ownerInitials: 'NP',
+    ownerInitials: 'DU',
   },
   {
     id: 'app_fraud_triage',
@@ -103,7 +103,7 @@ export const apps: App[] = [
     deployedAt: null,
     deployedVersion: 0,
     lastEvaluatedAt: '6 hr ago',
-    ownerInitials: 'NP',
+    ownerInitials: 'DU',
   },
   {
     id: 'app_hardship_assist',
@@ -127,7 +127,7 @@ export const apps: App[] = [
     deployedAt: null,
     deployedVersion: 0,
     lastEvaluatedAt: '20 hr ago',
-    ownerInitials: 'NP',
+    ownerInitials: 'DU',
   },
   {
     id: 'app_loan_intake',
@@ -151,7 +151,7 @@ export const apps: App[] = [
     deployedAt: null,
     deployedVersion: 0,
     lastEvaluatedAt: '2 days ago',
-    ownerInitials: 'NP',
+    ownerInitials: 'DU',
   },
 ];
 

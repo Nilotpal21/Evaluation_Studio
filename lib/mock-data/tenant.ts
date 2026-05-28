@@ -30,11 +30,11 @@ export const tenant: Tenant = {
 export const personas: Record<'processOwner' | 'reviewer' | 'admin', Persona> = {
   processOwner: {
     id: 'u_np',
-    name: 'Nilotpal Prakash',
-    firstName: 'Nilotpal',
-    email: 'nilotpal@cornerstone.cu',
+    name: 'Demo User',
+    firstName: 'Demo',
+    email: 'demo@cornerstone.cu',
     role: 'Process Owner',
-    initials: 'NP',
+    initials: 'DU',
     avatarHue: 'purple',
     home: '/',
   },
