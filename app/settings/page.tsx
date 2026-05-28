@@ -1,30 +1,24 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import {
   User,
   Bell,
   Sparkles,
   Building2,
   KeyRound,
-  LogOut,
   Shield,
   Eye,
+  Trash2,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { personas, tenant } from '@/lib/mock-data';
 import { useActivePersona } from '@/lib/persona';
-import { useAuth } from '@/lib/auth';
 import { Footer } from '@/components/shell/Footer';
 import { cn } from '@/lib/utils';
 
 export default function SettingsPage() {
   const persona = useActivePersona();
-  const router = useRouter();
-  const signOut = useAuth((s) => s.signOut);
-  const authMethod = useAuth((s) => s.authMethod);
-  const signedInAt = useAuth((s) => s.signedInAt);
 
   const isAdmin = persona.role === 'Credit Union Admin';
 
@@ -303,23 +297,24 @@ export default function SettingsPage() {
         </>
       )}
 
-      <Section
-        icon={LogOut}
-        title="Session"
-        description={`Signed in via ${authMethod ?? 'SSO'} at ${signedInAt ? new Date(signedInAt).toLocaleString() : '—'}.`}
-      >
-        <button
-          type="button"
-          onClick={() => {
-            signOut();
-            router.push('/login');
-          }}
-          className="h-9 px-3.5 rounded-md text-xs font-medium border border-error/30 text-error hover:bg-error-subtle transition-colors flex items-center gap-1.5"
+      {isAdmin && (
+        <Section
+          icon={Trash2}
+          title="Delete app"
+          description="Permanently delete this tenant's Eltropy workspace, all apps, SOPs, evaluations, and audit history. This cannot be undone."
         >
-          <LogOut className="size-3.5" />
-          Delete
-        </button>
-      </Section>
+          <button
+            type="button"
+            onClick={() => {
+              toast.error('Delete app is disabled in this prototype.');
+            }}
+            className="h-9 px-3.5 rounded-md text-xs font-medium border border-error/30 text-error hover:bg-error-subtle transition-colors flex items-center gap-1.5"
+          >
+            <Trash2 className="size-3.5" />
+            Delete app
+          </button>
+        </Section>
+      )}
 
       <Footer />
     </div>
