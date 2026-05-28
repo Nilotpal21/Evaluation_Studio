@@ -1,78 +1,73 @@
+'use client';
+
+import { useState, useMemo } from 'react';
 import Link from 'next/link';
-import { Plus, FolderKanban, TrendingUp, TrendingDown, Minus } from 'lucide-react';
+import { Plus, Search, FolderOpen, Bot, Clock, ChevronDown } from 'lucide-react';
 import { projects, type Project } from '@/lib/mock-data';
 import { Footer } from '@/components/shell/Footer';
-import { cn } from '@/lib/utils';
+
+function formatDate(iso: string): string {
+  const d = new Date(iso);
+  const dd = String(d.getDate()).padStart(2, '0');
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const yyyy = d.getFullYear();
+  return `${dd}/${mm}/${yyyy}`;
+}
 
 export default function ProjectsPage() {
-  const active = projects.filter((p) => p.status === 'active');
+  const [query, setQuery] = useState('');
+
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    const active = projects.filter((p) => p.status === 'active');
+    if (!q) return active;
+    return active.filter(
+      (p) =>
+        p.name.toLowerCase().includes(q) ||
+        p.tag.toLowerCase().includes(q) ||
+        p.description.toLowerCase().includes(q),
+    );
+  }, [query]);
 
   return (
     <div className="space-y-6">
-      <header className="flex items-end justify-between">
-        <div>
-          <h1 className="text-xl font-semibold tracking-tight">Projects</h1>
-          <p className="text-xs text-foreground-muted mt-1">
-            Business-area groupings inside Cornerstone FCU. Each project has its own SOPs, apps,
-            reviewers, knowledge, and KPIs.
-          </p>
-        </div>
+      <header className="flex items-center justify-between">
+        <h1 className="text-2xl font-semibold tracking-tight">Projects</h1>
         <button
           type="button"
-          className="h-8 px-3 rounded-md text-xs font-medium bg-accent text-accent-foreground hover:bg-accent-muted transition-colors flex items-center gap-1.5"
+          className="h-9 pl-3 pr-2 rounded-md text-xs font-medium bg-accent text-accent-foreground hover:bg-accent-muted transition-colors flex items-center gap-2"
         >
           <Plus className="size-3.5" />
-          New project
+          New Project
+          <span className="size-5 -mr-1 rounded flex items-center justify-center bg-accent-foreground/10">
+            <ChevronDown className="size-3" />
+          </span>
         </button>
       </header>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-        {active.map((p) => (
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-foreground-subtle pointer-events-none" />
+        <input
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Find your workspace…"
+          className="w-full h-11 bg-background-subtle border border-border-muted rounded-lg pl-9 pr-14 text-sm text-foreground placeholder:text-foreground-subtle focus:outline-none focus:ring-1 focus:ring-border-focus/40 focus:border-border"
+        />
+        <kbd className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-foreground-subtle font-mono border border-border-muted rounded px-1.5 py-0.5 pointer-events-none">
+          ⌘ K
+        </kbd>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {filtered.length === 0 && (
+          <p className="col-span-full text-xs text-foreground-muted text-center py-12 border border-dashed border-border-muted rounded-lg">
+            No projects match {query ? `"${query}"` : 'your filters'}.
+          </p>
+        )}
+        {filtered.map((p) => (
           <ProjectCard key={p.id} project={p} />
         ))}
       </div>
-
-      <section className="rounded-lg border border-border-muted bg-background-subtle overflow-hidden">
-        <div className="px-4 py-3 border-b border-border-muted">
-          <h2 className="text-sm font-semibold">Cross-project comparison</h2>
-          <p className="text-xs text-foreground-muted mt-0.5">
-            Visible to CU Admin. Sort by any column.
-          </p>
-        </div>
-        <div className="grid grid-cols-[2fr_1fr_1fr_1fr_1fr_1fr] items-center px-4 py-2.5 border-b border-border-muted text-[10px] uppercase tracking-wide text-foreground-meta font-medium gap-3">
-          <div>Project</div>
-          <div className="text-right">Apps</div>
-          <div className="text-right">Conv · 24h</div>
-          <div className="text-right">Avg eval</div>
-          <div className="text-right">Cost · MTD</div>
-          <div className="text-right">Reviewers</div>
-        </div>
-        {active.map((p) => {
-          const costPct = Math.round((p.mtdSpend / p.monthlyBudget) * 100);
-          return (
-            <div
-              key={p.id}
-              className="grid grid-cols-[2fr_1fr_1fr_1fr_1fr_1fr] items-center px-4 py-3 border-b last:border-b-0 border-border-muted text-xs gap-3 hover:bg-background-muted/40 transition-colors"
-            >
-              <Link
-                href={`/projects/${p.id}`}
-                className="font-medium hover:text-foreground transition-colors"
-              >
-                {p.name}
-              </Link>
-              <div className="text-right tabular-nums">{p.appCount}</div>
-              <div className="text-right tabular-nums">{p.conversations24h.toLocaleString()}</div>
-              <div className={cn('text-right tabular-nums font-medium', scoreText(p.avgEvaluationScore))}>
-                {p.avgEvaluationScore}
-              </div>
-              <div className="text-right tabular-nums">
-                <span className={costTextClass(costPct)}>{costPct}%</span>
-              </div>
-              <div className="text-right tabular-nums">{p.reviewerCount}</div>
-            </div>
-          );
-        })}
-      </section>
 
       <Footer />
     </div>
@@ -80,95 +75,35 @@ export default function ProjectsPage() {
 }
 
 function ProjectCard({ project: p }: { project: Project }) {
-  const costPct = Math.round((p.mtdSpend / p.monthlyBudget) * 100);
-
   return (
     <Link
       href={`/projects/${p.id}`}
-      className="group rounded-lg border border-border-muted bg-background-subtle hover:border-border hover:bg-background-muted/40 transition-colors p-4 flex flex-col"
+      className="group rounded-lg border border-border-muted bg-background-subtle hover:border-border hover:bg-background-muted/40 transition-colors p-5 flex flex-col"
     >
-      <div className="flex items-start justify-between mb-2">
-        <div className="flex items-center gap-2 min-w-0">
-          <div className="size-7 rounded-md bg-background-elevated border border-border-muted flex items-center justify-center shrink-0">
-            <FolderKanban className="size-3.5 text-foreground-muted group-hover:text-foreground transition-colors" />
-          </div>
-          <div className="min-w-0">
-            <div className="text-sm font-medium truncate">{p.name}</div>
-            <div className="text-[10px] uppercase tracking-wide text-foreground-meta">
-              {p.tag}
-            </div>
+      <div className="flex items-start gap-3 mb-4">
+        <div className="size-10 rounded-md bg-success-subtle text-success flex items-center justify-center shrink-0">
+          <FolderOpen className="size-5" />
+        </div>
+        <div className="min-w-0 flex-1 pt-0.5">
+          <div className="text-base font-semibold tracking-tight truncate group-hover:text-foreground transition-colors">
+            {p.name}
           </div>
         </div>
-        <span className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded uppercase tracking-wide font-medium bg-success-subtle text-success">
-          <span className="size-1.5 rounded-full bg-success" />
-          Active
+      </div>
+
+      <div className="h-px bg-border-muted mb-4" />
+
+      <div className="flex items-center gap-4 text-xs text-foreground-muted">
+        <span className="inline-flex items-center gap-1.5">
+          <Bot className="size-3.5 text-foreground-subtle" />
+          <span className="tabular-nums">{p.appCount}</span>{' '}
+          {p.appCount === 1 ? 'agent' : 'agents'}
         </span>
-      </div>
-
-      <p className="text-xs text-foreground-muted leading-relaxed line-clamp-2 mb-4 min-h-[2.2rem]">
-        {p.description}
-      </p>
-
-      <div className="grid grid-cols-4 gap-2 pt-3 border-t border-border-muted">
-        <Stat label="Apps" value={p.appCount.toString()} />
-        <Stat label="SOPs" value={p.sopCount.toString()} />
-        <Stat label="Reviewers" value={p.reviewerCount.toString()} />
-        <Stat
-          label="Score"
-          value={
-            <span className={cn('inline-flex items-center gap-0.5', scoreText(p.avgEvaluationScore))}>
-              {p.avgEvaluationScore}
-              <TrendIndicator score={p.avgEvaluationScore} />
-            </span>
-          }
-        />
-      </div>
-
-      <div className="mt-3">
-        <div className="flex items-center justify-between text-[10px] text-foreground-meta">
-          <span className="uppercase tracking-wide">Budget · MTD</span>
-          <span className="tabular-nums">{costPct}%</span>
-        </div>
-        <div className="mt-1 h-1 rounded-full bg-background-muted overflow-hidden">
-          <div
-            className={cn('h-full', costBarClass(costPct))}
-            style={{ width: `${Math.min(100, costPct)}%` }}
-          />
-        </div>
+        <span className="inline-flex items-center gap-1.5">
+          <Clock className="size-3.5 text-foreground-subtle" />
+          <span className="tabular-nums">{formatDate(p.createdAt)}</span>
+        </span>
       </div>
     </Link>
   );
-}
-
-function Stat({ label, value }: { label: string; value: React.ReactNode }) {
-  return (
-    <div>
-      <div className="text-[10px] uppercase tracking-wide text-foreground-meta">{label}</div>
-      <div className="text-xs font-medium tabular-nums mt-0.5">{value}</div>
-    </div>
-  );
-}
-
-function TrendIndicator({ score }: { score: number }) {
-  if (score >= 90) return <TrendingUp className="size-3 text-success" />;
-  if (score < 75) return <TrendingDown className="size-3 text-error" />;
-  return <Minus className="size-3 text-foreground-meta" />;
-}
-
-function scoreText(score: number): string {
-  if (score >= 90) return 'text-success';
-  if (score >= 75) return 'text-warning';
-  return 'text-error';
-}
-
-function costTextClass(pct: number): string {
-  if (pct >= 95) return 'text-error';
-  if (pct >= 80) return 'text-warning';
-  return 'text-foreground';
-}
-
-function costBarClass(pct: number): string {
-  if (pct >= 95) return 'bg-error';
-  if (pct >= 80) return 'bg-warning';
-  return 'bg-success/80';
 }

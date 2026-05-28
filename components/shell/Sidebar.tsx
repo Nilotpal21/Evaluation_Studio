@@ -19,9 +19,12 @@ import {
   Cpu,
   Users,
   Settings2,
+  FolderOpen,
+  ChevronLeft,
   type LucideIcon,
 } from 'lucide-react';
-import { useActivePersona } from '@/lib/persona';
+import { useActivePersona, useActiveProjectId } from '@/lib/persona';
+import { getProjectById } from '@/lib/mock-data';
 import { cn } from '@/lib/utils';
 
 interface NavItem {
@@ -40,9 +43,9 @@ interface NavGroup {
 const NAV: Record<'processOwner' | 'reviewer' | 'admin', NavGroup> = {
   processOwner: {
     primary: [
-      { id: 'projects', label: 'Projects', icon: LayoutDashboard, href: '/projects', count: 4 },
-      { id: 'sops', label: 'SOPs', icon: FileText, href: '/sops', count: 4 },
-      { id: 'apps', label: 'Apps', icon: Bot, href: '/apps', count: 5 },
+      { id: 'overview', label: 'Overview', icon: LayoutDashboard, href: '/' },
+      { id: 'sops', label: 'SOPs', icon: FileText, href: '/sops' },
+      { id: 'apps', label: 'Apps', icon: Bot, href: '/apps' },
       { id: 'evaluations', label: 'Evaluations', icon: LineChart, href: '/evaluations' },
       { id: 'helper', label: 'Helper', icon: Sparkles, href: '/helper' },
       { id: 'marketplace', label: 'Marketplace', icon: Store, href: '/marketplace' },
@@ -80,6 +83,8 @@ const NAV: Record<'processOwner' | 'reviewer' | 'admin', NavGroup> = {
 
 export function Sidebar() {
   const active = useActivePersona();
+  const activeProjectId = useActiveProjectId();
+  const project = getProjectById(activeProjectId);
   const pathname = usePathname();
 
   const personaKey =
@@ -89,13 +94,29 @@ export function Sidebar() {
         ? 'reviewer'
         : 'admin';
   const { primary, secondary } = NAV[personaKey];
+  const isProcessOwner = personaKey === 'processOwner';
 
   return (
     <aside className="w-[224px] shrink-0 border-r border-border bg-background-subtle flex flex-col">
+      {isProcessOwner && project && (
+        <ProjectContextCard project={project} />
+      )}
+
       <nav className="flex-1 px-2 py-3 space-y-0.5">
-        {primary.map((item) => (
-          <NavRow key={item.id} item={item} isActive={isActiveRoute(item.href, pathname)} />
-        ))}
+        {primary.map((item) => {
+          // Process Owner's "Overview" item links to the active project's home.
+          const href =
+            isProcessOwner && item.id === 'overview' && project
+              ? `/projects/${project.id}`
+              : item.href;
+          return (
+            <NavRow
+              key={item.id}
+              item={{ ...item, href }}
+              isActive={isActiveRoute(href, pathname, item.id === 'overview')}
+            />
+          );
+        })}
         <div className="my-3 border-t border-border-muted" />
         {secondary.map((item) => (
           <NavRow key={item.id} item={item} isActive={isActiveRoute(item.href, pathname)} />
@@ -113,6 +134,31 @@ export function Sidebar() {
         <p className="text-[11px] text-foreground-subtle mt-0.5">Updated 2 min ago</p>
       </div>
     </aside>
+  );
+}
+
+function ProjectContextCard({ project }: { project: { id: string; name: string; appCount: number } }) {
+  return (
+    <div className="px-3 pt-3 pb-2.5 border-b border-border-muted">
+      <Link
+        href="/projects"
+        className="flex items-center gap-1 text-[10px] uppercase tracking-wide text-foreground-meta hover:text-foreground transition-colors font-medium mb-1.5"
+      >
+        <ChevronLeft className="size-3" />
+        All projects
+      </Link>
+      <div className="flex items-start gap-2.5">
+        <div className="size-8 rounded-md bg-success-subtle text-success flex items-center justify-center shrink-0">
+          <FolderOpen className="size-4" />
+        </div>
+        <div className="min-w-0">
+          <div className="text-sm font-semibold tracking-tight truncate">{project.name}</div>
+          <div className="text-[11px] text-foreground-subtle tabular-nums">
+            {project.appCount} {project.appCount === 1 ? 'agent' : 'agents'}
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -144,7 +190,11 @@ function NavRow({ item, isActive }: { item: NavItem; isActive: boolean }) {
   );
 }
 
-function isActiveRoute(href: string, pathname: string): boolean {
+function isActiveRoute(href: string, pathname: string, looseProjectMatch = false): boolean {
+  if (looseProjectMatch && href.startsWith('/projects/')) {
+    // "Overview" item — active for /projects/[id] and any descendant
+    return pathname === href || pathname.startsWith(`${href}/`);
+  }
   if (href === '/') return pathname === '/';
   return pathname === href || pathname.startsWith(`${href}/`);
 }

@@ -16,6 +16,8 @@ export interface Project {
   monthlyBudget: number;
   mtdSpend: number;
   defaultChannels: ('digital' | 'voice' | 'sms' | 'email')[];
+  /** ISO date string of project creation */
+  createdAt: string;
 }
 
 export const projects: Project[] = [
@@ -36,6 +38,7 @@ export const projects: Project[] = [
     monthlyBudget: 1200,
     mtdSpend: 744,
     defaultChannels: ['digital', 'voice'],
+    createdAt: '2026-03-12',
   },
   {
     id: 'proj_member_onboarding',
@@ -54,6 +57,7 @@ export const projects: Project[] = [
     monthlyBudget: 900,
     mtdSpend: 188,
     defaultChannels: ['digital', 'sms'],
+    createdAt: '2026-04-02',
   },
   {
     id: 'proj_collections',
@@ -72,6 +76,7 @@ export const projects: Project[] = [
     monthlyBudget: 600,
     mtdSpend: 42,
     defaultChannels: ['digital'],
+    createdAt: '2026-04-21',
   },
   {
     id: 'proj_lending',
@@ -89,6 +94,7 @@ export const projects: Project[] = [
     monthlyBudget: 800,
     mtdSpend: 32,
     defaultChannels: ['digital'],
+    createdAt: '2026-05-08',
   },
 ];
 
