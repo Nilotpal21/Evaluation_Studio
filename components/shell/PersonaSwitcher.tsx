@@ -3,7 +3,7 @@
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import { Check, LogOut } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { personas } from '@/lib/mock-data';
+import { personas, tenant } from '@/lib/mock-data';
 import { usePersona, personaKeys } from '@/lib/persona';
 import { useAuth } from '@/lib/auth';
 import { cn } from '@/lib/utils';
@@ -46,8 +46,19 @@ export function PersonaSwitcher() {
         <DropdownMenu.Content
           align="end"
           sideOffset={6}
-          className="z-50 min-w-[240px] rounded-lg border border-border bg-background-elevated shadow-xl p-1 animate-fade-in"
+          className="z-50 min-w-[280px] rounded-lg border border-border bg-background-elevated shadow-xl p-1 animate-fade-in"
         >
+          <div className="px-3 py-2 text-[10px] uppercase tracking-wide text-foreground-meta font-medium">
+            Workspace
+          </div>
+          <div className="mx-1 px-3 py-2 rounded-md bg-background-muted">
+            <div className="text-sm font-medium">{tenant.name}</div>
+            <div className="text-[11px] text-foreground-muted mt-0.5">
+              {tenant.charter} charter · {tenant.region} · $
+              {(tenant.assetsUSD / 1e9).toFixed(1)}B assets
+            </div>
+          </div>
+          <DropdownMenu.Separator className="my-1 h-px bg-border-muted" />
           <div className="px-3 py-2 text-[10px] uppercase tracking-wide text-foreground-meta font-medium">
             Switch persona
           </div>

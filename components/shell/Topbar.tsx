@@ -1,12 +1,10 @@
 'use client';
 
-import { Search, Bell, Plus, ChevronDown } from 'lucide-react';
+import { Search, Bell, Plus } from 'lucide-react';
 import * as Popover from '@radix-ui/react-popover';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { tenant } from '@/lib/mock-data';
 import { PersonaSwitcher } from './PersonaSwitcher';
-import { ProjectSwitcher } from './ProjectSwitcher';
 
 export function Topbar() {
   const pathname = usePathname();
@@ -27,43 +25,6 @@ export function Topbar() {
 
       {!isProjectsLanding && (
         <>
-          <Popover.Root>
-            <Popover.Trigger asChild>
-              <button
-                type="button"
-                className="flex items-center gap-1.5 ml-3 px-2 py-1 rounded-md text-foreground-muted hover:bg-background-elevated hover:text-foreground transition-colors text-xs"
-              >
-                <span className="size-4 rounded bg-purple/20 text-purple flex items-center justify-center font-semibold text-[10px]">
-                  CU
-                </span>
-                <span>{tenant.shortName}</span>
-                <ChevronDown className="size-3" />
-              </button>
-            </Popover.Trigger>
-            <Popover.Portal>
-              <Popover.Content
-                align="start"
-                sideOffset={6}
-                className="z-50 w-[280px] rounded-lg border border-border bg-background-elevated shadow-xl p-2 animate-fade-in"
-              >
-                <div className="px-2 py-1.5 text-[10px] uppercase tracking-wide text-foreground-meta font-medium">
-                  Workspace
-                </div>
-                <div className="px-2 py-2 rounded-md bg-background-muted">
-                  <div className="text-sm font-medium">{tenant.name}</div>
-                  <div className="text-[11px] text-foreground-muted mt-0.5">
-                    {tenant.charter} charter · {tenant.region} · $
-                    {(tenant.assetsUSD / 1e9).toFixed(1)}B assets
-                  </div>
-                </div>
-              </Popover.Content>
-            </Popover.Portal>
-          </Popover.Root>
-
-          <span className="text-foreground-subtle text-xs">/</span>
-
-          <ProjectSwitcher />
-
           <div className="flex-1 max-w-sm mx-auto relative">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-3.5 text-foreground-subtle pointer-events-none" />
             <input

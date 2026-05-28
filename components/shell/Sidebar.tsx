@@ -18,13 +18,13 @@ import {
   Cpu,
   Users,
   Settings2,
-  FolderOpen,
   ChevronLeft,
   type LucideIcon,
 } from 'lucide-react';
 import { useActivePersona, useActiveProjectId } from '@/lib/persona';
 import { getProjectById } from '@/lib/mock-data';
 import { cn } from '@/lib/utils';
+import { ProjectSwitcher } from './ProjectSwitcher';
 
 interface NavItem {
   id: string;
@@ -97,7 +97,16 @@ export function Sidebar() {
   return (
     <aside className="w-[224px] shrink-0 border-r border-border bg-background-subtle flex flex-col">
       {isProcessOwner && project && (
-        <ProjectContextCard project={project} />
+        <div className="px-2 pt-3 pb-2 border-b border-border-muted space-y-1.5">
+          <Link
+            href="/projects"
+            className="flex items-center gap-1 px-2 text-[10px] uppercase tracking-wide text-foreground-meta hover:text-foreground transition-colors font-medium"
+          >
+            <ChevronLeft className="size-3" />
+            All projects
+          </Link>
+          <ProjectSwitcher variant="card" />
+        </div>
       )}
 
       <nav className="flex-1 px-2 py-3 space-y-0.5">
@@ -132,31 +141,6 @@ export function Sidebar() {
         <p className="text-[11px] text-foreground-subtle mt-0.5">Updated 2 min ago</p>
       </div>
     </aside>
-  );
-}
-
-function ProjectContextCard({ project }: { project: { id: string; name: string; appCount: number } }) {
-  return (
-    <div className="px-3 pt-3 pb-2.5 border-b border-border-muted">
-      <Link
-        href="/projects"
-        className="flex items-center gap-1 text-[10px] uppercase tracking-wide text-foreground-meta hover:text-foreground transition-colors font-medium mb-1.5"
-      >
-        <ChevronLeft className="size-3" />
-        All projects
-      </Link>
-      <div className="flex items-start gap-2.5">
-        <div className="size-8 rounded-md bg-success-subtle text-success flex items-center justify-center shrink-0">
-          <FolderOpen className="size-4" />
-        </div>
-        <div className="min-w-0">
-          <div className="text-sm font-semibold tracking-tight truncate">{project.name}</div>
-          <div className="text-[11px] text-foreground-subtle tabular-nums">
-            {project.appCount} {project.appCount === 1 ? 'agent' : 'agents'}
-          </div>
-        </div>
-      </div>
-    </div>
   );
 }
 
