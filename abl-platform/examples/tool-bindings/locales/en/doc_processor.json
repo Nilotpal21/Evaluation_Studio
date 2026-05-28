@@ -1,7 +1,0 @@
-{
-  "agent_name": "DocProcessor",
-  "strings": {
-    "gather_doc_url": "Please provide the document URL to process.",
-    "complete_success": "Document processing complete!"
-  }
-}

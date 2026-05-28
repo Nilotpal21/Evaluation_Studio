@@ -1,8 +1,0 @@
-{
-  "agent": "Live_Agent",
-  "locale": "en",
-  "strings": {
-    "transfer_message": "I'm connecting you with a specialist who can help further.\nThey'll have all the details of our conversation so you won't need to repeat anything.\nPlease hold for a moment.",
-    "human_resolved": "I'm glad the specialist was able to help! Is there anything else I can assist you with?"
-  }
-}

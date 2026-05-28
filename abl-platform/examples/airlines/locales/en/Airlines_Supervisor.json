@@ -1,9 +1,0 @@
-{
-  "agent": "Airlines_Supervisor",
-  "locale": "en",
-  "strings": {
-    "goal": "Route airline customer queries to the appropriate specialist agent.",
-    "welcome_default": "Welcome to Airlines Support! I can help you with:\n- Search for flights and check availability\n- Baggage, cancellation, refund, and loyalty policies\n- Revenue and operational analytics\nWhat can I help you with today?",
-    "welcome_markdown": "# Welcome to Airlines Support\n\nI can help you with:\n- **Flight search** -- availability, routes, schedules, booking\n- **Policies** -- baggage, cancellation, refunds, loyalty\n- **Analytics** -- revenue, fares, operational metrics\n\nWhat can I help you with today?"
-  }
-}

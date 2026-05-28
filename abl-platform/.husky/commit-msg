@@ -1,2 +1,0 @@
-export PATH="/usr/local/node/bin:$PATH"
-pnpm commitlint --edit $1

@@ -1,7 +1,0 @@
-{
-  "agent_name": "RiskCalculator",
-  "strings": {
-    "gather_data": "Please provide the data for risk assessment.",
-    "complete_success": "Risk assessment complete!"
-  }
-}

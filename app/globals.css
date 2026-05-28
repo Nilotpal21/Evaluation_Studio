@@ -1,0 +1,96 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Background */
+    --background: 220 3% 4%;
+    --background-subtle: 220 3% 7%;
+    --background-muted: 220 3% 10%;
+    --background-elevated: 220 3% 12.5%;
+
+    /* Foreground */
+    --foreground: 220 1% 98%;
+    --foreground-muted: 220 2% 64%;
+    --foreground-meta: 220 2% 55%;
+    --foreground-subtle: 220 2% 45%;
+
+    /* Border */
+    --border: 220 4% 18%;
+    --border-muted: 220 2% 14%;
+    --border-focus: 217 91% 60%;
+
+    /* Accent — monochrome */
+    --accent: 220 5% 93%;
+    --accent-foreground: 220 5% 5%;
+    --accent-muted: 220 5% 80%;
+    --accent-subtle: 220 3% 15%;
+
+    /* Status */
+    --success: 142.1 76.2% 36.3%;
+    --success-foreground: 0 0% 100%;
+    --success-subtle: 142.1 40% 15%;
+
+    --warning: 40 93.4% 47.5%;
+    --warning-foreground: 0 0% 9%;
+    --warning-subtle: 40 40% 15%;
+
+    --error: 0 72.2% 50.6%;
+    --error-foreground: 0 0% 100%;
+    --error-subtle: 0 40% 15%;
+
+    --info: 187.2 85.7% 53.3%;
+    --info-foreground: 0 0% 9%;
+    --info-subtle: 187.2 40% 15%;
+
+    --purple: 262.1 83.3% 57.8%;
+    --purple-foreground: 0 0% 100%;
+    --purple-subtle: 262.1 40% 15%;
+
+    /* Radius */
+    --radius-sm: 4px;
+    --radius-md: 6px;
+    --radius-lg: 8px;
+    --radius-xl: 12px;
+    --radius-2xl: 16px;
+  }
+}
+
+@layer base {
+  * {
+    border-color: hsl(var(--border));
+  }
+  html,
+  body {
+    height: 100%;
+  }
+  body {
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
+    font-feature-settings: 'cv11', 'ss01';
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  ::selection {
+    background-color: hsl(var(--accent) / 0.2);
+    color: hsl(var(--accent));
+  }
+}
+
+@layer components {
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background: hsl(var(--border));
+    border-radius: 9999px;
+  }
+  .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--foreground-subtle));
+  }
+}

@@ -1,8 +1,0 @@
-{
-  "mcpServers": {
-    "helix": {
-      "command": "pnpm",
-      "args": ["exec", "tsx", "packages/helix/src/mcp-cli.ts", "--workdir", "."]
-    }
-  }
-}

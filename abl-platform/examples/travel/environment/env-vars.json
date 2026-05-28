@@ -1,9 +1,0 @@
-{
-  "variables": [
-    {
-      "key": "SEARCH_API_URL",
-      "description": "Base URL for the flight/hotel search API used by Sales_Agent HTTP tools",
-      "required": true
-    }
-  ]
-}

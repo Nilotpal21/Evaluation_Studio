@@ -1,8 +1,0 @@
-{
-  "agent": "Fallback_Handler",
-  "locale": "en",
-  "strings": {
-    "clarification_prompt": "I want to make sure I help you with the right thing. What are you looking for?\n1. Book new travel (flights, hotels, packages)\n2. Manage an existing booking (view, change, cancel)\n3. Speak with a support agent\n4. Something else",
-    "handoff_initiated": "I understand now. Connecting you with the right specialist."
-  }
-}

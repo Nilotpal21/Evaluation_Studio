@@ -1,6 +1,0 @@
-{
-  "name": "abl-charter-concierge-mock",
-  "version": "1.0.0",
-  "private": true,
-  "description": "Deterministic Vercel mock API for the Charter Concierge ABL example"
-}

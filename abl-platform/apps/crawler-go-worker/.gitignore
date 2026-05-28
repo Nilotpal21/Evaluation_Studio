@@ -1,6 +1,0 @@
-bin/
-coverage.out
-coverage.html
-.env
-.env.local
-*.log

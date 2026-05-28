@@ -1,9 +1,0 @@
-{
-  "agent": "Device_Support",
-  "locale": "en",
-  "strings": {
-    "unsupported_device": "I can help with iPhone, iPad, Mac, Apple Watch, and AirPods. Which device are you having trouble with?",
-    "backup_required": "Before we reset, let's make sure your data is backed up to iCloud. Is your iCloud backup up to date?",
-    "issue_resolved": "Great news - it looks like the issue is resolved! Is everything working as expected now?"
-  }
-}

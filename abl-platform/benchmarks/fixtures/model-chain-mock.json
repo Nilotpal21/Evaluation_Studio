@@ -1,6 +1,0 @@
-{
-  "provider": "mock",
-  "endpoint": "http://mock-llm.abl-benchmarks.svc.cluster.local:8080/v1/chat/completions",
-  "model": "mock-gpt-4o-mini",
-  "description": "Mock LLM for platform benchmarks — fixed 200ms latency, deterministic responses"
-}

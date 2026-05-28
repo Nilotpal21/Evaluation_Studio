@@ -1,9 +1,0 @@
-{
-  "greeting": "Hola, soy Samy, su asistente virtual de Saludsa.\n\u00bfMe puede proporcionar su c\u00e9dula o pasaporte?\nLa conversaci\u00f3n se almacenar\u00e1 y monitorear\u00e1 por seguridad.",
-  "invalid_id_retry": "Proporcione el n\u00famero de identificaci\u00f3n v\u00e1lido / n\u00famero de pasaporte",
-  "session_closed": "Para cuidar su seguridad y su informaci\u00f3n, hemos cerrado esta sesi\u00f3n luego de varios intentos fallidos. Puede volver a intentarlo m\u00e1s adelante.",
-  "validation_success": "Gracias, su identidad ha sido validada. \u00bfEn qu\u00e9 le puedo servir?",
-  "non_client_offer": "\u00bfQuieres comprar un plan?",
-  "broker_wrong_number": "Este n\u00famero est\u00e1 asociado a un perfil de Broker. Por favor utilice el n\u00famero de WhatsApp correspondiente.",
-  "api_error": "Lo sentimos, tenemos dificultades t\u00e9cnicas. Por favor intente m\u00e1s tarde."
-}

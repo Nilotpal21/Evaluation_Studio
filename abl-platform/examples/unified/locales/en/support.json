@@ -1,9 +1,0 @@
-{
-  "agent": "Support_Agent",
-  "locale": "en",
-  "strings": {
-    "issue_prompt": "Please describe your issue.",
-    "booking_ref_prompt": "Do you have a booking reference?",
-    "issue_resolved": "I'm glad I could help resolve your issue."
-  }
-}

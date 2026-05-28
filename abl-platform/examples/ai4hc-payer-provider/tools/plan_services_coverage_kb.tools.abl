@@ -1,9 +1,0 @@
-TOOL: Plan_Services_Coverage_Knowledge_Base
-VERSION: "1.0"
-DESCRIPTION: "Search coverage information by plan name — copay, coinsurance, prior auth, limits, services"
-TYPE: knowledge
-PARAMETERS:
-  query:
-    type: string
-    description: "Search query using FULL plan name"
-    required: true

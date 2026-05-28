@@ -1,7 +1,0 @@
-{
-  "cert_type_prompt": "Que certificado desea? Cobertura o Viaje",
-  "security_question_intro": "Antes de continuar, necesito hacerle una pregunta de validacion para proteger su informacion. Por favor proporcione la respuesta a la siguiente pregunta de seguridad.",
-  "not_eligible": "Este servicio no esta disponible para su perfil. \u00bfLe puedo servir en algo adicional?",
-  "date_prompt": "Por favor proporcione la fecha de inicio de su viaje.",
-  "api_error": "Lo sentimos, tenemos dificultades tecnicas. Por favor intente mas tarde."
-}

@@ -1,9 +1,0 @@
-{
-  "agent": "Analytics",
-  "locale": "en",
-  "strings": {
-    "goal": "Answer analytical questions about airline operations by executing aggregation queries.",
-    "tool_vocabulary_resolve": "Resolve business terms to measures and dimensions",
-    "tool_search_aggregate": "Execute aggregation queries over flight and fare data"
-  }
-}

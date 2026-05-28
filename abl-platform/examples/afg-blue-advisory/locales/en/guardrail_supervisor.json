@@ -1,8 +1,0 @@
-{
-  "agent": "GuardRail_Supervisor",
-  "locale": "en",
-  "strings": {
-    "out_of_scope_decline": "I'm sorry, but I can only help with shopping, product recommendations, and store policies. I'm not able to assist with {{request_type}}.",
-    "routing_confirmation": "Let me connect you with the right specialist."
-  }
-}
