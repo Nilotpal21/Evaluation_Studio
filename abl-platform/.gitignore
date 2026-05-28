@@ -42,7 +42,6 @@ __pycache__/
 **/venv/
 **/.venv*/
 ./llm-cache
-pnpm-lock.yaml
 
 # testing
 coverage/
