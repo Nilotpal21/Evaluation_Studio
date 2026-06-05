@@ -41,6 +41,26 @@ export const connectorsByProject: Record<string, ProjectConnector[]> = {
       availabilityStatus: 'revoked',
       updatedAt: 'Jun 2, 10:18 AM',
     },
+    {
+      id: 'crm-zendesk-ops',
+      connectionName: 'Zendesk Support Ops',
+      appId: 'zendesk',
+      appName: 'Zendesk',
+      authType: 'PAT',
+      recordStatus: 'active',
+      availabilityStatus: 'active',
+      updatedAt: 'Jun 1, 4:20 PM',
+    },
+    {
+      id: 'crm-calendly-revops',
+      connectionName: 'Calendly RevOps',
+      appId: 'calendly',
+      appName: 'Calendly',
+      authType: 'PAT',
+      recordStatus: 'active',
+      availabilityStatus: 'disabled',
+      updatedAt: 'May 30, 11:10 AM',
+    },
   ],
   proj_member_onboarding: [
     {
@@ -63,6 +83,36 @@ export const connectorsByProject: Record<string, ProjectConnector[]> = {
       availabilityStatus: 'disabled',
       updatedAt: 'Jun 1, 2:05 PM',
     },
+    {
+      id: 'support-hubspot-lifecycle',
+      connectionName: 'HubSpot Lifecycle Sync',
+      appId: 'hubspot',
+      appName: 'HubSpot',
+      authType: 'PAT',
+      recordStatus: 'active',
+      availabilityStatus: 'active',
+      updatedAt: 'May 31, 10:40 AM',
+    },
+    {
+      id: 'support-salesforce-intake',
+      connectionName: 'Salesforce Intake Queue',
+      appId: 'salesforce',
+      appName: 'Salesforce',
+      authType: 'OAuth',
+      recordStatus: 'active',
+      availabilityStatus: 'disabled',
+      updatedAt: 'May 29, 5:55 PM',
+    },
+    {
+      id: 'support-calendly-onboarding',
+      connectionName: 'Calendly Onboarding Calls',
+      appId: 'calendly',
+      appName: 'Calendly',
+      authType: 'PAT',
+      recordStatus: 'draft',
+      availabilityStatus: 'revoked',
+      updatedAt: 'May 27, 9:15 AM',
+    },
   ],
   proj_collections: [
     {
@@ -84,6 +134,36 @@ export const connectorsByProject: Record<string, ProjectConnector[]> = {
       recordStatus: 'active',
       availabilityStatus: 'disabled',
       updatedAt: 'May 29, 4:50 PM',
+    },
+    {
+      id: 'sched-zendesk-recovery',
+      connectionName: 'Zendesk Recovery Desk',
+      appId: 'zendesk',
+      appName: 'Zendesk',
+      authType: 'PAT',
+      recordStatus: 'active',
+      availabilityStatus: 'active',
+      updatedAt: 'May 28, 2:25 PM',
+    },
+    {
+      id: 'sched-salesforce-renewals',
+      connectionName: 'Salesforce Renewals',
+      appId: 'salesforce',
+      appName: 'Salesforce',
+      authType: 'OAuth',
+      recordStatus: 'active',
+      availabilityStatus: 'disabled',
+      updatedAt: 'May 26, 3:40 PM',
+    },
+    {
+      id: 'sched-hubspot-reminders',
+      connectionName: 'HubSpot Reminder Sequences',
+      appId: 'hubspot',
+      appName: 'HubSpot',
+      authType: 'PAT',
+      recordStatus: 'draft',
+      availabilityStatus: 'revoked',
+      updatedAt: 'May 24, 11:30 AM',
     },
   ],
   proj_lending: [
@@ -117,6 +197,16 @@ export const connectorsByProject: Record<string, ProjectConnector[]> = {
       availabilityStatus: 'revoked',
       updatedAt: 'May 31, 12:40 PM',
     },
+    {
+      id: 'tmpl-calendly-baseline',
+      connectionName: 'Calendly Events Template',
+      appId: 'calendly',
+      appName: 'Calendly',
+      authType: 'PAT',
+      recordStatus: 'active',
+      availabilityStatus: 'active',
+      updatedAt: 'May 30, 4:15 PM',
+    },
   ],
 };
 
@@ -149,4 +239,3 @@ export function getProjectAppGroups(projectId: string) {
     }, {}),
   ).sort((left, right) => left.appName.localeCompare(right.appName));
 }
-

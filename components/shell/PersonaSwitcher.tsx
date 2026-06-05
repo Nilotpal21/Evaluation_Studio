@@ -46,20 +46,19 @@ export function PersonaSwitcher() {
         <DropdownMenu.Content
           align="end"
           sideOffset={6}
-          className="z-50 min-w-[280px] rounded-2xl border border-border bg-background-subtle shadow-xl p-1 animate-fade-in"
+          className="z-50 min-w-[260px] rounded-xl border border-border bg-background-subtle p-1 shadow-[0_18px_48px_rgba(15,23,42,0.12)] animate-fade-in"
         >
-          <div className="px-3 py-2 text-[10px] uppercase tracking-wide text-foreground-meta font-medium">
+          <div className="px-3 py-1.5 text-[10px] uppercase tracking-wide text-foreground-meta font-medium">
             Workspace
           </div>
-          <div className="mx-1 px-3 py-2 rounded-md bg-background-muted">
-            <div className="text-sm font-medium">{tenant.name}</div>
-            <div className="text-[11px] text-foreground-muted mt-0.5">
-              {tenant.charter} charter · {tenant.region} · $
-              {(tenant.assetsUSD / 1e9).toFixed(1)}B assets
+          <div className="mx-1 rounded-lg border border-border-muted bg-background px-3 py-2.5">
+            <div className="text-[13px] font-medium text-foreground">{tenant.name}</div>
+            <div className="mt-0.5 text-[11px] text-foreground-muted">
+              {tenant.workspaceSummary ?? `${tenant.region} workspace`}
             </div>
           </div>
           <DropdownMenu.Separator className="my-1 h-px bg-border-muted" />
-          <div className="px-3 py-2 text-[10px] uppercase tracking-wide text-foreground-meta font-medium">
+          <div className="px-3 py-1.5 text-[10px] uppercase tracking-wide text-foreground-meta font-medium">
             Switch persona
           </div>
           {personaKeys.map((key) => {
@@ -72,7 +71,12 @@ export function PersonaSwitcher() {
                   setActive(key);
                   router.push(p.home);
                 }}
-                className="flex items-center gap-2.5 px-3 py-2 rounded-md text-xs cursor-pointer outline-none focus:bg-background-muted data-[highlighted]:bg-background-muted"
+                className={cn(
+                  'flex items-center gap-2.5 rounded-lg px-3 py-2 text-xs cursor-pointer outline-none transition-colors',
+                  isActive
+                    ? 'bg-background-muted'
+                    : 'focus:bg-background-muted data-[highlighted]:bg-background-muted',
+                )}
               >
                 <span
                   className={cn(
@@ -83,8 +87,8 @@ export function PersonaSwitcher() {
                   {p.initials}
                 </span>
                 <span className="flex-1 min-w-0">
-                  <span className="block text-foreground font-medium">{p.name}</span>
-                  <span className="block text-[11px] text-foreground-muted">{p.role}</span>
+                  <span className="block text-[13px] font-medium text-foreground">{p.name}</span>
+                  <span className="block text-[11px] text-foreground-muted">{p.uiRole ?? p.role}</span>
                 </span>
                 {isActive && <Check className="size-3.5 text-foreground-muted shrink-0" />}
               </DropdownMenu.Item>
@@ -93,7 +97,7 @@ export function PersonaSwitcher() {
           <DropdownMenu.Separator className="my-1 h-px bg-border-muted" />
           <DropdownMenu.Item
             onSelect={handleSignOut}
-            className="flex items-center gap-2.5 px-3 py-2 rounded-md text-xs text-foreground-muted cursor-pointer outline-none focus:bg-background-muted data-[highlighted]:bg-background-muted hover:text-foreground"
+            className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-xs text-foreground-muted cursor-pointer outline-none hover:text-foreground focus:bg-background-muted data-[highlighted]:bg-background-muted"
           >
             <LogOut className="size-3.5" />
             Sign out

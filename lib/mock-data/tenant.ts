@@ -5,6 +5,7 @@ export interface Tenant {
   region: string;
   charter: 'federal' | 'state';
   assetsUSD: number;
+  workspaceSummary?: string;
 }
 
 export interface Persona {
@@ -13,37 +14,41 @@ export interface Persona {
   firstName: string;
   email: string;
   role: 'Process Owner' | 'Compliance Reviewer' | 'Credit Union Admin';
+  uiRole?: string;
   initials: string;
   avatarHue: 'purple' | 'success' | 'info' | 'warning';
   home: string;
 }
 
 export const tenant: Tenant = {
-  id: 'cu_cornerstone',
-  name: 'Cornerstone Federal Credit Union',
-  shortName: 'Cornerstone FCU',
+  id: 'acme_workspace',
+  name: 'Acme Corp',
+  shortName: 'Acme Corp',
   region: 'us-east',
   charter: 'federal',
   assetsUSD: 2_400_000_000,
+  workspaceSummary: '4 apps · 12 connectors · sandbox-first setup',
 };
 
 export const personas: Record<'processOwner' | 'reviewer' | 'admin', Persona> = {
   processOwner: {
     id: 'u_np',
-    name: 'Demo User',
-    firstName: 'Demo',
-    email: 'demo@cornerstone.cu',
+    name: 'Nilotpal Prakash',
+    firstName: 'Nilotpal',
+    email: 'nilotpal@acmecorp.com',
     role: 'Process Owner',
-    initials: 'DU',
+    uiRole: 'Product Manager',
+    initials: 'NP',
     avatarHue: 'purple',
     home: '/projects',
   },
   reviewer: {
     id: 'u_rs',
-    name: 'Rina Salgado',
+    name: 'Sarah Chen',
     firstName: 'Rina',
-    email: 'rina.salgado@cornerstone.cu',
+    email: 'sarah.chen@acmecorp.com',
     role: 'Compliance Reviewer',
+    uiRole: 'Integration Reviewer',
     initials: 'RS',
     avatarHue: 'success',
     home: '/queue',
@@ -52,8 +57,9 @@ export const personas: Record<'processOwner' | 'reviewer' | 'admin', Persona> = 
     id: 'u_jc',
     name: 'Jordan Chen',
     firstName: 'Jordan',
-    email: 'jordan.chen@cornerstone.cu',
+    email: 'jordan.chen@acmecorp.com',
     role: 'Credit Union Admin',
+    uiRole: 'Platform Admin',
     initials: 'JC',
     avatarHue: 'info',
     home: '/mission-control',

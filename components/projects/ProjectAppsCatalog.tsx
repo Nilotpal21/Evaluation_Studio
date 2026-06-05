@@ -133,23 +133,14 @@ export function ProjectAppsCatalog({
 
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
         {filteredApps.map((group) => {
-          const authBadges = Array.from(
-            new Set(group.connectors.map((connector) => normalizeAuth(connector.authType))),
-          );
-
           return (
             <Link
               key={group.appId}
               href={`/projects/${projectId}/apps/${group.appId}`}
               className="rounded-[18px] border border-border bg-background-subtle p-5 transition hover:border-accent/30 hover:shadow-[0_10px_22px_rgba(15,23,42,0.05)]"
             >
-              <div className="flex items-start justify-between gap-4">
+              <div className="flex items-start gap-4">
                 <AppIcon appId={group.appId} className="size-10 rounded-full border-0 bg-background-muted" />
-                <div className="flex flex-wrap justify-end gap-2">
-                  {authBadges.map((badge) => (
-                    <AuthBadge key={badge} type={badge} />
-                  ))}
-                </div>
               </div>
 
               <div className="mt-5">
@@ -159,23 +150,6 @@ export function ProjectAppsCatalog({
                 </p>
               </div>
 
-              {group.connectors.length > 0 ? (
-                <div className="mt-5 flex flex-wrap gap-2">
-                  {group.connectors.slice(0, 2).map((connector) => (
-                    <span
-                      key={connector.id}
-                      className="rounded-lg border border-border px-2.5 py-1 text-[12px] text-foreground-muted"
-                    >
-                      {connector.connectionName}
-                    </span>
-                  ))}
-                  {group.connectors.length > 2 ? (
-                    <span className="rounded-lg border border-border px-2.5 py-1 text-[12px] text-foreground-muted">
-                      +{group.connectors.length - 2}
-                    </span>
-                  ) : null}
-                </div>
-              ) : null}
             </Link>
           );
         })}
@@ -230,23 +204,6 @@ function FilterButton({
       ) : null}
     </div>
   );
-}
-
-function AuthBadge({ type }: { type: 'OAuth2' | 'API' | 'PAT' }) {
-  const tone =
-    type === 'OAuth2'
-      ? 'border-[#f5b44c] bg-[#fff7ea] text-[#df7d14]'
-      : type === 'API'
-        ? 'border-[#9de8b9] bg-[#ecfff3] text-[#1f9d60]'
-        : 'border-[#9fbfff] bg-[#eef4ff] text-[#2d6cdf]';
-
-  return <span className={cn('rounded-full border px-3 py-1 text-[12px] font-medium', tone)}>{type}</span>;
-}
-
-function normalizeAuth(authType: string): 'OAuth2' | 'API' | 'PAT' {
-  if (authType.toLowerCase() === 'oauth') return 'OAuth2';
-  if (authType.toLowerCase() === 'api') return 'API';
-  return 'PAT';
 }
 
 function descriptionForApp(appId: AppGroup['appId']) {
