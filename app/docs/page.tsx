@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { BookOpen, FileText, Sparkles, Bot, GitPullRequestArrow, ArrowUpRight } from 'lucide-react';
+import { BookOpen, FileText, Sparkles, Bot, ShieldCheck, ArrowUpRight } from 'lucide-react';
 import { Footer } from '@/components/shell/Footer';
 
 const sections = [
@@ -7,57 +7,57 @@ const sections = [
     icon: BookOpen,
     title: 'Getting started',
     description:
-      'A 10-minute tour of the platform: upload your first SOP, review the generated app, submit for approval, and deploy.',
+      'Set up projects, browse app catalogs, and create your first connector safely.',
     items: [
-      { label: 'What is Eltropy for credit unions?', href: '#' },
-      { label: 'Your first SOP upload', href: '#' },
-      { label: 'Walking through Review Studio', href: '#' },
-      { label: 'Submitting and getting approved', href: '#' },
+      { label: 'What is cloudagle.ai Integrations?', href: '#' },
+      { label: 'Project → App → Connector hierarchy', href: '#' },
+      { label: 'Creating your first connection', href: '#' },
+      { label: 'Sandbox-first activation flow', href: '#' },
     ],
   },
   {
     icon: Bot,
-    title: 'Building apps',
-    description: 'Concepts and how-tos for the app-authoring layer.',
+    title: 'Connector builder',
+    description: 'Concepts and how-tos for scratch creation and template-based setup.',
     items: [
-      { label: 'How auto-generation works', href: '#' },
-      { label: 'Sub-agents reference', href: '#' },
-      { label: 'Knowledge attachment', href: '#' },
-      { label: 'Guardrails: baseline vs custom', href: '#' },
-      { label: 'Memory modes', href: '#' },
+      { label: 'Start from scratch vs use template', href: '#' },
+      { label: 'Parsed spec as source of truth', href: '#' },
+      { label: 'Component generation for v1', href: '#' },
+      { label: 'Connector lifecycle: active, disabled, revoked', href: '#' },
+      { label: 'Reauthorize, revoke, and delete behavior', href: '#' },
     ],
   },
   {
-    icon: GitPullRequestArrow,
-    title: 'Evaluation',
-    description: 'Understanding the score-based evaluation system.',
+    icon: ShieldCheck,
+    title: 'Safeguards',
+    description: 'Guardrails and operational checks for customer-configured integrations.',
     items: [
-      { label: 'Three test sources explained', href: '#' },
-      { label: 'Reading the Evaluation Report', href: '#' },
-      { label: 'Continuous evaluation in production', href: '#' },
-      { label: 'Authoring your own scenarios', href: '#' },
+      { label: 'Why sandbox testing is required first', href: '#' },
+      { label: 'Credential handling and secret safety', href: '#' },
+      { label: 'Read-only v1 constraints', href: '#' },
+      { label: 'Activation, disable, and revoke rules', href: '#' },
     ],
   },
   {
     icon: Sparkles,
-    title: 'AI Helper',
-    description: 'How to use the always-on Helper effectively.',
+    title: 'Mode hub',
+    description: 'Manage the AI providers and models exposed during integration setup.',
     items: [
-      { label: 'When to ask the Helper', href: '#' },
-      { label: 'Context-anchored conversations', href: '#' },
-      { label: 'Suggested actions: Confirm vs Skip', href: '#' },
-      { label: 'What the Helper can and can\'t do', href: '#' },
+      { label: 'Provider and model configuration', href: '#' },
+      { label: 'Parsing defaults vs generation defaults', href: '#' },
+      { label: 'Multiple API-key-backed model entries', href: '#' },
+      { label: 'Exposing models in integration setup', href: '#' },
     ],
   },
   {
     icon: FileText,
     title: 'Reference',
-    description: 'Specs and source documents.',
+    description: 'Product rules, mock data, and supporting artifacts for this prototype.',
     items: [
-      { label: 'Business Requirements Document (BRD)', href: '#' },
-      { label: 'Executive brief (CXO summary)', href: '#' },
-      { label: 'Visual prototype PRD', href: '#' },
-      { label: 'BRD glossary', href: '#' },
+      { label: 'Integration builder PRD', href: '#' },
+      { label: 'UI prototype specification', href: '#' },
+      { label: 'Connector state model', href: '#' },
+      { label: 'Mode hub model inventory', href: '#' },
     ],
   },
 ];
@@ -68,7 +68,7 @@ export default function DocsPage() {
       <header className="pb-4 border-b border-border-muted">
         <h1 className="text-2xl font-semibold tracking-tight">Docs</h1>
         <p className="text-xs text-foreground-muted mt-1.5">
-          Concepts, how-tos, and reference material for the Eltropy platform.
+          Concepts, how-tos, and reference material for the integration platform.
         </p>
       </header>
 
@@ -110,8 +110,8 @@ export default function DocsPage() {
       </div>
 
       <p className="text-[11px] text-foreground-subtle text-center">
-        Docs in this prototype are placeholders. The real platform serves a versioned doc site
-        federated through your AI Helper.
+        Docs in this prototype are placeholders. The production platform would serve versioned
+        guidance for projects, apps, connectors, safeguards, and mode configuration.
       </p>
 
       <Footer />
