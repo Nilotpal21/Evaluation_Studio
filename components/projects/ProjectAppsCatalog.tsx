@@ -212,3 +212,9 @@ function descriptionForApp(appId: AppGroup['appId']) {
   if (appId === 'zendesk') return 'Connect Zendesk to manage tickets, agents, and support reporting.';
   return 'Connect Calendly for invitee, meeting, and scheduling usage workflows.';
 }
+
+function normalizeAuth(authType: string): 'OAuth2' | 'API' | 'PAT' {
+  if (authType.toLowerCase() === 'oauth') return 'OAuth2';
+  if (authType.toLowerCase() === 'api') return 'API';
+  return 'PAT';
+}
