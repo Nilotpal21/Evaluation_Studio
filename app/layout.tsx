@@ -5,9 +5,9 @@ import { AppShell } from '@/components/shell/AppShell';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'cloudagle.ai — Integration Builder Prototype',
+  title: 'netomi — Evaluation Studio Prototype',
   description:
-    'Build, test, and activate independent connectors from docs or templates.',
+    'Project-scoped pre-prod and production evaluation for agent versions, validators, and monitoring controls.',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

@@ -1,63 +1,84 @@
-import Link from 'next/link';
-import { BookOpen, FileText, Sparkles, Bot, ShieldCheck, ArrowUpRight } from 'lucide-react';
+import { BookOpen, FileText, FolderKanban, Radar, ShieldCheck, Sparkles } from 'lucide-react';
 import { Footer } from '@/components/shell/Footer';
 
 const sections = [
   {
-    icon: BookOpen,
-    title: 'Getting started',
+    icon: Sparkles,
+    title: 'Evaluation Studio',
     description:
-      'Set up projects, browse app catalogs, and create your first connector safely.',
+      'Project-first autonomous evaluation across pre-prod qualification and production analysis.',
     items: [
-      { label: 'What is cloudagle.ai Integrations?', href: '#' },
-      { label: 'Project → App → Connector hierarchy', href: '#' },
-      { label: 'Creating your first connection', href: '#' },
-      { label: 'Sandbox-first activation flow', href: '#' },
+      'Project -> Pre-prod | Prod -> Agent -> Version | Duration flow',
+      'Autonomous persona inference, scenario generation, and validator attachment',
+      'Benchmark-driven product decisioning for pre-prod promotion',
+      'Real-time monitoring, revert, and kill switch controls',
+      'Source PRD: 13 — Evaluation Studio',
     ],
   },
   {
-    icon: Bot,
-    title: 'Connector builder',
-    description: 'Concepts and how-tos for scratch creation and template-based setup.',
+    icon: FolderKanban,
+    title: 'Projects',
+    description:
+      'Business-area operating boundaries for agents, reviewers, knowledge, evaluations, and monitoring.',
     items: [
-      { label: 'Start from scratch vs use template', href: '#' },
-      { label: 'Parsed spec as source of truth', href: '#' },
-      { label: 'Component generation for v1', href: '#' },
-      { label: 'Connector lifecycle: active, disabled, revoked', href: '#' },
-      { label: 'Reauthorize, revoke, and delete behavior', href: '#' },
+      'Projects list, detail view, and project settings structure',
+      'Per-project reviewer pools, knowledge scope, tools, and model overrides',
+      'Cost envelope and budget controls',
+      'Project-scoped dashboards and audit boundaries',
+      'Source PRD: 11 — Projects',
     ],
   },
   {
     icon: ShieldCheck,
-    title: 'Safeguards',
-    description: 'Guardrails and operational checks for customer-configured integrations.',
+    title: 'Approval, Deployment, and Monitoring',
+    description:
+      'Operational controls that span review, deployment, continuous evaluation, and production safety.',
     items: [
-      { label: 'Why sandbox testing is required first', href: '#' },
-      { label: 'Credential handling and secret safety', href: '#' },
-      { label: 'Read-only v1 constraints', href: '#' },
-      { label: 'Activation, disable, and revoke rules', href: '#' },
+      'Approval workflow and reviewer detail surfaces',
+      'Deployment confirmation and post-deploy activation flow',
+      'Mission Control, audit log, and production findings',
+      'Operator-facing revert and kill switch expectations',
+      'Source PRDs: 06 — Approval + Deployment, 07 — Mission Control + Audit',
     ],
   },
   {
-    icon: Sparkles,
-    title: 'Mode hub',
-    description: 'Manage the AI providers and models exposed during integration setup.',
+    icon: BookOpen,
+    title: 'Knowledge and Models',
+    description:
+      'Reference surfaces for project-scoped knowledge, model configuration, and supporting governance.',
     items: [
-      { label: 'Provider and model configuration', href: '#' },
-      { label: 'Parsing defaults vs generation defaults', href: '#' },
-      { label: 'Multiple API-key-backed model entries', href: '#' },
-      { label: 'Exposing models in integration setup', href: '#' },
+      'Knowledge Library tenant-wide and project-scoped source model',
+      'Model Integration and project override patterns',
+      'How knowledge and model policy feed evaluation and production behavior',
+      'Source PRDs: 08 — Knowledge Library, 09 — Model Integration',
     ],
   },
   {
     icon: FileText,
-    title: 'Reference',
-    description: 'Product rules, mock data, and supporting artifacts for this prototype.',
+    title: 'Core Product Flows',
+    description:
+      'The main prototype surfaces that define how users move from SOP to app to evaluation and deployment.',
     items: [
-      { label: 'Integration builder PRD', href: '#' },
-      { label: 'UI prototype specification', href: '#' },
-      { label: 'Connector state model', href: '#' },
-      { label: 'Mode hub model inventory', href: '#' },
+      '00 — Overview',
+      '01 — App Shell + Process Owner Dashboard',
+      '02 — SOP-to-App Flow',
+      '03 — Review Studio',
+      '04 — AI Helper',
+      '05 — Evaluation Report',
+    ],
+  },
+  {
+    icon: Radar,
+    title: 'Reference and Prototype Assets',
+    description:
+      'Supporting artifacts used by design and engineering while building the UI prototype.',
+    items: [
+      '10 — Marketplace',
+      '12 — Auth',
+      '99 — Mock Data',
+      'BRD_Agentic_AI_Platform.md',
+      'BRD_Executive_Summary.md',
+      'Prototype routes in app/ and mock data in lib/mock-data/',
     ],
   },
 ];
@@ -65,42 +86,42 @@ const sections = [
 export default function DocsPage() {
   return (
     <div className="space-y-5">
-      <header className="pb-4 border-b border-border-muted">
+      <header className="border-b border-border-muted pb-4">
         <h1 className="text-2xl font-semibold tracking-tight">Docs</h1>
-        <p className="text-xs text-foreground-muted mt-1.5">
-          Concepts, how-tos, and reference material for the integration platform.
+        <p className="mt-1.5 max-w-3xl text-xs text-foreground-muted">
+          Product, design, and engineering reference for the current Evaluation Studio prototype.
+          This tab reflects the existing PRDs in `docs/prd/` rather than the older connector-builder
+          placeholder content.
         </p>
       </header>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-        {sections.map((s) => {
-          const Icon = s.icon;
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+        {sections.map((section) => {
+          const Icon = section.icon;
           return (
             <section
-              key={s.title}
+              key={section.title}
               className="rounded-lg border border-border-muted bg-background-subtle p-5"
             >
-              <header className="flex items-start gap-3 mb-4">
-                <div className="size-8 rounded-md bg-background-elevated border border-border-muted flex items-center justify-center shrink-0">
+              <header className="mb-4 flex items-start gap-3">
+                <div className="flex size-8 shrink-0 items-center justify-center rounded-md border border-border-muted bg-background-elevated">
                   <Icon className="size-4 text-foreground-muted" />
                 </div>
                 <div className="min-w-0">
-                  <h2 className="text-sm font-semibold tracking-tight">{s.title}</h2>
-                  <p className="text-[11px] text-foreground-muted mt-0.5 leading-relaxed">
-                    {s.description}
+                  <h2 className="text-sm font-semibold tracking-tight">{section.title}</h2>
+                  <p className="mt-0.5 text-[11px] leading-relaxed text-foreground-muted">
+                    {section.description}
                   </p>
                 </div>
               </header>
-              <ul className="space-y-1">
-                {s.items.map((item) => (
-                  <li key={item.label}>
-                    <Link
-                      href={item.href}
-                      className="flex items-center justify-between gap-2 px-2.5 py-1.5 -mx-2.5 rounded-md text-xs text-foreground-muted hover:text-foreground hover:bg-background-muted/60 transition-colors group"
-                    >
-                      <span>{item.label}</span>
-                      <ArrowUpRight className="size-3 text-foreground-subtle group-hover:text-foreground-muted transition-colors shrink-0" />
-                    </Link>
+
+              <ul className="space-y-2">
+                {section.items.map((item) => (
+                  <li
+                    key={item}
+                    className="rounded-md border border-border-muted bg-background px-3 py-2 text-xs text-foreground-muted"
+                  >
+                    {item}
                   </li>
                 ))}
               </ul>
@@ -109,10 +130,14 @@ export default function DocsPage() {
         })}
       </div>
 
-      <p className="text-[11px] text-foreground-subtle text-center">
-        Docs in this prototype are placeholders. The production platform would serve versioned
-        guidance for projects, apps, connectors, safeguards, and mode configuration.
-      </p>
+      <section className="rounded-lg border border-border-muted bg-background-subtle p-4">
+        <div className="text-sm font-semibold">Current source of truth</div>
+        <p className="mt-1.5 text-sm text-foreground-muted">
+          The most relevant product spec for the current prototype work is
+          `docs/prd/13-evaluation-studio.md`, supported by `11-projects.md`, `06-approval-and-deployment.md`,
+          `07-mission-control-and-audit.md`, and `12-auth.md`.
+        </p>
+      </section>
 
       <Footer />
     </div>

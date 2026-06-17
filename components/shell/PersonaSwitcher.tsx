@@ -4,8 +4,9 @@ import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import { LogOut } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { tenant } from '@/lib/mock-data';
-import { useActivePersona } from '@/lib/persona';
+import { useActivePersona, useActiveProjectId } from '@/lib/persona';
 import { useAuth } from '@/lib/auth';
+import { useResolvedProject } from '@/lib/project-state';
 import { cn } from '@/lib/utils';
 
 const hueClasses: Record<string, string> = {
@@ -18,6 +19,8 @@ const hueClasses: Record<string, string> = {
 export function PersonaSwitcher() {
   const signOut = useAuth((s) => s.signOut);
   const active = useActivePersona();
+  const activeProjectId = useActiveProjectId();
+  const activeProject = useResolvedProject(activeProjectId);
   const router = useRouter();
 
   const handleSignOut = () => {
@@ -47,17 +50,21 @@ export function PersonaSwitcher() {
           className="z-50 min-w-[260px] rounded-xl border border-border bg-background-subtle p-1 shadow-[0_18px_48px_rgba(15,23,42,0.12)] animate-fade-in"
         >
           <div className="px-3 py-1.5 text-[10px] uppercase tracking-wide text-foreground-meta font-medium">
-            Workspace
+            Active project
           </div>
           <div className="mx-1 rounded-lg border border-border-muted bg-background px-3 py-2.5">
-            <div className="text-[13px] font-medium text-foreground">{tenant.name}</div>
+            <div className="text-[13px] font-medium text-foreground">
+              {activeProject?.name ?? 'No active project'}
+            </div>
             <div className="mt-0.5 text-[11px] text-foreground-muted">
-              {tenant.workspaceSummary ?? `${tenant.region} workspace`}
+              {activeProject
+                ? `${activeProject.appCount} ${activeProject.appCount === 1 ? 'agent' : 'agents'} · ${activeProject.defaultChannels.join(' · ')}`
+                : `${tenant.shortName} workspace`}
             </div>
           </div>
           <DropdownMenu.Separator className="my-1 h-px bg-border-muted" />
           <div className="px-3 py-1.5 text-[10px] uppercase tracking-wide text-foreground-meta font-medium">
-            Account
+            Signed in as
           </div>
           <div className="mx-1 rounded-lg bg-background-muted px-3 py-2">
             <div className="flex items-center gap-2.5">
@@ -71,7 +78,7 @@ export function PersonaSwitcher() {
               </span>
               <span className="min-w-0">
                 <span className="block text-[13px] font-medium text-foreground">{active.name}</span>
-                <span className="block text-[11px] text-foreground-muted">{active.uiRole ?? active.role}</span>
+                <span className="block text-[11px] text-foreground-muted">{active.email}</span>
               </span>
             </div>
           </div>

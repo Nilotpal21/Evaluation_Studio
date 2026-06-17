@@ -1,16 +1,6 @@
-'use client';
-
-import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { useActiveProjectId } from '@/lib/persona';
+import { redirect } from 'next/navigation';
+import { defaultProjectId } from '@/lib/mock-data/projects';
 
 export default function IntegrationsPage() {
-  const router = useRouter();
-  const activeProjectId = useActiveProjectId();
-
-  useEffect(() => {
-    router.replace(`/projects/${activeProjectId}`);
-  }, [activeProjectId, router]);
-
-  return null;
+  redirect(`/projects/${defaultProjectId}`);
 }

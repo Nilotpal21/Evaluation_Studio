@@ -23,10 +23,10 @@ export interface Project {
 export const projects: Project[] = [
   {
     id: 'proj_card_services',
-    name: 'CRM Connectors',
+    name: 'Card Services',
     description:
-      'HubSpot and Salesforce read-only connectors for customer, activity, and usage data.',
-    tag: 'CRM Connectors',
+      'Disputes, card-servicing workflows, and payment-support agents for member-facing channels.',
+    tag: 'Card Services',
     status: 'active',
     ownerPersonaId: 'u_jc',
     memberCount: 3,
@@ -42,10 +42,10 @@ export const projects: Project[] = [
   },
   {
     id: 'proj_member_onboarding',
-    name: 'Support Connectors',
+    name: 'Member Onboarding',
     description:
-      'Zendesk and ticketing integrations for support operations and service analytics.',
-    tag: 'Support Connectors',
+      'Account opening, identity verification, and onboarding experiences across digital channels.',
+    tag: 'Member Onboarding',
     status: 'active',
     ownerPersonaId: 'u_jc',
     memberCount: 4,
@@ -61,10 +61,10 @@ export const projects: Project[] = [
   },
   {
     id: 'proj_collections',
-    name: 'Scheduling Connectors',
+    name: 'Collections',
     description:
-      'Calendly-style scheduling connectors for invitee, event, and usage visibility.',
-    tag: 'Scheduling Connectors',
+      'Hardship plans, delinquency workflows, and back-office escalation support for collections operations.',
+    tag: 'Collections',
     status: 'active',
     ownerPersonaId: 'u_jc',
     memberCount: 2,
@@ -80,9 +80,10 @@ export const projects: Project[] = [
   },
   {
     id: 'proj_lending',
-    name: 'Template Library',
-    description: 'Vetted connector templates used as starting points for new independent connectors.',
-    tag: 'Template Library',
+    name: 'Lending',
+    description:
+      'Loan intake, underwriting prep, and member guidance experiences for lending teams.',
+    tag: 'Lending',
     status: 'active',
     ownerPersonaId: 'u_jc',
     memberCount: 2,

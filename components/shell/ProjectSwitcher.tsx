@@ -4,8 +4,9 @@ import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import { ChevronsUpDown, Check, ArrowUpRight, Search } from 'lucide-react';
-import { projects, getProjectById, type Project } from '@/lib/mock-data';
+import { type Project } from '@/lib/mock-data';
 import { usePersona } from '@/lib/persona';
+import { useAllProjects, useResolvedProject } from '@/lib/project-state';
 
 function projectInitial(p: Project) {
   return p.name.trim().charAt(0).toUpperCase();
@@ -34,15 +35,16 @@ interface ProjectSwitcherProps {
 export function ProjectSwitcher({ variant = 'compact' }: ProjectSwitcherProps) {
   const activeProjectId = usePersona((s) => s.activeProjectId);
   const setActiveProject = usePersona((s) => s.setActiveProject);
-  const active = getProjectById(activeProjectId);
+  const active = useResolvedProject(activeProjectId);
+  const allProjects = useAllProjects();
   const [query, setQuery] = useState('');
 
   const filtered = useMemo(() => {
-    const list = projects.filter((p) => p.status === 'active');
+    const list = allProjects.filter((p) => p.status === 'active');
     const q = query.trim().toLowerCase();
     if (!q) return list;
     return list.filter((p) => p.name.toLowerCase().includes(q));
-  }, [query]);
+  }, [allProjects, query]);
 
   return (
     <DropdownMenu.Root onOpenChange={(open) => !open && setQuery('')}>

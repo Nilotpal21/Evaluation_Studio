@@ -11,11 +11,11 @@ export function Topbar() {
 
   return (
     <header className="h-12 border-b border-border bg-background-subtle flex items-center px-3 gap-3 shrink-0">
-      <Link href="/projects" className="flex items-center group" aria-label="cloudagle.ai — projects">
+      <Link href="/projects" className="flex items-center group" aria-label="netomi — projects">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src="/cloudagle-logo.svg"
-          alt="cloudagle.ai"
+          src="/netomi-logo.png"
+          alt="netomi"
           className="h-6 w-auto transition-transform group-hover:scale-105"
         />
       </Link>

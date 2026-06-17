@@ -14,3 +14,4 @@ export * from './audit';
 export * from './knowledge';
 export * from './models';
 export * from './marketplace';
+export * from './evaluation-studio';

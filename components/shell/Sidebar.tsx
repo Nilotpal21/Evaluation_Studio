@@ -3,7 +3,6 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
-  Blocks,
   BookOpen,
   Settings,
   Inbox,
@@ -16,10 +15,12 @@ import {
   Rocket,
   Store,
   ChevronLeft,
+  ClipboardList,
   type LucideIcon,
 } from 'lucide-react';
 import { useActivePersona, useActiveProjectId } from '@/lib/persona';
 import { getProjectById } from '@/lib/mock-data';
+import { useProjectNavAccess } from '@/lib/project-state';
 import { cn } from '@/lib/utils';
 import { ProjectSwitcher } from './ProjectSwitcher';
 
@@ -39,8 +40,12 @@ interface NavGroup {
 const NAV: Record<'processOwner' | 'reviewer' | 'admin', NavGroup> = {
   processOwner: {
     primary: [
-      { id: 'integrations', label: 'Integrations', icon: Blocks, href: '/integrations' },
+      { id: 'evaluations', label: 'Evaluation Studio', icon: Activity, href: '/evaluations' },
       { id: 'mode-hub', label: 'Mode hub', icon: Cpu, href: '/mode-hub' },
+      { id: 'knowledge-base', label: 'Knowledge Base', icon: Database, href: '/knowledge' },
+      { id: 'session-evaluation', label: 'Session evaluation', icon: ClipboardList, href: '/session-evaluation' },
+      { id: 'validators', label: 'Validators', icon: FileSearch, href: '/validators' },
+      { id: 'monitoring', label: 'Monitoring', icon: Activity, href: '/mission-control' },
     ],
     secondary: [
       { id: 'docs', label: 'Docs', icon: BookOpen, href: '/docs' },
@@ -59,7 +64,7 @@ const NAV: Record<'processOwner' | 'reviewer' | 'admin', NavGroup> = {
   },
   admin: {
     primary: [
-      { id: 'mc', label: 'Mission Control', icon: Activity, href: '/mission-control' },
+      { id: 'mc', label: 'Monitoring', icon: Activity, href: '/mission-control' },
       { id: 'deployments', label: 'Deployments', icon: Rocket, href: '/deployments' },
       { id: 'audit', label: 'Audit', icon: FileSearch, href: '/audit' },
       { id: 'knowledge', label: 'Knowledge', icon: Database, href: '/knowledge', count: 12 },
@@ -77,6 +82,7 @@ export function Sidebar() {
   const active = useActivePersona();
   const activeProjectId = useActiveProjectId();
   const project = getProjectById(activeProjectId);
+  const navAccess = useProjectNavAccess(activeProjectId);
   const pathname = usePathname();
 
   const personaKey =
@@ -106,13 +112,32 @@ export function Sidebar() {
       <nav className="flex-1 px-2.5 py-3 space-y-0.5">
         {primary.map((item) => {
           let href = item.href;
-          if (personaKey === 'processOwner' && item.id === 'integrations' && activeProjectId) {
-            href = `/projects/${activeProjectId}`;
+          if (personaKey === 'processOwner' && item.id === 'evaluations' && activeProjectId) {
+            href = `/projects/${activeProjectId}/evaluations`;
           }
+          if (personaKey === 'processOwner' && item.id === 'session-evaluation' && activeProjectId) {
+            href = `/projects/${activeProjectId}/preprod`;
+          }
+          if (personaKey === 'processOwner' && item.id === 'validators' && activeProjectId) {
+            href = `/projects/${activeProjectId}/validators`;
+          }
+          if (personaKey === 'processOwner' && item.id === 'monitoring' && activeProjectId) {
+            href = `/projects/${activeProjectId}/monitoring`;
+          }
+          if (personaKey === 'admin' && item.id === 'mc' && activeProjectId) {
+            href = `/projects/${activeProjectId}/monitoring`;
+          }
+          const disabled =
+            personaKey === 'processOwner' && item.id === 'session-evaluation'
+              ? !navAccess.sessionEvaluationEnabled
+              : personaKey === 'processOwner' && item.id === 'monitoring'
+                ? !navAccess.monitoringEnabled
+                : false;
           return (
             <NavRow
               key={item.id}
               item={{ ...item, href }}
+              disabled={disabled}
               isActive={isActiveRoute(href, pathname)}
             />
           );
@@ -137,17 +162,35 @@ export function Sidebar() {
   );
 }
 
-function NavRow({ item, isActive }: { item: NavItem; isActive: boolean }) {
+function NavRow({ item, isActive, disabled = false }: { item: NavItem; isActive: boolean; disabled?: boolean }) {
   const Icon = item.icon;
+  const classes = cn(
+    'w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-[14px] font-medium transition-colors',
+    disabled
+      ? 'cursor-not-allowed text-foreground-subtle opacity-50'
+      : isActive
+        ? 'bg-accent-subtle text-accent'
+        : 'text-foreground-muted hover:bg-background-muted hover:text-foreground',
+  );
+
+  if (disabled) {
+    return (
+      <div className={classes} aria-disabled="true">
+        <Icon className="size-4 shrink-0" />
+        <span className="flex-1 text-left">{item.label}</span>
+        {item.count !== undefined && (
+          <span className="text-[10px] font-mono tabular-nums text-foreground-subtle">
+            {item.count}
+          </span>
+        )}
+      </div>
+    );
+  }
+
   return (
     <Link
       href={item.href}
-      className={cn(
-        'w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-[14px] font-medium transition-colors',
-        isActive
-          ? 'bg-accent-subtle text-accent'
-          : 'text-foreground-muted hover:bg-background-muted hover:text-foreground',
-      )}
+      className={classes}
     >
       <Icon className="size-4 shrink-0" />
       <span className="flex-1 text-left">{item.label}</span>
@@ -166,11 +209,7 @@ function NavRow({ item, isActive }: { item: NavItem; isActive: boolean }) {
 }
 
 function isActiveRoute(href: string, pathname: string, looseProjectMatch = false): boolean {
-  if (href === '/integrations' && (pathname.startsWith('/integrations') || pathname.startsWith('/projects/'))) {
-    return true;
-  }
   if (looseProjectMatch && href.startsWith('/projects/')) {
-    // "Overview" item — active for /projects/[id] and any descendant
     return pathname === href || pathname.startsWith(`${href}/`);
   }
   if (href === '/') return pathname === '/';

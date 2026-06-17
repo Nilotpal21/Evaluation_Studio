@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { Rocket, PartyPopper, Calendar, Activity, FileText, ArrowRight } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import { projectAppMap } from '@/lib/mock-data';
 
 const STEPS = [
   'Recording configuration snapshot…',
@@ -39,6 +40,7 @@ export function DeployFlow({
   const router = useRouter();
   const [phase, setPhase] = useState<Phase>('idle');
   const [step, setStep] = useState(0);
+  const projectId = projectAppMap[appId];
 
   const deploy = () => {
     setPhase('running');
@@ -72,11 +74,11 @@ export function DeployFlow({
         </p>
         <div className="mt-6 flex items-center justify-center gap-2 flex-wrap">
           <Link
-            href="/mission-control"
+            href={projectId ? `/projects/${projectId}/monitoring` : '/mission-control'}
             className="h-9 px-4 rounded-md text-xs font-medium bg-accent text-accent-foreground hover:bg-accent-muted transition-colors flex items-center gap-1.5"
           >
             <Activity className="size-3.5" />
-            Open Mission Control
+            Open Monitoring
             <ArrowRight className="size-3" />
           </Link>
           <button

@@ -22,7 +22,7 @@ import {
 } from '@/lib/mock-data';
 import { cn } from '@/lib/utils';
 
-type Step = 1 | 2 | 3 | 4;
+type Step = 1 | 2 | 3 | 4 | 5;
 
 const modeIcon: Record<KnowledgeMode, LucideIcon> = {
   upload: Upload,
@@ -41,6 +41,7 @@ export function AddSourceDialog({ open, onOpenChange }: Props) {
   const [step, setStep] = useState<Step>(1);
   const [mode, setMode] = useState<KnowledgeMode | null>(null);
   const [name, setName] = useState('');
+  const [description, setDescription] = useState('');
   const [provider, setProvider] = useState('Confluence');
   const [crawlUrl, setCrawlUrl] = useState('');
   const [scope, setScope] = useState<'tenant' | 'project'>('tenant');
@@ -51,6 +52,7 @@ export function AddSourceDialog({ open, onOpenChange }: Props) {
     setStep(1);
     setMode(null);
     setName('');
+    setDescription('');
     setProvider('Confluence');
     setCrawlUrl('');
     setScope('tenant');
@@ -71,12 +73,13 @@ export function AddSourceDialog({ open, onOpenChange }: Props) {
   };
 
   const canAdvance = () => {
-    if (step === 1) return mode !== null;
-    if (step === 2) {
+    if (step === 1) return name.trim().length > 0;
+    if (step === 2) return mode !== null;
+    if (step === 3) {
       if (mode === 'crawl') return crawlUrl.trim().length > 0;
       return true;
     }
-    if (step === 3) return name.trim().length > 0;
+    if (step === 4) return true;
     return true;
   };
 
@@ -91,7 +94,7 @@ export function AddSourceDialog({ open, onOpenChange }: Props) {
                 Add knowledge source
               </Dialog.Title>
               <p className="text-[11px] text-foreground-muted mt-0.5">
-                Step {step} of 4 · {labelForStep(step)}
+                Step {step} of 5 · {labelForStep(step)}
               </p>
             </div>
             <Dialog.Close asChild>
@@ -107,6 +110,34 @@ export function AddSourceDialog({ open, onOpenChange }: Props) {
 
           <div className="flex-1 overflow-y-auto scrollbar-thin px-6 py-5">
             {step === 1 && (
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-[10px] uppercase tracking-wide text-foreground-meta font-medium mb-1.5">
+                    Knowledge base name
+                  </label>
+                  <input
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder="e.g., Card Services FAQ"
+                    className="w-full h-9 bg-background-muted/60 border border-border-muted rounded-md px-3 text-sm focus:outline-none focus:ring-1 focus:ring-border-focus/40"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] uppercase tracking-wide text-foreground-meta font-medium mb-1.5">
+                    Description
+                  </label>
+                  <textarea
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    placeholder="Optional description"
+                    rows={4}
+                    className="w-full resize-none rounded-md border border-border-muted bg-background-muted/60 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-border-focus/40"
+                  />
+                </div>
+              </div>
+            )}
+
+            {step === 2 && (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                 {ingestionModes.map((m) => {
                   const Icon = modeIcon[m.id];
@@ -145,7 +176,7 @@ export function AddSourceDialog({ open, onOpenChange }: Props) {
               </div>
             )}
 
-            {step === 2 && mode === 'upload' && (
+            {step === 3 && mode === 'upload' && (
               <div className="space-y-3">
                 <p className="text-xs text-foreground-muted">
                   Drop files or browse. Supported: PDF, DOCX, MD, HTML, TXT, XLSX, PPTX.
@@ -163,7 +194,7 @@ export function AddSourceDialog({ open, onOpenChange }: Props) {
               </div>
             )}
 
-            {step === 2 && mode === 'connector' && (
+            {step === 3 && mode === 'connector' && (
               <div className="space-y-3">
                 <div>
                   <label className="block text-[10px] uppercase tracking-wide text-foreground-meta font-medium mb-1.5">
@@ -203,7 +234,7 @@ export function AddSourceDialog({ open, onOpenChange }: Props) {
               </div>
             )}
 
-            {step === 2 && mode === 'crawl' && (
+            {step === 3 && mode === 'crawl' && (
               <div className="space-y-3">
                 <div>
                   <label className="block text-[10px] uppercase tracking-wide text-foreground-meta font-medium mb-1.5">
@@ -233,7 +264,7 @@ export function AddSourceDialog({ open, onOpenChange }: Props) {
               </div>
             )}
 
-            {step === 2 && mode === 'authored' && (
+            {step === 3 && mode === 'authored' && (
               <div className="space-y-3">
                 <p className="text-xs text-foreground-muted">
                   Author FAQ entries, glossary terms, or policy snippets directly.
@@ -255,7 +286,7 @@ export function AddSourceDialog({ open, onOpenChange }: Props) {
               </div>
             )}
 
-            {step === 2 && mode === 'api' && (
+            {step === 3 && mode === 'api' && (
               <div className="space-y-3">
                 <p className="text-xs text-foreground-muted">
                   Generate an API key for your CU IT team to push documents from custom systems.
@@ -274,19 +305,8 @@ export function AddSourceDialog({ open, onOpenChange }: Props) {
               </div>
             )}
 
-            {step === 3 && (
+            {step === 4 && (
               <div className="space-y-4">
-                <div>
-                  <label className="block text-[10px] uppercase tracking-wide text-foreground-meta font-medium mb-1.5">
-                    Source name
-                  </label>
-                  <input
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    placeholder="e.g., Card Services FAQ"
-                    className="w-full h-9 bg-background-muted/60 border border-border-muted rounded-md px-3 text-sm focus:outline-none focus:ring-1 focus:ring-border-focus/40"
-                  />
-                </div>
                 <div>
                   <label className="block text-[10px] uppercase tracking-wide text-foreground-meta font-medium mb-1.5">
                     Scope
@@ -357,11 +377,12 @@ export function AddSourceDialog({ open, onOpenChange }: Props) {
               </div>
             )}
 
-            {step === 4 && (
+            {step === 5 && (
               <div className="space-y-3">
                 <div className="rounded-md border border-border-muted bg-background-muted/40 p-4 space-y-2 text-xs">
                   <Summary label="Mode" value={mode ? ingestionModes.find((m) => m.id === mode)?.label ?? '' : '—'} />
                   <Summary label="Name" value={name || '—'} />
+                  {description && <Summary label="Description" value={description} />}
                   {mode === 'connector' && <Summary label="Provider" value={provider} />}
                   {mode === 'crawl' && <Summary label="URL" value={crawlUrl || '—'} mono />}
                   <Summary label="Scope" value={scope === 'tenant' ? 'Tenant-wide' : 'Project-scoped'} />
@@ -386,7 +407,7 @@ export function AddSourceDialog({ open, onOpenChange }: Props) {
               <ArrowLeft className="size-3.5" />
               Back
             </button>
-            {step < 4 ? (
+            {step < 5 ? (
               <button
                 type="button"
                 onClick={() => canAdvance() && setStep((s) => (s + 1) as Step)}
@@ -414,9 +435,10 @@ export function AddSourceDialog({ open, onOpenChange }: Props) {
 }
 
 function labelForStep(step: Step): string {
-  if (step === 1) return 'Choose how to ingest';
-  if (step === 2) return 'Configure source';
-  if (step === 3) return 'Tag and route';
+  if (step === 1) return 'General Settings';
+  if (step === 2) return 'Choose how to ingest';
+  if (step === 3) return 'Configure source';
+  if (step === 4) return 'Tag and route';
   return 'Confirm';
 }
 

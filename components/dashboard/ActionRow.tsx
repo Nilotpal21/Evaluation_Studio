@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { FileText, Bot, Activity, ArrowUpRight, type LucideIcon } from 'lucide-react';
+import { useActiveProjectId } from '@/lib/persona';
 
 interface ActionTile {
   href: string;
@@ -31,9 +32,17 @@ const tiles: ActionTile[] = [
 ];
 
 export function ActionRow() {
+  const activeProjectId = useActiveProjectId();
+  const resolvedTiles = tiles.map((tile) => {
+    if (tile.href === '/mission-control') {
+      return { ...tile, href: `/projects/${activeProjectId}/monitoring` };
+    }
+    return tile;
+  });
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-      {tiles.map((t) => {
+      {resolvedTiles.map((t) => {
         const Icon = t.icon;
         return (
           <Link

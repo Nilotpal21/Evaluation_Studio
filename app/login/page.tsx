@@ -3,7 +3,7 @@
 import { useState, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { KeyRound, Eye, EyeOff, ArrowRight, Workflow } from 'lucide-react';
+import { KeyRound, Eye, EyeOff, ArrowRight, Sparkles, Radar, ShieldCheck } from 'lucide-react';
 import { useAuth } from '@/lib/auth';
 
 type Stage = 'credentials' | 'mfa';
@@ -13,7 +13,7 @@ export default function LoginPage() {
   const router = useRouter();
   const [stage, setStage] = useState<Stage>('credentials');
   const [showPassword, setShowPassword] = useState(false);
-  const [email, setEmail] = useState('pm@integration.studio');
+  const [email, setEmail] = useState('pm@evaluation.studio');
   const [password, setPassword] = useState('demo-password');
   const [otp, setOtp] = useState('');
 
@@ -36,29 +36,39 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,_rgba(37,99,235,0.1),_transparent_28%),linear-gradient(180deg,rgba(248,250,252,1),rgba(241,245,249,1))] px-4 py-10">
+    <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,_rgba(59,130,246,0.14),_transparent_26%),radial-gradient(circle_at_bottom_left,_rgba(16,185,129,0.08),_transparent_22%),linear-gradient(180deg,rgba(248,250,252,1),rgba(241,245,249,1))] px-4 py-10">
       <div className="mx-auto grid min-h-[calc(100vh-5rem)] w-full max-w-6xl items-center gap-10 lg:grid-cols-[1.1fr_0.9fr]">
         <div className="space-y-6">
           <div className="inline-flex items-center gap-2 rounded-full border border-border bg-background-subtle px-3 py-1 text-[11px] uppercase tracking-[0.24em] text-foreground-muted">
-            <Workflow className="size-3.5" />
-            Integration Builder
+            <Sparkles className="size-3.5" />
+            Evaluation Studio
           </div>
           <div className="space-y-4">
             <h1 className="max-w-2xl text-4xl font-semibold tracking-tight text-foreground lg:text-5xl">
-              Sign in to build secure connectors from docs or templates.
+              Sign in to evaluate agents before and after production.
             </h1>
             <p className="max-w-xl text-sm leading-7 text-foreground-muted">
-              Prototype access includes connector creation, parsed-spec confirmation, server-side sandbox testing,
-              and lifecycle controls for active, disabled, and revoked connections.
+              Prototype access includes project-scoped pre-prod qualification, production analysis on
+              real traffic windows, validator benchmark policies, live monitoring, revert, and kill
+              switch controls.
             </p>
           </div>
           <div className="grid gap-4 sm:grid-cols-3">
             {[
-              ['App -> many connectors', 'Independent connector records grouped under each app.'],
-              ['Scratch or template', 'Choose docs-driven generation or start from a vetted baseline.'],
-              ['Test before save', 'Activation is gated by a successful server-side sandbox run.'],
-            ].map(([title, body]) => (
+              ['Project -> Pre-prod or Prod', 'Choose a project first, then branch into candidate evaluation or production analysis.'],
+              ['Validators drive promotion', 'Platform defaults plus project overrides decide whether a pre-prod version should promote.'],
+              ['Monitor, revert, kill', 'Live dashboards track drift and incidents while operators can still revert or stop traffic immediately.'],
+            ].map(([title, body], index) => (
               <div key={title} className="rounded-2xl border border-border bg-background-subtle p-4 shadow-sm">
+                <div className="mb-3 flex size-8 items-center justify-center rounded-xl border border-border-muted bg-background-muted/70">
+                  {index === 0 ? (
+                    <Sparkles className="size-4 text-accent" />
+                  ) : index === 1 ? (
+                    <ShieldCheck className="size-4 text-success" />
+                  ) : (
+                    <Radar className="size-4 text-info" />
+                  )}
+                </div>
                 <p className="text-sm font-medium text-foreground">{title}</p>
                 <p className="mt-2 text-sm leading-6 text-foreground-muted">{body}</p>
               </div>
@@ -69,19 +79,19 @@ export default function LoginPage() {
         <div className="flex flex-col items-center">
       {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src="/cloudagle-logo.svg"
-            alt="cloudagle.ai"
-            className="mb-6 h-9 w-auto"
+            src="/netomi-logo.png"
+            alt="netomi"
+            className="mb-6 h-12 w-auto"
           />
 
           <div className="w-full max-w-[420px] rounded-[28px] border border-border bg-background-subtle p-8 shadow-[0_24px_60px_rgba(15,23,42,0.08)]">
         {stage === 'credentials' && (
           <>
             <h1 className="text-xl font-semibold tracking-tight text-center">
-              Sign in to Integration Studio
+              Sign in to Evaluation Studio
             </h1>
             <p className="text-xs text-foreground-muted text-center mt-1.5">
-              Manage apps, connectors, and secure credential flows.
+              Manage projects, agent versions, validators, and production controls.
             </p>
 
             <button
@@ -93,7 +103,7 @@ export default function LoginPage() {
               Continue with Workspace SSO
             </button>
             <p className="text-[11px] text-foreground-subtle text-center mt-2">
-              Recommended for production tenants and admin workspaces.
+              Recommended for project admins, reviewers, and operator workspaces.
             </p>
 
             <div className="flex items-center gap-3 my-6">

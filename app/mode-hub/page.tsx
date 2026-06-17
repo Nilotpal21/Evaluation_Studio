@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import * as Tooltip from '@radix-ui/react-tooltip';
-import { CheckCircle2, Cpu, EyeOff, Pencil, PlugZap, Plus, Search, Sparkles, Trash2, X } from 'lucide-react';
+import { Cpu, EyeOff, Pencil, PlugZap, Plus, Search, Trash2, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { Footer } from '@/components/shell/Footer';
 import { PickerSelect } from '@/components/ui/PickerSelect';
@@ -32,8 +32,6 @@ const MODELS_BY_PROVIDER: Record<string, string[]> = {
 export default function ModeHubPage() {
   const models = useModeHubStore((state) => state.models);
   const toggleEnabled = useModeHubStore((state) => state.toggleEnabled);
-  const setDefaultParsing = useModeHubStore((state) => state.setDefaultParsing);
-  const setDefaultGeneration = useModeHubStore((state) => state.setDefaultGeneration);
   const upsertModel = useModeHubStore((state) => state.upsertModel);
   const deleteModel = useModeHubStore((state) => state.deleteModel);
   const testModel = useModeHubStore((state) => state.testModel);
@@ -136,39 +134,6 @@ export default function ModeHubPage() {
                 {model.provider}
               </span>
               <StatusBadge status={model.status} />
-            </div>
-
-            <div className="mt-4 grid gap-2">
-              <button
-                type="button"
-                onClick={() => setDefaultParsing(model.id)}
-                disabled={!model.enabled}
-                className={cn(
-                  'flex items-center gap-2 rounded-xl border px-3 py-2 text-left text-[12px] font-medium transition',
-                  model.defaultForParsing
-                    ? 'border-accent bg-accent-subtle text-accent'
-                    : 'border-border text-foreground-muted hover:bg-background',
-                  !model.enabled && 'cursor-not-allowed opacity-50',
-                )}
-              >
-                <CheckCircle2 className="size-3.5" />
-                Set as parsing default
-              </button>
-              <button
-                type="button"
-                onClick={() => setDefaultGeneration(model.id)}
-                disabled={!model.enabled}
-                className={cn(
-                  'flex items-center gap-2 rounded-xl border px-3 py-2 text-left text-[12px] font-medium transition',
-                  model.defaultForGeneration
-                    ? 'border-accent bg-accent-subtle text-accent'
-                    : 'border-border text-foreground-muted hover:bg-background',
-                  !model.enabled && 'cursor-not-allowed opacity-50',
-                )}
-              >
-                <Sparkles className="size-3.5" />
-                Set as generation default
-              </button>
             </div>
 
             <div className="mt-4 flex items-center gap-2 border-t border-border-muted pt-3.5">
