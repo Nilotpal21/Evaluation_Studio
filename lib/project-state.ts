@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { apps } from '@/lib/mock-data/apps';
@@ -21,6 +22,7 @@ export interface CustomProjectContext {
   duration?: string;
   sessionEvaluationEnabled: boolean;
   monitoringEnabled: boolean;
+  lastLaunchedRunId?: string;
 }
 
 interface ProjectState {
@@ -32,7 +34,8 @@ interface ProjectState {
     selectedVersionId?: string;
     duration?: string;
   }) => string;
-  startPreProdRun: (projectId: string) => void;
+  startPreProdRun: (projectId: string, runId: string) => void;
+  startProdRun: (projectId: string, runId: string) => void;
 }
 
 function slugify(value: string) {
@@ -92,13 +95,14 @@ export const useProjectState = create<ProjectState>()(
               duration,
               sessionEvaluationEnabled: environment === 'prod',
               monitoringEnabled: environment === 'prod',
+              lastLaunchedRunId: undefined,
             },
           },
         }));
 
         return id;
       },
-      startPreProdRun: (projectId) =>
+      startPreProdRun: (projectId, runId) =>
         set((state) => {
           const context = state.customProjects[projectId];
           if (!context || context.environment !== 'pre_prod') return state;
@@ -109,6 +113,23 @@ export const useProjectState = create<ProjectState>()(
                 ...context,
                 sessionEvaluationEnabled: true,
                 monitoringEnabled: true,
+                lastLaunchedRunId: runId,
+              },
+            },
+          };
+        }),
+      startProdRun: (projectId, runId) =>
+        set((state) => {
+          const context = state.customProjects[projectId];
+          if (!context || context.environment !== 'prod') return state;
+          return {
+            customProjects: {
+              ...state.customProjects,
+              [projectId]: {
+                ...context,
+                sessionEvaluationEnabled: true,
+                monitoringEnabled: true,
+                lastLaunchedRunId: runId,
               },
             },
           };
@@ -134,6 +155,18 @@ export const useProjectState = create<ProjectState>()(
     },
   ),
 );
+
+export function useProjectStateHydrated() {
+  const [hydrated, setHydrated] = useState(useProjectState.persist.hasHydrated());
+
+  useEffect(() => {
+    const unsubscribe = useProjectState.persist.onFinishHydration(() => setHydrated(true));
+    setHydrated(useProjectState.persist.hasHydrated());
+    return unsubscribe;
+  }, []);
+
+  return hydrated;
+}
 
 export function useAllProjects(): Project[] {
   const customProjects = useProjectState((state) => state.customProjects);

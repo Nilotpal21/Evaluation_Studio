@@ -27,6 +27,7 @@ export default function NewEvaluationPage() {
   const backingProjectId = useBackingProjectId(params.projectId);
   const projectContext = useProjectContext(params.projectId);
   const startPreProdRun = useProjectState((state) => state.startPreProdRun);
+  const startProdRun = useProjectState((state) => state.startProdRun);
   const [mode, setMode] = useState<EvaluationMode>('pre_prod');
   const availableAgents = useMemo(
     () => (project ? getEvaluationAgentsForProject(backingProjectId, mode) : []),
@@ -336,7 +337,9 @@ export default function NewEvaluationPage() {
                 onRun={() => {
                   if (launchHref) {
                     if (mode === 'pre_prod') {
-                      startPreProdRun(params.projectId);
+                      startPreProdRun(params.projectId, launchHref.split('/').pop() ?? '');
+                    } else {
+                      startProdRun(params.projectId, launchHref.split('/').pop() ?? '');
                     }
                     router.push(launchHref);
                   }
@@ -378,7 +381,9 @@ export default function NewEvaluationPage() {
             onRun={() => {
               if (launchHref) {
                 if (mode === 'pre_prod') {
-                  startPreProdRun(params.projectId);
+                  startPreProdRun(params.projectId, launchHref.split('/').pop() ?? '');
+                } else {
+                  startProdRun(params.projectId, launchHref.split('/').pop() ?? '');
                 }
                 router.push(launchHref);
               }
