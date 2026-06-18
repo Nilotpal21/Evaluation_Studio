@@ -114,6 +114,19 @@ const sections = [
   },
   {
     icon: FileText,
+    title: 'First-Time User Guide',
+    description:
+      'A lightweight walkthrough for someone opening the prototype for the first time and trying to understand the main flows.',
+    items: [
+      'How to create a new Pre-prod project with project name, agent, and version',
+      'How to create a new Prod project with project name, agent, and duration',
+      'How to reopen and inspect existing projects from the Projects catalog',
+      'How Session evaluation works, including that clicking Session IDs and Trace IDs opens more details',
+      'Source guide: docs/first-time-user-guide.md',
+    ],
+  },
+  {
+    icon: FileText,
     title: 'Current Prototype Notes',
     description:
       'These notes explain the current implementation boundaries so design and engineering are aligned on what is intentionally mocked.',

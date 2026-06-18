@@ -144,7 +144,22 @@ export function Sidebar() {
         })}
         <div className="my-3 border-t border-border-muted" />
         {secondary.map((item) => (
-          <NavRow key={item.id} item={item} isActive={isActiveRoute(item.href, pathname)} />
+          <NavRow
+            key={item.id}
+            item={{
+              ...item,
+              href:
+                personaKey === 'processOwner' && item.id === 'settings' && activeProjectId
+                  ? `/projects/${activeProjectId}/settings`
+                  : item.href,
+            }}
+            isActive={isActiveRoute(
+              personaKey === 'processOwner' && item.id === 'settings' && activeProjectId
+                ? `/projects/${activeProjectId}/settings`
+                : item.href,
+              pathname,
+            )}
+          />
         ))}
       </nav>
 
