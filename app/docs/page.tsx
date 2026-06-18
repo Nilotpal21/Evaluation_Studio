@@ -1,84 +1,129 @@
-import { BookOpen, FileText, FolderKanban, Radar, ShieldCheck, Sparkles } from 'lucide-react';
+import {
+  BookOpen,
+  Database,
+  FileText,
+  FolderKanban,
+  Gauge,
+  ShieldCheck,
+  Sparkles,
+  Waypoints,
+} from 'lucide-react';
 import { Footer } from '@/components/shell/Footer';
 
 const sections = [
   {
-    icon: Sparkles,
-    title: 'Evaluation Studio',
-    description:
-      'Project-first autonomous evaluation across pre-prod qualification and production analysis.',
-    items: [
-      'Project -> Pre-prod | Prod -> Agent -> Version | Duration flow',
-      'Autonomous persona inference, scenario generation, and validator attachment',
-      'Benchmark-driven product decisioning for pre-prod promotion',
-      'Real-time monitoring, revert, and kill switch controls',
-      'Source PRD: 13 — Evaluation Studio',
-    ],
-  },
-  {
     icon: FolderKanban,
     title: 'Projects',
     description:
-      'Business-area operating boundaries for agents, reviewers, knowledge, evaluations, and monitoring.',
+      'Projects are the operating boundary for agents, evaluations, validators, knowledge, monitoring, and operator controls.',
     items: [
-      'Projects list, detail view, and project settings structure',
-      'Per-project reviewer pools, knowledge scope, tools, and model overrides',
-      'Cost envelope and budget controls',
-      'Project-scoped dashboards and audit boundaries',
-      'Source PRD: 11 — Projects',
+      'Projects page uses the lighter catalog-style layout with search and grid/list toggle',
+      'Clicking a project opens Evaluation Studio instead of a separate overview surface',
+      'Project tiles show the project owner, agent count, created date, and environment chip',
+      'Custom project creation stores project name, selected environment, selected agent, and either version or duration',
+      'Custom projects are persisted in client state so the user can reopen the same seeded flow without rebuilding it',
+      'Project root routing is environment-aware for custom projects and falls back to the seeded evaluation landing for default projects',
+    ],
+  },
+  {
+    icon: Sparkles,
+    title: 'Evaluation Studio',
+    description:
+      'Evaluation Studio is the primary project landing surface and the control plane for autonomous evaluation.',
+    items: [
+      'Evaluation Studio remains project-scoped and is the default project destination',
+      'Users create either a Pre-prod or Prod project flow from New Project',
+      'Pre-prod uses selected agent + version',
+      'Prod uses selected agent + production-data duration window',
+      'Run history and environment-specific detail pages remain available under /projects/[projectId]/evaluations',
+      'Evaluation Studio remains the canonical project landing even when project tiles are opened from the global Projects catalog',
+      'Project-level summary surfaces are intentionally lighter than run-detail screens so they act as a control plane rather than an analysis canvas',
+    ],
+  },
+  {
+    icon: Waypoints,
+    title: 'Pre-prod And Prod Journeys',
+    description:
+      'Environment choice changes routing state, stored context, and downstream operator surfaces.',
+    items: [
+      'Pre-prod projects persist selected candidate agent and version',
+      'Prod projects persist selected production agent and duration',
+      'Custom project state stores the last launched run so reopening a project can return to its active run flow',
+      'Session evaluation and Monitoring access are unlocked from project state rather than being treated as global pages',
+      'Pre-prod run launches store a lastLaunchedRunId so the user can re-enter the exact run they started',
+      'Prod run launches follow the same stored-run behavior to avoid dropping the user back onto the generic evaluation dashboard',
+    ],
+  },
+  {
+    icon: Gauge,
+    title: 'Session Evaluation',
+    description:
+      'Session evaluation provides stored Sessions and Traces with drill-down inspectors for transcripts, evaluators, and input/output.',
+    items: [
+      'Dedicated left-nav tab below Mode hub',
+      'Sessions tab opens a session drawer with Evaluation and Transcript views',
+      'Traces tab opens a trace inspector with Evaluators and Input / output tabs',
+      'Trace tree nodes and evaluator cards are interactive and open node-specific inspector content',
+      'All dummy session and trace rows now have fallback detail so every row opens correctly',
+      'Session drawers default to transcript-first behavior while still supporting evaluation summaries and trace handoff',
+      'Trace drawers support node-level inspection, evaluator summaries, and pretty/JSON IO switching so the product story can be demonstrated end to end',
     ],
   },
   {
     icon: ShieldCheck,
-    title: 'Approval, Deployment, and Monitoring',
+    title: 'Validators',
     description:
-      'Operational controls that span review, deployment, continuous evaluation, and production safety.',
+      'Validators are managed as a dedicated project tab with catalog rows, configuration drawers, and custom-validator creation.',
     items: [
-      'Approval workflow and reviewer detail surfaces',
-      'Deployment confirmation and post-deploy activation flow',
-      'Mission Control, audit log, and production findings',
-      'Operator-facing revert and kill switch expectations',
-      'Source PRDs: 06 — Approval + Deployment, 07 — Mission Control + Audit',
+      'Validator rows open a right-side configuration drawer',
+      'Model dropdown is driven by configured Mode hub models',
+      'New custom validator uses the simplified setup flow requested in the prototype',
+      'Removed evaluator type, variable mapping, output config, global-save toggle, templates, and test button from the custom validator flow',
+      'Validators remain the project-level home for benchmark and policy configuration',
+      'Built-in and custom validators are both presented in the same catalog so users can see where benchmark ownership differs',
+      'Validator drawers now better match the rest of the platform by using the same spacing, card styling, and right-side edit pattern as other inspectors',
+    ],
+  },
+  {
+    icon: Database,
+    title: 'Knowledge Base',
+    description:
+      'Knowledge Base is now a dedicated left-nav surface below Mode hub and remains available as its own workflow.',
+    items: [
+      'Knowledge Base tab is separate from validators and evaluations',
+      'The add-source wizard now starts with General Settings',
+      'General Settings captures Knowledge base name and Description before ingestion setup',
+      'The wizard now totals five steps',
+      'Knowledge-base creation remains wizard-driven so later ingestion choices such as upload, crawl, or service connection can stay contextual',
+      'The tab is positioned next to Mode hub and Session evaluation because knowledge is treated as a core project configuration surface',
     ],
   },
   {
     icon: BookOpen,
-    title: 'Knowledge and Models',
+    title: 'Navigation Model',
     description:
-      'Reference surfaces for project-scoped knowledge, model configuration, and supporting governance.',
+      'The prototype navigation has been simplified to match the requested product structure.',
     items: [
-      'Knowledge Library tenant-wide and project-scoped source model',
-      'Model Integration and project override patterns',
-      'How knowledge and model policy feed evaluation and production behavior',
-      'Source PRDs: 08 — Knowledge Library, 09 — Model Integration',
+      'Overview has been removed from the left-nav project flow',
+      'Left nav now centers on Evaluation Studio, Mode hub, Knowledge Base, Session evaluation, Monitoring, Validators, Docs, and Settings',
+      'Monitoring is represented as a dedicated nav tab instead of a header CTA',
+      'Workspace/account popover now reflects the active project and signed-in user rather than older tenant placeholders',
+      'Session evaluation and Monitoring are intended to feel like downstream operational surfaces rather than alternate top-level home pages',
+      'Project navigation emphasizes setup, execution, inspection, and governance instead of the earlier connector-builder structure',
     ],
   },
   {
     icon: FileText,
-    title: 'Core Product Flows',
+    title: 'Current Prototype Notes',
     description:
-      'The main prototype surfaces that define how users move from SOP to app to evaluation and deployment.',
+      'These notes explain the current implementation boundaries so design and engineering are aligned on what is intentionally mocked.',
     items: [
-      '00 — Overview',
-      '01 — App Shell + Process Owner Dashboard',
-      '02 — SOP-to-App Flow',
-      '03 — Review Studio',
-      '04 — AI Helper',
-      '05 — Evaluation Report',
-    ],
-  },
-  {
-    icon: Radar,
-    title: 'Reference and Prototype Assets',
-    description:
-      'Supporting artifacts used by design and engineering while building the UI prototype.',
-    items: [
-      '10 — Marketplace',
-      '12 — Auth',
-      '99 — Mock Data',
-      'BRD_Agentic_AI_Platform.md',
-      'BRD_Executive_Summary.md',
-      'Prototype routes in app/ and mock data in lib/mock-data/',
+      'Project creation is still mock-persisted client state, not a backend-created resource',
+      'Run progression, session data, traces, validators, and monitoring are seeded dummy data',
+      'Routing and unlocking behavior for custom projects is persisted in local project state',
+      'The prototype is optimized for end-to-end flow demonstration rather than final production architecture',
+      'Several screens intentionally privilege clarity of user journey over backend realism so design review can focus on product behavior first',
+      'This docs page is meant to reflect what the prototype currently does, not only what the PRD originally described',
     ],
   },
 ];
@@ -88,11 +133,6 @@ export default function DocsPage() {
     <div className="space-y-5">
       <header className="border-b border-border-muted pb-4">
         <h1 className="text-2xl font-semibold tracking-tight">Docs</h1>
-        <p className="mt-1.5 max-w-3xl text-xs text-foreground-muted">
-          Product, design, and engineering reference for the current Evaluation Studio prototype.
-          This tab reflects the existing PRDs in `docs/prd/` rather than the older connector-builder
-          placeholder content.
-        </p>
       </header>
 
       <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
@@ -119,7 +159,7 @@ export default function DocsPage() {
                 {section.items.map((item) => (
                   <li
                     key={item}
-                    className="rounded-md border border-border-muted bg-background px-3 py-2 text-xs text-foreground-muted"
+                    className="rounded-md border border-border-muted bg-background px-3 py-2 text-xs leading-5 text-foreground-muted"
                   >
                     {item}
                   </li>
@@ -129,15 +169,6 @@ export default function DocsPage() {
           );
         })}
       </div>
-
-      <section className="rounded-lg border border-border-muted bg-background-subtle p-4">
-        <div className="text-sm font-semibold">Current source of truth</div>
-        <p className="mt-1.5 text-sm text-foreground-muted">
-          The most relevant product spec for the current prototype work is
-          `docs/prd/13-evaluation-studio.md`, supported by `11-projects.md`, `06-approval-and-deployment.md`,
-          `07-mission-control-and-audit.md`, and `12-auth.md`.
-        </p>
-      </section>
 
       <Footer />
     </div>
