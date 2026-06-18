@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { Plus, X, Archive, Save, Trash2 } from 'lucide-react';
 import { personas } from '@/lib/mock-data';
 import { Footer } from '@/components/shell/Footer';
+import { SyncActiveProject } from '@/components/projects/SyncActiveProject';
 import { PickerSelect } from '@/components/ui/PickerSelect';
 import {
   useProjectContext,
@@ -56,6 +57,8 @@ export default function ProjectSettingsPage() {
 
   return (
     <div className="space-y-4">
+      <SyncActiveProject projectId={project.id} />
+
       <nav className="text-xs text-foreground-muted flex items-center gap-2">
         <Link href="/projects" className="hover:text-foreground transition-colors">
           Projects

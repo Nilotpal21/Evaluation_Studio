@@ -149,13 +149,17 @@ export function Sidebar() {
             item={{
               ...item,
               href:
-                personaKey === 'processOwner' && item.id === 'settings' && activeProjectId
-                  ? `/projects/${activeProjectId}/settings`
-                  : item.href,
+                personaKey === 'processOwner' && item.id === 'docs' && activeProjectId
+                  ? `/projects/${activeProjectId}/docs`
+                  : personaKey === 'processOwner' && item.id === 'settings' && activeProjectId
+                    ? `/projects/${activeProjectId}/settings`
+                    : item.href,
             }}
             isActive={isActiveRoute(
-              personaKey === 'processOwner' && item.id === 'settings' && activeProjectId
-                ? `/projects/${activeProjectId}/settings`
+              personaKey === 'processOwner' && item.id === 'docs' && activeProjectId
+                ? `/projects/${activeProjectId}/docs`
+                : personaKey === 'processOwner' && item.id === 'settings' && activeProjectId
+                  ? `/projects/${activeProjectId}/settings`
                 : item.href,
               pathname,
             )}
