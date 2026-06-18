@@ -23,7 +23,7 @@ const TABS = [
   'Tools',
   'Cost & budget',
   'Channels',
-  'Archive',
+  'Danger Zone',
 ] as const;
 
 type Tab = (typeof TABS)[number];
@@ -138,7 +138,7 @@ export default function ProjectSettingsPage() {
         {tab === 'Channels' && (
           <ChannelsTab defaultChannels={project.defaultChannels} />
         )}
-        {tab === 'Archive' && <ArchiveTab projectName={project.name} />}
+        {tab === 'Danger Zone' && <ArchiveTab projectName={project.name} />}
       </div>
 
       <Footer />
@@ -541,25 +541,32 @@ function ChannelsTab({
 
 function ArchiveTab({ projectName }: { projectName: string }) {
   return (
-    <Section title="Archive this project">
-      <p className="mb-3 max-w-2xl text-xs text-foreground-muted">
-        Archiving pauses all apps in <span className="font-medium">{projectName}</span>. SOPs,
-        audit, and historical data remain queryable. You can restore the project later.
-      </p>
-      <div className="flex flex-wrap items-center gap-3">
-        <button className="flex h-9 items-center gap-1.5 rounded-md border border-warning/40 px-4 text-xs font-medium text-warning transition-colors hover:bg-warning-subtle">
-          <Archive className="size-3.5" />
-          Archive project
-        </button>
-        <button className="flex h-9 items-center gap-1.5 rounded-md border border-error/40 px-4 text-xs font-medium text-error transition-colors hover:bg-error-subtle">
-          <Trash2 className="size-3.5" />
-          Delete project
-        </button>
+    <Section title="Danger Zone">
+      <div className="space-y-3">
+        <div className="rounded-md border border-warning/20 bg-background p-4">
+          <div className="text-sm font-semibold text-foreground">Archive this project</div>
+          <p className="mt-1.5 max-w-2xl text-xs leading-6 text-foreground-muted">
+            Archiving pauses all apps in <span className="font-medium">{projectName}</span>. SOPs,
+            audit, and historical data remain queryable. You can restore the project later.
+          </p>
+          <button className="mt-3 flex h-9 items-center gap-1.5 rounded-md border border-warning/40 px-4 text-xs font-medium text-warning transition-colors hover:bg-warning-subtle">
+            <Archive className="size-3.5" />
+            Archive project
+          </button>
+        </div>
+
+        <div className="rounded-md border border-error/20 bg-background p-4">
+          <div className="text-sm font-semibold text-foreground">Delete this project</div>
+          <p className="mt-1.5 max-w-2xl text-xs leading-6 text-foreground-muted">
+            Delete is a destructive action. In this prototype it is visual only and does not remove
+            the project from local state.
+          </p>
+          <button className="mt-3 flex h-9 items-center gap-1.5 rounded-md border border-error/40 px-4 text-xs font-medium text-error transition-colors hover:bg-error-subtle">
+            <Trash2 className="size-3.5" />
+            Delete project
+          </button>
+        </div>
       </div>
-      <p className="mt-3 max-w-2xl text-[11px] text-foreground-subtle">
-        Delete is a destructive action. In this prototype it is visual only and does not remove the
-        project from local state.
-      </p>
     </Section>
   );
 }
